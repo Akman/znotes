@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- ***** BEGIN LICENSE BLOCK *****
+  -
+  - Version: GPL 3.0
+  -
+  - ZNotes
+  - Copyright (C) 2012 Alexander Kapitman
+  -
+  - This program is free software: you can redistribute it and/or modify
+  - it under the terms of the GNU General Public License as published by
+  - the Free Software Foundation, either version 3 of the License, or
+  - (at your option) any later version.
+  -
+  - This program is distributed in the hope that it will be useful,
+  - but WITHOUT ANY WARRANTY; without even the implied warranty of
+  - MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  - GNU General Public License for more details.
+  -
+  - You should have received a copy of the GNU General Public License
+  - along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -
+  - The Original Code is ZNotes.
+  -
+  - Initial Developer(s):
+  -   Alexander Kapitman <akman.ru@gmail.com>
+  -
+  - Portions created by the Initial Developer are Copyright (C) 2012
+  - the Initial Developer. All Rights Reserved.
+  -
+  - Contributor(s):
+  -
+  - ***** END LICENSE BLOCK ***** -->
+
+<?xml-stylesheet type="text/css" href="chrome://global/skin/" ?>
+<?xml-stylesheet type="text/css" href="chrome://znotes/skin/about.css" ?>
+
+<!DOCTYPE window SYSTEM "chrome://znotes/locale/about.dtd">
+
+<dialog
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  id="znotes_about"
+  title="&title;"
+  buttons="accept"
+  windowtype="znotes">
+
+  <script type="application/javascript"
+    src="chrome://znotes/content/about.js" />
+
+  <vbox id="aboutContent"
+    flex="1"
+    pack="start"
+    align="start">
+
+    <hbox id="headcontainer" align="start" flex="1">
+
+      <vbox id="iconcontainer" align="end" flex="1">
+        <image id="icon" />
+      </vbox>
+
+      <vbox id="summary" flex="1">
+        <hbox id="namecontainer" align="start">
+          <label id="name" flex="1" />
+          <label id="version"/>
+          <spacer flex="5000"/>
+        </hbox>
+        <label id="description" />
+      </vbox>
+
+    </hbox>
+
+    <vbox id="copyrights" align="start" flex="1" />
+
+    <vbox id="licensescontainer" align="start" flex="1">
+      <label id="licenses" value="&licenses;"/>
+    </vbox>
+
+    <vbox id="repositoriescontainer" align="start" flex="1">
+      <label id="repositories" value="&repositories;"/>
+    </vbox>
+
+    <vbox id="resourcescontainer" align="start" flex="1">
+      <label id="resources" value="&resources;" />
+      <hbox id="hbxsite">
+        <label id="site" value="&site;" />
+        <label id="sitelink"
+          value="&sitelink;"
+          class="text-link link"
+          onclick="ru.akman.znotes.About.onClick( event );"/>
+      </hbox>
+      <hbox id="hbxforum">
+        <label id="forum" value="&forum;" />
+        <label id="forumlink"
+          value="&forumlink;"
+          class="text-link link"
+          onclick="ru.akman.znotes.About.onClick( event );"/>
+      </hbox>
+    </vbox>
+
+    <vbox id="creatorscontainer" align="start" flex="1">
+      <label id="creators" value="&creators;"/>
+    </vbox>
+
+    <vbox id="contributorscontainer" align="start" flex="1">
+      <label id="contributors" value="&contributors;"/>
+    </vbox>
+
+    <vbox id="creditscontainer" align="start" flex="1">
+      <label id="credits" value="&credits;"/>
+    </vbox>
+    
+    <vbox id="translatorscontainer" align="start" flex="1">
+      <label id="translators" value="&translators;"/>
+    </vbox>
+    
+  </vbox>
+
+  <hbox id="donatecontainer" align="center" pack="center" flex="1">
+    <image id="donate"
+      class="link"
+      onclick="ru.akman.znotes.About.onDonate( event );" />
+  </hbox>
+
+</dialog>

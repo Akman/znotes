@@ -1,0 +1,789 @@
+<?xml version="1.0" ?>
+<!-- ***** BEGIN LICENSE BLOCK *****
+  -
+  - Version: GPL 3.0
+  -
+  - ZNotes
+  - Copyright (C) 2012 Alexander Kapitman
+  -
+  - This program is free software: you can redistribute it and/or modify
+  - it under the terms of the GNU General Public License as published by
+  - the Free Software Foundation, either version 3 of the License, or
+  - (at your option) any later version.
+  -
+  - This program is distributed in the hope that it will be useful,
+  - but WITHOUT ANY WARRANTY; without even the implied warranty of
+  - MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  - GNU General Public License for more details.
+  -
+  - You should have received a copy of the GNU General Public License
+  - along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -
+  - The Original Code is ZNotes.
+  -
+  - Initial Developer(s):
+  -   Alexander Kapitman <akman.ru@gmail.com>
+  -
+  - Portions created by the Initial Developer are Copyright (C) 2012
+  - the Initial Developer. All Rights Reserved.
+  -
+  - Contributor(s):
+  -
+  - ***** END LICENSE BLOCK ***** -->
+
+<project name="ZNotes" default="all">
+
+  <!-- PATHS -->
+  <property name="site.dir" value="./site/src" />
+  <property name="src.dir" value="./src" />
+  <property name="platform.dir" value="./platform" />
+  <property name="addon.dir" value="${src.dir}/addon" />
+  <property name="standalone.dir" value="${src.dir}/standalone" />
+  <property name="template.dir" value="${src.dir}/template" />
+  <property name="bin.dir" value="./bin" />
+  <property name="releases.dir" value="./releases" />
+
+  <!-- BUILD PROPERTIES -->
+  <property file="build.properties" />
+
+  <!-- OPENSSL -->
+  <property name="public.key.path"
+    location="${config.openssl.public.key.path}"/>
+  <property name="private.key.path"
+    location="${config.openssl.private.key.path}"/>
+  <loadfile srcfile="${public.key.path}"
+    property="public.key.value">
+    <filterchain>
+      <headfilter lines="4" skip="1"/>
+      <striplinebreaks />
+    </filterchain>
+  </loadfile>
+
+  <!-- ANT-CONTRIB -->
+  <taskdef resource="net/sf/antcontrib/antcontrib.properties">
+    <classpath>
+      <pathelement location="${config.antcontrib.path}"/>
+    </classpath>
+  </taskdef>
+
+  <!-- XALAN & XERCES -->
+  <path id="xslt.classpath">
+    <pathelement path="${config.xslt.xalan.path}"/>
+    <pathelement path="${config.xslt.xerces.impl.path}"/>
+    <pathelement path="${config.xslt.xerces.resolver.path}"/>
+  </path>
+
+  <!-- APPLICATION PROPERTIES -->
+  <xmlproperty file="${config.product.xml.path}" />
+  <property name="application.fullname"
+    value="${application.prefix}-${application.version}" />
+  <property name="application.applename"
+    value="${application.name}.app" />
+
+  <!-- APPLICATION SUPPORTED LANGUAGES -->
+  <property name="application.languages.enum"
+    value="${application.localized.locale(name)}" />
+
+  <!-- SITE SUPPORTED LANGUAGES -->
+  <property name="site.languages.enum"
+    value="${application.site.localized.locale(name)}" />
+
+  <!-- SUPPORTED PLATFORMS -->
+  <property name="platforms.enum"
+    value="${application.platforms.platform(name)}" />
+
+  <!-- CLEAN -->
+
+  <target
+    name="clean"
+    description="- Clean all">
+    <delete dir="${bin.dir}" quiet="true" includeemptydirs="true" />
+    <delete dir="${releases.dir}" quiet="true" includeemptydirs="true" />
+    <delete dir="${config.local.thunderbird.profile.development.dir}/extensions/${application.id}" quiet="true" includeemptydirs="true" />
+    <delete dir="${config.local.thunderbird.profile.work.dir}/extensions/${application.id}" quiet="true" includeemptydirs="true" />
+    <delete dir="${config.local.znotes.dir}" quiet="true" includeemptydirs="true">
+      <exclude name="profile/**" />
+    </delete>
+  </target>
+
+  <!-- BUILD ALL -->
+
+  <target
+    name="all"
+    description="- Build all"
+    depends="addon, standalone, locale" />
+
+  <!-- RELEASE -->
+
+  <target
+    name="release"
+    description="- Release all"
+    depends="release-addon, release-standalone, release-locale" />
+
+  <!-- ADDON -->
+
+  <target
+    name="process-welcome"
+    description="- [Internal] Build the contents of the welcome note for selected language">
+    <copy todir="${bin.dir}/addon/welcome/${lang}">
+      <fileset dir="${site.dir}/${lang}/docs/images">
+        <include name="workspace.png" />
+      </fileset>
+    </copy>
+    <property name="product.xml"
+      location="${config.product.xml.path}"
+      basedir="${site.dir}/template"
+      relative="true" />
+    <if>
+      <uptodate srcfile="${config.product.xml.path}"
+        targetfile="${bin.dir}/addon/welcome/index_${lang}.xhtml" />
+      <then>
+        <xslt
+          in="${site.dir}/${lang}/index.xml"
+          out="${bin.dir}/addon/welcome/index_${lang}.xhtml"
+          style="${site.dir}/template/index.xsl"
+          force="false">
+          <param name="mode" expression="welcome" />
+          <param name="type" expression="xhtml" />
+          <param name="path" expression="${product.xml}" />
+        </xslt>
+      </then>
+      <else>
+        <xslt
+          in="${site.dir}/${lang}/index.xml"
+          out="${bin.dir}/addon/welcome/index_${lang}.xhtml"
+          style="${site.dir}/template/index.xsl"
+          force="true">
+          <param name="mode" expression="welcome" />
+          <param name="type" expression="xhtml" />
+          <param name="path" expression="${product.xml}" />
+        </xslt>
+      </else>
+    </if>
+  </target>
+
+  <target
+    name="welcome"
+    description="- [Internal] Build the contents of the welcome note for all languages">
+    <copy todir="${bin.dir}/addon/welcome">
+      <fileset dir="${site.dir}/skin">
+        <include name="main.css" />
+        <include name="background.png" />
+        <include name="paypal.png" />
+        <include name="facebook.png" />
+        <include name="twitter.png" />
+        <include name="googleplus.png" />
+      </fileset>
+    </copy>
+    <copy file="${addon.dir}/icons/znotes16.ico"
+      tofile="${bin.dir}/addon/welcome/znotes.ico" />
+    <copy file="${addon.dir}/icons/znotes64.png"
+      tofile="${bin.dir}/addon/welcome/logo.png" />
+    <foreach list="${site.languages.enum}"
+      param="lang" target="process-welcome" />
+  </target>
+
+  <target
+    name="addon"
+    depends="welcome"
+    description="- Build addon xpi package">
+    <zip destfile="${bin.dir}/addon/chrome/${application.prefix}.jar">
+      <fileset dir="${addon.dir}">
+        <include name="content/**" />
+        <include name="skin/**" />
+      </fileset>
+    </zip>
+    <copy todir="${bin.dir}/addon/chrome/icons/default">
+      <fileset dir="${addon.dir}/icons">
+        <include name="**" />
+      </fileset>
+    </copy>
+    <copy todir="${bin.dir}/addon">
+      <fileset dir="${addon.dir}">
+        <include name="chrome.manifest" />
+        <include name="readme.md" />
+        <include name="modules/**" />
+        <include name="locale/**" />
+      </fileset>
+    </copy>
+    <property name="update.rdf.url"
+      value="http://znotes.net/downloads/releases/addon/update.rdf" />
+    <if>
+      <uptodate srcfile="${public.key.path}"
+        targetfile="${bin.dir}/addon/install.rdf" />
+      <then>
+        <xslt
+          in="${config.product.xml.path}"
+          out="${bin.dir}/addon/install.rdf"
+          style="${template.dir}/install.rdf.xsl"
+          force="false">
+          <param name="key" expression="${public.key.value}" />
+          <param name="url" expression="${update.rdf.url}" />
+          <param name="amo" expression="no" />
+        </xslt>
+        <xslt
+          in="${config.product.xml.path}"
+          out="${bin.dir}/addon/install.amo.rdf"
+          style="${template.dir}/install.rdf.xsl"
+          force="false">
+          <param name="key" expression="${public.key.value}" />
+          <param name="url" expression="${update.rdf.url}" />
+          <param name="amo" expression="yes" />
+        </xslt>
+      </then>
+      <else>
+        <xslt
+          in="${config.product.xml.path}"
+          out="${bin.dir}/addon/install.rdf"
+          style="${template.dir}/install.rdf.xsl"
+          force="true">
+          <param name="key" expression="${public.key.value}" />
+          <param name="url" expression="${update.rdf.url}" />
+          <param name="amo" expression="no" />
+        </xslt>
+        <xslt
+          in="${config.product.xml.path}"
+          out="${bin.dir}/addon/install.amo.rdf"
+          style="${template.dir}/install.rdf.xsl"
+          force="true">
+          <param name="key" expression="${public.key.value}" />
+          <param name="url" expression="${update.rdf.url}" />
+          <param name="amo" expression="yes" />
+        </xslt>
+      </else>
+    </if>
+    <xslt
+      in="${config.product.xml.path}"
+      out="${bin.dir}/addon/modules/product.js"
+      style="${template.dir}/product.js.xsl"
+      force="false" />
+    <copy file="./LICENSE" tofile="${bin.dir}/addon/LICENSE" />
+    <if>
+      <uptodate srcfile="${addon.dir}/readme.md"
+        targetfile="${bin.dir}/addon/readme.html" />
+      <then>
+      </then>
+      <else>
+        <exec executable="${config.markdown.path}">
+          <arg value="${addon.dir}/readme.md" />
+          <arg value="&gt;${bin.dir}/addon/readme.html" />
+        </exec>
+      </else>
+    </if>
+  </target>
+
+  <!-- LOCALE -->
+
+  <target
+    name="process-application-locale"
+    description="- [Internal] Build application localization package for selected language">
+    <copy todir="${bin.dir}/locale/${lang}">
+      <fileset dir="${src.dir}/addon/locale/${lang}">
+        <include name="*/**" />
+      </fileset>
+    </copy>
+  </target>
+
+  <target
+    name="locale"
+    description="- Build localization packages for all languages">
+    <foreach list="${application.languages.enum}" param="lang"
+      target="process-application-locale" />
+  </target>
+
+  <!-- STANDALONE -->
+
+  <target
+    name="standalone-resources-platform-language"
+    description="- [Internal] Build language specific resources for standalone application">
+    <copy file="${standalone.dir}/defaults/preferences/prefs.js"
+      tofile="${root}/defaults/preferences/prefs.js" />
+    <loadfile srcfile="${root}/defaults/preferences/prefs.js"
+      property="prefs.js" />
+    <property name="prefs.js.language" value="${lang}" />
+    <script language="javascript">
+      //<![CDATA[
+      var source = project.getProperty( "prefs.js" ).split("\n");
+      var lang = project.getProperty( "prefs.js.language" );
+      var result = [];
+      var found = false;
+      var flag = false;
+      for ( var i = 0; i < source.length; i++ ) {
+        var line = source[i];
+        var match = /\s*pref\s*\(\s*"general.useragent.locale"\s*,\s*"(.*)"\s*\)\s*;/.exec( line );
+        if ( match ) {
+          found = true;
+          if ( match[1] == lang ) {
+            result.push( line );
+          } else {
+            result.push( 'pref("general.useragent.locale", "' + lang + '");\n' );
+            flag = true;
+          }
+        } else {
+          result.push( line );
+        }
+      }
+      if ( !found ) {
+        result.push( 'pref("general.useragent.locale", "' + lang + '");\n' );
+        flag = true;
+      }
+      project.setProperty( "prefs.js", result.join( "\n" ) );
+      project.setProperty( "flag.prefs.js", flag );
+      //]]>
+    </script>
+    <if>
+      <equals arg1="${flag.prefs.js}" arg2="true" />
+      <then>
+        <echo message="${prefs.js}"
+          file="${root}/defaults/preferences/prefs.js" />
+      </then>
+    </if>
+    <copy todir="${root}/platform/locale">
+      <fileset dir="${platform.dir}/locale">
+        <include name="${lang}/**" />
+        <exclude name="${lang}/localized.manifest" />
+      </fileset>
+    </copy>
+    <copy todir="${root}/platform/locale">
+      <fileset file="${platform.dir}/locale/${lang}/localized.manifest" />
+    </copy>
+    <xslt
+      in="${config.product.xml.path}"
+      out="${root}/branding/locale/${lang}/brand.dtd"
+      style="${template.dir}/brand.dtd.xsl"
+      force="false">
+      <param name="lang" expression="${lang}" />
+    </xslt>
+    <xslt
+      in="${config.product.xml.path}"
+      out="${root}/branding/locale/${lang}/brand.properties"
+      style="${template.dir}/brand.properties.xsl"
+      force="false">
+      <param name="lang" expression="${lang}" />
+    </xslt>
+    <copy file="${standalone.dir}/locale/localized.manifest"
+      tofile="${root}/branding/locale/localized.manifest" />
+    <loadfile srcfile="${root}/branding/locale/localized.manifest"
+      property="branding.localized.manifest" />
+    <property name="branding.localized.language" value="${lang}" />
+    <script language="javascript">
+      //<![CDATA[
+      var source = project.getProperty( "branding.localized.manifest" ).split("\n");
+      var lang = project.getProperty( "branding.localized.language" );
+      var flag = false;
+      var result = [];
+      for ( var i = 0; i < source.length; i++ ) {
+        var line = source[i];
+        var match = /^locale\s+branding\s+([a-z][a-z])\s+\1\/\s*/.exec( line );
+        if ( match ) {
+          if ( match[1] == lang ) {
+            result.push( line );
+          } else {
+            flag = true;
+          }
+        } else {
+          result.push( line );
+        }
+      }
+      project.setProperty( "branding.localized.manifest", result.join( "\n" ) );
+      project.setProperty( "flag.branding.localized.manifest", flag );
+      //]]>
+    </script>
+    <if>
+      <equals arg1="${flag.branding.localized.manifest}" arg2="true" />
+      <then>
+        <echo message="${branding.localized.manifest}"
+          file="${root}/branding/locale/localized.manifest" />
+      </then>
+    </if>
+    <copy todir="${root}/locale">
+      <fileset dir="${bin.dir}/addon/locale">
+        <include name="${lang}/**" />
+      </fileset>
+    </copy>
+    <copy file="${bin.dir}/addon/locale/localized.manifest"
+      tofile="${root}/locale/localized.manifest" />
+    <loadfile srcfile="${root}/locale/localized.manifest"
+      property="addon.localized.manifest" />
+    <property name="addon.localized.language" value="${lang}" />
+    <script language="javascript">
+      //<![CDATA[
+      var source = project.getProperty( "addon.localized.manifest" ).split("\n");
+      var lang = project.getProperty( "addon.localized.language" );
+      var flag = false;
+      var result = [];
+      for ( var i = 0; i < source.length; i++ ) {
+        var line = source[i];
+        var match = /^locale\s+znotes\s+([a-z][a-z])\s+\1\/\s*/.exec( line );
+        if ( match ) {
+          if ( match[1] == lang ) {
+            result.push( line );
+          } else {
+            flag = true;
+          }
+        } else {
+          result.push( line );
+        }
+      }
+      project.setProperty( "addon.localized.manifest", result.join( "\n" ) );
+      project.setProperty( "flag.addon.localized.manifest", flag );
+      //]]>
+    </script>
+    <if>
+      <equals arg1="${flag.addon.localized.manifest}" arg2="true" />
+      <then>
+        <echo message="${addon.localized.manifest}"
+          file="${root}/locale/localized.manifest" />
+      </then>
+    </if>
+    <property name="welcome.localized.language" value="${lang}" />
+    <script language="javascript">
+      //<![CDATA[
+      var siteLanguages = project.getProperty( "site.languages.enum" );
+      var currentLanguage = project.getProperty( "welcome.localized.language" );
+      if ( siteLanguages.indexOf( currentLanguage ) < 0 ) {
+        project.setProperty( "welcome.localized.language", "en" );
+      }
+      //]]>
+    </script>
+    <copy todir="${root}/welcome">
+      <fileset dir="${bin.dir}/addon/welcome">
+        <include name="${welcome.localized.language}/**" />
+        <include name="index_${welcome.localized.language}.*" />
+        <include name="*.png" />
+        <include name="*.ico" />
+        <include name="*.css" />
+      </fileset>
+    </copy>
+  </target>
+
+  <target
+    name="standalone-platform-language"
+    description="- [Internal] Build standalone application for selected platform and language"
+    depends="addon">
+    <script language="javascript">
+      //<![CDATA[
+      project.setProperty(
+        "config.xulrunner.runtime.path",
+        project.getProperty( "config.xulrunner.runtimes." + project.getProperty( "platform" ) )
+      );
+      //]]>
+    </script>
+    <if>
+      <equals arg1="${platform}" arg2="mac" />
+      <then>
+        <copy todir="${bin.dir}/standalone/${platform}/${application.name}-${application.version}-${lang}/${application.applename}/Contents/Resources">
+          <fileset dir="${bin.dir}/addon">
+            <include name="chrome/**" />
+            <include name="modules/**" />
+            <include name="LICENSE" />
+          </fileset>
+          <fileset dir="${standalone.dir}">
+            <include name="chrome.manifest" />
+            <include name="readme.md" />
+            <include name="defaults/**" />
+          </fileset>
+        </copy>
+        <copy todir="${bin.dir}/standalone/${platform}/${application.name}-${application.version}-${lang}/${application.applename}/Contents/Resources/icons">
+          <fileset dir="${bin.dir}/addon/chrome/icons/default">
+            <include name="*" />
+          </fileset>
+        </copy>
+        <xslt
+          in="${config.product.xml.path}"
+          out="${bin.dir}/standalone/${platform}/${application.name}-${application.version}-${lang}/${application.applename}/Contents/Resources/application.ini"
+          style="${template.dir}/application.ini.xsl"
+          force="false" />
+        <if>
+          <uptodate srcfile="${standalone.dir}/readme.md"
+            targetfile="${bin.dir}/standalone/${platform}/${application.name}-${application.version}-${lang}/${application.applename}/Contents/Resources/readme.html" />
+          <then>
+          </then>
+          <else>
+            <exec executable="${config.markdown.path}">
+              <arg value="${standalone.dir}/readme.md" />
+              <arg value="&gt;${bin.dir}/standalone/${platform}/${application.name}-${application.version}-${lang}/${application.applename}/Contents/Resources/readme.html" />
+            </exec>
+          </else>
+        </if>
+        <copy todir="${bin.dir}/standalone/${platform}/${application.name}-${application.version}-${lang}/${application.applename}/Contents/Resources">
+          <fileset dir="${bin.dir}/addon/chrome/icons/default">
+            <include name="znotes.icns" />
+          </fileset>
+        </copy>
+        <antcall target="standalone-resources-platform-language">
+          <param name="root" value="${bin.dir}/standalone/${platform}/${application.name}-${application.version}-${lang}/${application.applename}/Contents/Resources" />
+        </antcall>
+        <xslt
+          in="${config.product.xml.path}"
+          out="${bin.dir}/standalone/${platform}/${application.name}-${application.version}-${lang}/${application.applename}/Contents/Info.plist"
+          style="${template.dir}/Info.plist.xsl"
+          force="false" />
+        <xslt
+          in="${config.product.xml.path}"
+          out="${bin.dir}/standalone/${platform}/${application.name}-${application.version}-${lang}/${application.applename}/Contents/PkgInfo"
+          style="${template.dir}/PkgInfo.xsl"
+          force="false" />
+        <copy todir="${bin.dir}/standalone/${platform}/${application.name}-${application.version}-${lang}/${application.applename}/Contents/MacOS">
+          <fileset dir="${platform.dir}/${platform}">
+            <include name="xulrunner" />
+          </fileset>
+        </copy>
+        <copy todir="${bin.dir}/standalone/${platform}/${application.name}-${application.version}-${lang}/${application.applename}/Contents/Frameworks/XUL.framework">
+          <fileset dir="${config.xulrunner.runtime.path}/XUL.framework/Versions/Current">
+            <include name="*/**" />
+          </fileset>
+        </copy>
+      </then>
+      <else>
+        <copy todir="${bin.dir}/standalone/${platform}/${application.fullname}-${lang}">
+          <fileset dir="${bin.dir}/addon">
+            <include name="chrome/**" />
+            <include name="modules/**" />
+            <include name="LICENSE" />
+          </fileset>
+          <fileset dir="${standalone.dir}">
+            <include name="chrome.manifest" />
+            <include name="readme.md" />
+            <include name="defaults/**" />
+          </fileset>
+          <fileset dir="${platform.dir}/${platform}">
+            <include name="*/**" />
+          </fileset>
+        </copy>
+        <copy todir="${bin.dir}/standalone/${platform}/${application.fullname}-${lang}/icons">
+          <fileset dir="${bin.dir}/addon/chrome/icons/default">
+            <include name="*" />
+          </fileset>
+        </copy>
+        <xslt
+          in="${config.product.xml.path}"
+          out="${bin.dir}/standalone/${platform}/${application.fullname}-${lang}/application.ini"
+          style="${template.dir}/application.ini.xsl"
+          force="false" />
+        <if>
+          <uptodate srcfile="${standalone.dir}/readme.md"
+            targetfile="${bin.dir}/standalone/${platform}/${application.fullname}-${lang}/readme.html" />
+          <then>
+          </then>
+          <else>
+            <exec executable="${config.markdown.path}">
+              <arg value="${standalone.dir}/readme.md" />
+              <arg value="&gt;${bin.dir}/standalone/${platform}/${application.fullname}-${lang}/readme.html" />
+            </exec>
+          </else>
+        </if>
+        <antcall target="standalone-resources-platform-language">
+          <param name="root"
+            value="${bin.dir}/standalone/${platform}/${application.fullname}-${lang}" />
+        </antcall>
+        <copy todir="${bin.dir}/standalone/${platform}/${application.fullname}-${lang}/xulrunner">
+          <fileset dir="${config.xulrunner.runtime.path}">
+            <include name="*/**" />
+          </fileset>
+        </copy>
+     </else>
+    </if>
+  </target>
+
+  <target
+    name="standalone-platform"
+    description="- [Internal] Build standalone applications for selected platform">
+    <foreach list="${application.languages.enum}" param="lang"
+      target="standalone-platform-language" />
+  </target>
+
+  <target
+    name="standalone"
+    description="- Build standalone applications for all platforms">
+    <foreach list="${platforms.enum}"
+      param="platform"
+      target="standalone-platform" />
+  </target>
+
+  <!-- RELEASE ADDON -->
+
+  <target
+    name="release-addon"
+    description="- Release addon"
+    depends="addon">
+    <zip destfile="${releases.dir}/releases/addon/${application.fullname}-tb.xpi">
+      <mappedresources enablemultiplemappings="yes">
+        <fileset dir="${bin.dir}/addon">
+          <exclude name="install.rdf" />
+        </fileset>
+        <filtermapper>
+          <replacestring from="install.amo.rdf" to="install.rdf" />
+        </filtermapper>
+      </mappedresources>
+    </zip>
+    <zip destfile="${releases.dir}/releases/addon/${application.fullname}.xpi">
+      <fileset dir="${bin.dir}/addon">
+        <exclude name="install.amo.rdf" />
+      </fileset>
+    </zip>
+    <property name="update.rdf.path"
+      location="${releases.dir}/releases/addon/update.rdf"/>
+    <if>
+      <uptodate targetfile="${update.rdf.path}">
+        <srcfiles file="${private.key.path}" />
+        <srcfiles file="${releases.dir}/releases/addon/${application.fullname}.xpi" />
+      </uptodate>
+      <then>
+      </then>
+      <else>
+        <exec executable="${config.uhura.path}">
+          <arg value="-o" />
+          <arg value="${update.rdf.path}" />
+          <arg value="-k" />
+          <arg value="${private.key.path}" />
+          <arg value="-p" />
+          <arg value="=${config.openssl.private.key.password}" />
+          <arg value="${releases.dir}/releases/addon/${application.fullname}.xpi" />
+          <arg value="http://znotes.net/downloads/releases/addon/${application.fullname}.xpi" />
+        </exec>
+      </else>
+    </if>
+  </target>
+
+  <!-- RELEASE LOCALE -->
+
+  <target
+    name="release-application-locale-process"
+    description="- [Internal] Release application localization package for selected language">
+    <zip destfile="${releases.dir}/locales/${application.prefix}-${lang}.zip">
+      <fileset dir="${bin.dir}/locale/${lang}">
+        <include name="*/**" />
+      </fileset>
+    </zip>
+  </target>
+
+  <target
+    name="release-locale"
+    description="- Release localization packages for all languages"
+    depends="locale">
+    <foreach list="${application.languages.enum}" param="lang"
+      target="release-application-locale-process" />
+  </target>
+
+  <!-- RELEASE STANDALONE -->
+
+  <target
+    name="release-standalone-platform-language"
+    description="- [Internal] Release standalone application for selected platform and language">
+    <if>
+      <equals arg1="${platform}" arg2="mac" />
+      <then>
+        <tar
+          longfile="gnu"
+          compression="bzip2"
+          destfile="${releases.dir}/releases/standalone/${lang}/${application.version}/${application.fullname}-${platform}-${lang}.tar.bz2">
+          <tarfileset dir="${bin.dir}/standalone/${platform}" filemode="755">
+            <include name="${application.name}-${application.version}-${lang}/**" />
+          </tarfileset>
+        </tar>
+      </then>
+      <elseif>
+        <equals arg1="${platform}" arg2="win32" />
+        <then>
+          <zip destfile="${releases.dir}/releases/standalone/${lang}/${application.version}/${application.fullname}-${platform}-${lang}.zip">
+            <fileset dir="${bin.dir}/standalone/${platform}">
+              <include name="${application.fullname}-${lang}/**" />
+            </fileset>
+          </zip>
+        </then>
+      </elseif>
+      <else>
+        <tar
+          longfile="gnu"
+          compression="gzip"
+          destfile="${releases.dir}/releases/standalone/${lang}/${application.version}/${application.fullname}-${platform}-${lang}.tar.gz">
+          <tarfileset dir="${bin.dir}/standalone/${platform}" filemode="755">
+            <include name="${application.fullname}-${lang}/znotes" />
+            <include name="${application.fullname}-${lang}/xulrunner/xulrunner" />
+          </tarfileset>
+          <tarfileset dir="${bin.dir}/standalone/${platform}">
+            <exclude name="${application.fullname}-${lang}/znotes" />
+            <exclude name="${application.fullname}-${lang}/xulrunner/xulrunner" />
+            <include name="${application.fullname}-${lang}/**" />
+          </tarfileset>
+        </tar>
+      </else>
+    </if>
+  </target>
+
+  <target
+    name="release-standalone-platform"
+    description="- [Internal] Release standalone application for selected platform for all languages">
+    <foreach list="${application.languages.enum}" param="lang"
+      target="release-standalone-platform-language" />
+  </target>
+
+  <target
+    name="release-standalone"
+    description="- Release standalone applications for all platforms"
+    depends="standalone">
+    <foreach list="${platforms.enum}" param="platform" target="release-standalone-platform" />
+  </target>
+
+  <!-- DEPLOY LOCALLY -->
+
+  <target
+    name="deploy-locally"
+    description="- Deploy addon and standalone locally"
+    depends="deploy-addon-locally, deploy-standalone-locally" />
+
+  <target
+    name="deploy-addon-locally"
+    depends="addon"
+    description="- Deploy addon in local user profile directory">
+    <copy todir="${config.local.thunderbird.profile.development.dir}/extensions/${application.id}">
+      <fileset dir="${bin.dir}/addon">
+        <exclude name="install.amo.rdf" />
+      </fileset>
+    </copy>
+    <copy todir="${config.local.thunderbird.profile.work.dir}/extensions/${application.id}">
+      <fileset dir="${bin.dir}/addon">
+        <exclude name="install.amo.rdf" />
+      </fileset>
+    </copy>
+  </target>
+
+  <target
+    name="deploy-standalone-locally"
+    description="- Deploy standalone application into local installation directory">
+    <foreach list="${config.local.platform}" param="platform" target="standalone-platform" />
+    <if>
+      <equals arg1="${config.local.platform}" arg2="mac" />
+      <then>
+        <copy todir="${config.local.znotes.dir}">
+          <fileset dir="${bin.dir}/standalone/${config.local.platform}/${application.name}-${application.version}-${config.local.language}/${application.applename}">
+            <include name="*/**" />
+          </fileset>
+        </copy>
+      </then>
+      <else>
+        <copy todir="${config.local.znotes.dir}">
+          <fileset dir="${bin.dir}/standalone/${config.local.platform}/${application.fullname}-${config.local.language}">
+            <include name="*/**" />
+          </fileset>
+        </copy>
+      </else>
+    </if>
+  </target>
+
+  <target
+    name="release-development"
+    description="- Release addon and standalone for development needs"
+    depends="release-addon, standalone">
+    <copy file="${releases.dir}/releases/addon/${application.fullname}-tb.xpi"
+      tofile="e:/temp/${application.fullname}-tb.xpi" />
+    <antcall target="release-standalone-platform-language">
+      <param name="platform" value="linux-i686"/>
+      <param name="lang" value="ru"/>
+    </antcall>    
+    <copy file="${releases.dir}/releases/standalone/ru/${application.version}/${application.fullname}-linux-i686-ru.tar.gz"
+      tofile="e:/temp/${application.fullname}-linux-i686-ru.tar.gz" />
+  </target>
+  
+</project>

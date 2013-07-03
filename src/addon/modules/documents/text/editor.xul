@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- ***** BEGIN LICENSE BLOCK *****
+  -
+  - Version: GPL 3.0
+  -
+  - ZNotes
+  - Copyright (C) 2012 Alexander Kapitman
+  -
+  - This program is free software: you can redistribute it and/or modify
+  - it under the terms of the GNU General Public License as published by
+  - the Free Software Foundation, either version 3 of the License, or
+  - (at your option) any later version.
+  -
+  - This program is distributed in the hope that it will be useful,
+  - but WITHOUT ANY WARRANTY; without even the implied warranty of
+  - MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  - GNU General Public License for more details.
+  -
+  - You should have received a copy of the GNU General Public License
+  - along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -
+  - The Original Code is ZNotes.
+  -
+  - Initial Developer(s):
+  -   Alexander Kapitman <akman.ru@gmail.com>
+  -
+  - Portions created by the Initial Developer are Copyright (C) 2012
+  - the Initial Developer. All Rights Reserved.
+  -
+  - Contributor(s):
+  -
+  - ***** END LICENSE BLOCK ***** -->
+
+<?xml-stylesheet type="text/css" href="chrome://znotes/skin/documents/text/editor.css" ?>
+
+<!DOCTYPE window SYSTEM "chrome://znotes/locale/documents/text/editor.dtd">
+
+<overlay id="text" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <commandset id="commandSet">
+    <command id="edtBold" />
+    <command id="edtItalic" />
+    <command id="edtUnderline" />
+    <command id="edtCopy" />
+    <command id="edtCut" />
+    <command id="edtPaste" />
+    <command id="edtDelete" />
+    <command id="edtSelectAll" />
+    <command id="edtUndo" />
+    <command id="edtRedo" />
+    <command id="edtForeColor" />
+    <command id="edtJustifyCenter" />
+    <command id="edtJustifyLeft" />
+    <command id="edtJustifyRight" />
+    <command id="edtJustifyFull" />
+  </commandset>
+
+  <popupset id="popupSet">
+    <menupopup id="clipPopup">
+      <menuitem id="clipCut" label="&edt_cut;" key="edtCutKey" command="edtCut" />
+      <menuitem id="clipCopy" label="&edt_copy;" key="edtCopyKey" command="edtCopy" />
+      <menuitem id="clipPaste" label="&edt_paste;" key="edtPasteKey" command="edtPaste" />
+      <menuitem id="clipDelete" label="&edt_delete;" key="edtDeleteKey" command="edtDelete" />
+      <menuseparator id="clipSeparator" />
+      <menuitem id="clipSelectAll" label="&edt_selectall;" key="edtSelectAllKey" command="edtSelectAll" />
+    </menupopup>
+  </popupset>
+  
+  <keyset id="keySet">
+    <key id="edtCutKey" modifiers="accel" key="X" command="edtCut" />
+    <key id="edtCopyKey" modifiers="accel" key="C" command="edtCopy" />
+    <key id="edtPasteKey" modifiers="accel" key="V" command="edtPaste" />
+    <key id="edtDeleteKey" keycode="VK_DELETE" command="edtDelete" />
+    <key id="edtSelectAllKey" modifiers="accel" key="A" command="edtSelectAll" />
+  </keyset>
+  
+  <toolbar id="toolBar" />
+
+  <vbox id="editorView">
+
+    <tabbox id="editorTabBox" flex="1">
+      <hbox id="editorTabsHeader">
+        <tabs id="editorTabs" hidden="true" pack="end">
+          <tab id="editorTabDesign"
+            pack="start"
+            label="&edt_tab_design;"
+            selected="true" />
+        </tabs>
+        <spacer pack="start" align="stretch" flex="1" />
+        <toolbarbutton id="editorTabClose"
+          hidden="true"
+          pack="end"
+          tooltiptext="&edt_tab_close;" />
+      </hbox>
+      <tabpanels id="editorPanels" flex="1">
+        <tabpanel id="designPanel" pack="start" align="stretch" flex="1">
+          <vbox id="designBox" pack="start" align="stretch" flex="1">
+            <iframe id="designViewer"
+              src="about:blank"
+              type="content-primary"
+              disablehistory="true"
+              flex="1"
+              pack="start"
+              align="stretch"/>
+            <textbox id="designEditor"
+              class="plain"
+              hidden="true"
+              multiline="true"
+              pack="start"
+              align="stretch"
+              flex="1" />
+            <toolbox id="designToolBox" collapsed="true">
+              <toolbar id="designToolBar0" mode="icons" collapsed="true" />
+              <toolbar id="designToolBar" mode="icons">
+                <menulist id="fontNameMenuList"
+                  disableautoselect="false"
+                  tooltiptext="&edt_font_name;">
+                  <menupopup id="fontNameMenuPopup"/>
+                </menulist>
+                <textbox id="edtFontSize"
+                  type="number" min="1" size="3"
+                  tooltiptext="&edt_font_size;" />
+                <toolbarseparator id="designToolBarSeparator1" />
+                <toolbarbutton id="boldEditorButton"
+                  type="checkbox"
+                  class="menuitem-iconic"
+                  tooltiptext="&edt_bold;"
+                  command="edtBold" />
+                <toolbarbutton id="italicEditorButton"
+                  type="checkbox"
+                  class="menuitem-iconic"
+                  tooltiptext="&edt_italic;"
+                  command="edtItalic" />
+                <toolbarbutton id="underlineEditorButton"
+                  type="checkbox"
+                  class="menuitem-iconic"
+                  tooltiptext="&edt_underline;"
+                  command="edtUnderline" />
+                <toolbarseparator id="designToolBarSeparator2" />
+                <toolbarbutton id="foreColorEditorButton"
+                  class="menuitem-iconic"
+                  tooltiptext="&edt_fore_сolor;"
+                  command="edtForeColor" />
+                <toolbarseparator id="designToolBarSeparator3" />
+                <toolbarbutton id="justifyCenterEditorButton"
+                  type="checkbox"
+                  class="menuitem-iconic"
+                  tooltiptext="&edt_justify_center;"
+                  command="edtJustifyCenter" />
+                <toolbarbutton id="justifyLeftEditorButton"
+                  type="checkbox"
+                  class="menuitem-iconic"
+                  tooltiptext="&edt_justify_left;"
+                  command="edtJustifyLeft" />
+                <toolbarbutton id="justifyRightEditorButton"
+                  type="checkbox"
+                  class="menuitem-iconic"
+                  tooltiptext="&edt_justify_right;"
+                  command="edtJustifyRight" />
+                <toolbarbutton id="justifyFullEditorButton"
+                  type="checkbox"
+                  class="menuitem-iconic"
+                  tooltiptext="&edt_justify_full;"
+                  command="edtJustifyFull" />
+                <toolbarseparator id="designToolBarSeparator4" />
+                <toolbarbutton id="copyEditorButton"
+                  class="menuitem-iconic"
+                  tooltiptext="&edt_copy;"
+                  command="edtCopy" />
+                <toolbarbutton id="cutEditorButton"
+                  class="menuitem-iconic"
+                  tooltiptext="&edt_cut;"
+                  command="edtCut" />
+                <toolbarbutton id="pasteEditorButton"
+                  class="menuitem-iconic"
+                  tooltiptext="&edt_paste;"
+                  command="edtPaste" />
+                <toolbarbutton id="deleteEditorButton"
+                  class="menuitem-iconic"
+                  tooltiptext="&edt_delete;"
+                  command="edtDelete" />
+                <toolbarseparator id="designToolBarSeparator4" />
+                <toolbarbutton id="undoEditorButton"
+                  class="menuitem-iconic"
+                  tooltiptext="&edt_undo;"
+                  command="edtUndo" />
+                <toolbarbutton id="redoEditorButton"
+                  class="menuitem-iconic"
+                  tooltiptext="&edt_redo;"
+                  command="edtRedo" />
+              </toolbar>
+            </toolbox>
+          </vbox>
+        </tabpanel>
+      </tabpanels>
+    </tabbox>
+    
+    <iframe id="printFrame"
+      src="about:blank"
+      type="content-primary"
+      disablehistory="true"
+      collapsed="true" />
+    
+  </vbox>
+
+</overlay>

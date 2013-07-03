@@ -1,0 +1,75 @@
+<!-- ***** BEGIN LICENSE BLOCK *****
+  -
+  - Version: GPL 3.0
+  -
+  - ZNotes
+  - Copyright (C) 2012 Alexander Kapitman
+  -
+  - This program is free software: you can redistribute it and/or modify
+  - it under the terms of the GNU General Public License as published by
+  - the Free Software Foundation, either version 3 of the License, or
+  - (at your option) any later version.
+  -
+  - This program is distributed in the hope that it will be useful,
+  - but WITHOUT ANY WARRANTY; without even the implied warranty of
+  - MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  - GNU General Public License for more details.
+  -
+  - You should have received a copy of the GNU General Public License
+  - along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -
+  - The Original Code is ZNotes.
+  -
+  - Initial Developer(s):
+  -   Alexander Kapitman <akman.ru@gmail.com>
+  -
+  - Portions created by the Initial Developer are Copyright (C) 2012
+  - the Initial Developer. All Rights Reserved.
+  -
+  - Contributor(s):
+  -
+  - ***** END LICENSE BLOCK ***** -->
+
+<!ENTITY edt_tab_design " Вид ">
+<!ENTITY edt_tab_source " Текст ">
+<!ENTITY edt_tab_close " Закрыть">
+
+<!ENTITY edt_redo "Повтор">
+<!ENTITY edt_undo "Отмена">
+<!ENTITY edt_delete "Удалить">
+<!ENTITY edt_paste "Вставить">
+<!ENTITY edt_copy "Копировать">
+<!ENTITY edt_cut "Вырезать">
+<!ENTITY edt_selectall "Выделить всё">
+<!ENTITY edt_remove_format "Удалить формат">
+<!ENTITY edt_subscript "Нижний индекс">
+<!ENTITY edt_superscript "Верхний индекс">
+<!ENTITY edt_increase_font "Увеличить шрифт">
+<!ENTITY edt_decrease_font "Уменьшить шрифт">
+<!ENTITY edt_insert_horizontal_rule "Вставить горизонтальную линию">
+<!ENTITY edt_insert_paragraph "Вставить параграф">
+<!ENTITY edt_link "Вставить ссылку">
+<!ENTITY edt_unlink "Удалить ссылку">
+<!ENTITY edt_insert_image "Вставить изображение">
+<!ENTITY edt_insert_table "Вставить таблицу">
+<!ENTITY edt_fore_сolor "Цвет текста">
+<!ENTITY edt_fore_сolor_delete "Удалить цвет текста">
+<!ENTITY edt_back_сolor "Цвет фона">
+<!ENTITY edt_back_сolor_delete "Удалить цвет фона">
+<!ENTITY edt_font_name "Начертание шрифта">
+<!ENTITY edt_font_size "Размер шрифта">
+<!ENTITY edt_format_block "Форматировать блок">
+<!ENTITY edt_bold "Жирный">
+<!ENTITY edt_italic "Наклонный">
+<!ENTITY edt_underline "Подчёркнутый">
+<!ENTITY edt_strike "Зачёркнутый">
+<!ENTITY edt_justify_center "Выравнять по центру">
+<!ENTITY edt_justify_left "Выравнять по левому краю">
+<!ENTITY edt_justify_right "Выравнять по правому краю">
+<!ENTITY edt_justify_full "Выравнять по ширине">
+<!ENTITY edt_indent "Вставить отступ">
+<!ENTITY edt_outdent "Удалить отступ">
+<!ENTITY edt_insert_ordered_list "Вставить пронумерованный список">
+<!ENTITY edt_insert_unordered_list "Вставить непронумерованный список">
+
+<!ENTITY src_beautify "Форматировать исходный код">

@@ -1,0 +1,548 @@
+/* ***** BEGIN LICENSE BLOCK *****
+ *
+ * Version: GPL 3.0
+ *
+ * ZNotes
+ * Copyright (C) 2012 Alexander Kapitman
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * The Original Code is ZNotes.
+ *
+ * Initial Developer(s):
+ *   Alexander Kapitman <akman.ru@gmail.com>
+ *
+ * Portions created by the Initial Developer are Copyright (C) 2012
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+/* ***** classic/1.0 common **** */
+
+#editorTabBox {
+}
+#editorTabs {
+  margin-left: 5px;
+  -moz-appearance: none; 
+  border: none;
+}
+#editorPanels {
+  -moz-appearance: none;
+  border: none;
+  border-top: 1px solid ThreeDShadow;
+  border-bottom: 1px solid ThreeDShadow;
+  padding: 0px;
+}
+#designPanel {
+}
+#sourcePanel {
+}
+#editorTabClose {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-cancel-16x16.png");
+}
+#sourceEditor {
+  overflow: hidden;
+}
+#sourceToolBox{
+}
+#sourceToolBar{
+  -moz-appearance: none;
+  border: none !important;
+  padding-left: 2px;
+  margin-top: 3px;
+  padding-bottom: 3px;
+}
+#designToolBox {
+}
+#editorToolBar1 {
+  -moz-appearance: none;
+  border: none !important;
+  padding-left: 2px;
+  margin-top: 3px;
+  padding-bottom: 1px;
+}
+#editorToolBar2 {
+  -moz-appearance: none;
+  border: none !important;
+  padding-left: 2px;
+  padding-bottom: 1px;
+  margin-bottom: 3px;
+}
+#fontNameMenuList {
+  margin-right: 0px;
+}
+#fontSizeTextBox {
+  margin-left: -1px;
+  margin-right: 0px;
+}
+#formatBlockMenuList {
+  margin-left: 0px;
+  margin-right: 0px;
+}
+toolbar[iconsize="small"] #fontNameMenuList,
+toolbar[iconsize="small"] #fontSizeTextBox,
+toolbar[iconsize="small"] #formatBlockMenuList  {
+  font-size: 10px;
+}
+
+#boldEditorButton {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-bold-24x24.png");
+}
+toolbar[iconsize="small"] #boldEditorButton {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-bold-16x16.png");
+}
+#boldEditorButton[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-bold-disabled-24x24.png");
+}
+toolbar[iconsize="small"] #boldEditorButton[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-bold-disabled-16x16.png");
+}
+
+#italicEditorButton {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-italic-24x24.png");
+}
+toolbar[iconsize="small"] #italicEditorButton {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-italic-16x16.png");
+}
+#italicEditorButton[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-italic-disabled-24x24.png");
+}
+toolbar[iconsize="small"] #italicEditorButton[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-italic-disabled-16x16.png");
+}
+#underlineEditorButton {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-underline-24x24.png");
+}
+toolbar[iconsize="small"] #underlineEditorButton {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-underline-16x16.png");
+}
+#underlineEditorButton[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-underline-disabled-24x24.png");
+}
+toolbar[iconsize="small"] #underlineEditorButton[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-underline-disabled-16x16.png");
+}
+#strikeThroughEditorButton {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-strikethrough-24x24.png");
+}
+toolbar[iconsize="small"] #strikeThroughEditorButton {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-strikethrough-16x16.png");
+}
+#strikeThroughEditorButton[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-strikethrough-disabled-24x24.png");
+}
+toolbar[iconsize="small"] #strikeThroughEditorButton[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-strikethrough-disabled-16x16.png");
+}
+
+#copyEditorButton {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-copy-24x24.png");
+}
+toolbar[iconsize="small"] #copyEditorButton {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-copy-16x16.png");
+}
+#copyEditorButton[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-copy-disabled-24x24.png");
+}
+toolbar[iconsize="small"] #copyEditorButton[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-copy-disabled-16x16.png");
+}
+#sourceCopyEditorButton {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-copy-24x24.png");
+}
+toolbar[iconsize="small"] #sourceCopyEditorButton {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-copy-16x16.png");
+}
+#sourceCopyEditorButton[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-copy-disabled-24x24.png");
+}
+toolbar[iconsize="small"] #sourceCopyEditorButton[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-copy-disabled-16x16.png");
+}
+
+#cutEditorButton {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-cut-24x24.png");
+}
+toolbar[iconsize="small"] #cutEditorButton {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-cut-16x16.png");
+}
+#cutEditorButton[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-cut-disabled-24x24.png");
+}
+toolbar[iconsize="small"] #cutEditorButton[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-cut-disabled-16x16.png");
+}
+#sourceCutEditorButton {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-cut-24x24.png");
+}
+toolbar[iconsize="small"] #sourceCutEditorButton {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-cut-16x16.png");
+}
+#sourceCutEditorButton[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-cut-disabled-24x24.png");
+}
+toolbar[iconsize="small"] #sourceCutEditorButton[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-cut-disabled-16x16.png");
+}
+
+#pasteEditorButton {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-paste-24x24.png");
+}
+toolbar[iconsize="small"] #pasteEditorButton {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-paste-16x16.png");
+}
+#pasteEditorButton[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-paste-disabled-24x24.png");
+}
+toolbar[iconsize="small"] #pasteEditorButton[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-paste-disabled-16x16.png");
+}
+
+#sourcePasteEditorButton {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-paste-24x24.png");
+}
+toolbar[iconsize="small"] #sourcePasteEditorButton {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-paste-16x16.png");
+}
+#sourcePasteEditorButton[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-paste-disabled-24x24.png");
+}
+toolbar[iconsize="small"] #sourcePasteEditorButton[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-paste-disabled-16x16.png");
+}
+
+#deleteEditorButton {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-delete-24x24.png");
+}
+toolbar[iconsize="small"] #deleteEditorButton {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-delete-16x16.png");
+}
+#deleteEditorButton[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-delete-disabled-24x24.png");
+}
+toolbar[iconsize="small"] #deleteEditorButton[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-delete-disabled-16x16.png");
+}
+#sourceDeleteEditorButton {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-delete-24x24.png");
+}
+toolbar[iconsize="small"] #sourceDeleteEditorButton {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-delete-16x16.png");
+}
+#sourceDeleteEditorButton[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-delete-disabled-24x24.png");
+}
+toolbar[iconsize="small"] #sourceDeleteEditorButton[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-delete-disabled-16x16.png");
+}
+
+#undoEditorButton {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-undo-24x24.png");
+}
+toolbar[iconsize="small"] #undoEditorButton {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-undo-16x16.png");
+}
+#undoEditorButton[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-undo-disabled-24x24.png");
+}
+toolbar[iconsize="small"] #undoEditorButton[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-undo-disabled-16x16.png");
+}
+#sourceUndoEditorButton {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-undo-24x24.png");
+}
+toolbar[iconsize="small"] #sourceUndoEditorButton {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-undo-16x16.png");
+}
+#sourceUndoEditorButton[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-undo-disabled-24x24.png");
+}
+toolbar[iconsize="small"] #sourceUndoEditorButton[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-undo-disabled-16x16.png");
+}
+
+#redoEditorButton {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-redo-24x24.png");
+}
+toolbar[iconsize="small"] #redoEditorButton {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-redo-16x16.png");
+}
+#redoEditorButton[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-redo-disabled-24x24.png");
+}
+toolbar[iconsize="small"] #redoEditorButton[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-redo-disabled-16x16.png");
+}
+#sourceRedoEditorButton {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-redo-24x24.png");
+}
+toolbar[iconsize="small"] #sourceRedoEditorButton {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-redo-16x16.png");
+}
+#sourceRedoEditorButton[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-redo-disabled-24x24.png");
+}
+toolbar[iconsize="small"] #sourceRedoEditorButton[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-redo-disabled-16x16.png");
+}
+
+#justifyCenterEditorButton {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-justifycenter-24x24.png");
+}
+toolbar[iconsize="small"] #justifyCenterEditorButton {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-justifycenter-16x16.png");
+}
+#justifyCenterEditorButton[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-justifycenter-disabled-24x24.png");
+}
+toolbar[iconsize="small"] #justifyCenterEditorButton[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-justifycenter-disabled-16x16.png");
+}
+#justifyLeftEditorButton {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-justifyleft-24x24.png");
+}
+toolbar[iconsize="small"] #justifyLeftEditorButton {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-justifyleft-16x16.png");
+}
+#justifyLeftEditorButton[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-justifyleft-disabled-24x24.png");
+}
+toolbar[iconsize="small"] #justifyLeftEditorButton[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-justifyleft-disabled-16x16.png");
+}
+#justifyRightEditorButton {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-justifyright-24x24.png");
+}
+toolbar[iconsize="small"] #justifyRightEditorButton {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-justifyright-16x16.png");
+}
+#justifyRightEditorButton[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-justifyright-disabled-24x24.png");
+}
+toolbar[iconsize="small"] #justifyRightEditorButton[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-justifyright-disabled-16x16.png");
+}
+#justifyFullEditorButton {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-justifyfull-24x24.png");
+}
+toolbar[iconsize="small"] #justifyFullEditorButton {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-justifyfull-16x16.png");
+}
+#justifyFullEditorButton[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-justifyfull-disabled-24x24.png");
+}
+toolbar[iconsize="small"] #justifyFullEditorButton[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-justifyfull-disabled-16x16.png");
+}
+
+#indentEditorButton {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-indent-24x24.png");
+}
+toolbar[iconsize="small"] #indentEditorButton {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-indent-16x16.png");
+}
+#indentEditorButton[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-indent-disabled-24x24.png");
+}
+toolbar[iconsize="small"] #indentEditorButton[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-indent-disabled-16x16.png");
+}
+#outdentEditorButton {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-outdent-24x24.png");
+}
+toolbar[iconsize="small"] #outdentEditorButton {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-outdent-16x16.png");
+}
+#outdentEditorButton[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-outdent-disabled-24x24.png");
+}
+toolbar[iconsize="small"] #outdentEditorButton[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-outdent-disabled-16x16.png");
+}
+
+#subscriptEditorButton {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-subscript-24x24.png");
+}
+toolbar[iconsize="small"] #subscriptEditorButton {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-subscript-16x16.png");
+}
+#subscriptEditorButton[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-subscript-disabled-24x24.png");
+}
+toolbar[iconsize="small"] #subscriptEditorButton[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-subscript-disabled-16x16.png");
+}
+#superscriptEditorButton {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-superscript-24x24.png");
+}
+toolbar[iconsize="small"] #superscriptEditorButton {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-superscript-16x16.png");
+}
+#superscriptEditorButton[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-superscript-disabled-24x24.png");
+}
+toolbar[iconsize="small"] #superscriptEditorButton[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-superscript-disabled-16x16.png");
+}
+
+#linkEditorButton {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-link-24x24.png");
+}
+toolbar[iconsize="small"] #linkEditorButton {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-link-16x16.png");
+}
+#linkEditorButton[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-link-disabled-24x24.png");
+}
+toolbar[iconsize="small"] #linkEditorButton[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-link-disabled-16x16.png");
+}
+#unlinkEditorButton {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-unlink-24x24.png");
+}
+toolbar[iconsize="small"] #unlinkEditorButton {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-unlink-16x16.png");
+}
+#unlinkEditorButton[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-unlink-disabled-24x24.png");
+}
+toolbar[iconsize="small"] #unlinkEditorButton[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-unlink-disabled-16x16.png");
+}
+
+#removeFormatEditorButton {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-removeformat-24x24.png");
+}
+toolbar[iconsize="small"] #removeFormatEditorButton {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-removeformat-16x16.png");
+}
+#removeFormatEditorButton[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-removeformat-disabled-24x24.png");
+}
+toolbar[iconsize="small"] #removeFormatEditorButton[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-removeformat-disabled-16x16.png");
+}
+
+#insertOrderedListEditorButton {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-insertorderedlist-24x24.png");
+}
+toolbar[iconsize="small"] #insertOrderedListEditorButton {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-insertorderedlist-16x16.png");
+}
+#insertOrderedListEditorButton[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-insertorderedlist-disabled-24x24.png");
+}
+toolbar[iconsize="small"] #insertOrderedListEditorButton[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-insertorderedlist-disabled-16x16.png");
+}
+#insertUnorderedListEditorButton {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-insertunorderedlist-24x24.png");
+}
+toolbar[iconsize="small"] #insertUnorderedListEditorButton {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-insertunorderedlist-16x16.png");
+}
+#insertUnorderedListEditorButton[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-insertunorderedlist-disabled-24x24.png");
+}
+toolbar[iconsize="small"] #insertUnorderedListEditorButton[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-insertunorderedlist-disabled-16x16.png");
+}
+
+#insertHorizontalRuleEditorButton {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-inserthorizontalrule-24x24.png");
+}
+toolbar[iconsize="small"] #insertHorizontalRuleEditorButton {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-inserthorizontalrule-16x16.png");
+}
+#insertHorizontalRuleEditorButton[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-inserthorizontalrule-disabled-24x24.png");
+}
+toolbar[iconsize="small"] #insertHorizontalRuleEditorButton[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-inserthorizontalrule-disabled-16x16.png");
+}
+#insertParagraphEditorButton {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-insertparagraph-24x24.png");
+}
+toolbar[iconsize="small"] #insertParagraphEditorButton {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-insertparagraph-16x16.png");
+}
+#insertParagraphEditorButton[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-insertparagraph-disabled-24x24.png");
+}
+toolbar[iconsize="small"] #insertParagraphEditorButton[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-insertparagraph-disabled-16x16.png");
+}
+#insertImageEditorButton {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-insertimage-24x24.png");
+}
+toolbar[iconsize="small"] #insertImageEditorButton {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-insertimage-16x16.png");
+}
+#insertImageEditorButton[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-insertimage-disabled-24x24.png");
+}
+toolbar[iconsize="small"] #insertImageEditorButton[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-insertimage-disabled-16x16.png");
+}
+#insertTableEditorButton {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-inserttable-24x24.png");
+}
+toolbar[iconsize="small"] #insertTableEditorButton {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-inserttable-16x16.png");
+}
+#insertTableEditorButton[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-inserttable-disabled-24x24.png");
+}
+toolbar[iconsize="small"] #insertTableEditorButton[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-inserttable-disabled-16x16.png");
+}
+#foreColorDeleteEditorButton {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-transparent-24x24.png");
+}
+toolbar[iconsize="small"] #foreColorDeleteEditorButton {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-transparent-16x16.png");
+}
+#foreColorDeleteEditorButton[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-transparent-disabled-24x24.png");
+}
+toolbar[iconsize="small"] #foreColorDeleteEditorButton[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-transparent-disabled-16x16.png");
+}
+#backColorDeleteEditorButton {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-transparent-24x24.png");
+}
+toolbar[iconsize="small"] #backColorDeleteEditorButton {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-transparent-16x16.png");
+}
+#backColorDeleteEditorButton[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-transparent-disabled-24x24.png");
+}
+toolbar[iconsize="small"] #backColorDeleteEditorButton[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/editor-transparent-disabled-16x16.png");
+}
+
+#sourceBeautifyButton  {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/source-beautify-24x24.png");
+}
+toolbar[iconsize="small"] #sourceBeautifyButton  {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/source-beautify-16x16.png");
+}
+#sourceBeautifyButton[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/source-beautify-disabled-24x24.png");
+}
+toolbar[iconsize="small"] #sourceBeautifyButton[disabled="true"]  {
+  list-style-image: url("chrome://znotes_images/skin/documents/default/source-beautify-disabled-16x16.png");
+}

@@ -1,0 +1,54 @@
+<!-- ***** BEGIN LICENSE BLOCK *****
+  -
+  - Version: GPL 3.0
+  -
+  - ZNotes
+  - Copyright (C) 2012 Alexander Kapitman
+  -
+  - This program is free software: you can redistribute it and/or modify
+  - it under the terms of the GNU General Public License as published by
+  - the Free Software Foundation, either version 3 of the License, or
+  - (at your option) any later version.
+  -
+  - This program is distributed in the hope that it will be useful,
+  - but WITHOUT ANY WARRANTY; without even the implied warranty of
+  - MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  - GNU General Public License for more details.
+  -
+  - You should have received a copy of the GNU General Public License
+  - along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -
+  - The Original Code is ZNotes.
+  -
+  - Initial Developer(s):
+  -   Alexander Kapitman <akman.ru@gmail.com>
+  -
+  - Portions created by the Initial Developer are Copyright (C) 2012
+  - the Initial Developer. All Rights Reserved.
+  -
+  - Contributor(s):
+  -
+  - ***** END LICENSE BLOCK ***** -->
+
+<!ENTITY printer_window_title "Print">
+<!ENTITY print_button_label "Print…">
+<!ENTITY print_button_accesskey "p">
+<!ENTITY setup_button_label "Setup…">
+<!ENTITY setup_button_accesskey "a">
+<!ENTITY page_label_value "Page:">
+<!ENTITY page_label_accesskey "g">
+<!ENTITY home_button_tooltip "First page">
+<!ENTITY previous_button_tooltip "Previous page">
+<!ENTITY number_textbox_label "of">
+<!ENTITY next_button_tooltip "Next page">
+<!ENTITY end_button_tooltip "Last page">
+<!ENTITY scale_label_value "Scale:">
+<!ENTITY scale_label_accesskey "s">
+<!ENTITY shrink_checkbox_label "Shrink to fit">
+<!ENTITY shrink_checkbox_accesskey "f">
+<!ENTITY portrait_button_label "Portrait">
+<!ENTITY portrait_button_accesskey "t">
+<!ENTITY landscape_button_label "Landscape">
+<!ENTITY landscape_button_accesskey "l">
+<!ENTITY close_button_label "Close">
+<!ENTITY close_button_accesskey "c">

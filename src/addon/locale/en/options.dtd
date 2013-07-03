@@ -1,0 +1,41 @@
+<!-- ***** BEGIN LICENSE BLOCK *****
+  -
+  - Version: GPL 3.0
+  -
+  - ZNotes
+  - Copyright (C) 2012 Alexander Kapitman
+  -
+  - This program is free software: you can redistribute it and/or modify
+  - it under the terms of the GNU General Public License as published by
+  - the Free Software Foundation, either version 3 of the License, or
+  - (at your option) any later version.
+  -
+  - This program is distributed in the hope that it will be useful,
+  - but WITHOUT ANY WARRANTY; without even the implied warranty of
+  - MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  - GNU General Public License for more details.
+  -
+  - You should have received a copy of the GNU General Public License
+  - along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -
+  - The Original Code is ZNotes.
+  -
+  - Initial Developer(s):
+  -   Alexander Kapitman <akman.ru@gmail.com>
+  -
+  - Portions created by the Initial Developer are Copyright (C) 2012
+  - the Initial Developer. All Rights Reserved.
+  -
+  - Contributor(s):
+  -
+  - ***** END LICENSE BLOCK ***** -->
+
+<!ENTITY options_window_title "Options">
+<!ENTITY options_place_caption " This workplace ">
+<!ENTITY options_place_description "Enter this workplace name ...">
+<!ENTITY options_is_save_position "Remember the selected note for each category/tag">
+<!ENTITY options_is_edit_source_enabled "Allow editing the note's source code">
+<!ENTITY gb_default_document_type_caption "Default document type">
+<!ENTITY options_is_play_sound "Play sound at startup">
+<!ENTITY options_accept "Accept">
+<!ENTITY options_cancel "Cancel">

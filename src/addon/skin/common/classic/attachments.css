@@ -1,0 +1,101 @@
+﻿/* ***** BEGIN LICENSE BLOCK *****
+ *
+ * Version: GPL 3.0
+ *
+ * ZNotes
+ * Copyright (C) 2012 Alexander Kapitman
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * The Original Code is ZNotes.
+ *
+ * Initial Developer(s):
+ *   Alexander Kapitman <akman.ru@gmail.com>
+ *
+ * Portions created by the Initial Developer are Copyright (C) 2012
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+/* ***** classic/1.0 common **** */
+
+#noteButtonContact {
+  list-style-image: url("chrome://znotes_images/skin/contact-24x24.png");
+}
+#noteButtonContact[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/contact-disabled-24x24.png");
+}
+toolbar[iconsize="small"] #noteButtonContact {
+  list-style-image: url("chrome://znotes_images/skin/contact-16x16.png");
+}
+toolbar[iconsize="small"] #noteButtonContact[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/contact-disabled-16x16.png");
+}
+
+#noteButtonAttachment {
+  list-style-image: url("chrome://znotes_images/skin/attachment-24x24.png");
+}
+#noteButtonAttachment[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/attachment-disabled-24x24.png");
+}
+toolbar[iconsize="small"] #noteButtonAttachment {
+  list-style-image: url("chrome://znotes_images/skin/attachment-16x16.png");
+}
+toolbar[iconsize="small"] #noteButtonAttachment[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/attachment-disabled-16x16.png");
+}
+
+treechildren::-moz-tree-image( attachment )
+{
+  width: 16px;
+  height: 16px;
+}
+treechildren::-moz-tree-cell-text( attachment )
+{
+  padding-left: 3px;
+}
+treechildren::-moz-tree-cell-text( attachment, selected )
+{
+  font-weight: bold;
+}
+treechildren::-moz-tree-separator( attachmenttreeseparator )
+{
+}
+
+#attachmentTreeMenuOpen {
+  list-style-image: url("chrome://znotes_images/skin/attopen-24x24.png");
+}
+#attachmentTreeMenuOpen[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/attopen-disabled-24x24.png");
+}
+#attachmentTreeMenuOpenWith {
+  list-style-image: url("chrome://znotes_images/skin/attopenwith-24x24.png");
+}
+#attachmentTreeMenuOpenWith[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/attopenwith-disabled-24x24.png");
+}
+#attachmentTreeMenuSave {
+  list-style-image: url("chrome://znotes_images/skin/save-24x24.png");
+}
+#attachmentTreeMenuSave[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/save-disabled-24x24.png");
+}
+#attachmentTreeMenuDelete {
+  list-style-image: url("chrome://znotes_images/skin/delete-24x24.png");
+}
+#attachmentTreeMenuDelete[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/delete-disabled-24x24.png");
+}

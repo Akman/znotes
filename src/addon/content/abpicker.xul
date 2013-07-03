@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- ***** BEGIN LICENSE BLOCK *****
+  -
+  - Version: GPL 3.0
+  -
+  - ZNotes
+  - Copyright (C) 2012 Alexander Kapitman
+  -
+  - This program is free software: you can redistribute it and/or modify
+  - it under the terms of the GNU General Public License as published by
+  - the Free Software Foundation, either version 3 of the License, or
+  - (at your option) any later version.
+  -
+  - This program is distributed in the hope that it will be useful,
+  - but WITHOUT ANY WARRANTY; without even the implied warranty of
+  - MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  - GNU General Public License for more details.
+  -
+  - You should have received a copy of the GNU General Public License
+  - along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -
+  - The Original Code is ZNotes.
+  -
+  - Initial Developer(s):
+  -   Alexander Kapitman <akman.ru@gmail.com>
+  -
+  - Portions created by the Initial Developer are Copyright (C) 2012
+  - the Initial Developer. All Rights Reserved.
+  -
+  - Contributor(s):
+  -
+  - ***** END LICENSE BLOCK ***** -->
+
+<?xml-stylesheet type="text/css" href="chrome://global/skin/" ?>
+<?xml-stylesheet type="text/css" href="chrome://znotes/skin/abpicker.css" ?>
+
+<!DOCTYPE window SYSTEM "chrome://znotes/locale/abpicker.dtd">
+
+<dialog
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  id="znotes_abpicker"
+  minwidth="350"
+  windowtype="znotes"
+  title="&abpicker_title;">
+
+  <script type="application/javascript"
+    src="chrome://znotes/content/abpicker.js" />
+
+  <commandset>
+    <command id="cmdSelectDirectory" oncommand="ru.akman.znotes.ABPicker.onCmdSelectDirectory( event.target )" />
+  </commandset>
+
+  <menulist id="directoryMenuList"
+    disableautoselect="false"
+    command="cmdSelectDirectory"
+    height="24"
+    maxheight="24">
+    <menupopup id="directoryMenuPopup"/>
+  </menulist>
+  <spacer height="2" minheight="2" maxheight="2" pack="start"/>
+  <richlistbox id="cardsRichListBox"
+    seltype="multiple"
+    flex="1"
+    minheight="200"
+    maxheight="500"/>
+  <spacer height="10" minheight="10" maxheight="10" pack="start"/>
+  <hbox dir="rtl">
+    <button id="btnAccept"
+      dlgtype="accept"
+      minwidth="90"
+      label=" &abpicker_accept;"
+      pack="start"/>
+    <button id="btnCancel"
+      dlgtype="cancel"
+      minwidth="90"
+      label=" &abpicker_cancel;"
+      pack="start"/>
+  </hbox>
+
+</dialog>

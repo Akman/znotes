@@ -1,0 +1,62 @@
+<!-- ***** BEGIN LICENSE BLOCK *****
+  -
+  - Version: GPL 3.0
+  -
+  - ZNotes
+  - Copyright (C) 2012 Alexander Kapitman
+  -
+  - This program is free software: you can redistribute it and/or modify
+  - it under the terms of the GNU General Public License as published by
+  - the Free Software Foundation, either version 3 of the License, or
+  - (at your option) any later version.
+  -
+  - This program is distributed in the hope that it will be useful,
+  - but WITHOUT ANY WARRANTY; without even the implied warranty of
+  - MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  - GNU General Public License for more details.
+  -
+  - You should have received a copy of the GNU General Public License
+  - along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -
+  - The Original Code is ZNotes.
+  -
+  - Initial Developer(s):
+  -   Alexander Kapitman <akman.ru@gmail.com>
+  -
+  - Portions created by the Initial Developer are Copyright (C) 2012
+  - the Initial Developer. All Rights Reserved.
+  -
+  - Contributor(s):
+  -
+  - ***** END LICENSE BLOCK ***** -->
+
+<!ENTITY znotes_menu_label "Заметки">
+<!ENTITY znotes_menu_accesskey "З">
+
+<!ENTITY znotes_openmaintab_menuitem_label "Заметки">
+<!ENTITY znotes_openmaintab_menuitem_accesskey "З">
+
+<!ENTITY znotes_newnote_menuitem_label_1 "Заметку">
+<!ENTITY znotes_newnote_menuitem_accesskey_1 "З">
+<!ENTITY znotes_newnote_menuitem_acceltext_1 "Ctrl+З">
+
+<!ENTITY znotes_newnote_menuitem_label_2 "Новая заметка">
+<!ENTITY znotes_newnote_menuitem_accesskey_2 "Н">
+
+<!ENTITY znotes_openoptionsdialog_menuitem_label "Параметры">
+<!ENTITY znotes_openoptionsdialog_menuitem_accesskey "П">
+
+<!ENTITY znotes_debug_menuitem_label "Отладка">
+<!ENTITY znotes_debug_menuitem_accesskey "О">
+
+<!ENTITY znotes_openhelp_menuitem_label "Справка">
+<!ENTITY znotes_openhelp_menuitem_accesskey "С">
+
+<!ENTITY znotes_openabout_menuitem_label "О программе">
+<!ENTITY znotes_openabout_menuitem_accesskey "р">
+
+<!ENTITY newMsgButton-znotes-menuitem_label "Заметка">
+
+<!ENTITY znotes_menupopup_view_label "Вид">
+<!ENTITY znotes_showmainmenubar_label "Панель меню">
+<!ENTITY znotes_showmaintoolbar_label "Панель инструментов">

@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- ***** BEGIN LICENSE BLOCK *****
+  -
+  - Version: GPL 3.0
+  -
+  - ZNotes
+  - Copyright (C) 2012 Alexander Kapitman
+  -
+  - This program is free software: you can redistribute it and/or modify
+  - it under the terms of the GNU General Public License as published by
+  - the Free Software Foundation, either version 3 of the License, or
+  - (at your option) any later version.
+  -
+  - This program is distributed in the hope that it will be useful,
+  - but WITHOUT ANY WARRANTY; without even the implied warranty of
+  - MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  - GNU General Public License for more details.
+  -
+  - You should have received a copy of the GNU General Public License
+  - along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -
+  - The Original Code is ZNotes.
+  -
+  - Initial Developer(s):
+  -   Alexander Kapitman <akman.ru@gmail.com>
+  -
+  - Portions created by the Initial Developer are Copyright (C) 2012
+  - the Initial Developer. All Rights Reserved.
+  -
+  - Contributor(s):
+  -
+  - ***** END LICENSE BLOCK ***** -->
+
+<?xml-stylesheet type="text/css" href="chrome://global/skin/" ?>
+<?xml-stylesheet type="text/css" href="chrome://znotes/skin/printpreview.css" ?>
+
+<!DOCTYPE window SYSTEM "chrome://znotes/locale/printpreview.dtd">
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  id="znotes"
+  windowtype="znotes"
+  title="&printer_window_title;"
+  persist="width height screenX screenY sizemode">
+
+  <script type="application/javascript" src="chrome://znotes/content/printpreview.js" />
+
+  <vbox id="previewBox" pack="start" align="stretch" flex="1">
+
+    <toolbar id="previewToolbar" class="toolbar-primary" >
+
+      <button id="print_button"
+        icon="print"
+        label="&print_button_label;"
+        accesskey="&print_button_accesskey;"
+        oncommand="ru.akman.znotes.PrintPreview.print();" />
+
+      <button id="setup_button"
+        label="&setup_button_label;"
+        accesskey="&setup_button_accesskey;"
+        oncommand="ru.akman.znotes.PrintPreview.setup();" />
+
+      <vbox align="center" pack="center">
+        <label id="page_label"
+          value="&page_label_value;"
+          accesskey="&page_label_accesskey;"
+          control="number_textbox"/>
+      </vbox>
+
+      <toolbarbutton id="home_button"
+        class="home-arrow tabbable"
+        tooltiptext="&home_button_tooltip;"
+        oncommand="ru.akman.znotes.PrintPreview.navigate( 'home', 0 );" />
+
+      <toolbarbutton id="previous_button"
+        class="previous-arrow tabbable"
+        tooltiptext="&previous_button_tooltip;"
+        oncommand="ru.akman.znotes.PrintPreview.navigate( 'prev', 0 );" />
+
+      <hbox align="center" pack="center">
+        <textbox id="number_textbox"
+          type="number"
+          hidespinbuttons="true"
+          size="3"
+          value="1"
+          min="1"
+          max="1"
+          onchange="ru.akman.znotes.PrintPreview.navigate( 'page', this.valueNumber );" />
+        <label value="&number_textbox_label;" />
+        <label id="total_label" value="" />
+      </hbox>
+
+      <toolbarbutton id="next_button"
+        class="next-arrow tabbable"
+        tooltiptext="&next_button_tooltip;"
+        oncommand="ru.akman.znotes.PrintPreview.navigate( 'next', 0 );" />
+
+      <toolbarbutton id="end_button"
+        class="end-arrow tabbable"
+        tooltiptext="&end_button_tooltip;"
+        oncommand="ru.akman.znotes.PrintPreview.navigate( 'end', 0 );" />
+
+      <toolbarseparator class="toolbarseparator-primary" />
+
+      <vbox align="center" pack="center">
+        <label id="scale_label"
+          value="&scale_label_value;"
+          accesskey="&scale_label_accesskey;"
+          control="scale_menulist" />
+      </vbox>
+
+      <hbox align="center" pack="center">
+        <menulist id="scale_menulist"
+          crop="none"
+          sizetopopup="pref"
+          value="1"
+          label="100%"
+          oncommand="ru.akman.znotes.PrintPreview.scale( this.selectedItem.value );" >
+          <menupopup>
+            <menuitem value="0.3"  label="30%"/>
+            <menuitem value="0.4"  label="40%"/>
+            <menuitem value="0.5"  label="50%"/>
+            <menuitem value="0.6"  label="60%"/>
+            <menuitem value="0.7"  label="70%"/>
+            <menuitem value="0.8"  label="80%"/>
+            <menuitem value="0.9"  label="90%"/>
+            <menuitem value="1"    label="100%" selected="true"/>
+            <menuitem value="1.25" label="125%"/>
+            <menuitem value="1.5"  label="150%"/>
+            <menuitem value="1.75" label="175%"/>
+            <menuitem value="2"    label="200%"/>
+          </menupopup>
+        </menulist>
+        <checkbox id="shrink_checkbox"
+          accesskey="&shrink_checkbox_accesskey;"
+          label="&shrink_checkbox_label;"
+          checked="true"
+          oncommand="ru.akman.znotes.PrintPreview.shrink( this.checked );" />
+      </hbox>
+
+      <toolbarseparator class="toolbarseparator-primary"/>
+
+      <hbox align="center" pack="center">
+
+        <toolbarbutton id="portrait_button"
+          label="&portrait_button_label;"
+          accesskey="&portrait_button_accesskey;"
+          type="radio"
+          group="orient"
+          checked="true"
+          class="toolbar-portrait-page tabbable"
+          oncommand="ru.akman.znotes.PrintPreview.orient( 0 );" />
+
+        <toolbarbutton id="landscape_button"
+          label="&landscape_button_label;"
+          accesskey="&landscape_button_accesskey;"
+          type="radio"
+          group="orient"
+          class="toolbar-landscape-page tabbable"
+          oncommand="ru.akman.znotes.PrintPreview.orient( 1 );" />
+
+      </hbox>
+
+      <toolbarseparator class="toolbarseparator-primary" />
+
+      <button id="close_button"
+        icon="close"
+        label="&close_button_label;"
+        accesskey="&close_button_accesskey;"
+        oncommand="ru.akman.znotes.PrintPreview.close();" />
+
+    </toolbar>
+
+    <browser id="previewBrowser"
+      name="previewBrowser"
+      type="content"
+      flex="1"
+      clickthrough="never"
+      disablehistory="true"
+      pack="start"
+      align="stretch"/>
+
+    <browser id="contentBrowser"
+      src="about:blank"
+      name="contentBrowser"
+      type="content-primary"
+      clickthrough="never"
+      disablehistory="true"
+      collapsed="true"/>
+
+  </vbox>
+
+</window>

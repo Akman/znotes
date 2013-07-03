@@ -1,0 +1,287 @@
+<application>
+
+  <vendor>Akman</vendor>
+  <name>ZNotes</name>
+  <prefix>znotes</prefix>
+  <id>znotes@akman.ru</id>
+  <bundle>net.akman.znotes</bundle>
+  <version>0.9.18</version>
+  <build>20130703</build>
+
+  <licenses>
+    <license>
+      <name>GNU General Public License Version 3.0</name>
+      <link>http://www.gnu.org/licenses/gpl.html</link>
+    </license>
+  </licenses>
+
+  <repositories>
+    <repository>
+      <name>GitHub</name>
+      <link>https://github.com/akman/znotes</link>
+    </repository>
+  </repositories>
+
+  <platforms>
+    <!-- XUL Runner -->
+    <platform name="win32" type=".zip" />
+    <platform name="mac" type=".tar.bz2" />
+    <platform name="linux-x86_64" type=".tar.gz" />
+    <platform name="linux-i686" type=".tar.gz" />
+  </platforms>
+
+  <gecko>
+    <!-- Thunderbird -->
+    <id>{3550f703-e582-4d05-9a08-453d09bdfdc6}</id>
+    <version>
+      <min>17.0</min>
+      <max>21.*</max>
+    </version>
+  </gecko>
+
+  <site>
+    <url>http://znotes.net/</url>
+    <localized>
+      <locale name="en">
+        <language>English</language>
+        <url>en/index.xhtml</url>
+        <forum>forum/viewforum.php?f=37</forum>
+      </locale>
+      <locale name="ru">
+        <language>Русский</language>
+        <url>ru/index.xhtml</url>
+        <forum>forum/viewforum.php?f=38</forum>
+      </locale>
+    </localized>
+  </site>
+
+  <title>Zool notes</title>
+  <description>Program for creating and managing notes.</description>
+  <copyright>
+    <prefix>Copyright (C)</prefix>
+    <year>2012, 2013</year>
+    <author>Alexander Kapitman</author>
+    <reserved>All rights reserved</reserved>
+  </copyright>
+  <creator>
+    <name>Alexander Kapitman</name>
+    <link>mailto:akman.ru@gmail.com</link>
+  </creator>
+  <credit>
+    <name>Marijn Haverbeke</name>
+    <link>http://codemirror.net/</link>
+    <title>CodeMirror is a JavaScript component that provides a code editor in the browser</title>
+    <description>
+      Fine-tuning a rich API and CSS theme support allows integrate the component
+      to an application and fill it with new functionality.
+    </description>
+    <license>
+      <name>MIT-style license</name>
+      <link>http://codemirror.net/LICENSE</link>
+    </license>
+  </credit>
+  <credit>
+    <name>Robert Eisele</name>
+    <link>http://www.xarg.org/2010/03/generate-client-side-png-files-using-javascript/</link>
+    <title>PNGLib generate client-side PNG files using JavaScript</title>
+    <description>
+      Implementation of a client-side JavaScript library like libpng
+      which creates a PNG data stream.
+    </description>
+    <license>
+      <name>BSD License</name>
+      <link>http://www.opensource.org/licenses/bsd-license.php</link>
+    </license>
+  </credit>
+  <credit>
+    <name>FatCow Web Hosting</name>
+    <link>http://www.fatcow.com/free-icons</link>
+    <title>3000 Free Farm-Fresh Web Icons</title>
+    <description>
+      Download hundreds of FREE, beautifully designed icons.
+      Icon set includes both 16 and 32 pixel versions of icons.
+    </description>
+    <license>
+      <name>Creative Commons Attribution 3.0 License</name>
+      <link>http://creativecommons.org/licenses/by/3.0/</link>
+    </license>
+  </credit>
+  <credit>
+    <name>DocBook Project</name>
+    <link>http://docbook.sourceforge.net/</link>
+    <title>
+      DocBook is an XML vocabulary that lets you create documents in a
+      presentation-neutral form
+    </title>
+    <description>
+      DocBook is an XML vocabulary that lets you create documents in a
+      presentation-neutral form that captures the logical structure of your
+      content. Using free tools along with the DocBook XSL stylesheets, you
+      can publish your content as HTML pages, PDF files, a variety of
+      other formats.
+    </description>
+    <license>
+      <name>MIT-style license</name>
+      <link>http://wiki.docbook.org/DocBookLicense</link>
+    </license>
+  </credit>
+
+  <localized>
+
+    <locale name="en">
+      <language>English</language>
+      <translator>
+        <name>Alexander Kapitman</name>
+        <link>mailto:akman.ru@gmail.com</link>
+      </translator>
+      <title>Zool notes</title>
+      <description>Program for creating and managing notes.</description>
+      <copyright>
+        <prefix>Copyright (C)</prefix>
+        <year>2012, 2013</year>
+        <author>Alexander Kapitman</author>
+        <reserved>All rights reserved</reserved>
+      </copyright>
+      <creator>
+        <name>Alexander Kapitman</name>
+        <link>mailto:akman.ru@gmail.com</link>
+      </creator>
+      <credit>
+        <name>Marijn Haverbeke</name>
+        <link>http://codemirror.net/</link>
+        <title>CodeMirror is a JavaScript component that provides a code editor in the browser</title>
+        <description>
+          Fine-tuning a rich API and CSS theme support allows integrate the component
+          to an application and fill it with new functionality.
+        </description>
+        <license>
+          <name>MIT-style license</name>
+          <link>http://codemirror.net/LICENSE</link>
+        </license>
+      </credit>
+      <credit>
+        <name>Robert Eisele</name>
+        <link>http://www.xarg.org/2010/03/generate-client-side-png-files-using-javascript/</link>
+        <title>PNGLib generate client-side PNG files using JavaScript</title>
+        <description>
+          Implementation of a client-side JavaScript library like libpng
+          which creates a PNG data stream.
+        </description>
+        <license>
+          <name>BSD License</name>
+          <link>http://www.opensource.org/licenses/bsd-license.php</link>
+        </license>
+      </credit>
+      <credit>
+        <name>FatCow Web Hosting</name>
+        <link>http://www.fatcow.com/free-icons</link>
+        <title>3000 Free Farm-Fresh Web Icons</title>
+        <description>
+          Download hundreds of FREE, beautifully designed icons.
+          Icon set includes both 16 and 32 pixel versions of icons.
+        </description>
+        <license>
+          <name>Creative Commons Attribution 3.0 License</name>
+          <link>http://creativecommons.org/licenses/by/3.0/</link>
+        </license>
+      </credit>
+      <credit>
+        <name>DocBook Project</name>
+        <link>http://docbook.sourceforge.net/</link>
+        <title>
+          DocBook is an XML vocabulary that lets you create documents in a
+          presentation-neutral form
+        </title>
+        <description>
+          DocBook is an XML vocabulary that lets you create documents in a
+          presentation-neutral form that captures the logical structure of your
+          content. Using free tools along with the DocBook XSL stylesheets, you
+          can publish your content as HTML pages, PDF files, a variety of
+          other formats.
+        </description>
+        <license>
+          <name>MIT-style license</name>
+          <link>http://wiki.docbook.org/DocBookLicense</link>
+        </license>
+      </credit>
+    </locale>
+
+    <locale name="ru">
+      <language>Русский</language>
+      <translator>
+        <name>Александр Капитман</name>
+        <link>mailto:akman.ru@gmail.com</link>
+      </translator>
+      <title>Чудесные заметки</title>
+      <description>Программа для создания и организации заметок</description>
+      <copyright>
+        <prefix>Авторские права (C)</prefix>
+        <year>2012, 2013</year>
+        <author>Александр Капитман</author>
+        <reserved>Все права зарезервированы</reserved>
+      </copyright>
+      <creator>
+        <name>Александр Капитман</name>
+        <link>mailto:akman.ru@gmail.com</link>
+      </creator>
+      <credit>
+        <name>Marijn Haverbeke</name>
+        <link>http://codemirror.net</link>
+        <title>CodeMirror - это JavaScript компонент обеспечивающий редактирование кода в браузере</title>
+        <description>
+          Тонкая настройка через богатый API и поддержка тем на основе CSS позволяют
+          встроить компонент в приложение и наполнить его новой функциональностью.
+        </description>
+        <license>
+          <name>MIT-style license</name>
+          <link>http://codemirror.net/LICENSE</link>
+        </license>
+      </credit>
+      <credit>
+        <name>Robert Eisele</name>
+        <link>mailto:robert@xarg.org</link>
+        <title>PNGLib создаёт PNG файлы на стороне клиента используя JavaScript</title>
+        <description>
+          Реализация клиентской JavaScript библиотеки похожей на libpng
+          которая создаёт поток данных PNG.
+        </description>
+        <license>
+          <name>BSD License</name>
+          <link>http://www.opensource.org/licenses/bsd-license.php</link>
+        </license>
+      </credit>
+      <credit>
+        <name>FatCow</name>
+        <link>http://www.fatcow.com/free-icons</link>
+        <title>3000 Бесплатных свежайших веб иконок</title>
+        <description>
+          Загружайте сотни БЕСПЛАТНЫХ, прекрасно сделанных иконок.
+          Наборы иконок включают две версии иконок 16 и 32 пиксельные.
+        </description>
+        <license>
+          <name>Creative Commons Attribution 3.0 License</name>
+          <link>http://creativecommons.org/licenses/by/3.0/</link>
+        </license>
+      </credit>
+      <credit>
+        <name>Проект DocBook</name>
+        <link>http://docbook.sourceforge.net/</link>
+        <title>
+          DocBook — это технология разработки документации на основе XML
+        </title>
+        <description>
+          DocBook — это технология разработки документации на основе XML,
+          позволяющая из единого исходного текста автоматически получать выходные
+          документы в различных форматах (наиболее распространенные — HTML, PDF,
+          HTML Help) и с разными вариантами компоновки и оформления.
+        </description>
+        <license>
+          <name>MIT-style license</name>
+          <link>http://wiki.docbook.org/DocBookLicense</link>
+        </license>
+      </credit>
+    </locale>
+
+  </localized>
+
+</application>

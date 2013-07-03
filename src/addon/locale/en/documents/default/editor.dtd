@@ -1,0 +1,75 @@
+<!-- ***** BEGIN LICENSE BLOCK *****
+  -
+  - Version: GPL 3.0
+  -
+  - ZNotes
+  - Copyright (C) 2012 Alexander Kapitman
+  -
+  - This program is free software: you can redistribute it and/or modify
+  - it under the terms of the GNU General Public License as published by
+  - the Free Software Foundation, either version 3 of the License, or
+  - (at your option) any later version.
+  -
+  - This program is distributed in the hope that it will be useful,
+  - but WITHOUT ANY WARRANTY; without even the implied warranty of
+  - MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  - GNU General Public License for more details.
+  -
+  - You should have received a copy of the GNU General Public License
+  - along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -
+  - The Original Code is ZNotes.
+  -
+  - Initial Developer(s):
+  -   Alexander Kapitman <akman.ru@gmail.com>
+  -
+  - Portions created by the Initial Developer are Copyright (C) 2012
+  - the Initial Developer. All Rights Reserved.
+  -
+  - Contributor(s):
+  -
+  - ***** END LICENSE BLOCK ***** -->
+
+<!ENTITY edt_tab_design " Design ">
+<!ENTITY edt_tab_source " Source ">
+<!ENTITY edt_tab_close " Close">
+
+<!ENTITY edt_redo "Redo">
+<!ENTITY edt_undo "Undo">
+<!ENTITY edt_delete "Delete">
+<!ENTITY edt_paste "Paste">
+<!ENTITY edt_copy "Copy">
+<!ENTITY edt_cut "Cut">
+<!ENTITY edt_selectall "Select all">
+<!ENTITY edt_remove_format "Remove format">
+<!ENTITY edt_subscript "Subscript">
+<!ENTITY edt_superscript "Superscript">
+<!ENTITY edt_increase_font "Increase font">
+<!ENTITY edt_decrease_font "Decrease font">
+<!ENTITY edt_insert_horizontal_rule "Insert horizontal rule">
+<!ENTITY edt_insert_paragraph "Insert paragraph">
+<!ENTITY edt_link "Insert link">
+<!ENTITY edt_unlink "Remove link">
+<!ENTITY edt_insert_image "Insert image">
+<!ENTITY edt_insert_table "Insert table">
+<!ENTITY edt_fore_сolor "Foreground color">
+<!ENTITY edt_fore_сolor_delete "Remove foreground color">
+<!ENTITY edt_back_сolor "Background color">
+<!ENTITY edt_back_сolor_delete "Remove background color">
+<!ENTITY edt_font_name "Font name">
+<!ENTITY edt_font_size "Font size">
+<!ENTITY edt_format_block "Format block">
+<!ENTITY edt_bold "Bold">
+<!ENTITY edt_italic "Italic">
+<!ENTITY edt_underline "Underline">
+<!ENTITY edt_strike "Strike">
+<!ENTITY edt_justify_center "Justify center">
+<!ENTITY edt_justify_left "Justify left">
+<!ENTITY edt_justify_right "Justify right">
+<!ENTITY edt_justify_full "Justify full">
+<!ENTITY edt_indent "Indent">
+<!ENTITY edt_outdent "Outdent">
+<!ENTITY edt_insert_ordered_list "Insert ordered list">
+<!ENTITY edt_insert_unordered_list "Insert unordered list">
+
+<!ENTITY src_beautify "Beautify source code">

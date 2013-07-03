@@ -1,0 +1,55 @@
+###############
+# product.xml #
+###############
+config.product.xml.path=./product.xml
+
+#####################
+# Ant-Contrib Tasks #
+#####################
+config.antcontrib.path=f\:/development/ant-contrib/ant-contrib-1.0b3.jar
+
+#############################
+# Xalan Java XSLT processor #
+#############################
+config.xslt.xalan.path=f\:/development/xalan-j/xalan.jar
+
+######################
+# Xerces Java Parser #
+######################
+config.xslt.xerces.impl.path=f\:/development/xerces-j/xercesImpl.jar
+config.xslt.xerces.resolver.path=f\:/development/xerces-j/resolver.jar
+
+#####################
+# Mozilla XULRunner #
+#####################
+config.xulrunner.runtimes.win32=f\:/development/xulrunner-runtimes/win32
+config.xulrunner.runtimes.mac=f\:/development/xulrunner-runtimes/mac
+config.xulrunner.runtimes.linux-x86_64=f\:/development/xulrunner-runtimes/linux-x86_64
+config.xulrunner.runtimes.linux-i686=f\:/development/xulrunner-runtimes/linux-i686
+
+###########
+# OpenSSL #
+###########
+config.openssl.public.key.path=f\:/OpenSSL/public.pem
+config.openssl.private.key.path=f\:/OpenSSL/private.pem
+config.openssl.private.key.password=xxxxxxxxxxxxxxxxxxxx
+
+####################
+# MX-Tools / Uhura #
+####################
+config.uhura.path=f\:/development/mxtools/uhura.bat
+
+############
+# Markdown #
+############
+config.markdown.path=f\:/development/md/md.bat
+
+#################################
+# Local development environment #
+#################################
+config.local.platform=win32
+config.local.language=ru
+config.local.thunderbird.profile.development.dir=f\:/development/workspace/gecko/znotes/profile
+config.local.thunderbird.profile.work.dir=f\:/thunderbird
+config.local.znotes.dir=f\:/znotes
+config.local.znotes.profile.dir=f\:/znotes/profile

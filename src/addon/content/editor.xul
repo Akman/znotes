@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- ***** BEGIN LICENSE BLOCK *****
+  -
+  - Version: GPL 3.0
+  -
+  - ZNotes
+  - Copyright (C) 2012 Alexander Kapitman
+  -
+  - This program is free software: you can redistribute it and/or modify
+  - it under the terms of the GNU General Public License as published by
+  - the Free Software Foundation, either version 3 of the License, or
+  - (at your option) any later version.
+  -
+  - This program is distributed in the hope that it will be useful,
+  - but WITHOUT ANY WARRANTY; without even the implied warranty of
+  - MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  - GNU General Public License for more details.
+  -
+  - You should have received a copy of the GNU General Public License
+  - along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -
+  - The Original Code is ZNotes.
+  -
+  - Initial Developer(s):
+  -   Alexander Kapitman <akman.ru@gmail.com>
+  -
+  - Portions created by the Initial Developer are Copyright (C) 2012
+  - the Initial Developer. All Rights Reserved.
+  -
+  - Contributor(s):
+  -
+  - ***** END LICENSE BLOCK ***** -->
+
+<?xml-stylesheet type="text/css" href="chrome://znotes/skin/editor.css" ?>
+
+<!DOCTYPE window SYSTEM "chrome://znotes/locale/editor.dtd">
+
+<overlay id="editor" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script type="application/x-javascript" src="chrome://znotes/content/editor.js" />
+
+  <stringbundleset id="znotes_stringbundleset" />
+  
+  <keyset id="keySet" />
+  
+  <popupset id="popupSet" />
+  
+  <commandset id="commandSet">
+    <command id="cmdNoteEdit"/>
+    <command id="cmdNoteSave"/>
+    <command id="cmdNotePrint"/>
+  </commandset>
+
+  <toolbar id="toolBar">
+    <toolbarbutton id="noteButtonEdit"
+      class="menuitem-iconic"
+      tooltiptext="&note_button_edit;"
+      command="cmdNoteEdit"
+      pack="end"
+      insertbefore="noteButtonTag"/>
+    <toolbarbutton id="noteButtonSave"
+      class="menuitem-iconic"
+      tooltiptext="&note_button_save;"
+      command="cmdNoteSave"
+      pack="end"
+      insertbefore="noteButtonTag"/>
+    <toolbarbutton id="noteButtonPrint"
+      class="menuitem-iconic"
+      tooltiptext="&note_button_print;"
+      command="cmdNotePrint"
+      pack="end"
+      insertafter="noteButtonTag"/>
+  </toolbar>
+
+  <vbox id="noteView" flex="1">
+  
+    <vbox id="editorView" flex="1"/>
+  
+  </vbox>
+
+</overlay>

@@ -1,0 +1,137 @@
+﻿/* ***** BEGIN LICENSE BLOCK *****
+ *
+ * Version: GPL 3.0
+ *
+ * ZNotes
+ * Copyright (C) 2012 Alexander Kapitman
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * The Original Code is ZNotes.
+ *
+ * Initial Developer(s):
+ *   Alexander Kapitman <akman.ru@gmail.com>
+ *
+ * Portions created by the Initial Developer are Copyright (C) 2012
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+/* ***** classic/1.0 common **** */
+
+@import url("chrome://znotes/skin/common.css");
+
+.znotes_maintoolbox {
+  margin-top: -1px;
+  margin-bottom: -1px;
+  padding-left: 1px;
+  padding-right: 1px;
+}
+#znotes_maintabpanel {
+}
+.znotes_maintabpanel {
+  border-top: 1px solid ThreeDShadow;
+  border-bottom: 1px solid ThreeDShadow;
+}
+#status-bar {
+  -moz-appearance: none;
+  margin-bottom: -1px;
+  border: none;
+  border-top: 1px solid ThreeDShadow;
+}
+#folderTree {
+  margin-top: -2px !important;
+}
+#tagTree {
+  margin-top: -2px !important;
+}
+#qfBox {
+  padding: 0px;
+}
+#noteBodyView {
+  margin-bottom: -1px;
+}
+#noteBodyView[disabled="true"] {
+  border-bottom: 1px solid ThreeDShadow;
+}
+treechildren::-moz-tree-image( folder, leaf ) {
+  list-style-image: url("chrome://znotes_images/skin/folder-16x16.png");
+}
+treechildren::-moz-tree-image( folder, closed ) {
+  list-style-image: url("chrome://znotes_images/skin/folder-16x16.png");
+}
+treechildren::-moz-tree-image( folder, open ) {
+  list-style-image: url("chrome://znotes_images/skin/open-folder-16x16.png");
+}
+treechildren::-moz-tree-cell-text( folder ) {
+  padding-left: 3px;
+}
+treechildren::-moz-tree-cell-text( folder, selected ) {
+  font-weight: bold;
+}
+treechildren::-moz-tree-row( folderdroprow ) {
+  border: 1px solid;
+}
+treechildren::-moz-tree-separator( foldertreeseparator ) {
+}
+treechildren::-moz-tree-image( book ) {
+  list-style-image: url("chrome://znotes_images/skin/book-16x16.png");
+}
+treechildren::-moz-tree-image( book, opened ) {
+  list-style-image: url("chrome://znotes_images/skin/open-book-16x16.png");
+}
+treechildren::-moz-tree-cell-text( book ) {
+  padding-left: 3px;
+}
+treechildren::-moz-tree-cell-text( book, selected ) {
+  font-weight: bold;
+}
+treechildren::-moz-tree-separator( booktreeseparator ) {
+}
+treechildren#noteTreeChildren::-moz-tree-image( attachment ) {
+  list-style-image: url("chrome://znotes_images/skin/attachment-16x16.png");
+}
+treechildren::-moz-tree-image( note ) {
+  list-style-image: url("chrome://znotes_images/skin/note-16x16.png");
+}
+treechildren::-moz-tree-image( loading ) {
+  list-style-image: url("chrome://znotes_images/skin/spinner-16x16.gif");
+}
+treechildren::-moz-tree-cell-text( note ) {
+  padding-left: 3px;
+}
+treechildren::-moz-tree-cell-text( note, selected ) {
+  font-weight: bold;
+}
+treechildren::-moz-tree-row( notedroprow ) {
+  border: 1px solid;
+}
+treechildren::-moz-tree-separator( notetreeseparator ) {
+}
+#noteTreeAttachments {
+  list-style-image: url("chrome://znotes_images/skin/attachment-16x16.png");
+}
+treechildren::-moz-tree-image( tag ) {
+  list-style-image: url("chrome://znotes_images/skin/tag-16x16.png");
+}
+treechildren::-moz-tree-cell-text( tag ) {
+  padding-left: 3px;
+}
+treechildren::-moz-tree-cell-text( tag, selected ) {
+  font-weight: bold;
+}
+treechildren::-moz-tree-separator( tagtreeseparator ) {
+}

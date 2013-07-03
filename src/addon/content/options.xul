@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- ***** BEGIN LICENSE BLOCK *****
+  -
+  - Version: GPL 3.0
+  -
+  - ZNotes
+  - Copyright (C) 2012 Alexander Kapitman
+  -
+  - This program is free software: you can redistribute it and/or modify
+  - it under the terms of the GNU General Public License as published by
+  - the Free Software Foundation, either version 3 of the License, or
+  - (at your option) any later version.
+  -
+  - This program is distributed in the hope that it will be useful,
+  - but WITHOUT ANY WARRANTY; without even the implied warranty of
+  - MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  - GNU General Public License for more details.
+  -
+  - You should have received a copy of the GNU General Public License
+  - along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -
+  - The Original Code is ZNotes.
+  -
+  - Initial Developer(s):
+  -   Alexander Kapitman <akman.ru@gmail.com>
+  -
+  - Portions created by the Initial Developer are Copyright (C) 2012
+  - the Initial Developer. All Rights Reserved.
+  -
+  - Contributor(s):
+  -
+  - ***** END LICENSE BLOCK ***** -->
+
+<?xml-stylesheet type="text/css" href="chrome://global/skin/" ?>
+<?xml-stylesheet type="text/css" href="chrome://znotes/skin/options.css" ?>
+
+<!DOCTYPE window SYSTEM "chrome://znotes/locale/options.dtd">
+
+<dialog
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  id="znotes_options"
+  orient="vertical"
+  windowtype="znotes"
+  title="&options_window_title;">
+
+  <script type="application/x-javascript"
+    src="chrome://znotes/content/options.js" />
+
+  <groupbox id="gb_place">
+    <caption id="gb_place_caption"
+      label="&options_place_caption;" />
+    <hbox id="hb_place_name" align="center">
+      <textbox id="tb_place_name" flex="1"
+        placeholder="&options_place_description;" />
+    </hbox>
+  </groupbox>
+
+  <groupbox id="gb_main">
+    <vbox id="vb_main" align="start">
+      <checkbox id="cb_is_save_position"
+        label="&options_is_save_position;" flex="1" />
+      <checkbox id="cb_is_edit_source_enabled"
+        label="&options_is_edit_source_enabled;" flex="1" />
+    </vbox>
+  </groupbox>
+
+  <groupbox id="gb_default_document_type">
+    <caption id="gb_default_document_type_caption"
+      label="&gb_default_document_type_caption;" />
+    <hbox id="hb_default_document_type" align="center">
+      <menulist id="ml_default_document_type" flex="1">
+        <menupopup id="mp_default_document_type" flex="1" />
+      </menulist>      
+    </hbox>
+  </groupbox>
+  
+  <groupbox id="gb_addition">
+    <vbox id="vb_addition" align="start">
+      <checkbox id="cb_is_play_sound"
+        label="&options_is_play_sound;" flex="1" />
+    </vbox>
+  </groupbox>
+  
+  <spacer id="options_spacer" minheight="20" flex="1"/>
+
+  <hbox id="hb_buttons" dir="rtl">
+    <button id="btnAccept"
+      dlgtype="accept"
+      minwidth="90"
+      label=" &options_accept;"
+      pack="start"/>
+    <button id="btnCancel"
+      dlgtype="cancel"
+      minwidth="90"
+      label=" &options_cancel;"
+      pack="start"/>
+  </hbox>
+
+</dialog>

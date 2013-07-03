@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- ***** BEGIN LICENSE BLOCK *****
+  -
+  - Version: GPL 3.0
+  -
+  - ZNotes
+  - Copyright (C) 2012 Alexander Kapitman
+  -
+  - This program is free software: you can redistribute it and/or modify
+  - it under the terms of the GNU General Public License as published by
+  - the Free Software Foundation, either version 3 of the License, or
+  - (at your option) any later version.
+  -
+  - This program is distributed in the hope that it will be useful,
+  - but WITHOUT ANY WARRANTY; without even the implied warranty of
+  - MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  - GNU General Public License for more details.
+  -
+  - You should have received a copy of the GNU General Public License
+  - along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -
+  - The Original Code is ZNotes.
+  -
+  - Initial Developer(s):
+  -   Alexander Kapitman <akman.ru@gmail.com>
+  -
+  - Portions created by the Initial Developer are Copyright (C) 2012
+  - the Initial Developer. All Rights Reserved.
+  -
+  - Contributor(s):
+  -
+  - ***** END LICENSE BLOCK ***** -->
+
+<?xml-stylesheet type="text/css" href="chrome://global/skin/" ?>
+<?xml-stylesheet type="text/css" href="chrome://znotes/skin/book.css" ?>
+
+<!DOCTYPE window SYSTEM "chrome://znotes/locale/book.dtd">
+
+<dialog
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  id="znotes_book"
+  title="&book_dialog_title;"
+  windowtype="znotes">
+
+  <script type="application/javascript"
+    src="chrome://znotes/content/book.js" />
+
+  <vbox id="bookBox" flex="1">
+
+  <hbox width="600" minwidth="300">
+    <label id="labelHeader" value="&label_header;" crop="center" />
+  </hbox>
+
+  <groupbox flex="1">
+    <vbox id="commonBox">
+      <label value="&label_book_name;" />
+      <textbox id="textBookName"
+        type="text"
+      />
+      <label value="&label_book_description;" />
+      <textbox id="textBookDescription"
+        type="text"
+        multiline="true"
+        rows="5"
+        size="80"
+        wrap="true"
+        newlines="pasteintact"
+        placeholder="&text_book_description_placeholder;"
+      />
+      <label value="&label_book_driver;" />
+      <menulist id="menuBookDriver">
+        <menupopup />
+      </menulist>
+    </vbox>
+  </groupbox>
+
+  <hbox width="600" minwidth="300">
+    <label id="labelFooter" value="&label_footer;" crop="center" />
+  </hbox>
+
+  <groupbox flex="1">
+    <vbox id="driverBox" flex="1"/>
+  </groupbox>
+
+  <spacer flex="1" style="height: 20px; min-height: 20px; max-height: 20px;"/>
+
+  <hbox dir="rtl" flex="1" align="end">
+    <button id="btnAccept"
+      dlgtype="accept"
+      minwidth="90"
+      label=" &book_dialog_accept;"
+      pack="start"/>
+    <button id="btnCancel"
+      dlgtype="cancel"
+      minwidth="90"
+      label=" &book_dialog_cancel;"
+      pack="start"/>
+  </hbox>
+
+  </vbox>
+
+</dialog>

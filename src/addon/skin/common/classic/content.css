@@ -1,0 +1,81 @@
+﻿/* ***** BEGIN LICENSE BLOCK *****
+ *
+ * Version: GPL 3.0
+ *
+ * ZNotes
+ * Copyright (C) 2012 Alexander Kapitman
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * The Original Code is ZNotes.
+ *
+ * Initial Developer(s):
+ *   Alexander Kapitman <akman.ru@gmail.com>
+ *
+ * Portions created by the Initial Developer are Copyright (C) 2012
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+/* ***** classic/1.0 common **** */
+
+treechildren::-moz-tree-image( content )
+{
+  width: 16px;
+  height: 16px;
+}
+treechildren::-moz-tree-cell-text( content )
+{
+  padding-left: 3px;
+}
+treechildren::-moz-tree-cell-text( content, selected )
+{
+  font-weight: bold;
+}
+treechildren::-moz-tree-separator( contenttreeseparator )
+{
+}
+
+#contentTreeMenuNew {
+  list-style-image: url("chrome://znotes_images/skin/content-add-24x24.png");
+}
+#contentTreeMenuNew[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/content-add-disabled-24x24.png");
+}
+#contentTreeMenuOpen {
+  list-style-image: url("chrome://znotes_images/skin/attopen-24x24.png");
+}
+#contentTreeMenuOpen[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/attopen-disabled-24x24.png");
+}
+#contentTreeMenuOpenWith {
+  list-style-image: url("chrome://znotes_images/skin/attopenwith-24x24.png");
+}
+#contentTreeMenuOpenWith[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/attopenwith-disabled-24x24.png");
+}
+#contentTreeMenuSave {
+  list-style-image: url("chrome://znotes_images/skin/save-24x24.png");
+}
+#contentTreeMenuSave[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/save-disabled-24x24.png");
+}
+#contentTreeMenuDelete {
+  list-style-image: url("chrome://znotes_images/skin/delete-24x24.png");
+}
+#contentTreeMenuDelete[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/delete-disabled-24x24.png");
+}

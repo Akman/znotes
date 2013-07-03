@@ -1,0 +1,111 @@
+/* ***** BEGIN LICENSE BLOCK *****
+ *
+ * Version: GPL 3.0
+ *
+ * ZNotes
+ * Copyright (C) 2012 Alexander Kapitman
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * The Original Code is ZNotes.
+ *
+ * Initial Developer(s):
+ *   Alexander Kapitman <akman.ru@gmail.com>
+ *
+ * Portions created by the Initial Developer are Copyright (C) 2012
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+/* ***** classic/1.0 common **** */
+
+.noteBodyViewStandalone {
+}
+.noteBodyViewAddon {
+  padding-top: 0px !important;
+}
+#toolBox {
+  padding-top: 1px;
+  padding-right: 1px;
+  padding-bottom: 3px;
+  padding-left: 1px;
+  margin-top: -2px;
+  margin-bottom: -2px;
+}
+#addonsTabs {
+  -moz-appearance: none; 
+  border: none;
+  margin-left: 5px;
+}
+#addonsPanels {
+  -moz-appearance: none;
+  border: none;
+  border-top: 1px solid ThreeDShadow;
+  border-bottom: 1px solid ThreeDShadow;
+  padding: 0px;
+  margin-top: -2px;
+}
+#noteButtonTag {
+  list-style-image: url("chrome://znotes_images/skin/tags-24x24.png");
+}
+#noteButtonTag[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/tags-disabled-24x24.png");
+}
+toolbar[iconsize="small"] #noteButtonTag  {
+  list-style-image: url("chrome://znotes_images/skin/tags-16x16.png");
+}
+toolbar[iconsize="small"] #noteButtonTag[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/tags-disabled-16x16.png");
+}
+
+#noteButtonRename {
+  list-style-image: url("chrome://znotes_images/skin/rename-24x24.png");
+}
+#noteButtonRename[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/rename-disabled-24x24.png");
+}
+toolbar[iconsize="small"] #noteButtonRename {
+  list-style-image: url("chrome://znotes_images/skin/rename-16x16.png");
+}
+toolbar[iconsize="small"] #noteButtonRename[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/rename-disabled-16x16.png");
+}
+
+#noteButtonDelete {
+  list-style-image: url("chrome://znotes_images/skin/delete-24x24.png");
+}
+#noteButtonDelete[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/delete-disabled-24x24.png");
+}
+toolbar[iconsize="small"] #noteButtonDelete {
+  list-style-image: url("chrome://znotes_images/skin/delete-16x16.png");
+}
+toolbar[iconsize="small"] #noteButtonDelete[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/delete-disabled-16x16.png");
+}
+
+#noteButtonAddons {
+  list-style-image: url("chrome://znotes_images/skin/addons-24x24.png");
+}
+#noteButtonAddons[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/addons-disabled-24x24.png");
+}
+toolbar[iconsize="small"] #noteButtonAddons {
+  list-style-image: url("chrome://znotes_images/skin/addons-16x16.png");
+}
+toolbar[iconsize="small"] #noteButtonAddons[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/addons-disabled-16x16.png");
+}

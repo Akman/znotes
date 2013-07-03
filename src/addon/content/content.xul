@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- ***** BEGIN LICENSE BLOCK *****
+  -
+  - Version: GPL 3.0
+  -
+  - ZNotes
+  - Copyright (C) 2012 Alexander Kapitman
+  -
+  - This program is free software: you can redistribute it and/or modify
+  - it under the terms of the GNU General Public License as published by
+  - the Free Software Foundation, either version 3 of the License, or
+  - (at your option) any later version.
+  -
+  - This program is distributed in the hope that it will be useful,
+  - but WITHOUT ANY WARRANTY; without even the implied warranty of
+  - MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  - GNU General Public License for more details.
+  -
+  - You should have received a copy of the GNU General Public License
+  - along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -
+  - The Original Code is ZNotes.
+  -
+  - Initial Developer(s):
+  -   Alexander Kapitman <akman.ru@gmail.com>
+  -
+  - Portions created by the Initial Developer are Copyright (C) 2012
+  - the Initial Developer. All Rights Reserved.
+  -
+  - Contributor(s):
+  -
+  - ***** END LICENSE BLOCK ***** -->
+
+<?xml-stylesheet type="text/css" href="chrome://znotes/skin/content.css" ?>
+
+<!DOCTYPE overlay SYSTEM "chrome://znotes/locale/content.dtd">
+
+<overlay id="content" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script type="application/javascript" src="chrome://znotes/content/content.js"/>
+
+  <commandset id="commandSet">
+    <command id="cmdNewContent"/>
+    <command id="cmdOpenContent"/>
+    <command id="cmdOpenWithContent"/>
+    <command id="cmdSaveContent"/>
+    <command id="cmdDeleteContent"/>
+  </commandset>
+
+  <popupset id="popupSet">
+    <menupopup id="contentTreeMenu">
+      <menuitem id="contentTreeMenuNew"
+        class="menuitem-iconic"
+        label="&content_popup_new;"
+        command="cmdNewContent"/>
+      <menuitem id="contentTreeMenuOpen"
+        class="menuitem-iconic"
+        label="&content_popup_open;"
+        command="cmdOpenContent"/>
+      <menuitem id="contentTreeMenuOpenWith"
+        class="menuitem-iconic"
+        label="&content_popup_open_with;"
+        command="cmdOpenWithContent"/>
+      <menuitem id="contentTreeMenuSave"
+        class="menuitem-iconic"
+        label="&content_popup_save;"
+        command="cmdSaveContent"/>
+      <menuitem id="contentTreeMenuDelete"
+        class="menuitem-iconic"
+        label="&content_popup_delete;"
+        command="cmdDeleteContent"/>
+    </menupopup>
+  </popupset>
+
+  <tabs id="addonsTabs">
+    <tab id="addonsTabContent" pack="start" label="&content_tab_caption;" />
+  </tabs>
+
+  <tabpanels id="addonsPanels">
+    <tabpanel id="contentPanel" pack="start" align="stretch" flex="1">
+      <vbox id="noteContentView"
+         pack="start"
+         align="stretch"
+         flex="1">
+        <tree id="contentTree" class="plain" flex="1" seltype="single"
+          height="120" minheight="50"
+          hidecolumnpicker="true"
+          keepcurrentinview="true" disableKeyNavigation="true"
+          enableColumnDrag="true" context="contentTreeMenu">
+          <treecols id="contentTreeCols">
+            <treecol id="contentTreeName"
+              label="&content_tree_name;"
+              flex="5"
+              crop="center"
+              persist="width ordinal hidden"
+              hideheader="false"
+              ignoreincolumnpicker="true"
+              primary="true"
+              sortActive="true"
+              sortDirection="ascending"/>
+            <splitter class="tree-splitter"/>
+            <treecol id="contentTreeDescription"
+              label="&content_tree_description;"
+              flex="5"
+              crop="center"
+              persist="width ordinal hidden"
+              hideheader="false"
+              ignoreincolumnpicker="true"
+              primary="true"
+              sortActive="true"
+              sortDirection="ascending"/>
+          </treecols>
+          <treechildren id="contentTreeChildren"/>
+        </tree>
+      </vbox>
+    </tabpanel>
+  </tabpanels>
+
+</overlay>

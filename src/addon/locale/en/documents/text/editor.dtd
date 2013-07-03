@@ -1,0 +1,52 @@
+<!-- ***** BEGIN LICENSE BLOCK *****
+  -
+  - Version: GPL 3.0
+  -
+  - ZNotes
+  - Copyright (C) 2012 Alexander Kapitman
+  -
+  - This program is free software: you can redistribute it and/or modify
+  - it under the terms of the GNU General Public License as published by
+  - the Free Software Foundation, either version 3 of the License, or
+  - (at your option) any later version.
+  -
+  - This program is distributed in the hope that it will be useful,
+  - but WITHOUT ANY WARRANTY; without even the implied warranty of
+  - MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  - GNU General Public License for more details.
+  -
+  - You should have received a copy of the GNU General Public License
+  - along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -
+  - The Original Code is ZNotes.
+  -
+  - Initial Developer(s):
+  -   Alexander Kapitman <akman.ru@gmail.com>
+  -
+  - Portions created by the Initial Developer are Copyright (C) 2012
+  - the Initial Developer. All Rights Reserved.
+  -
+  - Contributor(s):
+  -
+  - ***** END LICENSE BLOCK ***** -->
+
+<!ENTITY edt_tab_design " Design ">
+<!ENTITY edt_tab_close " Close">
+
+<!ENTITY edt_redo "Redo">
+<!ENTITY edt_undo "Undo">
+<!ENTITY edt_selectall "Select all">
+<!ENTITY edt_delete "Delete">
+<!ENTITY edt_paste "Paste">
+<!ENTITY edt_copy "Copy">
+<!ENTITY edt_cut "Cut">
+<!ENTITY edt_fore_сolor "Foreground color">
+<!ENTITY edt_font_name "Font name">
+<!ENTITY edt_font_size "Font size">
+<!ENTITY edt_bold "Bold">
+<!ENTITY edt_italic "Italic">
+<!ENTITY edt_underline "Underline">
+<!ENTITY edt_justify_center "Justify center">
+<!ENTITY edt_justify_left "Justify left">
+<!ENTITY edt_justify_right "Justify right">
+<!ENTITY edt_justify_full "Justify full">

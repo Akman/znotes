@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- ***** BEGIN LICENSE BLOCK *****
+  -
+  - Version: GPL 3.0
+  -
+  - ZNotes
+  - Copyright (C) 2012 Alexander Kapitman
+  -
+  - This program is free software: you can redistribute it and/or modify
+  - it under the terms of the GNU General Public License as published by
+  - the Free Software Foundation, either version 3 of the License, or
+  - (at your option) any later version.
+  -
+  - This program is distributed in the hope that it will be useful,
+  - but WITHOUT ANY WARRANTY; without even the implied warranty of
+  - MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  - GNU General Public License for more details.
+  -
+  - You should have received a copy of the GNU General Public License
+  - along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -
+  - The Original Code is ZNotes.
+  -
+  - Initial Developer(s):
+  -   Alexander Kapitman <akman.ru@gmail.com>
+  -
+  - Portions created by the Initial Developer are Copyright (C) 2012
+  - the Initial Developer. All Rights Reserved.
+  -
+  - Contributor(s):
+  -
+  - ***** END LICENSE BLOCK ***** -->
+
+<?xml-stylesheet type="text/css" href="chrome://global/skin/" ?>
+<?xml-stylesheet type="text/css" href="chrome://znotes/skin/viewer.css" ?>
+
+<?xul-overlay href="chrome://znotes/content/body.xul" ?>
+
+<!DOCTYPE window SYSTEM "chrome://znotes/locale/viewer.dtd">
+
+<window xmlns:html="http://www.w3.org/1999/xhtml" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  id="znotes"
+  windowtype="znotes"
+  title="&viewer_window_title;"
+  orient="vertical"
+  persist="width height screenX screenY sizemode">
+
+  <script type="application/x-javascript" src="chrome://znotes/content/viewer.js" />
+
+  <stringbundleset id="znotes_stringbundleset" />
+  <keyset id="keySet" />
+  <commandset id="commandSet" />
+  <popupset id="popupSet" />
+
+  <vbox id="noteBodyView" pack="start" align="stretch" flex="1"/>
+
+  <statusbar id="statusbar" hidden="true">
+    <spacer id="statusbar-spacer" flex="1" />
+    <!--
+    <statusbarpanel id="viewer-statusbar-panel" flex="1" hidden="false"/>
+    -->
+  </statusbar>
+  
+</window>

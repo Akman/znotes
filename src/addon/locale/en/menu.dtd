@@ -1,0 +1,62 @@
+<!-- ***** BEGIN LICENSE BLOCK *****
+  -
+  - Version: GPL 3.0
+  -
+  - ZNotes
+  - Copyright (C) 2012 Alexander Kapitman
+  -
+  - This program is free software: you can redistribute it and/or modify
+  - it under the terms of the GNU General Public License as published by
+  - the Free Software Foundation, either version 3 of the License, or
+  - (at your option) any later version.
+  -
+  - This program is distributed in the hope that it will be useful,
+  - but WITHOUT ANY WARRANTY; without even the implied warranty of
+  - MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  - GNU General Public License for more details.
+  -
+  - You should have received a copy of the GNU General Public License
+  - along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -
+  - The Original Code is ZNotes.
+  -
+  - Initial Developer(s):
+  -   Alexander Kapitman <akman.ru@gmail.com>
+  -
+  - Portions created by the Initial Developer are Copyright (C) 2012
+  - the Initial Developer. All Rights Reserved.
+  -
+  - Contributor(s):
+  -
+  - ***** END LICENSE BLOCK ***** -->
+
+<!ENTITY znotes_menu_label "Notes">
+<!ENTITY znotes_menu_accesskey "N">
+
+<!ENTITY znotes_openmaintab_menuitem_label "Notes">
+<!ENTITY znotes_openmaintab_menuitem_accesskey "N">
+
+<!ENTITY znotes_newnote_menuitem_label_1 "Note">
+<!ENTITY znotes_newnote_menuitem_accesskey_1 "N">
+<!ENTITY znotes_newnote_menuitem_acceltext_1 "Ctrl+N">
+
+<!ENTITY znotes_newnote_menuitem_label_2 "New note">
+<!ENTITY znotes_newnote_menuitem_accesskey_2 "T">
+
+<!ENTITY znotes_openoptionsdialog_menuitem_label "Options">
+<!ENTITY znotes_openoptionsdialog_menuitem_accesskey "O">
+
+<!ENTITY znotes_debug_menuitem_label "Debug">
+<!ENTITY znotes_debug_menuitem_accesskey "D">
+
+<!ENTITY znotes_openhelp_menuitem_label "Help">
+<!ENTITY znotes_openhelp_menuitem_accesskey "H">
+
+<!ENTITY znotes_openabout_menuitem_label "About">
+<!ENTITY znotes_openabout_menuitem_accesskey "A">
+
+<!ENTITY newMsgButton-znotes-menuitem_label "Note">
+
+<!ENTITY znotes_menupopup_view_label "View">
+<!ENTITY znotes_showmainmenubar_label " Menubar">
+<!ENTITY znotes_showmaintoolbar_label " Toolbar">

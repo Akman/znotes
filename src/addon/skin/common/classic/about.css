@@ -1,0 +1,133 @@
+/* ***** BEGIN LICENSE BLOCK *****
+ *
+ * Version: GPL 3.0
+ *
+ * ZNotes
+ * Copyright (C) 2012 Alexander Kapitman
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * The Original Code is ZNotes.
+ *
+ * Initial Developer(s):
+ *   Alexander Kapitman <akman.ru@gmail.com>
+ *
+ * Portions created by the Initial Developer are Copyright (C) 2012
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+/* ***** classic/1.0 common **** */
+
+#iconcontainer {
+  margin-top: 6px;
+}
+#icon {
+  list-style-image: url( "chrome://znotes_images/skin/icon64.png" );
+  max-width: 64px;
+  max-height: 64px;
+}
+#namecontainer {
+  margin-top: 6px;
+  font-family: Serif;
+  font-size: 250%;
+  font-weight: bold;
+  color: #3F3F3F;
+}
+#description  {
+  font-family: Serif;
+  font-size: 130%;
+  color: #0066CC;
+}
+#copyrights {
+  margin-top: 6px;
+  font-weight: bold;
+}
+#licensescontainer {
+  margin-top: 6px;
+}
+#licenses {
+  font-weight: bold;
+  margin-bottom: 6px;
+}
+#repositoriescontainer {
+  margin-top: 6px;
+}
+#repositories {
+  font-weight: bold;
+  margin-bottom: 6px;
+}
+#resourcescontainer {
+  margin-top: 6px;
+}
+#resources {
+  font-weight: bold;
+  margin-bottom: 6px;
+}
+#translatorscontainer {
+  margin-top: 6px;
+}
+#translators {
+  font-weight: bold;
+  margin-bottom: 6px;
+}
+#contributorscontainer {
+  margin-top: 6px;
+}
+#contributors {
+  font-weight: bold;
+  margin-bottom: 6px;
+}
+#creditscontainer {
+  margin-top: 6px;
+}
+#credits {
+  font-weight: bold;
+  margin-bottom: 6px;
+}
+#creatorscontainer {
+  margin-top: 6px;
+}
+#creators {
+  font-weight: bold;
+  margin-bottom: 6px;
+}
+#donate {
+  margin-top: 10px;
+  margin-left: 6px;
+  margin-bottom: 10px;
+  list-style-image: url( "chrome://znotes_images/skin/donate.gif" );
+  max-width: 147px;
+  max-height: 47px;
+  cursor: pointer;
+}
+.link {
+  color: #0000d0;
+  text-decoration: underline;
+  margin-top: 0px;
+  margin-left: 0px;
+}
+.link:hover {
+  color: #A52A2A;
+}
+.shiftright {
+  margin-left: 6px;
+}
+.shiftbottom {
+  margin-bottom: 3px;
+}
+.description {
+}

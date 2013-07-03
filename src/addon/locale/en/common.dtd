@@ -1,0 +1,147 @@
+<!-- ***** BEGIN LICENSE BLOCK *****
+  -
+  - Version: GPL 3.0
+  -
+  - ZNotes
+  - Copyright (C) 2012 Alexander Kapitman
+  -
+  - This program is free software: you can redistribute it and/or modify
+  - it under the terms of the GNU General Public License as published by
+  - the Free Software Foundation, either version 3 of the License, or
+  - (at your option) any later version.
+  -
+  - This program is distributed in the hope that it will be useful,
+  - but WITHOUT ANY WARRANTY; without even the implied warranty of
+  - MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  - GNU General Public License for more details.
+  -
+  - You should have received a copy of the GNU General Public License
+  - along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -
+  - The Original Code is ZNotes.
+  -
+  - Initial Developer(s):
+  -   Alexander Kapitman <akman.ru@gmail.com>
+  -
+  - Portions created by the Initial Developer are Copyright (C) 2012
+  - the Initial Developer. All Rights Reserved.
+  -
+  - Contributor(s):
+  -
+  - ***** END LICENSE BLOCK ***** -->
+
+<!ENTITY znotes_mainmenutoolbar_name "Menu">
+<!ENTITY znotes_maintoolbar_name "Notes">
+
+<!ENTITY znotes_mainmenubar_file_label "File">
+<!ENTITY znotes_mainmenubar_book_label "Book">
+<!ENTITY znotes_mainmenubar_category_label "Category">
+<!ENTITY znotes_mainmenubar_tag_label "Tag">
+<!ENTITY znotes_mainmenubar_note_label "Note">
+<!ENTITY znotes_mainmenubar_tools_label "Tools">
+<!ENTITY znotes_mainmenubar_tools_view_label " View">
+<!ENTITY znotes_mainmenubar_help_label "Help">
+
+<!ENTITY znotes_showmainmenubar_label " Menubar">
+<!ENTITY znotes_showmaintoolbar_label " Toolbar">
+<!ENTITY znotes_customizemaintoolbar_label " Customize">
+
+<!ENTITY znotes_openoptionsdialog_label " Options">
+<!ENTITY znotes_openoptionsdialog_tooltip " Open options dialog">
+
+<!ENTITY znotes_debug_label " Debug">
+<!ENTITY znotes_debug_tooltip " Open debug window">
+
+<!ENTITY znotes_addons_label " Addons">
+<!ENTITY znotes_addons_tooltip " Manage add-ons">
+
+<!ENTITY znotes_update_label " Update">
+<!ENTITY znotes_update_tooltip " Check for updates">
+
+<!ENTITY znotes_openhelp_label " Help">
+<!ENTITY znotes_openhelp_tooltip " Open help">
+
+<!ENTITY znotes_openabout_label " About">
+<!ENTITY znotes_openabout_tooltip " About program">
+
+<!ENTITY znotes_openbook_label " Open notebook">
+<!ENTITY znotes_openbook_tooltip " Open notebook">
+
+<!ENTITY znotes_closebook_label " Close notebook">
+<!ENTITY znotes_closebook_tooltip " Close notebook">
+
+<!ENTITY znotes_appendbook_label " Append notebook">
+<!ENTITY znotes_appendbook_tooltip " Append notebook">
+
+<!ENTITY znotes_deletebook_label " Delete notebook">
+<!ENTITY znotes_deletebook_tooltip " Delete notebook">
+
+<!ENTITY znotes_deletebookdata_label " Delete notebook and data">
+<!ENTITY znotes_deletebookdata_tooltip " Delete notebook with all data in it">
+
+<!ENTITY znotes_editbook_label " Edit notebook">
+<!ENTITY znotes_editbook_tooltip "Edit notebook">
+
+<!ENTITY znotes_renamebook_label " Rename notebook">
+<!ENTITY znotes_renamebook_tooltip "Rename notebook">
+
+<!ENTITY znotes_refreshbooktree_label " Refresh notebooks">
+<!ENTITY znotes_refreshbooktree_tooltip "Refresh notebooks tree">
+
+<!ENTITY znotes_refreshfoldertree_label " Refresh categories">
+<!ENTITY znotes_refreshfoldertree_tooltip "Refresh categories tree">
+
+<!ENTITY znotes_newcategory_label " New category">
+<!ENTITY znotes_newcategory_tooltip "New category">
+
+<!ENTITY znotes_deletecategory_label " Delete category">
+<!ENTITY znotes_deletecategory_tooltip "Delete category">
+
+<!ENTITY znotes_renamecategory_label " Rename category">
+<!ENTITY znotes_renamecategory_tooltip "Rename category">
+
+<!ENTITY znotes_refreshtagtree_label " Refresh tags">
+<!ENTITY znotes_refreshtagtree_tooltip "Refresh tags tree">
+
+<!ENTITY znotes_newtag_label " New tag">
+<!ENTITY znotes_newtag_tooltip "New tag">
+
+<!ENTITY znotes_deletetag_label " Delete tag">
+<!ENTITY znotes_deletetag_tooltip "Delete tag">
+
+<!ENTITY znotes_renametag_label " Rename tag">
+<!ENTITY znotes_renametag_tooltip "Rename tag">
+
+<!ENTITY znotes_colortag_label " Colorize tag">
+<!ENTITY znotes_colortag_tooltip "Colorize tag">
+
+<!ENTITY znotes_newnote_label " New note">
+<!ENTITY znotes_newnote_tooltip "New note">
+
+<!ENTITY znotes_importnote_label " Import note">
+<!ENTITY znotes_importnote_tooltip "Import note">
+
+<!ENTITY znotes_deletenote_label " Delete note">
+<!ENTITY znotes_deletenote_tooltip "Delete note">
+
+<!ENTITY znotes_renamenote_label " Rename note">
+<!ENTITY znotes_renamenote_tooltip "Rename note">
+
+<!ENTITY znotes_processnote_label " Process note">
+<!ENTITY znotes_processnote_tooltip "Process note in external program">
+
+<!ENTITY znotes_updatenote_label " Update note">
+<!ENTITY znotes_updatenote_tooltip "Update note">
+
+<!ENTITY znotes_refreshnotetree_label " Refresh notes">
+<!ENTITY znotes_refreshnotetree_tooltip "Refresh notes tree">
+
+<!ENTITY znotes_showfilterbar_label " Quick Filter">
+<!ENTITY znotes_showfilterbar_tooltip "Toggle the quick filter bar">
+
+<!ENTITY znotes_showappmenu_label " AppMenu">
+<!ENTITY znotes_showappmenu_tooltip "Displays the Application Menu">
+
+<!ENTITY znotes_exit_label " Exit">
+<!ENTITY znotes_pagesetup_label " Page setup">
+<!ENTITY znotes_print_label " Print">

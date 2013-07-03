@@ -1,0 +1,6 @@
+/build.properties
+/*.log
+site/
+bin/
+releases/
+profile/

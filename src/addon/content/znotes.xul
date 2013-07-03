@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- ***** BEGIN LICENSE BLOCK *****
+  -
+  - Version: GPL 3.0
+  -
+  - ZNotes
+  - Copyright (C) 2012 Alexander Kapitman
+  -
+  - This program is free software: you can redistribute it and/or modify
+  - it under the terms of the GNU General Public License as published by
+  - the Free Software Foundation, either version 3 of the License, or
+  - (at your option) any later version.
+  -
+  - This program is distributed in the hope that it will be useful,
+  - but WITHOUT ANY WARRANTY; without even the implied warranty of
+  - MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  - GNU General Public License for more details.
+  -
+  - You should have received a copy of the GNU General Public License
+  - along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -
+  - The Original Code is ZNotes.
+  -
+  - Initial Developer(s):
+  -   Alexander Kapitman <akman.ru@gmail.com>
+  -
+  - Portions created by the Initial Developer are Copyright (C) 2012
+  - the Initial Developer. All Rights Reserved.
+  -
+  - Contributor(s):
+  -
+  - ***** END LICENSE BLOCK ***** -->
+
+<?xml-stylesheet type="text/css" href="chrome://znotes/skin/znotes.css" ?>
+
+<?xul-overlay href="chrome://znotes/content/common.xul" ?>
+<?xul-overlay href="chrome://znotes/content/menu.xul" ?>
+
+<!DOCTYPE overlay SYSTEM "chrome://znotes/locale/znotes.dtd">
+
+<overlay id="messenger-overlay" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script type="application/javascript" src="chrome://znotes/content/maintabtype.js" />
+  <script type="application/javascript" src="chrome://znotes/content/contenttabtype.js" />
+  <script type="application/javascript" src="chrome://znotes/content/znotes.js" />
+
+  <window id="messengerWindow">
+
+    <commandset id="znotes_commands">
+      <command id="znotes_openmaintab_command" oncommand="ru.akman.znotes.ZNotes.openMainTab( true );" />
+    </commandset>
+
+    <popupset id="znotes_popupset" />
+
+  </window>
+
+  <stringbundleset id="stringbundleset">
+    <stringbundle id="znotes_stringbundle" />
+  </stringbundleset>
+
+  <toolbarpalette id="MailToolbarPalette">
+    <toolbarbutton id="znotes_openmaintab_button"
+      class="toolbarbutton-1"
+      label="&znotes_openmaintab_button_label;"
+      title="&znotes_openmaintab_button_label;"
+      tooltiptext="&znotes_openmaintab_button_tooltip;"
+      command="znotes_openmaintab_command"/>
+  </toolbarpalette>
+
+  <toolbar id="tabbar-toolbar">
+    <toolbarbutton id="znotes_openmaintab_tabbar_button"
+      class="toolbarbutton-1"
+      label="&znotes_openmaintab_button_label;"
+      title="&znotes_openmaintab_button_label;"
+      tooltiptext="&znotes_openmaintab_button_tooltip;"
+      command="znotes_openmaintab_command"/>
+  </toolbar>
+
+  <tabpanels id="tabpanelcontainer">
+
+    <vbox id="znotes_maintabpanel">
+      <toolbox id="znotes_maintoolbox"
+        class="mail-toolbox znotes_maintoolbox"
+        mode="icons"
+        defaultmode="full"
+        labelalign="bottom"
+        defaultlabelalign="end"
+        iconsize="small" />
+      <vbox id="znotes_maintabcontent" flex="1">
+        <notificationbox flex="1">
+          <browser id="znotes_maintabbrowser" type="content-targetable" flex="1"
+                   disablehistory="true" autocompletepopup="PopupAutoComplete"
+                   context="mailContext"/>
+        </notificationbox>
+        <findbar id="znotes_maintabfindbar" browserid="znotes_maintabbrowser"/>
+      </vbox>
+    </vbox>
+
+  </tabpanels>
+
+  <hbox id="tabmail-container">
+    <vbox id="znotesContentTab" collapsed="true">
+      <vbox id="znotes_contenttabpanel" flex="1">
+        <commandset id="znotes_contentcommandset" />
+        <toolbox id="znotes_contenttoolbox"
+          class="mail-toolbox znotes_contenttoolbox"
+          mode="icons"
+          defaultmode="full"
+          labelalign="bottom"
+          defaultlabelalign="end"
+          orient="horizontal"
+          pack="start"
+          align="stretch"
+          iconsize="small" >
+        </toolbox>
+        <notificationbox flex="1">
+          <browser id="znotes_contenttabbrowser"
+            class="znotes_contenttabbrowser"
+            type="content-targetable"
+            flex="1"
+            disablehistory="true"
+            autocompletepopup="PopupAutoComplete"
+            context="mailContext" />
+        </notificationbox>
+        <findbar id="znotes_contenttabfindbar" browserid="znotes_contenttabbrowser"/>
+      </vbox>
+    </vbox>
+  </hbox>
+
+  <statusbar id="status-bar">
+    <statusbarpanel id="znotes_statusbarpanel" hidden="true"/>
+  </statusbar>
+
+</overlay>

@@ -1,0 +1,147 @@
+<!-- ***** BEGIN LICENSE BLOCK *****
+  -
+  - Version: GPL 3.0
+  -
+  - ZNotes
+  - Copyright (C) 2012 Alexander Kapitman
+  -
+  - This program is free software: you can redistribute it and/or modify
+  - it under the terms of the GNU General Public License as published by
+  - the Free Software Foundation, either version 3 of the License, or
+  - (at your option) any later version.
+  -
+  - This program is distributed in the hope that it will be useful,
+  - but WITHOUT ANY WARRANTY; without even the implied warranty of
+  - MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  - GNU General Public License for more details.
+  -
+  - You should have received a copy of the GNU General Public License
+  - along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -
+  - The Original Code is ZNotes.
+  -
+  - Initial Developer(s):
+  -   Alexander Kapitman <akman.ru@gmail.com>
+  -
+  - Portions created by the Initial Developer are Copyright (C) 2012
+  - the Initial Developer. All Rights Reserved.
+  -
+  - Contributor(s):
+  -
+  - ***** END LICENSE BLOCK ***** -->
+
+<!ENTITY znotes_mainmenutoolbar_name "Меню">
+<!ENTITY znotes_maintoolbar_name "Заметки">
+
+<!ENTITY znotes_mainmenubar_file_label "Файл">
+<!ENTITY znotes_mainmenubar_book_label "Блокнот">
+<!ENTITY znotes_mainmenubar_category_label "Категория">
+<!ENTITY znotes_mainmenubar_tag_label "Тег">
+<!ENTITY znotes_mainmenubar_note_label "Заметка">
+<!ENTITY znotes_mainmenubar_tools_label "Инструменты">
+<!ENTITY znotes_mainmenubar_tools_view_label " Вид">
+<!ENTITY znotes_mainmenubar_help_label "Справка">
+
+<!ENTITY znotes_showmainmenubar_label " Панель меню">
+<!ENTITY znotes_showmaintoolbar_label " Панель инструментов">
+<!ENTITY znotes_customizemaintoolbar_label " Настроить">
+
+<!ENTITY znotes_openoptionsdialog_label " Параметры">
+<!ENTITY znotes_openoptionsdialog_tooltip " Открыть диалог изменения параметров">
+
+<!ENTITY znotes_debug_label " Отладка">
+<!ENTITY znotes_debug_tooltip " Открыть окно отладки">
+
+<!ENTITY znotes_addons_label " Дополнения">
+<!ENTITY znotes_addons_tooltip " Управление дополнениями">
+
+<!ENTITY znotes_update_label " Обновить">
+<!ENTITY znotes_update_tooltip " Проверить обновления">
+
+<!ENTITY znotes_openhelp_label " Справка">
+<!ENTITY znotes_openhelp_tooltip " Открыть справку">
+
+<!ENTITY znotes_openabout_label " О программе">
+<!ENTITY znotes_openabout_tooltip " О программе">
+
+<!ENTITY znotes_openbook_label " Открыть блокнот">
+<!ENTITY znotes_openbook_tooltip " Открыть блокнот">
+
+<!ENTITY znotes_closebook_label " Закрыть блокнот">
+<!ENTITY znotes_closebook_tooltip " Закрыть блокнот">
+
+<!ENTITY znotes_appendbook_label " Добавить блокнот">
+<!ENTITY znotes_appendbook_tooltip " Добавить блокнот">
+
+<!ENTITY znotes_deletebook_label " Удалить блокнот">
+<!ENTITY znotes_deletebook_tooltip " Удалить блокнот">
+
+<!ENTITY znotes_deletebookdata_label " Удалить блокнот и данные">
+<!ENTITY znotes_deletebookdata_tooltip " Удалить блокнот со всеми содержащимися в нём данными">
+
+<!ENTITY znotes_editbook_label " Изменить блокнот">
+<!ENTITY znotes_editbook_tooltip "Изменить блокнот">
+
+<!ENTITY znotes_renamebook_label " Переименовать блокнот">
+<!ENTITY znotes_renamebook_tooltip "Переименовать блокнот">
+
+<!ENTITY znotes_refreshbooktree_label " Освежить блокноты">
+<!ENTITY znotes_refreshbooktree_tooltip "Освежить дерево блокнотов">
+
+<!ENTITY znotes_refreshfoldertree_label " Освежить категории">
+<!ENTITY znotes_refreshfoldertree_tooltip "Освежить дерево категорий">
+
+<!ENTITY znotes_newcategory_label " Новая категория">
+<!ENTITY znotes_newcategory_tooltip "Новая категория">
+
+<!ENTITY znotes_deletecategory_label " Удалить категорию">
+<!ENTITY znotes_deletecategory_tooltip "Удалить категорию">
+
+<!ENTITY znotes_renamecategory_label " Переименовать категорию">
+<!ENTITY znotes_renamecategory_tooltip "Переименовать категорию">
+
+<!ENTITY znotes_refreshtagtree_label " Освежить теги">
+<!ENTITY znotes_refreshtagtree_tooltip "Освежить дерево тегов">
+
+<!ENTITY znotes_newtag_label " Новый тег">
+<!ENTITY znotes_newtag_tooltip "Новый тег">
+
+<!ENTITY znotes_deletetag_label " Удалить тег">
+<!ENTITY znotes_deletetag_tooltip "Удалить тег">
+
+<!ENTITY znotes_renametag_label " Переименовать тег">
+<!ENTITY znotes_renametag_tooltip "Переименовать тег">
+
+<!ENTITY znotes_colortag_label " Цвет тега">
+<!ENTITY znotes_colortag_tooltip "Задать цвет тега">
+
+<!ENTITY znotes_newnote_label " Новая заметка">
+<!ENTITY znotes_newnote_tooltip "Новая заметка">
+
+<!ENTITY znotes_importnote_label " Импорт заметки">
+<!ENTITY znotes_importnote_tooltip "Импорт заметки">
+
+<!ENTITY znotes_deletenote_label " Удалить заметку">
+<!ENTITY znotes_deletenote_tooltip "Удалить заметку">
+
+<!ENTITY znotes_renamenote_label " Переименовать заметку">
+<!ENTITY znotes_renamenote_tooltip "Переименовать заметку">
+
+<!ENTITY znotes_processnote_label " Обработать заметку">
+<!ENTITY znotes_processnote_tooltip "Открыть заметку во внешней программе">
+
+<!ENTITY znotes_updatenote_label " Обновить заметку">
+<!ENTITY znotes_updatenote_tooltip "Обновить заметку">
+
+<!ENTITY znotes_refreshnotetree_label " Освежить заметки">
+<!ENTITY znotes_refreshnotetree_tooltip "Освежить дерево заметок">
+
+<!ENTITY znotes_showfilterbar_label " Быстрый фильтр">
+<!ENTITY znotes_showfilterbar_tooltip "Включить/выключить панель быстрого фильтра">
+
+<!ENTITY znotes_showappmenu_label " Меню приложения">
+<!ENTITY znotes_showappmenu_tooltip "Показать меню приложения">
+
+<!ENTITY znotes_exit_label " Выход">
+<!ENTITY znotes_pagesetup_label " Параметры страницы">
+<!ENTITY znotes_print_label " Печать">

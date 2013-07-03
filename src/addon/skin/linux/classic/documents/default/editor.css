@@ -1,0 +1,70 @@
+/* ***** BEGIN LICENSE BLOCK *****
+ *
+ * Version: GPL 3.0
+ *
+ * ZNotes
+ * Copyright (C) 2012 Alexander Kapitman
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * The Original Code is ZNotes.
+ *
+ * Initial Developer(s):
+ *   Alexander Kapitman <akman.ru@gmail.com>
+ *
+ * Portions created by the Initial Developer are Copyright (C) 2012
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+/* ***** classic/1.0 linux **** */
+
+@import url("chrome://znotes_common/skin/documents/default/editor.css");
+
+#editorPanels {
+  margin-top: 1px;
+}
+#sourceToolBar toolbarbutton,
+#editorToolBar1 toolbarbutton,
+#editorToolBar2 toolbarbutton {
+  min-height: 36px;
+  max-height: 36px;
+  height: 36px;
+  min-width: 36px;
+  max-width: 36px;
+  width: 36px;
+}
+#sourceToolBar[iconsize="small"] toolbarbutton,
+#editorToolBar1[iconsize="small"] toolbarbutton,
+#editorToolBar2[iconsize="small"] toolbarbutton {
+  min-height: 28px;
+  max-height: 28px;
+  height: 28px;
+  min-width: 28px;
+  max-width: 28px;
+  width: 28px;
+}
+#fontNameMenuList,
+#fontSizeTextBox,
+#formatBlockMenuList {
+  font-size: 16px;
+}
+toolbar #fontSizeTextBox {
+  width: 55px;
+}
+toolbar[iconsize="small"] #fontSizeTextBox {
+  width: 45px;
+}

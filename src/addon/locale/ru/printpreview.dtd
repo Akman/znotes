@@ -1,0 +1,54 @@
+<!-- ***** BEGIN LICENSE BLOCK *****
+  -
+  - Version: GPL 3.0
+  -
+  - ZNotes
+  - Copyright (C) 2012 Alexander Kapitman
+  -
+  - This program is free software: you can redistribute it and/or modify
+  - it under the terms of the GNU General Public License as published by
+  - the Free Software Foundation, either version 3 of the License, or
+  - (at your option) any later version.
+  -
+  - This program is distributed in the hope that it will be useful,
+  - but WITHOUT ANY WARRANTY; without even the implied warranty of
+  - MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  - GNU General Public License for more details.
+  -
+  - You should have received a copy of the GNU General Public License
+  - along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -
+  - The Original Code is ZNotes.
+  -
+  - Initial Developer(s):
+  -   Alexander Kapitman <akman.ru@gmail.com>
+  -
+  - Portions created by the Initial Developer are Copyright (C) 2012
+  - the Initial Developer. All Rights Reserved.
+  -
+  - Contributor(s):
+  -
+  - ***** END LICENSE BLOCK ***** -->
+
+<!ENTITY printer_window_title "Печать">
+<!ENTITY print_button_label "Печать…">
+<!ENTITY print_button_accesskey "е">
+<!ENTITY setup_button_label "Параметры…">
+<!ENTITY setup_button_accesskey "а">
+<!ENTITY page_label_value "Страница:">
+<!ENTITY page_label_accesskey "р">
+<!ENTITY home_button_tooltip "Первая страница">
+<!ENTITY previous_button_tooltip "Предыдущая страница">
+<!ENTITY number_textbox_label "из">
+<!ENTITY next_button_tooltip "Следующая страница">
+<!ENTITY end_button_tooltip "Последняя страница">
+<!ENTITY scale_label_value "Масштаб:">
+<!ENTITY scale_label_accesskey "ш">
+<!ENTITY shrink_checkbox_label "По размеру">
+<!ENTITY shrink_checkbox_accesskey "у">
+<!ENTITY portrait_button_label "Книжная">
+<!ENTITY portrait_button_accesskey "н">
+<!ENTITY landscape_button_label "Альбомная">
+<!ENTITY landscape_button_accesskey "л">
+<!ENTITY close_button_label "Закрыть">
+<!ENTITY close_button_accesskey "ы">

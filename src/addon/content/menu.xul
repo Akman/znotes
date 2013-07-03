@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- ***** BEGIN LICENSE BLOCK *****
+  -
+  - Version: GPL 3.0
+  -
+  - ZNotes
+  - Copyright (C) 2012 Alexander Kapitman
+  -
+  - This program is free software: you can redistribute it and/or modify
+  - it under the terms of the GNU General Public License as published by
+  - the Free Software Foundation, either version 3 of the License, or
+  - (at your option) any later version.
+  -
+  - This program is distributed in the hope that it will be useful,
+  - but WITHOUT ANY WARRANTY; without even the implied warranty of
+  - MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  - GNU General Public License for more details.
+  -
+  - You should have received a copy of the GNU General Public License
+  - along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -
+  - The Original Code is ZNotes.
+  -
+  - Initial Developer(s):
+  -   Alexander Kapitman <akman.ru@gmail.com>
+  -
+  - Portions created by the Initial Developer are Copyright (C) 2012
+  - the Initial Developer. All Rights Reserved.
+  -
+  - Contributor(s):
+  -
+  - ***** END LICENSE BLOCK ***** -->
+
+<?xml-stylesheet type="text/css" href="chrome://znotes/skin/menu.css" ?>
+
+<!DOCTYPE overlay SYSTEM "chrome://znotes/locale/menu.dtd">
+
+<overlay id="menu-messenger-overlay" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <menupopup id="menu_NewPopup">
+    <menuitem id="znotes_newnote_menuitem_1"
+      label="&znotes_newnote_menuitem_label_1;"
+      accesskey="&znotes_newnote_menuitem_accesskey_1;"
+      acceltext="&znotes_newnote_menuitem_acceltext_1;"
+      command="znotes_newnote_command"
+      insertbefore="afterltnNewTask,menu_newFolder"/>
+  </menupopup>
+  <menubar id="mail-menubar">
+    <menu id="znotes_menu"
+      label="&znotes_menu_label;"
+      accesskey="&znotes_menu_accesskey;"
+      insertafter="messageMenu">
+      <menupopup id="znotes_menupopup" >
+        <menuitem id="znotes_newnote_menuitem_2"
+          label="&znotes_newnote_menuitem_label_2;"
+          accesskey="&znotes_newnote_menuitem_accesskey_2;"
+          command="znotes_newnote_command">
+        </menuitem>
+        <menuseparator id="znotes_after_new_section" />
+        <menuitem id="znotes_openmaintab_menuitem"
+          label="&znotes_openmaintab_menuitem_label;"
+          accesskey="&znotes_openmaintab_menuitem_accesskey;"
+          command="znotes_openmaintab_command"/>
+        <menuitem id="znotes_openoptionsdialog_menuitem"
+          label="&znotes_openoptionsdialog_menuitem_label;"
+          accesskey="&znotes_openoptionsdialog_menuitem_accesskey;"
+          command="znotes_openoptionsdialog_command"/>
+        <menuitem id="znotes_debug_menuitem"
+          label="&znotes_debug_menuitem_label;"
+          accesskey="&znotes_debug_menuitem_accesskey;"
+          command="znotes_debug_command"/>
+        <menu id="znotes_menupopup_view" label="&znotes_menupopup_view_label;">
+          <menupopup id="znotes_view_menupopup">
+            <menuitem id="znotes_view_showmainmenubar_menuitem"
+              type="checkbox"
+              checked="false"
+              label="&znotes_showmainmenubar_label;"
+              command="znotes_showmainmenubar_command"/>
+            <menuitem id="znotes_view_showmaintoolbar_menuitem"
+              type="checkbox"
+              checked="true"
+              label="&znotes_showmaintoolbar_label;"
+              command="znotes_showmaintoolbar_command"/>
+          </menupopup>
+        </menu>
+        <menuseparator id="znotes_before_help_section" />
+        <menuitem id="znotes_openhelp_menuitem"
+          label="&znotes_openhelp_menuitem_label;"
+          accesskey="&znotes_openhelp_menuitem_accesskey;"
+          command="znotes_openhelp_command"/>
+        <menuitem id="znotes_openabout_menuitem"
+          label="&znotes_openabout_menuitem_label;"
+          accesskey="&znotes_openabout_menuitem_accesskey;"
+          command="znotes_openabout_command"/>
+      </menupopup>
+    </menu>
+  </menubar>
+
+  <menupopup id="appmenu_newMenupopup">
+    <menuitem id="znotes_appnewnote_menuitem_1"
+      label="&znotes_newnote_menuitem_label_1;"
+      command="znotes_newnote_command"
+      insertbefore="appmenu_afterltnNewTask,appmenu_newFolder"/>
+  </menupopup>
+  <vbox id="appmenuSecondaryPane">
+    <menu id="znotes_appmenu"
+      label="&znotes_menu_label;"
+      insertafter="appmenu_Event_Task,appmenu_messageMenu">
+      <menupopup id="znotes_appmenupopup" >
+        <menuitem id="znotes_appnewnote_menuitem_2"
+          label="&znotes_newnote_menuitem_label_2;"
+          command="znotes_newnote_command">
+        </menuitem>
+        <menuseparator id="znotes_appafter_new_section" />
+        <menuitem id="znotes_appopenmaintab_menuitem"
+          label="&znotes_openmaintab_menuitem_label;"
+          command="znotes_openmaintab_command"/>
+        <menu id="znotes_appmenupopup_view" label="&znotes_menupopup_view_label;">
+          <menupopup id="znotes_appview_menupopup">
+            <menuitem id="znotes_appview_showmainmenubar_menuitem"
+              type="checkbox"
+              checked="false"
+              label="&znotes_showmainmenubar_label;"
+              command="znotes_showmainmenubar_command"/>
+            <menuitem id="znotes_appview_showmaintoolbar_menuitem"
+              type="checkbox"
+              checked="true"
+              label="&znotes_showmaintoolbar_label;"
+              command="znotes_showmaintoolbar_command"/>
+          </menupopup>
+        </menu>
+        <menuitem id="znotes_appopenoptionsdialog_menuitem"
+          label="&znotes_openoptionsdialog_menuitem_label;"
+          command="znotes_openoptionsdialog_command"/>
+        <menuitem id="znotes_appdebug_menuitem"
+          label="&znotes_debug_menuitem_label;"
+          command="znotes_debug_command"/>
+        <menuseparator id="znotes_appbefore_help_section" />
+        <menuitem id="znotes_appopenhelp_menuitem"
+          label="&znotes_openhelp_menuitem_label;"
+          command="znotes_openhelp_command"/>
+        <menuitem id="znotes_appopenabout_menuitem"
+          label="&znotes_openabout_menuitem_label;"
+          command="znotes_openabout_command"/>
+      </menupopup>
+    </menu>
+  </vbox>
+
+  <toolbarbutton id="button-newmsg" type="menu-button">
+    <menupopup id="button-newMsgPopup">
+     <menuitem id="newMsgButton-znotes-menuitem"
+       label="&newMsgButton-znotes-menuitem_label;"
+       class="menuitem-iconic "
+       command="znotes_newnote_command"
+       insertafter="newMsgButton-mail-menuitem"/>
+    </menupopup>
+  </toolbarbutton>
+
+</overlay>

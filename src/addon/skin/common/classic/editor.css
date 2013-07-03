@@ -1,0 +1,72 @@
+/* ***** BEGIN LICENSE BLOCK *****
+ *
+ * Version: GPL 3.0
+ *
+ * ZNotes
+ * Copyright (C) 2012 Alexander Kapitman
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * The Original Code is ZNotes.
+ *
+ * Initial Developer(s):
+ *   Alexander Kapitman <akman.ru@gmail.com>
+ *
+ * Portions created by the Initial Developer are Copyright (C) 2012
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+/* ***** classic/1.0 common **** */
+
+#noteButtonSave {
+  list-style-image: url("chrome://znotes_images/skin/save-24x24.png");
+}
+#noteButtonSave[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/save-disabled-24x24.png");
+}
+toolbar[iconsize="small"] #noteButtonSave {
+  list-style-image: url("chrome://znotes_images/skin/save-16x16.png");
+}
+toolbar[iconsize="small"] #noteButtonSave[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/save-disabled-16x16.png");
+}
+
+#noteButtonEdit {
+  list-style-image: url("chrome://znotes_images/skin/edit-24x24.png");
+}
+#noteButtonEdit[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/edit-disabled-24x24.png");
+}
+toolbar[iconsize="small"] #noteButtonEdit {
+  list-style-image: url("chrome://znotes_images/skin/edit-16x16.png");
+}
+toolbar[iconsize="small"] #noteButtonEdit[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/edit-disabled-16x16.png");
+}
+
+#noteButtonPrint {
+  list-style-image: url("chrome://znotes_images/skin/print-24x24.png");
+}
+#noteButtonPrint[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/print-disabled-24x24.png");
+}
+toolbar[iconsize="small"] #noteButtonPrint {
+  list-style-image: url("chrome://znotes_images/skin/print-16x16.png");
+}
+toolbar[iconsize="small"] #noteButtonPrint[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/print-disabled-16x16.png");
+}

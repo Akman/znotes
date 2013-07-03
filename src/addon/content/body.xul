@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- ***** BEGIN LICENSE BLOCK *****
+  -
+  - Version: GPL 3.0
+  -
+  - ZNotes
+  - Copyright (C) 2012 Alexander Kapitman
+  -
+  - This program is free software: you can redistribute it and/or modify
+  - it under the terms of the GNU General Public License as published by
+  - the Free Software Foundation, either version 3 of the License, or
+  - (at your option) any later version.
+  -
+  - This program is distributed in the hope that it will be useful,
+  - but WITHOUT ANY WARRANTY; without even the implied warranty of
+  - MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  - GNU General Public License for more details.
+  -
+  - You should have received a copy of the GNU General Public License
+  - along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -
+  - The Original Code is ZNotes.
+  -
+  - Initial Developer(s):
+  -   Alexander Kapitman <akman.ru@gmail.com>
+  -
+  - Portions created by the Initial Developer are Copyright (C) 2012
+  - the Initial Developer. All Rights Reserved.
+  -
+  - Contributor(s):
+  -
+  - ***** END LICENSE BLOCK ***** -->
+
+<?xml-stylesheet type="text/css" href="chrome://znotes/skin/body.css" ?>
+
+<?xul-overlay href="chrome://znotes/content/attachments.xul" ?>
+<?xul-overlay href="chrome://znotes/content/content.xul" ?>
+<?xul-overlay href="chrome://znotes/content/editor.xul" ?>
+<?xul-overlay href="chrome://znotes/content/loader.xul" ?>
+<?xul-overlay href="chrome://znotes/content/adviewer.xul" ?>
+
+<!DOCTYPE overlay SYSTEM "chrome://znotes/locale/body.dtd">
+
+<overlay id="body" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script type="application/javascript" src="chrome://znotes/content/body.js"/>
+
+  <stringbundleset id="znotes_stringbundleset"/>
+  
+  <keyset id="keySet" />
+  
+  <commandset id="commandSet">
+    <command id="cmdNoteTag"/>
+    <command id="cmdNoteDelete"/>
+    <command id="cmdNoteRename"/>
+    <command id="cmdNoteAddons"/>
+  </commandset>
+
+  <popupset id="popupSet">
+    <menupopup id="tagMenu"/>
+  </popupset>
+
+  <vbox id="noteBodyView">
+
+    <vbox id="noteMainBox" flex="1">
+
+      <toolbox id="toolBox"
+        pack="start"
+        align="stretch"
+        mode="icons"
+        iconsize="small">
+        
+        <toolbar id="toolBar" class="inline-toolbar" mode="icons" flex="1">
+          <spacer id="toolBarSpacer"
+            pack="start"
+            align="stretch"
+            flex="1" />
+          <toolbarbutton id="noteButtonTag"
+            tooltiptext="&note_button_tag;"
+            command="cmdNoteTag"
+            pack="end"/>
+          <toolbarbutton id="noteButtonRename"
+            tooltiptext="&note_button_rename;"
+            command="cmdNoteRename"
+            pack="end"/>
+          <toolbarbutton id="noteButtonDelete"
+            tooltiptext="&note_button_delete;"
+            command="cmdNoteDelete"
+            pack="end"/>
+          <toolbarbutton id="noteButtonAddons"
+            type="checkbox" autocheck="true"
+            tooltiptext="&note_button_addons;"
+            command="cmdNoteAddons"
+            pack="end"/>
+        </toolbar>
+
+      </toolbox>
+      
+      <vbox id="noteMainView" flex="1">
+        <deck id="noteViewDeck" flex="1" selectedIndex="0">
+          <vbox id="noteView" flex="1" />
+          <vbox id="loadView" flex="1" />
+        </deck>
+      </vbox>
+      
+    </vbox>
+
+    <splitter id="noteBodySplitter"
+      collapsed="true"
+      resizebefore="closest"
+      resizeafter="closest"
+      collapse="after" />
+
+    <vbox id="noteAddonsBox" minheight="100" flex="1">
+      <tabbox id="noteAddonsTabBox" flex="1">
+        <tabs id="addonsTabs" orient="horizontal" pack="end" />
+        <tabpanels id="addonsPanels" flex="1" />
+      </tabbox>
+    </vbox>
+    
+  </vbox>
+
+</overlay>

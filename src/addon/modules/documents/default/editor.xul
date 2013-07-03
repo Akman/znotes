@@ -1,0 +1,353 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- ***** BEGIN LICENSE BLOCK *****
+  -
+  - Version: GPL 3.0
+  -
+  - ZNotes
+  - Copyright (C) 2012 Alexander Kapitman
+  -
+  - This program is free software: you can redistribute it and/or modify
+  - it under the terms of the GNU General Public License as published by
+  - the Free Software Foundation, either version 3 of the License, or
+  - (at your option) any later version.
+  -
+  - This program is distributed in the hope that it will be useful,
+  - but WITHOUT ANY WARRANTY; without even the implied warranty of
+  - MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  - GNU General Public License for more details.
+  -
+  - You should have received a copy of the GNU General Public License
+  - along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -
+  - The Original Code is ZNotes.
+  -
+  - Initial Developer(s):
+  -   Alexander Kapitman <akman.ru@gmail.com>
+  -
+  - Portions created by the Initial Developer are Copyright (C) 2012
+  - the Initial Developer. All Rights Reserved.
+  -
+  - Contributor(s):
+  -
+  - ***** END LICENSE BLOCK ***** -->
+
+<?xml-stylesheet type="text/css" href="chrome://znotes/skin/documents/default/editor.css" ?>
+
+<!DOCTYPE window SYSTEM "chrome://znotes/locale/documents/default/editor.dtd">
+
+<overlay id="documents.default.editor" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <stringbundleset id="znotes_stringbundleset">
+    <stringbundle id="default.editor.stringbundle" 
+      src="chrome://znotes/locale/documents/default/editor.properties" />
+  </stringbundleset>
+
+  <commandset id="commandSet">
+    <!-- design -->
+    <command id="edtBold"/>
+    <command id="edtItalic"/>
+    <command id="edtUnderline"/>
+    <command id="edtStrikeThrough"/>
+    <command id="edtCopy"/>
+    <command id="edtCut"/>
+    <command id="edtPaste"/>
+    <command id="edtDelete"/>
+    <command id="edtSelectAll"/>
+    <command id="edtUndo"/>
+    <command id="edtRedo"/>
+    <command id="edtJustifyCenter"/>
+    <command id="edtJustifyLeft"/>
+    <command id="edtJustifyRight"/>
+    <command id="edtJustifyFull"/>
+    <command id="edtSubscript"/>
+    <command id="edtSuperscript"/>
+    <command id="edtIndent"/>
+    <command id="edtOutdent"/>
+    <command id="edtLink"/>
+    <command id="edtUnlink"/>
+    <command id="edtRemoveFormat"/>
+    <command id="edtInsertOrderedList"/>
+    <command id="edtInsertUnorderedList"/>
+    <command id="edtInsertHorizontalRule"/>
+    <command id="edtInsertTable"/>
+    <command id="edtInsertImage"/>
+    <command id="edtInsertParagraph"/>
+    <command id="edtForeColor"/>
+    <command id="edtForeColorDelete"/>
+    <command id="edtBackColor"/>
+    <command id="edtBackColorDelete"/>
+    <!-- source -->
+    <command id="srcBeautify"/>
+  </commandset>
+
+  <keyset id="keySet">
+    <key id="edtCutKey" modifiers="accel" key="X" command="edtCut" />
+    <key id="edtCopyKey" modifiers="accel" key="C" command="edtCopy" />
+    <key id="edtPasteKey" modifiers="accel" key="V" command="edtPaste" />
+    <key id="edtDeleteKey" keycode="VK_DELETE" command="edtDelete" />
+    <key id="edtSelectAllKey" modifiers="accel" key="A" command="edtSelectAll" />
+  </keyset>
+  
+  <popupset id="popupSet">
+    <menupopup id="clipPopup">
+      <menuitem id="clipCut" label="&edt_cut;" key="edtCutKey" command="edtCut" />
+      <menuitem id="clipCopy" label="&edt_copy;" key="edtCopyKey" command="edtCopy" />
+      <menuitem id="clipPaste" label="&edt_paste;" key="edtPasteKey" command="edtPaste" />
+      <menuitem id="clipDelete" label="&edt_delete;" key="edtDeleteKey" command="edtDelete" />
+      <menuseparator id="clipSeparator" />
+      <menuitem id="clipSelectAll" label="&edt_selectall;" key="edtSelectAllKey" command="edtSelectAll" />
+    </menupopup>
+  </popupset>
+  
+  <toolbar id="toolBar" />
+  
+  <vbox id="editorView">
+
+    <tabbox id="editorTabBox" flex="1">
+      <hbox id="editorTabsHeader">
+        <tabs id="editorTabs" hidden="true" pack="end">
+          <tab id="editorTabDesign" pack="start" label="&edt_tab_design;" selected="true"/>
+          <tab id="editorTabSource" pack="start" label="&edt_tab_source;"/>
+        </tabs>
+        <spacer pack="start" align="stretch" flex="1" />
+        <toolbarbutton id="editorTabClose" hidden="true" pack="end" tooltiptext="&edt_tab_close;"/>
+      </hbox>
+      <tabpanels id="editorPanels" flex="1">
+        <tabpanel id="designPanel" pack="start" align="stretch" flex="1">
+          <vbox id="designBox" pack="start" align="stretch" flex="1">
+            <editor id="designEditor"
+              type="content-primary"
+              src="chrome://znotes_documents/content/default/design.xhtml"
+              editortype="html"
+              disablehistory="true"
+              flex="1"
+              pack="start"
+              align="stretch" />
+            <toolbox id="designToolBox" collapsed="true">
+              <toolbar id="editorToolBar1" mode="icons">
+                <toolbarbutton id="boldEditorButton"
+                  class="menuitem-iconic"
+                  type="checkbox" autocheck="true"
+                  tooltiptext="&edt_bold;"
+                  command="edtBold" />
+                <toolbarbutton id="italicEditorButton"
+                  class="menuitem-iconic"
+                  type="checkbox" autocheck="true"
+                  tooltiptext="&edt_italic;"
+                  command="edtItalic" />
+                <toolbarbutton id="underlineEditorButton"
+                  class="menuitem-iconic"
+                  type="checkbox" autocheck="true"
+                  tooltiptext="&edt_underline;"
+                  command="edtUnderline" />
+                <toolbarbutton id="strikeThroughEditorButton"
+                  class="menuitem-iconic"
+                  type="checkbox" autocheck="true"
+                  tooltiptext="&edt_strike;"
+                  command="edtStrikeThrough" />
+                <toolbarseparator id="editorToolBar1Separator1" />
+                <menulist id="fontNameMenuList"
+                  disableautoselect="false"
+                  tooltiptext="&edt_font_name;">
+                  <menupopup id="fontNameMenuPopup"/>
+                </menulist>
+                <textbox id="fontSizeTextBox"
+                  type="number" min="1" size="3"
+                  tooltiptext="&edt_font_size;" />
+                <toolbarseparator id="editorToolBar1Separator0" />
+                <menulist id="formatBlockMenuList"
+                  disableautoselect="false"
+                  tooltiptext="&edt_format_block;">
+                  <menupopup id="formatBlockMenuPopup"/>
+                </menulist>
+                <toolbarseparator id="editorToolBar1Separator2" />
+                <toolbarbutton id="justifyLeftEditorButton"
+                  type="checkbox" autocheck="true"
+                  class="menuitem-iconic"
+                  tooltiptext="&edt_justify_left;"
+                  command="edtJustifyLeft" />
+                <toolbarbutton id="justifyCenterEditorButton"
+                  type="checkbox" autocheck="true"
+                  class="menuitem-iconic"
+                  tooltiptext="&edt_justify_center;"
+                  command="edtJustifyCenter" />
+                <toolbarbutton id="justifyRightEditorButton"
+                  type="checkbox" autocheck="true"
+                  class="menuitem-iconic"
+                  tooltiptext="&edt_justify_right;"
+                  command="edtJustifyRight" />
+                <toolbarbutton id="justifyFullEditorButton"
+                  type="checkbox" autocheck="true"
+                  class="menuitem-iconic"
+                  tooltiptext="&edt_justify_full;"
+                  command="edtJustifyFull" />
+              </toolbar>
+              <toolbar id="editorToolBar2" mode="icons">
+                <toolbarbutton id="insertParagraphEditorButton"
+                  class="menuitem-iconic"
+                  tooltiptext="&edt_insert_paragraph;"
+                  command="edtInsertParagraph" />
+                <toolbarbutton id="indentEditorButton"
+                  class="menuitem-iconic"
+                  tooltiptext="&edt_indent;"
+                  command="edtIndent" />
+                <toolbarbutton id="outdentEditorButton"
+                  class="menuitem-iconic"
+                  tooltiptext="&edt_outdent;"
+                  command="edtOutdent" />
+                <toolbarseparator id="editorToolBar2Separator1" />
+                <toolbarbutton id="insertOrderedListEditorButton"
+                  class="menuitem-iconic"
+                  tooltiptext="&edt_insert_ordered_list;"
+                  command="edtInsertOrderedList" />
+                <toolbarbutton id="insertUnorderedListEditorButton"
+                  class="menuitem-iconic"
+                  tooltiptext="&edt_insert_unordered_list;"
+                  command="edtInsertUnorderedList" />
+                <toolbarseparator id="editorToolBar2Separator2" />
+                <toolbarbutton id="insertHorizontalRuleEditorButton"
+                  class="menuitem-iconic"
+                  tooltiptext="&edt_insert_horizontal_rule;"
+                  command="edtInsertHorizontalRule" />
+                <toolbarseparator id="editorToolBar2Separator3" />
+                <toolbarbutton id="subscriptEditorButton"
+                  class="menuitem-iconic"
+                  tooltiptext="&edt_subscript;"
+                  command="edtSubscript" />
+                <toolbarbutton id="superscriptEditorButton"
+                  class="menuitem-iconic"
+                  tooltiptext="&edt_superscript;"
+                  command="edtSuperscript" />
+                <toolbarseparator id="editorToolBar2Separator4" />
+                <toolbarbutton id="foreColorEditorButton"
+                  class="menuitem-iconic"
+                  tooltiptext="&edt_fore_сolor;"
+                  command="edtForeColor" />
+                <toolbarbutton id="foreColorDeleteEditorButton"
+                  class="menuitem-iconic"
+                  tooltiptext="&edt_fore_сolor_delete;"
+                  command="edtForeColorDelete" />
+                <toolbarseparator id="editorToolBar2Separator5" />
+                <toolbarbutton id="backColorEditorButton"
+                  class="menuitem-iconic"
+                  tooltiptext="&edt_back_сolor;"
+                  command="edtBackColor" />
+                <toolbarbutton id="backColorDeleteEditorButton"
+                  class="menuitem-iconic"
+                  tooltiptext="&edt_back_сolor_delete;"
+                  command="edtBackColorDelete" />
+                <toolbarseparator id="editorToolBar2Separator6" />
+                <toolbarbutton id="removeFormatEditorButton"
+                  class="menuitem-iconic"
+                  tooltiptext="&edt_remove_format;"
+                  command="edtRemoveFormat" />
+                <toolbarseparator id="editorToolBar2Separator7" />
+                <toolbarbutton id="linkEditorButton"
+                  class="menuitem-iconic"
+                  tooltiptext="&edt_link;"
+                  command="edtLink" />
+                <toolbarbutton id="unlinkEditorButton"
+                  class="menuitem-iconic"
+                  tooltiptext="&edt_unlink;"
+                  command="edtUnlink" />
+                <toolbarseparator id="editorToolBar2Separator8" />
+                <toolbarbutton id="insertImageEditorButton"
+                  class="menuitem-iconic"
+                  tooltiptext="&edt_insert_image;"
+                  command="edtInsertImage" />
+                <toolbarbutton id="insertTableEditorButton"
+                  class="menuitem-iconic"
+                  tooltiptext="&edt_insert_table;"
+                  command="edtInsertTable" />
+                <toolbarseparator id="editorToolBar2Separator9" />
+                <toolbarbutton id="copyEditorButton"
+                  class="menuitem-iconic"
+                  tooltiptext="&edt_copy;"
+                  key="edtCopyKey"
+                  command="edtCopy" />
+                <toolbarbutton id="cutEditorButton"
+                  class="menuitem-iconic"
+                  tooltiptext="&edt_cut;"
+                  command="edtCut" />
+                <toolbarbutton id="pasteEditorButton"
+                  class="menuitem-iconic"
+                  tooltiptext="&edt_paste;"
+                  command="edtPaste" />
+                <toolbarseparator id="editorToolBar2Separator10" />
+                <toolbarbutton id="deleteEditorButton"
+                  class="menuitem-iconic"
+                  tooltiptext="&edt_delete;"
+                  command="edtDelete" />
+                <toolbarseparator id="editorToolBar2Separator11" />
+                <toolbarbutton id="undoEditorButton"
+                  class="menuitem-iconic"
+                  tooltiptext="&edt_undo;"
+                  command="edtUndo" />
+                <toolbarbutton id="redoEditorButton"
+                  class="menuitem-iconic"
+                  tooltiptext="&edt_redo;"
+                  command="edtRedo" />
+              </toolbar>
+            </toolbox>
+          </vbox>
+        </tabpanel>
+        <tabpanel id="sourcePanel" pack="start" align="stretch" flex="1">
+          <vbox id="sourceBox" flex="1" pack="start" align="stretch">
+            <iframe id="sourceEditor"
+              src="chrome://znotes_documents/content/default/source.xhtml"
+              type="content-primary"
+              disablehistory="true"
+              flex="1"
+              pack="start"
+              align="stretch"/>
+            <toolbox id="sourceToolBox" collapsed="true">
+              <toolbar id="sourceToolBar" mode="icons">
+                <toolbarbutton id="sourceBeautifyButton"
+                  class="menuitem-iconic"
+                  tooltiptext="&src_beautify;"
+                  command="srcBeautify" />
+                <toolbarseparator id="sourceToolBarSeparator1" />
+                <toolbarbutton id="sourceCopyEditorButton"
+                  class="menuitem-iconic"
+                  tooltiptext="&edt_copy;"
+                  key="edtCopyKey"
+                  command="edtCopy" />
+                <toolbarbutton id="sourceCutEditorButton"
+                  class="menuitem-iconic"
+                  tooltiptext="&edt_cut;"
+                  command="edtCut" />
+                <toolbarbutton id="sourcePasteEditorButton"
+                  class="menuitem-iconic"
+                  tooltiptext="&edt_paste;"
+                  command="edtPaste" />
+                <toolbarseparator id="sourceToolBarSeparator2" />
+                <toolbarbutton id="sourceDeleteEditorButton"
+                  class="menuitem-iconic"
+                  tooltiptext="&edt_delete;"
+                  command="edtDelete" />
+                <toolbarseparator id="sourceToolBarSeparator3" />
+                <toolbarbutton id="sourceUndoEditorButton"
+                  class="menuitem-iconic"
+                  tooltiptext="&edt_undo;"
+                  command="edtUndo" />
+                <toolbarbutton id="sourceRedoEditorButton"
+                  class="menuitem-iconic"
+                  tooltiptext="&edt_redo;"
+                  command="edtRedo" />
+              </toolbar>
+            </toolbox>
+          </vbox>
+        </tabpanel>
+      </tabpanels>
+
+    </tabbox>
+            
+    <iframe id="sourcePrintFrame"
+      src="chrome://znotes_documents/content/default/source.printing.xhtml"
+      type="content-primary"
+      disablehistory="true"
+      collapsed="true" />
+  
+  </vbox>
+
+</overlay>

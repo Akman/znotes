@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- ***** BEGIN LICENSE BLOCK *****
+  -
+  - Version: GPL 3.0
+  -
+  - ZNotes
+  - Copyright (C) 2012 Alexander Kapitman
+  -
+  - This program is free software: you can redistribute it and/or modify
+  - it under the terms of the GNU General Public License as published by
+  - the Free Software Foundation, either version 3 of the License, or
+  - (at your option) any later version.
+  -
+  - This program is distributed in the hope that it will be useful,
+  - but WITHOUT ANY WARRANTY; without even the implied warranty of
+  - MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  - GNU General Public License for more details.
+  -
+  - You should have received a copy of the GNU General Public License
+  - along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -
+  - The Original Code is ZNotes.
+  -
+  - Initial Developer(s):
+  -   Alexander Kapitman <akman.ru@gmail.com>
+  -
+  - Portions created by the Initial Developer are Copyright (C) 2012
+  - the Initial Developer. All Rights Reserved.
+  -
+  - Contributor(s):
+  -
+  - ***** END LICENSE BLOCK ***** -->
+
+<?xml-stylesheet type="text/css" href="chrome://znotes/skin/attachments.css" ?>
+
+<!DOCTYPE overlay SYSTEM "chrome://znotes/locale/attachments.dtd">
+
+<overlay id="attachments" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script type="application/javascript" src="chrome://znotes/content/attachments.js"/>
+
+  <commandset id="commandSet">
+    <command id="cmdNewContact"/>
+    <command id="cmdNewAttachment"/>
+    <command id="cmdOpenAttachment"/>
+    <command id="cmdOpenAttachmentWith"/>
+    <command id="cmdSaveAttachment"/>
+    <command id="cmdDeleteAttachment"/>
+  </commandset>
+
+  <popupset id="popupSet">
+    <menupopup id="attachmentTreeMenu">
+      <menuitem id="attachmentTreeMenuOpen"
+        class="menuitem-iconic"
+        label="&attachment_popup_open;"
+        command="cmdOpenAttachment"/>
+      <menuitem id="attachmentTreeMenuOpenWith"
+        class="menuitem-iconic"
+        label="&attachment_popup_open_with;"
+        command="cmdOpenAttachmentWith"/>
+      <menuitem id="attachmentTreeMenuSave"
+        class="menuitem-iconic"
+        label="&attachment_popup_save;"
+        command="cmdSaveAttachment"/>
+      <menuitem id="attachmentTreeMenuDelete"
+        class="menuitem-iconic"
+        label="&attachment_popup_delete;"
+        command="cmdDeleteAttachment"/>
+    </menupopup>
+  </popupset>
+
+  <toolbar id="toolBar">
+    <toolbarbutton id="noteButtonAttachment"
+      tooltiptext="&note_button_attachment;"
+      command="cmdNewAttachment"
+      pack="end"
+      insertafter="noteButtonTag"/>
+    <toolbarbutton id="noteButtonContact"
+      hidden="true"
+      tooltiptext="&note_button_contact;"
+      command="cmdNewContact"
+      pack="end"
+      insertafter="noteButtonTag"/>
+  </toolbar>
+
+  <tabs id="addonsTabs">
+    <tab id="addonsTabAttachments" pack="start" label="&attachment_tab_caption;" selected="true" />
+  </tabs>
+
+  <tabpanels id="addonsPanels">
+    <tabpanel id="attachmentsPanel" pack="start" align="stretch" flex="1">
+      <vbox id="noteAttachmentsView"
+        pack="start"
+        align="stretch"
+        flex="1">
+        <tree id="attachmentTree" class="plain" flex="1" seltype="single"
+          height="120" minheight="50"
+          hidecolumnpicker="true"
+          keepcurrentinview="true" disableKeyNavigation="true"
+          enableColumnDrag="true" context="attachmentTreeMenu">
+          <treecols id="attachmentTreeCols">
+            <treecol id="attachmentTreeName"
+              label="&attachment_tree_name;"
+              flex="5"
+              crop="center"
+              persist="width ordinal hidden"
+              hideheader="false"
+              ignoreincolumnpicker="true"
+              primary="true"
+              sortActive="true"
+              sortDirection="ascending"/>
+            <splitter class="tree-splitter"/>
+            <treecol id="attachmentTreeDescription"
+              label="&attachment_tree_description;"
+              flex="5"
+              crop="center"
+              persist="width ordinal hidden"
+              hideheader="false"
+              ignoreincolumnpicker="true"
+              primary="true"
+              sortActive="true"
+              sortDirection="ascending"/>
+          </treecols>
+          <treechildren id="attachmentTreeChildren"/>
+        </tree>
+      </vbox>
+    </tabpanel>
+  </tabpanels>
+
+</overlay>
