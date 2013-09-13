@@ -34,114 +34,20 @@ if ( !ru ) var ru = {};
 if ( !ru.akman ) ru.akman = {};
 if ( !ru.akman.znotes ) ru.akman.znotes = {};
 
-Components.utils.import( "resource://znotes/utils.js"          , ru.akman.znotes );
-Components.utils.import( "resource://znotes/sessionmanager.js" , ru.akman.znotes );
-Components.utils.import( "resource://znotes/tabmonitor.js"     , ru.akman.znotes );
-Components.utils.import( "resource://znotes/prefsmanager.js"   , ru.akman.znotes );
+Components.utils.import( "resource://znotes/utils.js", ru.akman.znotes );
 
-ru.akman.znotes.ZNotes = function() {
+ru.akman.znotes.Platform = function() {
 
   var pub = {};
 
   var log = ru.akman.znotes.Utils.log;
-  
-  var setupTabs = function() {
-    var tabMail = ru.akman.znotes.Utils.getTabMail();
-    tabMail.registerTabType( ru.akman.znotes.MainTabType );
-    tabMail.registerTabType( ru.akman.znotes.ContentTabType );
-    tabMail.registerTabMonitor( ru.akman.znotes.TabMonitor );
-  };
 
-  var getState = function() {
-    var state = {
-      open: false,
-      active: false
-    };
-    var prefsManager = ru.akman.znotes.PrefsManager.getInstance();
-    if ( !prefsManager.hasPref( "isOpened" ) ) {
-      prefsManager.setBoolPref( "isOpened", false );
-    } else {
-      state.open = prefsManager.getBoolPref( "isOpened" );
-    }
-    if ( !prefsManager.hasPref( "isActive" ) ) {
-      prefsManager.setBoolPref( "isActive", false );
-    } else {
-      state.active = prefsManager.getBoolPref( "isActive" );
-    }
-    return state;
-  };
-
-  // L O A D
-
-  pub.load = function() {
-    removeEventListener( "load", ru.akman.znotes.ZNotes.load, false );
-    setupTabs();
-    var state = getState();
-    var persistedState = ru.akman.znotes.SessionManager.getPersistedState();
-    if ( persistedState.tabs.length > 0 ) {
-      pub.openMainTab( state.active, persistedState );
-    } else {
-      if ( state.open ) {
-        pub.openMainTab( state.active, null );
-      }
-    }
-  };
-
-  // R U N
-
-  pub.openMainTab = function( isActive, persistedState ) {
-    var mail3PaneWindow = ru.akman.znotes.Utils.getMail3PaneWindow();
-    var tabMail = ru.akman.znotes.Utils.getTabMail();
-    if ( tabMail ) {
-      setTimeout(
-        function() { 
-          tabMail.openTab(
-            "znotesMainTab",
-            {
-              contentPage: "chrome://znotes/content/main.xul",
-              background: !isActive,
-              persistedState: persistedState
-            }
-          );
-        },
-        0
-      );
-    } else if ( mail3PaneWindow ) {
-      setTimeout(
-        function() { 
-          mail3PaneWindow.openDialog(
-            "chrome://messenger/content/",
-            "_blank",
-            "chrome,dialog=no,all,centerscreen",
-            null,
-            {
-              tabType: "znotesMainTab",
-              tabParams: {
-                contentPage: "chrome://znotes/content/main.xul",
-                background: !isActive,
-                persistedState: persistedState
-              }
-            }
-          );
-        },
-        0
-      );
-    } else {
-      window.openDialog(
-        "chrome://znotes/content/main.xul",
-        "_blank",
-        "chrome,dialog=no,all,centerscreen",
-        {
-          contentPage: "chrome://znotes/content/main.xul",
-          background: !isActive,
-          persistedState: persistedState
-        }
-      );
-    }
+  pub.onLoad = function( event ) {
+    window.removeEventListener( "load", ru.akman.znotes.Platform.onLoad, false );
   };
 
   return pub;
 
 }();
 
-window.addEventListener( "load"  , ru.akman.znotes.ZNotes.load, false );
+window.addEventListener( "load", ru.akman.znotes.Platform.onLoad, false );

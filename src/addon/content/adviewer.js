@@ -52,6 +52,8 @@ ru.akman.znotes.AdViewer = function() {
     var noteStateListener = null;
 
     var adBrowser = null;
+    var noteAdViewPanel = null;
+    var addonsTabAd = null;
     
     // N O T E  E V E N T S
 
@@ -119,6 +121,20 @@ ru.akman.znotes.AdViewer = function() {
     
     function onLoad( event ) {
       adBrowser.removeEventListener( "load", onLoad, false );
+      // BUG ?!
+      // TB :: adBrowser.webNavigation.sessionHistory === null
+      // XR :: adBrowser.webNavigation.sessionHistory !== null
+      if ( !adBrowser.webNavigation.sessionHistory ) {
+        try {
+          // * EXCEPTION *
+          adBrowser.webNavigation.sessionHistory = 
+            Components.classes["@mozilla.org/browser/shistory;1"]
+                      .createInstance( Components.interfaces.nsISHistory );
+        } catch ( e ) {
+          //log( e );
+        }
+      }
+      //
       adBrowser.contentDocument.body.style.setProperty(
         'background-color',
         'white'
@@ -145,19 +161,6 @@ ru.akman.znotes.AdViewer = function() {
                 "adv/?language=" +
                 encodeURIComponent( language );
       try {
-        // BUG ?!
-        // Thunderbird :: adBrowser.webNavigation.sessionHistory === null
-        // XULRunner :: adBrowser.webNavigation.sessionHistory !== null
-        if ( !adBrowser.webNavigation.sessionHistory ) {
-          var sessionHistory = Components.classes["@mozilla.org/browser/shistory;1"]
-                                         .createInstance( Components.interfaces.nsISHistory );
-          try {
-            // * EXCEPTION *
-            adBrowser.webNavigation.sessionHistory = sessionHistory;
-          } catch ( e ) {
-            log( e );
-          }
-        }
         adBrowser.addEventListener( "load", onLoad, false );
         adBrowser.webNavigation.loadURI(
           url,

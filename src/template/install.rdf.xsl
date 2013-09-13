@@ -51,6 +51,9 @@
         <em:maxVersion><xsl:value-of select="//application/gecko/version/max" /></em:maxVersion>
       </Description>
     </em:targetApplication>
+    <!-- bootstrap
+    <em:bootstrap>true</em:bootstrap>
+    -->
     <em:unpack>true</em:unpack>
     <em:optionsURL>chrome://znotes/content/options.xul</em:optionsURL>
     <em:optionsType>1</em:optionsType>

@@ -33,680 +33,1247 @@
 
 <!DOCTYPE overlay SYSTEM "chrome://znotes/locale/common.dtd">
 
-<overlay id="znotes_overlay" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+<overlay id="znotes-common"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <script type="application/javascript" src="chrome://znotes/content/common.js" />
-
-  <stringbundle id="znotes_stringbundle" src="chrome://znotes/locale/znotes.properties" />
+  <stringbundleset id="znotes_stringbundleset" >
+    <stringbundle id="znotes_stringbundle"
+      src="chrome://znotes/locale/znotes.properties" />
+  </stringbundleset>
   
-  <commandset id="znotes_commands">
-    <command id="znotes_showmainmenubar_command" disabled="true" oncommand="ru.akman.znotes.Common.doCommand( 'znotes_showmainmenubar_command', event );"/>
-    <command id="znotes_showmaintoolbar_command" disabled="true" oncommand="ru.akman.znotes.Common.doCommand( 'znotes_showmaintoolbar_command', event );"/>
-    <command id="znotes_customizemaintoolbar_command" disabled="true" oncommand="ru.akman.znotes.Common.doCommand( 'znotes_customizemaintoolbar_command', event );"/>
-    <command id="znotes_openoptionsdialog_command" disabled="true" oncommand="ru.akman.znotes.Common.doCommand( 'znotes_openoptionsdialog_command', event );"/>
-    <command id="znotes_openhelp_command" disabled="true" oncommand="ru.akman.znotes.Common.doCommand( 'znotes_openhelp_command', event );"/>
-    <command id="znotes_openabout_command" disabled="true" oncommand="ru.akman.znotes.Common.doCommand( 'znotes_openabout_command', event );"/>
-    <command id="znotes_openbook_command" disabled="true" oncommand="ru.akman.znotes.Common.doCommand( 'znotes_openbook_command', event );"/>
-    <command id="znotes_closebook_command" disabled="true" oncommand="ru.akman.znotes.Common.doCommand( 'znotes_closebook_command', event );"/>
-    <command id="znotes_appendbook_command" disabled="true" oncommand="ru.akman.znotes.Common.doCommand( 'znotes_appendbook_command', event );"/>
-    <command id="znotes_deletebook_command" disabled="true" oncommand="ru.akman.znotes.Common.doCommand( 'znotes_deletebook_command', event );"/>
-    <command id="znotes_deletebookdata_command" disabled="true" oncommand="ru.akman.znotes.Common.doCommand( 'znotes_deletebookdata_command', event );"/>
-    <command id="znotes_editbook_command" disabled="true" oncommand="ru.akman.znotes.Common.doCommand( 'znotes_editbook_command', event );"/>
-    <command id="znotes_renamebook_command" disabled="true" oncommand="ru.akman.znotes.Common.doCommand( 'znotes_renamebook_command', event );"/>
-    <command id="znotes_refreshbooktree_command" disabled="true" oncommand="ru.akman.znotes.Common.doCommand( 'znotes_refreshbooktree_command', event );"/>
-    <command id="znotes_refreshfoldertree_command" disabled="true" oncommand="ru.akman.znotes.Common.doCommand( 'znotes_refreshfoldertree_command', event );"/>
-    <command id="znotes_newcategory_command" disabled="true" oncommand="ru.akman.znotes.Common.doCommand( 'znotes_newcategory_command', event );"/>
-    <command id="znotes_deletecategory_command" disabled="true" oncommand="ru.akman.znotes.Common.doCommand( 'znotes_deletecategory_command', event );"/>
-    <command id="znotes_renamecategory_command" disabled="true" oncommand="ru.akman.znotes.Common.doCommand( 'znotes_renamecategory_command', event );"/>
-    <command id="znotes_refreshtagtree_command" disabled="true" oncommand="ru.akman.znotes.Common.doCommand( 'znotes_refreshtagtree_command', event );"/>
-    <command id="znotes_newtag_command" disabled="true" oncommand="ru.akman.znotes.Common.doCommand( 'znotes_newtag_command', event );"/>
-    <command id="znotes_deletetag_command" disabled="true" oncommand="ru.akman.znotes.Common.doCommand( 'znotes_deletetag_command', event );"/>
-    <command id="znotes_renametag_command" disabled="true" oncommand="ru.akman.znotes.Common.doCommand( 'znotes_renametag_command', event );"/>
-    <command id="znotes_colortag_command" disabled="true" oncommand="ru.akman.znotes.Common.doCommand( 'znotes_colortag_command', event );"/>
-    <command id="znotes_newnote_command" disabled="true" oncommand="ru.akman.znotes.Common.doCommand( 'znotes_newnote_command', event );"/>
-    <command id="znotes_importnote_command" disabled="true" oncommand="ru.akman.znotes.Common.doCommand( 'znotes_importnote_command', event );"/>
-    <command id="znotes_deletenote_command" disabled="true" oncommand="ru.akman.znotes.Common.doCommand( 'znotes_deletenote_command', event );"/>
-    <command id="znotes_renamenote_command" disabled="true" oncommand="ru.akman.znotes.Common.doCommand( 'znotes_renamenote_command', event );"/>
-    <command id="znotes_processnote_command" disabled="true" oncommand="ru.akman.znotes.Common.doCommand( 'znotes_processnote_command', event );"/>
-    <command id="znotes_updatenote_command" disabled="true" oncommand="ru.akman.znotes.Common.doCommand( 'znotes_updatenote_command', event );"/>
-    <command id="znotes_refreshnotetree_command" disabled="true" oncommand="ru.akman.znotes.Common.doCommand( 'znotes_refreshnotetree_command', event );"/>
-    <command id="znotes_exit_command" disabled="true" oncommand="ru.akman.znotes.Common.doCommand( 'znotes_exit_command', event );"/>
-    <command id="znotes_pagesetup_command" disabled="true" oncommand="ru.akman.znotes.Common.doCommand( 'znotes_pagesetup_command', event );"/>
-    <command id="znotes_print_command" disabled="true" oncommand="ru.akman.znotes.Common.doCommand( 'znotes_print_command', event );"/>
-    <command id="znotes_showfilterbar_command" disabled="true" oncommand="ru.akman.znotes.Common.doCommand( 'znotes_showfilterbar_command', event );"/>
-    <command id="znotes_showappmenu_command" disabled="true" oncommand="ru.akman.znotes.Common.doCommand( 'znotes_showappmenu_command', event );"/>
-    <command id="znotes_debug_command" disabled="true" oncommand="ru.akman.znotes.Common.doCommand( 'znotes_debug_command', event );"/>
-    <command id="znotes_addons_command" disabled="true" oncommand="ru.akman.znotes.Common.doCommand( 'znotes_addons_command', event );"/>
-    <command id="znotes_update_command" disabled="true" oncommand="ru.akman.znotes.Common.doCommand( 'znotes_update_command', event );"/>
+  <!--
+    <commandset id="editMenuCommandSetAll" commandupdater="true"
+      events="focus,select" oncommandupdate="goUpdateGlobalEditMenuItems()"/>
+    <commandset id="editMenuCommandSetUndo" commandupdater="true"
+      events="undo" oncommandupdate="goUpdateUndoEditMenuItems()"/>
+    <commandset id="editMenuCommandSetPaste" commandupdater="true"
+      events="clipboard" oncommandupdate="goUpdatePasteMenuItems()"/>
+  -->
+  
+  <commandset id="znotes_commandset">
+    <command id="znotes_showmainmenubar_command" disabled="true"
+      label="&znotes_showmainmenubar_label;"
+      title="&znotes_showmainmenubar_label;"
+      tooltiptext="&znotes_showmainmenubar_tooltip;"
+      accesskey="&znotes_showmainmenubar_accesskey;"
+      key="znotes_showmainmenubar_key"
+      oncommand="goDoCommand( 'znotes_showmainmenubar_command' );"/>
+    <command id="znotes_showmaintoolbar_command" disabled="true"
+      label="&znotes_showmaintoolbar_label;"
+      title="&znotes_showmaintoolbar_label;"
+      tooltiptext="&znotes_showmaintoolbar_tooltip;"
+      accesskey="&znotes_showmaintoolbar_accesskey;"
+      key="znotes_showmaintoolbar_key"
+      oncommand="goDoCommand( 'znotes_showmaintoolbar_command' );"/>
+    <command id="znotes_customizemaintoolbar_command" disabled="true"
+      label="&znotes_customizemaintoolbar_label;"
+      title="&znotes_customizemaintoolbar_label;"
+      tooltiptext="&znotes_customizemaintoolbar_tooltip;"
+      accesskey="&znotes_customizemaintoolbar_accesskey;"
+      key="znotes_customizemaintoolbar_key"
+      oncommand="goDoCommand( 'znotes_customizemaintoolbar_command' );"/>
+    <command id="znotes_openoptionsdialog_command" disabled="true"
+      label="&znotes_openoptionsdialog_label;"
+      title="&znotes_openoptionsdialog_label;"
+      tooltiptext="&znotes_openoptionsdialog_tooltip;"
+      accesskey="&znotes_openoptionsdialog_accesskey;"
+      key="znotes_openoptionsdialog_key"
+      oncommand="goDoCommand( 'znotes_openoptionsdialog_command' );"/>
+    <command id="znotes_openhelp_command" disabled="true"
+      label="&znotes_openhelp_label;"
+      title="&znotes_openhelp_label;"
+      tooltiptext="&znotes_openhelp_tooltip;"
+      accesskey="&znotes_openhelp_accesskey;"
+      key="znotes_openhelp_key"
+      oncommand="goDoCommand( 'znotes_openhelp_command' );"/>
+    <command id="znotes_openabout_command" disabled="true"
+      label="&znotes_openabout_label;"
+      title="&znotes_openabout_label;"
+      tooltiptext="&znotes_openabout_tooltip;"
+      accesskey="&znotes_openabout_accesskey;"
+      key="znotes_openabout_key"
+      oncommand="goDoCommand('znotes_openabout_command')"/>
+    <command id="znotes_openbook_command" disabled="true"
+      label="&znotes_openbook_label;"
+      title="&znotes_openbook_label;"
+      tooltiptext="&znotes_openbook_tooltip;"
+      accesskey="&znotes_openbook_accesskey;"
+      key="znotes_openbook_key"
+      oncommand="goDoCommand( 'znotes_openbook_command' );"/>
+    <command id="znotes_closebook_command" disabled="true"
+      label="&znotes_closebook_label;"
+      title="&znotes_closebook_label;"
+      tooltiptext="&znotes_closebook_tooltip;"
+      accesskey="&znotes_closebook_accesskey;"
+      key="znotes_closebook_key"
+      oncommand="goDoCommand( 'znotes_closebook_command' );"/>
+    <command id="znotes_appendbook_command" disabled="true"
+      label="&znotes_appendbook_label;"
+      title="&znotes_appendbook_label;"
+      tooltiptext="&znotes_appendbook_tooltip;"
+      accesskey="&znotes_appendbook_accesskey;"
+      key="znotes_appendbook_key"
+      oncommand="goDoCommand( 'znotes_appendbook_command' );"/>
+    <command id="znotes_deletebook_command" disabled="true"
+      label="&znotes_deletebook_label;"
+      title="&znotes_deletebook_label;"
+      tooltiptext="&znotes_deletebook_tooltip;"
+      accesskey="&znotes_deletebook_accesskey;"
+      key="znotes_deletebook_key"
+      oncommand="goDoCommand( 'znotes_deletebook_command' );"/>
+    <command id="znotes_deletebookdata_command" disabled="true"
+      label="&znotes_deletebookdata_label;"
+      title="&znotes_deletebookdata_label;"
+      tooltiptext="&znotes_deletebookdata_tooltip;"
+      accesskey="&znotes_deletebookdata_accesskey;"
+      key="znotes_deletebookdata_key"
+      oncommand="goDoCommand( 'znotes_deletebookdata_command' );"/>
+    <command id="znotes_editbook_command" disabled="true"
+      label="&znotes_editbook_label;"
+      title="&znotes_editbook_label;"
+      tooltiptext="&znotes_editbook_tooltip;"
+      accesskey="&znotes_editbook_accesskey;"
+      key="znotes_editbook_key"
+      oncommand="goDoCommand( 'znotes_editbook_command' );"/>
+    <command id="znotes_renamebook_command" disabled="true"
+      label="&znotes_renamebook_label;"
+      title="&znotes_renamebook_label;"
+      tooltiptext="&znotes_renamebook_tooltip;"
+      accesskey="&znotes_renamebook_accesskey;"
+      key="znotes_renamebook_key"
+      oncommand="goDoCommand( 'znotes_renamebook_command' );"/>
+    <command id="znotes_refreshbooktree_command" disabled="true"
+      label="&znotes_refreshbooktree_label;"
+      title="&znotes_refreshbooktree_label;"
+      tooltiptext="&znotes_refreshbooktree_tooltip;"
+      accesskey="&znotes_refreshbooktree_accesskey;"
+      key="znotes_refreshbooktree_key"
+      oncommand="goDoCommand( 'znotes_refreshbooktree_command' );"/>
+    <command id="znotes_refreshfoldertree_command" disabled="true"
+      label="&znotes_refreshfoldertree_label;"
+      title="&znotes_refreshfoldertree_label;"
+      tooltiptext="&znotes_refreshfoldertree_tooltip;"
+      accesskey="&znotes_refreshfoldertree_accesskey;"
+      key="znotes_refreshfoldertree_key"
+      oncommand="goDoCommand( 'znotes_refreshfoldertree_command' );"/>
+    <command id="znotes_newcategory_command" disabled="true"
+      label="&znotes_newcategory_label;"
+      title="&znotes_newcategory_label;"
+      tooltiptext="&znotes_newcategory_tooltip;"
+      accesskey="&znotes_newcategory_accesskey;"
+      key="znotes_newcategory_key"
+      oncommand="goDoCommand( 'znotes_newcategory_command' );"/>
+    <command id="znotes_deletecategory_command" disabled="true"
+      label="&znotes_deletecategory_label;"
+      title="&znotes_deletecategory_label;"
+      tooltiptext="&znotes_deletecategory_tooltip;"
+      accesskey="&znotes_deletecategory_accesskey;"
+      key="znotes_deletecategory_key"
+      oncommand="goDoCommand( 'znotes_deletecategory_command' );"/>
+    <command id="znotes_renamecategory_command" disabled="true"
+      label="&znotes_renamecategory_label;"
+      title="&znotes_renamecategory_label;"
+      tooltiptext="&znotes_renamecategory_tooltip;"
+      accesskey="&znotes_renamecategory_accesskey;"
+      key="znotes_renamecategory_key"
+      oncommand="goDoCommand( 'znotes_renamecategory_command' );"/>
+    <command id="znotes_refreshtagtree_command" disabled="true"
+      label="&znotes_refreshtagtree_label;"
+      title="&znotes_refreshtagtree_label;"
+      tooltiptext="&znotes_refreshtagtree_tooltip;"
+      accesskey="&znotes_refreshtagtree_accesskey;"
+      key="znotes_refreshtagtree_key"
+      oncommand="goDoCommand( 'znotes_refreshtagtree_command' );"/>
+    <command id="znotes_newtag_command" disabled="true"
+      label="&znotes_newtag_label;"
+      title="&znotes_newtag_label;"
+      tooltiptext="&znotes_newtag_tooltip;"
+      accesskey="&znotes_newtag_accesskey;"
+      key="znotes_newtag_key"
+      oncommand="goDoCommand( 'znotes_newtag_command' );"/>
+    <command id="znotes_deletetag_command" disabled="true"
+      label="&znotes_deletetag_label;"
+      title="&znotes_deletetag_label;"
+      tooltiptext="&znotes_deletetag_tooltip;"
+      accesskey="&znotes_deletetag_accesskey;"
+      key="znotes_deletetag_key"
+      oncommand="goDoCommand( 'znotes_deletetag_command' );"/>
+    <command id="znotes_renametag_command" disabled="true"
+      label="&znotes_renametag_label;"
+      title="&znotes_renametag_label;"
+      tooltiptext="&znotes_renametag_tooltip;"
+      accesskey="&znotes_renametag_accesskey;"
+      key="znotes_renametag_key"
+      oncommand="goDoCommand( 'znotes_renametag_command' );"/>
+    <command id="znotes_colortag_command" disabled="true"
+      label="&znotes_colortag_label;"
+      title="&znotes_colortag_label;"
+      tooltiptext="&znotes_colortag_tooltip;"
+      accesskey="&znotes_colortag_accesskey;"
+      key="znotes_colortag_key"
+      oncommand="goDoCommand( 'znotes_colortag_command' );"/>
+    <command id="znotes_newnote_command" disabled="true"
+      label="&znotes_newnote_label;"
+      title="&znotes_newnote_label;"
+      tooltiptext="&znotes_newnote_tooltip;"
+      accesskey="&znotes_newnote_accesskey;"
+      key="znotes_newnote_key"
+      oncommand="goDoCommand( 'znotes_newnote_command' );"/>
+    <command id="znotes_importnote_command" disabled="true"
+      label="&znotes_importnote_label;"
+      title="&znotes_importnote_label;"
+      tooltiptext="&znotes_importnote_tooltip;"
+      accesskey="&znotes_importnote_accesskey;"
+      key="znotes_importnote_key"
+      oncommand="goDoCommand( 'znotes_importnote_command' );"/>
+    <command id="znotes_deletenote_command" disabled="true"
+      label="&znotes_deletenote_label;"
+      title="&znotes_deletenote_label;"
+      tooltiptext="&znotes_deletenote_tooltip;"
+      accesskey="&znotes_deletenote_accesskey;"
+      key="znotes_deletenote_key"
+      oncommand="goDoCommand( 'znotes_deletenote_command' );"/>
+    <command id="znotes_renamenote_command" disabled="true"
+      label="&znotes_renamenote_label;"
+      title="&znotes_renamenote_label;"
+      tooltiptext="&znotes_renamenote_tooltip;"
+      accesskey="&znotes_renamenote_accesskey;"
+      key="znotes_renamenote_key"
+      oncommand="goDoCommand( 'znotes_renamenote_command' );"/>
+    <command id="znotes_processnote_command" disabled="true"
+      label="&znotes_processnote_label;"
+      title="&znotes_processnote_label;"
+      tooltiptext="&znotes_processnote_tooltip;"
+      accesskey="&znotes_processnote_accesskey;"
+      key="znotes_processnote_key"
+      oncommand="goDoCommand( 'znotes_processnote_command' );"/>
+    <command id="znotes_updatenote_command" disabled="true"
+      label="&znotes_updatenote_label;"
+      title="&znotes_updatenote_label;"
+      tooltiptext="&znotes_updatenote_tooltip;"
+      accesskey="&znotes_updatenote_accesskey;"
+      key="znotes_updatenote_key"
+      oncommand="goDoCommand( 'znotes_updatenote_command' );"/>
+    <command id="znotes_refreshnotetree_command" disabled="true"
+      label="&znotes_refreshnotetree_label;"
+      title="&znotes_refreshnotetree_label;"
+      tooltiptext="&znotes_refreshnotetree_tooltip;"
+      accesskey="&znotes_refreshnotetree_accesskey;"
+      key="znotes_refreshnotetree_key"
+      oncommand="goDoCommand( 'znotes_refreshnotetree_command' );"/>
+    <command id="znotes_exit_command" disabled="true"
+      label="&znotes_exit_label;"
+      title="&znotes_exit_label;"
+      tooltiptext="&znotes_exit_tooltip;"
+      accesskey="&znotes_exit_accesskey;"
+      key="znotes_exit_key"
+      oncommand="goDoCommand( 'znotes_exit_command' );"/>
+    <command id="znotes_pagesetup_command" disabled="true"
+      label="&znotes_pagesetup_label;"
+      title="&znotes_pagesetup_label;"
+      tooltiptext="&znotes_pagesetup_tooltip;"
+      accesskey="&znotes_pagesetup_accesskey;"
+      key="znotes_pagesetup_key"
+      oncommand="goDoCommand( 'znotes_pagesetup_command' );"/>
+    <command id="znotes_showfilterbar_command" disabled="true"
+      label="&znotes_showfilterbar_label;"
+      title="&znotes_showfilterbar_label;"
+      tooltiptext="&znotes_showfilterbar_tooltip;"
+      accesskey="&znotes_showfilterbar_accesskey;"
+      key="znotes_showfilterbar_key"
+      oncommand="goDoCommand( 'znotes_showfilterbar_command' );"/>
+    <command id="znotes_showappmenu_command" disabled="true"
+      label="&znotes_showappmenu_label;"
+      title="&znotes_showappmenu_label;"
+      tooltiptext="&znotes_showappmenu_tooltip;"
+      accesskey="&znotes_showappmenu_accesskey;"
+      key="znotes_showappmenu_key"
+      oncommand="goDoCommand( 'znotes_showappmenu_command' );"/>
+    <command id="znotes_debug_command" disabled="true"
+      label="&znotes_debug_label;"
+      title="&znotes_debug_label;"
+      tooltiptext="&znotes_debug_tooltip;"
+      accesskey="&znotes_debug_accesskey;"
+      key="znotes_debug_key"
+      oncommand="goDoCommand( 'znotes_debug_command' );"/>
+    <command id="znotes_addons_command" disabled="true"
+      label="&znotes_addons_label;"
+      title="&znotes_addons_label;"
+      tooltiptext="&znotes_addons_tooltip;"
+      accesskey="&znotes_addons_accesskey;"
+      key="znotes_addons_key"
+      oncommand="goDoCommand( 'znotes_addons_command' );"/>
+    <command id="znotes_update_command" disabled="true"
+      label="&znotes_update_label;"
+      title="&znotes_update_label;"
+      tooltiptext="&znotes_update_tooltip;"
+      accesskey="&znotes_update_accesskey;"
+      key="znotes_update_key"
+      oncommand="goDoCommand( 'znotes_update_command' );"/>
+    <command id="znotes_print_command" disabled="true"
+      label="&znotes_print_label;"
+      title="&znotes_print_label;"
+      tooltiptext="&znotes_print_tooltip;"
+      accesskey="&znotes_print_accesskey;"
+      key="znotes_print_key"
+      oncommand="goDoCommand( 'znotes_print_command' );"/>
+    <command id="znotes_undo_command" disabled="true"
+      label="&znotes_undo_label;"
+      title="&znotes_undo_label;"
+      tooltiptext="&znotes_undo_tooltip;"
+      accesskey="&znotes_undo_accesskey;"
+      key="znotes_undo_key"
+      oncommand="goDoCommand( 'znotes_undo_command' );"/>
+    <command id="znotes_redo_command" disabled="true"
+      label="&znotes_redo_label;"
+      title="&znotes_redo_label;"
+      tooltiptext="&znotes_redo_tooltip;"
+      accesskey="&znotes_redo_accesskey;"
+      key="znotes_redo_key"
+      oncommand="goDoCommand( 'znotes_redo_command' );"/>
+    <command id="znotes_cut_command" disabled="true"
+      label="&znotes_cut_label;"
+      title="&znotes_cut_label;"
+      tooltiptext="&znotes_cut_tooltip;"
+      accesskey="&znotes_cut_accesskey;"
+      key="znotes_cut_key"
+      oncommand="goDoCommand( 'znotes_cut_command' );"/>
+    <command id="znotes_copy_command" disabled="true"
+      label="&znotes_copy_label;"
+      title="&znotes_copy_label;"
+      tooltiptext="&znotes_copy_tooltip;"
+      accesskey="&znotes_copy_accesskey;"
+      key="znotes_copy_key"
+      oncommand="goDoCommand( 'znotes_copy_command' );"/>
+    <command id="znotes_paste_command" disabled="true"
+      label="&znotes_paste_label;"
+      title="&znotes_paste_label;"
+      tooltiptext="&znotes_paste_tooltip;"
+      accesskey="&znotes_paste_accesskey;"
+      key="znotes_paste_key"
+      oncommand="goDoCommand( 'znotes_paste_command' );"/>
+    <command id="znotes_delete_command" disabled="true"
+      label="&znotes_delete_label;"
+      title="&znotes_delete_label;"
+      tooltiptext="&znotes_delete_tooltip;"
+      accesskey="&znotes_delete_accesskey;"
+      key="znotes_delete_key"
+      oncommand="goDoCommand( 'znotes_delete_command' );"/>
+    <command id="znotes_selectall_command" disabled="true"
+      label="&znotes_selectall_label;"
+      title="&znotes_selectall_label;"
+      tooltiptext="&znotes_selectall_tooltip;"
+      accesskey="&znotes_selectall_accesskey;"
+      key="znotes_selectall_key"
+      oncommand="goDoCommand( 'znotes_selectall_command' );"/>
   </commandset>
 
+  <keyset id="znotes_keyset">
+    <key id="znotes_showmainmenubar_key" command="znotes_showmainmenubar_command"
+      key="&znotes_showmainmenubar_key;" modifiers="&znotes_showmainmenubar_key_modifiers;"
+      keycode="&znotes_showmainmenubar_keycode;"/>
+    <key id="znotes_showmaintoolbar_key" command="znotes_showmaintoolbar_command"
+      key="&znotes_showmaintoolbar_key;" modifiers="&znotes_showmaintoolbar_key_modifiers;"
+      keycode="&znotes_showmaintoolbar_keycode;"/>
+    <key id="znotes_customizemaintoolbar_key" command="znotes_customizemaintoolbar_command"
+      key="&znotes_customizemaintoolbar_key;" modifiers="&znotes_customizemaintoolbar_key_modifiers;"
+      keycode="&znotes_customizemaintoolbar_keycode;"/>
+    <key id="znotes_openoptionsdialog_key" command="znotes_openoptionsdialog_command"
+      key="&znotes_openoptionsdialog_key;" modifiers="&znotes_openoptionsdialog_key_modifiers;"
+      keycode="&znotes_openoptionsdialog_keycode;"/>
+    <key id="znotes_openhelp_key" command="znotes_openhelp_command"
+      key="&znotes_openhelp_key;" modifiers="&znotes_openhelp_key_modifiers;"
+      keycode="&znotes_openhelp_keycode;"/>
+    <key id="znotes_openabout_key" command="znotes_openabout_command"
+      key="&znotes_openabout_key;" modifiers="&znotes_openabout_key_modifiers;"
+      keycode="&znotes_openabout_keycode;"/>
+    <key id="znotes_openbook_key" command="znotes_openbook_command"
+      key="&znotes_openbook_key;" modifiers="&znotes_openbook_key_modifiers;"
+      keycode="&znotes_openbook_keycode;"/>
+    <key id="znotes_closebook_key" command="znotes_closebook_command"
+      key="&znotes_closebook_key;" modifiers="&znotes_closebook_key_modifiers;"
+      keycode="&znotes_closebook_keycode;"/>
+    <key id="znotes_appendbook_key" command="znotes_appendbook_command"
+      key="&znotes_appendbook_key;" modifiers="&znotes_appendbook_key_modifiers;"
+      keycode="&znotes_appendbook_keycode;"/>
+    <key id="znotes_deletebook_key" command="znotes_deletebook_command"
+      key="&znotes_deletebook_key;" modifiers="&znotes_deletebook_key_modifiers;"
+      keycode="&znotes_deletebook_keycode;"/>
+    <key id="znotes_deletebookdata_key" command="znotes_deletebookdata_command"
+      key="&znotes_deletebookdata_key;" modifiers="&znotes_deletebookdata_key_modifiers;"
+      keycode="&znotes_deletebookdata_keycode;"/>
+    <key id="znotes_editbook_key" command="znotes_editbook_command"
+      key="&znotes_editbook_key;" modifiers="&znotes_editbook_key_modifiers;"
+      keycode="&znotes_editbook_keycode;"/>
+    <key id="znotes_renamebook_key" command="znotes_renamebook_command"
+      key="&znotes_renamebook_key;" modifiers="&znotes_renamebook_key_modifiers;"
+      keycode="&znotes_renamebook_keycode;"/>
+    <key id="znotes_refreshbooktree_key" command="znotes_refreshbooktree_command"
+      key="&znotes_refreshbooktree_key;" modifiers="&znotes_refreshbooktree_key_modifiers;"
+      keycode="&znotes_refreshbooktree_keycode;"/>
+    <key id="znotes_refreshfoldertree_key" command="znotes_refreshfoldertree_command"
+      key="&znotes_refreshfoldertree_key;" modifiers="&znotes_refreshfoldertree_key_modifiers;"
+      keycode="&znotes_refreshfoldertree_keycode;"/>
+    <key id="znotes_newcategory_key" command="znotes_newcategory_command"
+      key="&znotes_newcategory_key;" modifiers="&znotes_newcategory_key_modifiers;"
+      keycode="&znotes_newcategory_keycode;"/>
+    <key id="znotes_deletecategory_key" command="znotes_deletecategory_command"
+      key="&znotes_deletecategory_key;" modifiers="&znotes_deletecategory_key_modifiers;"
+      keycode="&znotes_deletecategory_keycode;"/>
+    <key id="znotes_renamecategory_key" command="znotes_renamecategory_command"
+      key="&znotes_renamecategory_key;" modifiers="&znotes_renamecategory_key_modifiers;"
+      keycode="&znotes_renamecategory_keycode;"/>
+    <key id="znotes_refreshtagtree_key" command="znotes_refreshtagtree_command"
+      key="&znotes_refreshtagtree_key;" modifiers="&znotes_refreshtagtree_key_modifiers;"
+      keycode="&znotes_refreshtagtree_keycode;"/>
+    <key id="znotes_newtag_key" command="znotes_newtag_command"
+      key="&znotes_newtag_key;" modifiers="&znotes_newtag_key_modifiers;"
+      keycode="&znotes_newtag_keycode;"/>
+    <key id="znotes_deletetag_key" command="znotes_deletetag_command"
+      key="&znotes_deletetag_key;" modifiers="&znotes_deletetag_key_modifiers;"
+      keycode="&znotes_deletetag_keycode;"/>
+    <key id="znotes_renametag_key" command="znotes_renametag_command"
+      key="&znotes_renametag_key;" modifiers="&znotes_renametag_key_modifiers;"
+      keycode="&znotes_renametag_keycode;"/>
+    <key id="znotes_colortag_key" command="znotes_colortag_command"
+      key="&znotes_colortag_key;" modifiers="&znotes_colortag_key_modifiers;"
+      keycode="&znotes_colortag_keycode;"/>
+    <key id="znotes_newnote_key" command="znotes_newnote_command"
+      key="&znotes_newnote_key;" modifiers="&znotes_newnote_key_modifiers;"
+      keycode="&znotes_newnote_keycode;"/>
+    <key id="znotes_importnote_key" command="znotes_importnote_command"
+      key="&znotes_importnote_key;" modifiers="&znotes_importnote_key_modifiers;"
+      keycode="&znotes_importnote_keycode;"/>
+    <key id="znotes_deletenote_key" command="znotes_deletenote_command"
+      key="&znotes_deletenote_key;" modifiers="&znotes_deletenote_key_modifiers;"
+      keycode="&znotes_deletenote_keycode;"/>
+    <key id="znotes_renamenote_key" command="znotes_renamenote_command"
+      key="&znotes_renamenote_key;" modifiers="&znotes_renamenote_key_modifiers;"
+      keycode="&znotes_renamenote_keycode;"/>
+    <key id="znotes_processnote_key" command="znotes_processnote_command"
+      key="&znotes_processnote_key;" modifiers="&znotes_processnote_key_modifiers;"
+      keycode="&znotes_processnote_keycode;"/>
+    <key id="znotes_updatenote_key" command="znotes_updatenote_command"
+      key="&znotes_updatenote_key;" modifiers="&znotes_updatenote_key_modifiers;"
+      keycode="&znotes_updatenote_keycode;"/>
+    <key id="znotes_refreshnotetree_key" command="znotes_refreshnotetree_command"
+      key="&znotes_refreshnotetree_key;" modifiers="&znotes_refreshnotetree_key_modifiers;"
+      keycode="&znotes_refreshnotetree_keycode;"/>
+    <key id="znotes_exit_key" command="znotes_exit_command"
+      key="&znotes_exit_key;" modifiers="&znotes_exit_key_modifiers;"
+      keycode="&znotes_exit_keycode;"/>
+    <key id="znotes_pagesetup_key" command="znotes_pagesetup_command"
+      key="&znotes_pagesetup_key;" modifiers="&znotes_pagesetup_key_modifiers;"
+      keycode="&znotes_pagesetup_keycode;"/>
+    <key id="znotes_showfilterbar_key" command="znotes_showfilterbar_command"
+      key="&znotes_showfilterbar_key;" modifiers="&znotes_showfilterbar_key_modifiers;"
+      keycode="&znotes_showfilterbar_keycode;"/>
+    <key id="znotes_showappmenu_key" command="znotes_showappmenu_command"
+      key="&znotes_showappmenu_key;" modifiers="&znotes_showappmenu_key_modifiers;"
+      keycode="&znotes_showappmenu_keycode;"/>
+    <key id="znotes_debug_key" command="znotes_debug_command"
+      key="&znotes_debug_key;" modifiers="&znotes_debug_key_modifiers;"
+      keycode="&znotes_debug_keycode;"/>
+    <key id="znotes_addons_key" command="znotes_addons_command"
+      key="&znotes_addons_key;" modifiers="&znotes_addons_key_modifiers;"
+      keycode="&znotes_addons_keycode;"/>
+    <key id="znotes_update_key" command="znotes_update_command"
+      key="&znotes_update_key;" modifiers="&znotes_update_key_modifiers;"
+      keycode="&znotes_update_keycode;"/>
+    <key id="znotes_print_key" command="znotes_print_command"
+      key="&znotes_print_key;" modifiers="&znotes_print_key_modifiers;"
+      keycode="&znotes_print_keycode;"/>
+    <key id="znotes_undo_key" command="znotes_undo_command"
+      key="&znotes_undo_key;" modifiers="&znotes_undo_key_modifiers;"
+      keycode="&znotes_undo_keycode;"/>
+    <key id="znotes_redo_key" command="znotes_redo_command"
+      key="&znotes_redo_key;" modifiers="&znotes_redo_key_modifiers;"
+      keycode="&znotes_redo_keycode;"/>
+    <key id="znotes_cut_key" command="znotes_cut_command"
+      key="&znotes_cut_key;" modifiers="&znotes_cut_key_modifiers;"
+      keycode="&znotes_cut_keycode;"/>
+    <key id="znotes_copy_key" command="znotes_copy_command"
+      key="&znotes_copy_key;" modifiers="&znotes_copy_key_modifiers;"
+      keycode="&znotes_copy_keycode;"/>
+    <key id="znotes_paste_key" command="znotes_paste_command"
+      key="&znotes_paste_key;" modifiers="&znotes_paste_key_modifiers;"
+      keycode="&znotes_paste_keycode;"/>
+    <key id="znotes_delete_key" command="znotes_delete_command"
+      key="&znotes_delete_key;" modifiers="&znotes_delete_key_modifiers;"
+      keycode="&znotes_delete_keycode;"/>
+    <key id="znotes_selectall_key" command="znotes_selectall_command"
+      key="&znotes_selectall_key;" modifiers="&znotes_selectall_key_modifiers;"
+      keycode="&znotes_selectall_keycode;"/>
+  </keyset>
+  
   <popupset id="znotes_popupset">
+    <menupopup id="znotes_edit_menupopup">
+      <menuitem id="znotes_undo_menuitem"
+        class="menuitem-iconic"
+        key="znotes_undo_key"
+        command="znotes_undo_command"/>
+      <menuitem id="znotes_redo_menuitem"
+        class="menuitem-iconic"
+        key="znotes_redo_key"
+        command="znotes_redo_command"/>
+      <menuseparator id="znotes_edit_menupopup_separator1"/>
+      <menuitem id="znotes_cut_menuitem"
+        class="menuitem-iconic"
+        key="znotes_cut_key"
+        command="znotes_cut_command"/>
+      <menuitem id="znotes_copy_menuitem"
+        class="menuitem-iconic"
+        key="znotes_copy_key"
+        command="znotes_copy_command"/>
+      <menuitem id="znotes_paste_menuitem"
+        class="menuitem-iconic"
+        key="znotes_paste_key"
+        command="znotes_paste_command"/>
+      <menuitem id="znotes_delete_menuitem"
+        class="menuitem-iconic"
+        key="znotes_delete_key"
+        command="znotes_delete_command"/>
+      <menuseparator id="znotes_edit_menupopup_separator2"/>
+      <menuitem id="znotes_selectall_menuitem"
+        class="menuitem-iconic"
+        key="znotes_selectall_key"
+        command="znotes_selectall_command"/>
+    </menupopup>
     <menupopup id="znotes_maintoolbar_menupopup">
       <menuitem id="znotes_showmainmenubar_menuitem"
-        class="menuitem-iconic"
-        type="checkbox"
-        checked="false"
-        label="&znotes_showmainmenubar_label;"
-        command="znotes_showmainmenubar_command"/>
+        class="menuitem-iconic" type="checkbox" checked="false"
+        command="znotes_showmainmenubar_command"
+        key="znotes_showmainmenubar_key"/>
       <menuitem id="znotes_showmaintoolbar_menuitem"
-        class="menuitem-iconic"
-        type="checkbox"
-        checked="true"
-        label="&znotes_showmaintoolbar_label;"
-        command="znotes_showmaintoolbar_command"/>
+        class="menuitem-iconic" type="checkbox" checked="true"
+        command="znotes_showmaintoolbar_command"
+        key="znotes_showmaintoolbar_key"/>
       <menuseparator id="znotes_customizemaintoolbar_separator"/>
       <menuitem id="znotes_customizemaintoolbar_menuitem"
         class="menuitem-iconic znotes_customizemaintoolbar_class"
-        label="&znotes_customizemaintoolbar_label;"
-        command="znotes_customizemaintoolbar_command"/>
+        command="znotes_customizemaintoolbar_command"
+        key="znotes_customizemaintoolbar_key"/>
     </menupopup>
-  </popupset>
-
-  <popupset id="znotes_appmenupopupset">
-    <menupopup id="znotes_appmenupopup">
+    <menupopup id="bookTreeMenu">
+      <menuitem id="bookTreeMenuOpen"
+        class="menuitem-iconic znotes_openbook_class"
+        command="znotes_openbook_command"
+        key="znotes_openbook_key"/>
+      <menuitem id="bookTreeMenuClose"
+        class="menuitem-iconic znotes_closebook_class"
+        command="znotes_closebook_command"
+        key="znotes_closebook_key"/>
+      <menuitem id="bookTreeMenuAppend"
+        class="menuitem-iconic znotes_appendbook_class"
+        command="znotes_appendbook_command"
+        key="znotes_appendbook_key"/>
+      <menuitem id="bookTreeMenuDelete"
+        class="menuitem-iconic znotes_deletebook_class"
+        command="znotes_deletebook_command"
+        key="znotes_deletebook_key"/>
+      <menuitem id="bookTreeMenuDeleteData"
+        class="menuitem-iconic znotes_deletebookdata_class"
+        command="znotes_deletebookdata_command"
+        key="znotes_deletebookdata_key"/>
+      <menuitem id="bookTreeMenuEdit"
+        class="menuitem-iconic znotes_editbook_class"
+        command="znotes_editbook_command"
+        key="znotes_editbook_key"/>
+      <menuitem id="bookTreeMenuRename"
+        class="menuitem-iconic znotes_renamebook_class"
+        command="znotes_renamebook_command"
+        key="znotes_renamebook_key"/>
+      <menuitem id="bookTreeMenuRefresh"
+        class="menuitem-iconic znotes_refreshbooktree_class"
+        command="znotes_refreshbooktree_command"
+        key="znotes_refreshbooktree_key"/>
+    </menupopup>
+    <menupopup id="folderTreeMenu">
+      <menuitem id="folderTreeMenuNew"
+        class="menuitem-iconic znotes_newcategory_class"
+        command="znotes_newcategory_command"
+        key="znotes_newcategory_key"/>
+      <menuitem  id="folderTreeMenuDelete"
+        class="menuitem-iconic znotes_deletecategory_class"
+        command="znotes_deletecategory_command"
+        key="znotes_deletecategory_key"/>
+      <menuitem id="folderTreeMenuRename"
+        class="menuitem-iconic znotes_renamecategory_class"
+        command="znotes_renamecategory_command"
+        key="znotes_renamecategory_key"/>
+      <menuitem id="folderTreeMenuRefresh"
+        class="menuitem-iconic znotes_refreshfoldertree_class"
+        command="znotes_refreshfoldertree_command"
+        key="znotes_refreshfoldertree_key"/>
+    </menupopup>
+    <menupopup id="noteTreeMenu">
+      <menuitem id="noteTreeMenuNew"
+        class="menuitem-iconic znotes_newnote_class"
+        command="znotes_newnote_command"
+        key="znotes_newnote_key"/>
+      <menuitem id="noteTreeMenuImport"
+        class="menuitem-iconic znotes_importnote_class"
+        command="znotes_importnote_command"
+        key="znotes_importnote_key"/>
+      <menuitem id="noteTreeMenuDelete"
+        class="menuitem-iconic znotes_deletenote_class"
+        command="znotes_deletenote_command"
+        key="znotes_deletenote_key"/>
+      <menuitem id="noteTreeMenuRename"
+        class="menuitem-iconic znotes_renamenote_class"
+        command="znotes_renamenote_command"
+        key="znotes_renamenote_key"/>
+      <menuitem id="noteTreeMenuProcess"
+        class="menuitem-iconic znotes_processnote_class"
+        command="znotes_processnote_command"
+        key="znotes_processnote_key"/>
+      <menuitem id="noteTreeMenuRefresh"
+        class="menuitem-iconic znotes_refreshnotetree_class"
+        command="znotes_refreshnotetree_command"
+        key="znotes_refreshnotetree_key"/>
+      <menuitem id="noteTreeMenuUpdate"
+        class="menuitem-iconic znotes_updatenote_class"
+        command="znotes_updatenote_command"
+        key="znotes_updatenote_key"/>
+    </menupopup>
+    <menupopup id="tagTreeMenu">
+      <menuitem id="tagTreeMenuNew"
+        class="menuitem-iconic znotes_newtag_class"
+        command="znotes_newtag_command"
+        key="znotes_newtag_key"/>
+      <menuitem id="tagTreeMenuDelete"
+        class="menuitem-iconic znotes_deletetag_class"
+        command="znotes_deletetag_command"
+        key="znotes_deletetag_key"/>
+      <menuitem id="tagTreeMenuRename"
+        class="menuitem-iconic znotes_renametag_class"
+        command="znotes_renametag_command"
+        key="znotes_renametag_key"/>
+      <menuitem id="tagTreeMenuColor"
+        class="menuitem-iconic znotes_colortag_class"
+        command="znotes_colortag_command"
+        key="znotes_colortag_key"/>
+      <menuitem id="tagTreeMenuRefresh"
+        class="menuitem-iconic znotes_refreshtagtree_class"
+        command="znotes_refreshtagtree_command"
+        key="znotes_refreshtagtree_key"/>
+    </menupopup>
+    <!-- app menu begin -->
+    <menupopup id="znotes_appmenu_popup">
       <hbox>
         <vbox id="znotes_appmenuprimarypane">
           <menuitem id="znotes_appmenu_pagesetup"
             class="menuitem-iconic"
-            label="&znotes_pagesetup_label;"
-            command="znotes_pagesetup_command"/>
+            command="znotes_pagesetup_command"
+            observes="znotes_pagesetup_command"
+            key="znotes_pagesetup_key"/>
           <menuitem id="znotes_appmenu_print"
             class="menuitem-iconic"
-            label="&znotes_print_label;"
-            command="znotes_print_command"/>
+            command="znotes_print_command"
+            observes="znotes_print_command"
+            key="znotes_print_key"/>
           <menuseparator id="znotes_appmenu_view_separator"
             class="znotes_appmenu_separator" />
-          <menu id="znotes_appmenu_view" label="&znotes_mainmenubar_tools_view_label;">
+          <menu id="znotes_appmenu_view"
+            label="&znotes_mainmenubar_tools_view_label;">
             <menupopup id="znotes_appmenu_view_popup">
               <menuitem id="znotes_appmenu_view_showmainmenubar"
-                type="checkbox"
-                checked="false"
-                label="&znotes_showmainmenubar_label;"
-                command="znotes_showmainmenubar_command"/>
+                type="checkbox" checked="false"
+                command="znotes_showmainmenubar_command"
+                observes="znotes_showmainmenubar_command"
+                key="znotes_showmainmenubar_key"/>
               <menuitem id="znotes_appmenu_view_showmaintoolbar"
-                type="checkbox"
-                checked="true"
-                label="&znotes_showmaintoolbar_label;"
-                command="znotes_showmaintoolbar_command"/>
+                type="checkbox" checked="true"
+                command="znotes_showmaintoolbar_command"
+                observes="znotes_showmaintoolbar_command"
+                key="znotes_showmaintoolbar_key"/>
             </menupopup>
           </menu>
           <menuitem id="znotes_appmenu_openoptionsdialog"
             class="menuitem-iconic"
-            label="&znotes_openoptionsdialog_label;"
-            command="znotes_openoptionsdialog_command"/>
+            command="znotes_openoptionsdialog_command"
+            observes="znotes_openoptionsdialog_command"
+            key="znotes_openoptionsdialog_key"/>
           <menuitem id="znotes_appmenu_addons"
-            hidden="true"
             class="menuitem-iconic"
-            label="&znotes_addons_label;"
-            command="znotes_addons_command"/>
+            command="znotes_addons_command"
+            observes="znotes_addons_command"
+            key="znotes_addons_key"/>
+          <menuitem id="znotes_appmenu_update"
+            class="menuitem-iconic"
+            command="znotes_update_command"
+            observes="znotes_update_command"
+            key="znotes_update_key"/>
           <menuitem id="znotes_appmenu_debug"
             class="menuitem-iconic"
-            label="&znotes_debug_label;"
-            command="znotes_debug_command"/>
+            command="znotes_debug_command"
+            observes="znotes_debug_command"
+            key="znotes_debug_key"/>
           <menuseparator id="znotes_appmenu_help_separator"
             class="znotes_appmenu_separator" />
-          <menuitem id="znotes_appmenu_update"
-            hidden="true"
-            class="menuitem-iconic"
-            label="&znotes_update_label;"
-            command="znotes_update_command"/>
           <menuitem id="znotes_appmenu_openhelp"
             class="menuitem-iconic"
-            label="&znotes_openhelp_label;"
-            command="znotes_openhelp_command"/>
+            command="znotes_openhelp_command"
+            observes="znotes_openhelp_command"
+            key="znotes_openhelp_key"/>
           <menuitem id="znotes_appmenu_openabout"
             class="menuitem-iconic"
-            label="&znotes_openabout_label;"
-            command="znotes_openabout_command"/>
+            command="znotes_openabout_command"
+            observes="znotes_openabout_command"
+            key="znotes_openabout_key"/>
           <menuseparator id="znotes_appmenu_exit_separator"
             class="znotes_appmenu_separator" />
           <menuitem id="znotes_appmenu_exit"
             class="menuitem-iconic"
-            label="&znotes_exit_label;"
-            command="znotes_exit_command"/>
+            command="znotes_exit_command"
+            observes="znotes_exit_command"
+            key="znotes_exit_key"/>
         </vbox>
         <vbox id="znotes_appmenusecondarypane">
-          <menu id="znotes_appmenu_book" label="&znotes_mainmenubar_book_label;">
+          <menu id="znotes_appmenu_book"
+            label="&znotes_mainmenubar_book_label;">
             <menupopup id="znotes_appmenu_book_popup">
               <menuitem id="znotes_appmenu_book_popup_openbook"
                 class="menuitem-iconic"
-                label="&znotes_openbook_label;"
-                command="znotes_openbook_command"/>
+                command="znotes_openbook_command"
+                key="znotes_openbook_key"/>
               <menuitem id="znotes_appmenu_book_popup_closebook"
                 class="menuitem-iconic"
-                label="&znotes_closebook_label;"
-                command="znotes_closebook_command"/>
+                command="znotes_closebook_command"
+                key="znotes_closebook_key"/>
               <menuitem id="znotes_appmenu_book_popup_appendbook"
                 class="menuitem-iconic"
-                label="&znotes_appendbook_label;"
-                command="znotes_appendbook_command"/>
+                command="znotes_appendbook_command"
+                key="znotes_appendbook_key"/>
               <menuitem id="znotes_appmenu_book_popup_deletebook"
                 class="menuitem-iconic"
-                label="&znotes_deletebook_label;"
-                command="znotes_deletebook_command"/>
+                command="znotes_deletebook_command"
+                key="znotes_deletebook_key"/>
               <menuitem id="znotes_appmenu_book_popup_deletebookdata"
                 class="menuitem-iconic"
-                label="&znotes_deletebookdata_label;"
-                command="znotes_deletebookdata_command"/>
+                command="znotes_deletebookdata_command"
+                key="znotes_deletebookdata_key"/>
               <menuitem id="znotes_appmenu_book_popup_editbook"
                 class="menuitem-iconic"
-                label="&znotes_editbook_label;"
-                command="znotes_editbook_command"/>
+                command="znotes_editbook_command"
+                key="znotes_editbook_key"/>
               <menuitem id="znotes_appmenu_book_popup_renamebook"
                 class="menuitem-iconic"
-                label="&znotes_renamebook_label;"
-                command="znotes_renamebook_command"/>
+                command="znotes_renamebook_command"
+                key="znotes_renamebook_key"/>
               <menuitem id="znotes_appmenu_book_popup_refreshbooktree"
                 class="menuitem-iconic"
-                label="&znotes_refreshbooktree_label;"
-                command="znotes_refreshbooktree_command"/>
+                command="znotes_refreshbooktree_command"
+                key="znotes_refreshbooktree_key"/>
             </menupopup>
           </menu>
-          <spacer id="znotes_appmenu_book_spacer" class="znotes_appmenu_spacer"/>
-          <menu id="znotes_appmenu_category" label="&znotes_mainmenubar_category_label;">
+          <spacer id="znotes_appmenu_book_spacer"
+            class="znotes_appmenu_spacer"/>
+          <menu id="znotes_appmenu_category"
+            label="&znotes_mainmenubar_category_label;">
             <menupopup id="znotes_appmenu_category_popup">
               <menuitem id="znotes_appmenu_category_popup_newcategory"
                 class="menuitem-iconic"
-                label="&znotes_newcategory_label;"
-                command="znotes_newcategory_command"/>
+                command="znotes_newcategory_command"
+                key="znotes_newcategory_key"/>
               <menuitem id="znotes_appmenu_category_popup_deletecategory"
                 class="menuitem-iconic"
-                label="&znotes_deletecategory_label;"
-                command="znotes_deletecategory_command"/>
+                command="znotes_deletecategory_command"
+                key="znotes_deletecategory_key"/>
               <menuitem id="znotes_appmenu_category_popup_renamecategory"
                 class="menuitem-iconic"
-                label="&znotes_renamecategory_label;"
-                command="znotes_renamecategory_command"/>
+                command="znotes_renamecategory_command"
+                key="znotes_renamecategory_key"/>
               <menuitem id="znotes_appmenu_category_popup_refreshfoldertree"
                 class="menuitem-iconic"
-                label="&znotes_refreshfoldertree_label;"
-                command="znotes_refreshfoldertree_command"/>
+                command="znotes_refreshfoldertree_command"
+                key="znotes_refreshfoldertree_key"/>
             </menupopup>
           </menu>
-          <menu id="znotes_appmenu_tag" label="&znotes_mainmenubar_tag_label;">
+          <menu id="znotes_appmenu_tag"
+            label="&znotes_mainmenubar_tag_label;">
             <menupopup id="znotes_appmenu_tag_popup">
               <menuitem id="znotes_appmenu_tag_popup_newtag"
                 class="menuitem-iconic"
-                label="&znotes_newtag_label;"
-                command="znotes_newtag_command"/>
+                command="znotes_newtag_command"
+                key="znotes_newtag_key"/>
               <menuitem id="znotes_appmenu_tag_popup_deletetag"
                 class="menuitem-iconic"
-                label="&znotes_deletetag_label;"
-                command="znotes_deletetag_command"/>
+                command="znotes_deletetag_command"
+                key="znotes_deletetag_key"/>
               <menuitem id="znotes_appmenu_tag_popup_renametag"
                 class="menuitem-iconic"
-                label="&znotes_renametag_label;"
-                command="znotes_renametag_command"/>
+                command="znotes_renametag_command"
+                key="znotes_renametag_key"/>
               <menuitem id="znotes_appmenu_tag_popup_colortag"
                 class="menuitem-iconic"
-                label="&znotes_colortag_label;"
-                command="znotes_colortag_command"/>
+                command="znotes_colortag_command"
+                key="znotes_colortag_key"/>
               <menuitem id="znotes_appmenu_tag_popup_refreshtagtree"
                 class="menuitem-iconic"
-                label="&znotes_refreshtagtree_label;"
-                command="znotes_refreshtagtree_command"/>
+                command="znotes_refreshtagtree_command"
+                key="znotes_refreshtagtree_key"/>
             </menupopup>
           </menu>
-          <menu id="znotes_appmenu_note" label="&znotes_mainmenubar_note_label;">
+          <menu id="znotes_appmenu_note"
+            label="&znotes_mainmenubar_note_label;">
             <menupopup id="znotes_appmenu_note_popup">
               <menuitem id="znotes_appmenu_note_popup_newnote"
                 class="menuitem-iconic"
-                label="&znotes_newnote_label;"
-                command="znotes_newnote_command"/>
+                command="znotes_newnote_command"
+                key="znotes_newnote_key"/>
               <menuitem id="znotes_appmenu_note_popup_importnote"
                 class="menuitem-iconic"
-                label="&znotes_importnote_label;"
-                command="znotes_importnote_command"/>
+                command="znotes_importnote_command"
+                key="znotes_importnote_key"/>
               <menuitem id="znotes_appmenu_note_popup_deletenote"
                 class="menuitem-iconic"
-                label="&znotes_deletenote_label;"
-                command="znotes_deletenote_command"/>
+                command="znotes_deletenote_command"
+                key="znotes_deletenote_key"/>
               <menuitem id="znotes_appmenu_note_popup_renamenote"
                 class="menuitem-iconic"
-                label="&znotes_renamenote_label;"
-                command="znotes_renamenote_command"/>
+                command="znotes_renamenote_command"
+                key="znotes_renamenote_key"/>
               <menuitem id="znotes_appmenu_note_popup_processnote"
                 class="menuitem-iconic"
-                label="&znotes_processnote_label;"
-                command="znotes_processnote_command"/>
+                command="znotes_processnote_command"
+                key="znotes_processnote_key"/>
               <menuitem id="znotes_appmenu_note_popup_refreshnotetree"
                 class="menuitem-iconic"
-                label="&znotes_refreshnotetree_label;"
-                command="znotes_refreshnotetree_command"/>
+                command="znotes_refreshnotetree_command"
+                key="znotes_refreshnotetree_key"/>
               <menuitem id="znotes_appmenu_note_popup_updatenote"
                 class="menuitem-iconic"
-                label="&znotes_updatenote_label;"
-                command="znotes_updatenote_command"/>
+                command="znotes_updatenote_command"
+                key="znotes_updatenote_key"/>
             </menupopup>
           </menu>
         </vbox>
       </hbox>
     </menupopup>
+    <!-- app menu end -->
   </popupset>
   
-  <toolbox id="znotes_maintoolbox">
-
-    <toolbarpalette id="znotes_maintoolbarpalette">
-      <toolbarbutton id="znotes_openoptionsdialog_button"
-        class="toolbarbutton-1 znotes_openoptionsdialog_class"
-        label="&znotes_openoptionsdialog_label;"
-        title="&znotes_openoptionsdialog_label;"
-        tooltiptext="&znotes_openoptionsdialog_tooltip;"
-        command="znotes_openoptionsdialog_command"/>
-      <toolbarbutton id="znotes_debug_button"
-        class="toolbarbutton-1 znotes_debug_class"
-        label="&znotes_debug_label;"
-        title="&znotes_debug_label;"
-        tooltiptext="&znotes_debug_tooltip;"
-        command="znotes_debug_command"/>
-      <toolbarbutton id="znotes_addons_button"
-        hidden="true"
-        class="toolbarbutton-1 znotes_addons_class"
-        label="&znotes_addons_label;"
-        title="&znotes_addons_label;"
-        tooltiptext="&znotes_addons_tooltip;"
-        command="znotes_addons_command"/>
-      <toolbarbutton id="znotes_update_button"
-        hidden="true"
-        class="toolbarbutton-1 znotes_update_class"
-        label="&znotes_update_label;"
-        title="&znotes_update_label;"
-        tooltiptext="&znotes_update_tooltip;"
-        command="znotes_update_command"/>
-      <toolbarbutton id="znotes_openhelp_button"
-        class="toolbarbutton-1 znotes_openhelp_class"
-        label="&znotes_openhelp_label;"
-        title="&znotes_openhelp_label;"
-        tooltiptext="&znotes_openhelp_tooltip;"
-        command="znotes_openhelp_command"/>
-      <toolbarbutton id="znotes_openabout_button"
-        class="toolbarbutton-1 znotes_openabout_class"
-        label="&znotes_openabout_label;"
-        title="&znotes_openabout_label;"
-        tooltiptext="&znotes_openabout_tooltip;"
-        command="znotes_openabout_command"/>
-      <toolbarbutton id="znotes_openbook_button"
-        class="toolbarbutton-1 znotes_openbook_class"
-        label="&znotes_openbook_label;"
-        title="&znotes_openbook_label;"
-        tooltiptext="&znotes_openbook_tooltip;"
-        command="znotes_openbook_command"/>
-      <toolbarbutton id="znotes_closebook_button"
-        class="toolbarbutton-1 znotes_closebook_class"
-        label="&znotes_closebook_label;"
-        title="&znotes_closebook_label;"
-        tooltiptext="&znotes_closebook_tooltip;"
-        command="znotes_closebook_command"/>
-      <toolbarbutton id="znotes_appendbook_button"
-        class="toolbarbutton-1 znotes_appendbook_class"
-        label="&znotes_appendbook_label;"
-        title="&znotes_appendbook_label;"
-        tooltiptext="&znotes_appendbook_tooltip;"
-        command="znotes_appendbook_command"/>
-      <toolbarbutton id="znotes_deletebook_button"
-        class="toolbarbutton-1 znotes_deletebook_class"
-        label="&znotes_deletebook_label;"
-        title="&znotes_deletebook_label;"
-        tooltiptext="&znotes_deletebook_tooltip;"
-        command="znotes_deletebook_command"/>
-      <toolbarbutton id="znotes_deletebookdata_button"
-        class="toolbarbutton-1 znotes_deletebookdata_class"
-        label="&znotes_deletebookdata_label;"
-        title="&znotes_deletebookdata_label;"
-        tooltiptext="&znotes_deletebookdata_tooltip;"
-        command="znotes_deletebookdata_command"/>
-      <toolbarbutton id="znotes_editbook_button"
-        class="toolbarbutton-1 znotes_editbook_class"
-        label="&znotes_editbook_label;"
-        title="&znotes_editbook_label;"
-        tooltiptext="&znotes_editbook_tooltip;"
-        command="znotes_editbook_command"/>
-      <toolbarbutton id="znotes_renamebook_button"
-        class="toolbarbutton-1 znotes_renamebook_class"
-        label="&znotes_renamebook_label;"
-        title="&znotes_renamebook_label;"
-        tooltiptext="&znotes_renamebook_tooltip;"
-        command="znotes_renamebook_command"/>
-      <toolbarbutton id="znotes_refreshbooktree_button"
-        class="toolbarbutton-1 znotes_refreshbooktree_class"
-        label="&znotes_refreshbooktree_label;"
-        title="&znotes_refreshbooktree_label;"
-        tooltiptext="&znotes_refreshbooktree_tooltip;"
-        command="znotes_refreshbooktree_command"/>
-      <toolbarbutton id="znotes_refreshfoldertree_button"
-        class="toolbarbutton-1 znotes_refreshfoldertree_class"
-        label="&znotes_refreshfoldertree_label;"
-        title="&znotes_refreshfoldertree_label;"
-        tooltiptext="&znotes_refreshfoldertree_tooltip;"
-        command="znotes_refreshfoldertree_command"/>
-      <toolbarbutton id="znotes_newcategory_button"
-        class="toolbarbutton-1 znotes_newcategory_class"
-        label="&znotes_newcategory_label;"
-        title="&znotes_newcategory_label;"
-        tooltiptext="&znotes_newcategory_tooltip;"
-        command="znotes_newcategory_command"/>
-      <toolbarbutton id="znotes_deletecategory_button"
-        class="toolbarbutton-1 znotes_deletecategory_class"
-        label="&znotes_deletecategory_label;"
-        title="&znotes_deletecategory_label;"
-        tooltiptext="&znotes_deletecategory_tooltip;"
-        command="znotes_deletecategory_command"/>
-      <toolbarbutton id="znotes_renamecategory_button"
-        class="toolbarbutton-1 znotes_renamecategory_class"
-        label="&znotes_renamecategory_label;"
-        title="&znotes_renamecategory_label;"
-        tooltiptext="&znotes_renamecategory_tooltip;"
-        command="znotes_renamecategory_command"/>
-      <toolbarbutton id="znotes_refreshtagtree_button"
-        class="toolbarbutton-1 znotes_refreshtagtree_class"
-        label="&znotes_refreshtagtree_label;"
-        title="&znotes_refreshtagtree_label;"
-        tooltiptext="&znotes_refreshtagtree_tooltip;"
-        command="znotes_refreshtagtree_command"/>
-      <toolbarbutton id="znotes_newtag_button"
-        class="toolbarbutton-1 znotes_newtag_class"
-        label="&znotes_newtag_label;"
-        title="&znotes_newtag_label;"
-        tooltiptext="&znotes_newtag_tooltip;"
-        command="znotes_newtag_command"/>
-      <toolbarbutton id="znotes_deletetag_button"
-        class="toolbarbutton-1 znotes_deletetag_class"
-        label="&znotes_deletetag_label;"
-        title="&znotes_deletetag_label;"
-        tooltiptext="&znotes_deletetag_tooltip;"
-        command="znotes_deletetag_command"/>
-      <toolbarbutton id="znotes_renametag_button"
-        class="toolbarbutton-1 znotes_renametag_class"
-        label="&znotes_renametag_label;"
-        title="&znotes_renametag_label;"
-        tooltiptext="&znotes_renametag_tooltip;"
-        command="znotes_renametag_command"/>
-      <toolbarbutton id="znotes_colortag_button"
-        class="toolbarbutton-1 znotes_colortag_class"
-        label="&znotes_colortag_label;"
-        title="&znotes_colortag_label;"
-        tooltiptext="&znotes_colortag_tooltip;"
-        command="znotes_colortag_command"/>
-      <toolbarbutton id="znotes_newnote_button"
-        type="menu-button"
-        class="toolbarbutton-1 znotes_newnote_class"
-        label="&znotes_newnote_label;"
-        title="&znotes_newnote_label;"
-        tooltiptext="&znotes_newnote_tooltip;"
-        command="znotes_newnote_command">
-        <menupopup id="znotes_newnote_button_menupopup" />
-      </toolbarbutton>
-      <toolbarbutton id="znotes_importnote_button"
-        type="menu-button"
-        class="toolbarbutton-1 znotes_importnote_class"
-        label="&znotes_importnote_label;"
-        title="&znotes_importnote_label;"
-        tooltiptext="&znotes_importnote_tooltip;"
-        command="znotes_importnote_command">
-        <menupopup id="znotes_importnote_button_menupopup" />
-      </toolbarbutton>
-      <toolbarbutton id="znotes_deletenote_button"
-        class="toolbarbutton-1 znotes_deletenote_class"
-        label="&znotes_deletenote_label;"
-        title="&znotes_deletenote_label;"
-        tooltiptext="&znotes_deletenote_tooltip;"
-        command="znotes_deletenote_command"/>
-      <toolbarbutton id="znotes_renamenote_button"
-        class="toolbarbutton-1 znotes_renamenote_class"
-        label="&znotes_renamenote_label;"
-        title="&znotes_renamenote_label;"
-        tooltiptext="&znotes_renamenote_tooltip;"
-        command="znotes_renamenote_command"/>
-      <toolbarbutton id="znotes_processnote_button"
-        class="toolbarbutton-1 znotes_processnote_class"
-        label="&znotes_processnote_label;"
-        title="&znotes_processnote_label;"
-        tooltiptext="&znotes_processnote_tooltip;"
-        command="znotes_processnote_command"/>
-      <toolbarbutton id="znotes_refreshnotetree_button"
-        class="toolbarbutton-1 znotes_refreshnotetree_class"
-        label="&znotes_refreshnotetree_label;"
-        title="&znotes_refreshnotetree_label;"
-        tooltiptext="&znotes_refreshnotetree_tooltip;"
-        command="znotes_refreshnotetree_command"/>
-      <toolbarbutton id="znotes_updatenote_button"
-        class="toolbarbutton-1 znotes_updatenote_class"
-        label="&znotes_updatenote_label;"
-        title="&znotes_updatenote_label;"
-        tooltiptext="&znotes_updatenote_tooltip;"
-        command="znotes_updatenote_command"/>
-      <toolbarbutton id="znotes_showfilterbar_button"
-        class="toolbarbutton-1 znotes_showfilterbar_class"
-        label="&znotes_showfilterbar_label;"
-        title="&znotes_showfilterbar_label;"
-        tooltiptext="&znotes_showfilterbar_tooltip;"
-        type="checkbox"
-        autocheck="true"
-        checked="false"
-        checkState="0"
-        command="znotes_showfilterbar_command" />
-      <toolbarbutton id="znotes_showappmenu_button"
-        class="toolbarbutton-1"
-        label="&znotes_showappmenu_label;"
-        title="&znotes_showappmenu_label;"
-        tooltiptext="&znotes_showappmenu_tooltip;"
-        command="znotes_showappmenu_command"/>
-    </toolbarpalette>
-    
-    <toolbar id="znotes_mainmenutoolbar"
-      type="menubar"
-      autohide="true"
-      class="inline-toolbar chromeclass-menubar"
-      toolbarname="&znotes_mainmenutoolbar_name;"
-      fullscreentoolbar="true"
-      mode="full"
-      customizable="true"
-      context="znotes_maintoolbar_menupopup"
-      defaultset="znotes_mainmenubar,znotes_mainmenutoolbar_spring">
-      
-      <menubar id="znotes_mainmenubar">
-        <menu id="znotes_mainmenubar_file" label="&znotes_mainmenubar_file_label;">
-          <menupopup id="znotes_mainmenubar_file_popup">
-            <menuitem id="znotes_mainmenubar_file_popup_pagesetup"
-              class="menuitem-iconic"
-              label="&znotes_pagesetup_label;"
-              command="znotes_pagesetup_command"/>
-            <menuitem id="znotes_mainmenubar_file_popup_print"
-              class="menuitem-iconic"
-              label="&znotes_print_label;"
-              command="znotes_print_command"/>
-            <menuseparator id="znotes_mainmenubar_file_popup_exit_separator" />
-            <menuitem id="znotes_mainmenubar_file_popup_exit"
-              class="menuitem-iconic"
-              label="&znotes_exit_label;"
-              command="znotes_exit_command"/>
-          </menupopup>
-        </menu>
-        <menu id="znotes_mainmenubar_book" label="&znotes_mainmenubar_book_label;">
-          <menupopup id="znotes_mainmenubar_book_popup">
-            <menuitem id="znotes_mainmenubar_book_popup_openbook"
-              class="menuitem-iconic"
-              label="&znotes_openbook_label;"
-              command="znotes_openbook_command"/>
-            <menuitem id="znotes_mainmenubar_book_popup_closebook"
-              class="menuitem-iconic"
-              label="&znotes_closebook_label;"
-              command="znotes_closebook_command"/>
-            <menuitem id="znotes_mainmenubar_book_popup_appendbook"
-              class="menuitem-iconic"
-              label="&znotes_appendbook_label;"
-              command="znotes_appendbook_command"/>
-            <menuitem id="znotes_mainmenubar_book_popup_deletebook"
-              class="menuitem-iconic"
-              label="&znotes_deletebook_label;"
-              command="znotes_deletebook_command"/>
-            <menuitem id="znotes_mainmenubar_book_popup_deletebookdata"
-              class="menuitem-iconic"
-              label="&znotes_deletebookdata_label;"
-              command="znotes_deletebookdata_command"/>
-            <menuitem id="znotes_mainmenubar_book_popup_editbook"
-              class="menuitem-iconic"
-              label="&znotes_editbook_label;"
-              command="znotes_editbook_command"/>
-            <menuitem id="znotes_mainmenubar_book_popup_renamebook"
-              class="menuitem-iconic"
-              label="&znotes_renamebook_label;"
-              command="znotes_renamebook_command"/>
-            <menuitem id="znotes_mainmenubar_book_popup_refreshbooktree"
-              class="menuitem-iconic"
-              label="&znotes_refreshbooktree_label;"
-              command="znotes_refreshbooktree_command"/>
-          </menupopup>
-        </menu>
-        <menu id="znotes_mainmenubar_category" label="&znotes_mainmenubar_category_label;">
-          <menupopup id="znotes_mainmenubar_category_popup">
-            <menuitem id="znotes_mainmenubar_category_popup_newcategory"
-              class="menuitem-iconic"
-              label="&znotes_newcategory_label;"
-              command="znotes_newcategory_command"/>
-            <menuitem id="znotes_mainmenubar_category_popup_deletecategory"
-              class="menuitem-iconic"
-              label="&znotes_deletecategory_label;"
-              command="znotes_deletecategory_command"/>
-            <menuitem id="znotes_mainmenubar_category_popup_renamecategory"
-              class="menuitem-iconic"
-              label="&znotes_renamecategory_label;"
-              command="znotes_renamecategory_command"/>
-            <menuitem id="znotes_mainmenubar_category_popup_refreshfoldertree"
-              class="menuitem-iconic"
-              label="&znotes_refreshfoldertree_label;"
-              command="znotes_refreshfoldertree_command"/>
-          </menupopup>
-        </menu>
-        <menu id="znotes_mainmenubar_tag" label="&znotes_mainmenubar_tag_label;">
-          <menupopup id="znotes_mainmenubar_tag_popup">
-            <menuitem id="znotes_mainmenubar_tag_popup_newtag"
-              class="menuitem-iconic"
-              label="&znotes_newtag_label;"
-              command="znotes_newtag_command"/>
-            <menuitem id="znotes_mainmenubar_tag_popup_deletetag"
-              class="menuitem-iconic"
-              label="&znotes_deletetag_label;"
-              command="znotes_deletetag_command"/>
-            <menuitem id="znotes_mainmenubar_tag_popup_renametag"
-              class="menuitem-iconic"
-              label="&znotes_renametag_label;"
-              command="znotes_renametag_command"/>
-            <menuitem id="znotes_mainmenubar_tag_popup_colortag"
-              class="menuitem-iconic"
-              label="&znotes_colortag_label;"
-              command="znotes_colortag_command"/>
-            <menuitem id="znotes_mainmenubar_tag_popup_refreshtagtree"
-              class="menuitem-iconic"
-              label="&znotes_refreshtagtree_label;"
-              command="znotes_refreshtagtree_command"/>
-          </menupopup>
-        </menu>
-        <menu id="znotes_mainmenubar_note" label="&znotes_mainmenubar_note_label;">
-          <menupopup id="znotes_mainmenubar_note_popup">
-            <menuitem id="znotes_mainmenubar_note_popup_newnote"
-              class="menuitem-iconic"
-              label="&znotes_newnote_label;"
-              command="znotes_newnote_command"/>
-            <menuitem id="znotes_mainmenubar_note_popup_importnote"
-              class="menuitem-iconic"
-              label="&znotes_importnote_label;"
-              command="znotes_importnote_command"/>
-            <menuitem id="znotes_mainmenubar_note_popup_deletenote"
-              class="menuitem-iconic"
-              label="&znotes_deletenote_label;"
-              command="znotes_deletenote_command"/>
-            <menuitem id="znotes_mainmenubar_note_popup_renamenote"
-              class="menuitem-iconic"
-              label="&znotes_renamenote_label;"
-              command="znotes_renamenote_command"/>
-            <menuitem id="znotes_mainmenubar_note_popup_processnote"
-              class="menuitem-iconic"
-              label="&znotes_processnote_label;"
-              command="znotes_processnote_command"/>
-            <menuitem id="znotes_mainmenubar_note_popup_refreshnotetree"
-              class="menuitem-iconic"
-              label="&znotes_refreshnotetree_label;"
-              command="znotes_refreshnotetree_command"/>
-            <menuitem id="znotes_mainmenubar_note_popup_updatenote"
-              class="menuitem-iconic"
-              label="&znotes_updatenote_label;"
-              command="znotes_updatenote_command"/>
-          </menupopup>
-        </menu>
-        <menu id="znotes_mainmenubar_tools" label="&znotes_mainmenubar_tools_label;">
-          <menupopup id="znotes_mainmenubar_tools_popup">
-            <menu id="znotes_mainmenubar_tools_view" label="&znotes_mainmenubar_tools_view_label;">
-              <menupopup id="znotes_mainmenubar_tools_view_menupopup">
-                <menuitem id="znotes_mainmenubar_tools_view_popup_showmainmenubar_menuitem"
-                  type="checkbox"
-                  checked="false"
-                  label="&znotes_showmainmenubar_label;"
-                  command="znotes_showmainmenubar_command"/>
-                <menuitem id="znotes_mainmenubar_tools_view_popup_showmaintoolbar_menuitem"
-                  type="checkbox"
-                  checked="true"
-                  label="&znotes_showmaintoolbar_label;"
-                  command="znotes_showmaintoolbar_command"/>
-              </menupopup>
-            </menu>
-            <menuitem id="znotes_mainmenubar_tools_popup_openoptionsdialog"
-              class="menuitem-iconic"
-              label="&znotes_openoptionsdialog_label;"
-              command="znotes_openoptionsdialog_command"/>
-            <menuitem id="znotes_mainmenubar_tools_popup_addons"
-              hidden="true"
-              class="menuitem-iconic"
-              label="&znotes_addons_label;"
-              command="znotes_addons_command"/>
-            <menuitem id="znotes_mainmenubar_tools_popup_debug"
-              class="menuitem-iconic"
-              label="&znotes_debug_label;"
-              command="znotes_debug_command"/>
-          </menupopup>
-        </menu>
-        <menu id="znotes_mainmenubar_help" label="&znotes_mainmenubar_help_label;">
-          <menupopup id="znotes_mainmenubar_help_popup">
-            <menuitem id="znotes_mainmenubar_help_popup_update"
-              hidden="true"
-              class="menuitem-iconic"
-              label="&znotes_update_label;"
-              command="znotes_update_command"/>
-            <menuitem id="znotes_mainmenubar_help_popup_openhelp"
-              class="menuitem-iconic"
-              label="&znotes_openhelp_label;"
-              command="znotes_openhelp_command"/>
-            <menuitem id="znotes_mainmenubar_help_popup_openabout"
-              class="menuitem-iconic"
-              label="&znotes_openabout_label;"
-              command="znotes_openabout_command"/>
-          </menupopup>
-        </menu>
-        <spacer id="znotes_mainmenubar_spacer" flex="100%" />
-      </menubar>
-      <toolbarspring id="znotes_mainmenutoolbar_spring" removable="true" flex="1"/>
-    </toolbar>
-
-    <toolbar id="znotes_maintoolbar"
-      class="inline-toolbar chromeclass-toolbar znotes_maintoolbar"
-      hidden="true"
-      toolbarname="&znotes_maintoolbar_name;"
-      fullscreentoolbar="true"
+  <vbox id="znotes_maintabpanel"
+    class="znotes_maintabpanel" flex="1">
+    <toolbox id="znotes_maintoolbox"
+      class="mail-toolbox znotes_maintoolbox"
       mode="icons"
-      iconsize="small"
-      customizable="true"
-      context="znotes_maintoolbar_menupopup"
-      defaultset="znotes_appendbook_button,znotes_deletebook_button,znotes_editbook_button,separator,znotes_newcategory_button,znotes_deletecategory_button,separator,znotes_newtag_button,znotes_deletetag_button,znotes_colortag_button,separator,znotes_newnote_button,znotes_deletenote_button,znotes_deletenote_button,separator,znotes_openoptionsdialog_button,separator,znotes_update_button,znotes_openabout_button,znotes_openhelp_button,spring,znotes_showfilterbar_button,znotes_debug_button,znotes_addons_button,znotes_showappmenu_button" />
-
-    <toolbarset id="znotes_maintoolbarset" context="znotes_maintoolbar_menupopup" />
-
-  </toolbox>
+      defaultmode="full"
+      labelalign="bottom"
+      defaultlabelalign="end"
+      iconsize="small">
+      <toolbarpalette id="znotes_maintoolbarpalette">
+        <toolbarbutton id="znotes_openoptionsdialog_button"
+          class="toolbarbutton-1 znotes_openoptionsdialog_class"
+          command="znotes_openoptionsdialog_command"/>
+        <toolbarbutton id="znotes_debug_button"
+          class="toolbarbutton-1 znotes_debug_class"
+          command="znotes_debug_command"/>
+        <toolbarbutton id="znotes_addons_button"
+          class="toolbarbutton-1 znotes_addons_class"
+          command="znotes_addons_command"/>
+        <toolbarbutton id="znotes_update_button"
+          class="toolbarbutton-1 znotes_update_class"
+          command="znotes_update_command"/>
+        <toolbarbutton id="znotes_openhelp_button"
+          class="toolbarbutton-1 znotes_openhelp_class"
+          command="znotes_openhelp_command"/>
+        <toolbarbutton id="znotes_openabout_button"
+          class="toolbarbutton-1 znotes_openabout_class"
+          command="znotes_openabout_command"/>
+        <toolbarbutton id="znotes_openbook_button"
+          class="toolbarbutton-1 znotes_openbook_class"
+          command="znotes_openbook_command"/>
+        <toolbarbutton id="znotes_closebook_button"
+          class="toolbarbutton-1 znotes_closebook_class"
+          command="znotes_closebook_command"/>
+        <toolbarbutton id="znotes_appendbook_button"
+          class="toolbarbutton-1 znotes_appendbook_class"
+          command="znotes_appendbook_command"/>
+        <toolbarbutton id="znotes_deletebook_button"
+          class="toolbarbutton-1 znotes_deletebook_class"
+          command="znotes_deletebook_command"/>
+        <toolbarbutton id="znotes_deletebookdata_button"
+          class="toolbarbutton-1 znotes_deletebookdata_class"
+          command="znotes_deletebookdata_command"/>
+        <toolbarbutton id="znotes_editbook_button"
+          class="toolbarbutton-1 znotes_editbook_class"
+          command="znotes_editbook_command"/>
+        <toolbarbutton id="znotes_renamebook_button"
+          class="toolbarbutton-1 znotes_renamebook_class"
+          command="znotes_renamebook_command"/>
+        <toolbarbutton id="znotes_refreshbooktree_button"
+          class="toolbarbutton-1 znotes_refreshbooktree_class"
+          command="znotes_refreshbooktree_command"/>
+        <toolbarbutton id="znotes_refreshfoldertree_button"
+          class="toolbarbutton-1 znotes_refreshfoldertree_class"
+          command="znotes_refreshfoldertree_command"/>
+        <toolbarbutton id="znotes_newcategory_button"
+          class="toolbarbutton-1 znotes_newcategory_class"
+          command="znotes_newcategory_command"/>
+        <toolbarbutton id="znotes_deletecategory_button"
+          class="toolbarbutton-1 znotes_deletecategory_class"
+          command="znotes_deletecategory_command"/>
+        <toolbarbutton id="znotes_renamecategory_button"
+          class="toolbarbutton-1 znotes_renamecategory_class"
+          command="znotes_renamecategory_command"/>
+        <toolbarbutton id="znotes_refreshtagtree_button"
+          class="toolbarbutton-1 znotes_refreshtagtree_class"
+          command="znotes_refreshtagtree_command"/>
+        <toolbarbutton id="znotes_newtag_button"
+          class="toolbarbutton-1 znotes_newtag_class"
+          command="znotes_newtag_command"/>
+        <toolbarbutton id="znotes_deletetag_button"
+          class="toolbarbutton-1 znotes_deletetag_class"
+          command="znotes_deletetag_command"/>
+        <toolbarbutton id="znotes_renametag_button"
+          class="toolbarbutton-1 znotes_renametag_class"
+          command="znotes_renametag_command"/>
+        <toolbarbutton id="znotes_colortag_button"
+          class="toolbarbutton-1 znotes_colortag_class"
+          command="znotes_colortag_command"/>
+        <toolbarbutton id="znotes_newnote_button"
+          type="menu-button"
+          class="toolbarbutton-1 znotes_newnote_class"
+          command="znotes_newnote_command">
+          <menupopup id="znotes_newnote_button_menupopup" />
+        </toolbarbutton>
+        <toolbarbutton id="znotes_importnote_button"
+          type="menu-button"
+          class="toolbarbutton-1 znotes_importnote_class"
+          command="znotes_importnote_command">
+          <menupopup id="znotes_importnote_button_menupopup" />
+        </toolbarbutton>
+        <toolbarbutton id="znotes_deletenote_button"
+          class="toolbarbutton-1 znotes_deletenote_class"
+          command="znotes_deletenote_command"/>
+        <toolbarbutton id="znotes_renamenote_button"
+          class="toolbarbutton-1 znotes_renamenote_class"
+          command="znotes_renamenote_command"/>
+        <toolbarbutton id="znotes_processnote_button"
+          class="toolbarbutton-1 znotes_processnote_class"
+          command="znotes_processnote_command"/>
+        <toolbarbutton id="znotes_refreshnotetree_button"
+          class="toolbarbutton-1 znotes_refreshnotetree_class"
+          command="znotes_refreshnotetree_command"/>
+        <toolbarbutton id="znotes_updatenote_button"
+          class="toolbarbutton-1 znotes_updatenote_class"
+          command="znotes_updatenote_command"/>
+        <toolbarbutton id="znotes_showfilterbar_button"
+          class="toolbarbutton-1 znotes_showfilterbar_class"
+          type="checkbox" autocheck="true" checked="false" checkState="0"
+          command="znotes_showfilterbar_command" />
+        <toolbarbutton id="znotes_showappmenu_button"
+          class="toolbarbutton-1"
+          command="znotes_showappmenu_command"/>
+      </toolbarpalette>
+      <toolbar id="znotes_mainmenutoolbar"
+        type="menubar"
+        autohide="true"
+        class="inline-toolbar chromeclass-menubar znotes_mainmenutoolbar"
+        toolbarname="&znotes_mainmenutoolbar_name;"
+        fullscreentoolbar="true"
+        mode="full"
+        customizable="true"
+        context="znotes_maintoolbar_menupopup"
+        defaultset="znotes_mainmenubar,znotes_mainmenutoolbar_spring">
+        <menubar id="znotes_mainmenubar">
+          <menu id="znotes_mainmenubar_file"
+            accesskey="&znotes_mainmenubar_file_accesskey;"
+            label="&znotes_mainmenubar_file_label;">
+            <menupopup id="znotes_mainmenubar_file_popup">
+              <menuitem id="znotes_mainmenubar_file_popup_pagesetup"
+                class="menuitem-iconic"
+                key="znotes_pagesetup_key"
+                command="znotes_pagesetup_command"/>
+              <menuitem id="znotes_mainmenubar_file_popup_print"
+                class="menuitem-iconic"
+                key="znotes_print_key"
+                command="znotes_print_command"/>
+              <menuseparator
+                id="znotes_mainmenubar_file_popup_exit_separator" />
+              <menuitem id="znotes_mainmenubar_file_popup_exit"
+                class="menuitem-iconic"
+                key="znotes_exit_key"
+                command="znotes_exit_command"/>
+            </menupopup>
+          </menu>
+          <menu id="znotes_mainmenubar_edit"
+            accesskey="&znotes_mainmenubar_edit_accesskey;"
+            label="&znotes_mainmenubar_edit_label;">
+            <menupopup id="znotes_mainmenubar_edit_popup">
+              <menuitem id="znotes_mainmenubar_edit_popup_undo"
+                class="menuitem-iconic"
+                key="znotes_undo_key"
+                command="znotes_undo_command"/>
+              <menuitem id="znotes_mainmenubar_edit_popup_redo"
+                class="menuitem-iconic"
+                key="znotes_redo_key"
+                command="znotes_redo_command"/>
+              <menuseparator
+                id="znotes_mainmenubar_edit_popup_cut_separator" />
+              <menuitem id="znotes_mainmenubar_edit_popup_cut"
+                class="menuitem-iconic"
+                key="znotes_cut_key"
+                command="znotes_cut_command"/>
+              <menuitem id="znotes_mainmenubar_edit_popup_copy"
+                class="menuitem-iconic"
+                key="znotes_copy_key"
+                command="znotes_copy_command"/>
+              <menuitem id="znotes_mainmenubar_edit_popup_paste"
+                class="menuitem-iconic"
+                key="znotes_paste_key"
+                command="znotes_paste_command"/>
+              <menuitem id="znotes_mainmenubar_edit_popup_delete"
+                class="menuitem-iconic"
+                key="znotes_delete_key"
+                command="znotes_delete_command"/>
+              <menuseparator
+                id="znotes_mainmenubar_edit_popup_selectall_separator" />
+              <menuitem id="znotes_mainmenubar_edit_popup_selectall"
+                class="menuitem-iconic"
+                key="znotes_selectall_key"
+                command="znotes_selectall_command"/>
+            </menupopup>
+          </menu>
+          <menu id="znotes_mainmenubar_book"
+            accesskey="&znotes_mainmenubar_book_accesskey;"
+            label="&znotes_mainmenubar_book_label;">
+            <menupopup id="znotes_mainmenubar_book_popup">
+              <menuitem id="znotes_mainmenubar_book_popup_openbook"
+                class="menuitem-iconic"
+                command="znotes_openbook_command"
+                key="znotes_openbook_key"/>
+              <menuitem id="znotes_mainmenubar_book_popup_closebook"
+                class="menuitem-iconic"
+                command="znotes_closebook_command"
+                key="znotes_closebook_key"/>
+              <menuitem id="znotes_mainmenubar_book_popup_appendbook"
+                class="menuitem-iconic"
+                command="znotes_appendbook_command"
+                key="znotes_appendbook_key"/>
+              <menuitem id="znotes_mainmenubar_book_popup_deletebook"
+                class="menuitem-iconic"
+                command="znotes_deletebook_command"
+                key="znotes_deletebook_key"/>
+              <menuitem id="znotes_mainmenubar_book_popup_deletebookdata"
+                class="menuitem-iconic"
+                command="znotes_deletebookdata_command"
+                key="znotes_deletebookdata_key"/>
+              <menuitem id="znotes_mainmenubar_book_popup_editbook"
+                class="menuitem-iconic"
+                command="znotes_editbook_command"
+                key="znotes_editbook_key"/>
+              <menuitem id="znotes_mainmenubar_book_popup_renamebook"
+                class="menuitem-iconic"
+                command="znotes_renamebook_command"
+                key="znotes_renamebook_key"/>
+              <menuitem id="znotes_mainmenubar_book_popup_refreshbooktree"
+                class="menuitem-iconic"
+                command="znotes_refreshbooktree_command"
+                key="znotes_refreshbooktree_key"/>
+            </menupopup>
+          </menu>
+          <menu id="znotes_mainmenubar_category"
+            accesskey="&znotes_mainmenubar_category_accesskey;"
+            label="&znotes_mainmenubar_category_label;">
+            <menupopup id="znotes_mainmenubar_category_popup">
+              <menuitem id="znotes_mainmenubar_category_popup_newcategory"
+                class="menuitem-iconic"
+                command="znotes_newcategory_command"
+                key="znotes_newcategory_key"/>
+              <menuitem id="znotes_mainmenubar_category_popup_deletecategory"
+                class="menuitem-iconic"
+                command="znotes_deletecategory_command"
+                key="znotes_deletecategory_key"/>
+              <menuitem id="znotes_mainmenubar_category_popup_renamecategory"
+                class="menuitem-iconic"
+                command="znotes_renamecategory_command"
+                key="znotes_renamecategory_key"/>
+              <menuitem id="znotes_mainmenubar_category_popup_refreshfoldertree"
+                class="menuitem-iconic"
+                command="znotes_refreshfoldertree_command"
+                key="znotes_refreshfoldertree_key"/>
+            </menupopup>
+          </menu>
+          <menu id="znotes_mainmenubar_tag"
+            accesskey="&znotes_mainmenubar_tag_accesskey;"
+            label="&znotes_mainmenubar_tag_label;">
+            <menupopup id="znotes_mainmenubar_tag_popup">
+              <menuitem id="znotes_mainmenubar_tag_popup_newtag"
+                class="menuitem-iconic"
+                command="znotes_newtag_command"
+                key="znotes_newtag_key"/>
+              <menuitem id="znotes_mainmenubar_tag_popup_deletetag"
+                class="menuitem-iconic"
+                command="znotes_deletetag_command"
+                key="znotes_deletetag_key"/>
+              <menuitem id="znotes_mainmenubar_tag_popup_renametag"
+                class="menuitem-iconic"
+                command="znotes_renametag_command"
+                key="znotes_renametag_key"/>
+              <menuitem id="znotes_mainmenubar_tag_popup_colortag"
+                class="menuitem-iconic"
+                command="znotes_colortag_command"
+                key="znotes_colortag_key"/>
+              <menuitem id="znotes_mainmenubar_tag_popup_refreshtagtree"
+                class="menuitem-iconic"
+                command="znotes_refreshtagtree_command"
+                key="znotes_refreshtagtree_key"/>
+            </menupopup>
+          </menu>
+          <menu id="znotes_mainmenubar_note"
+            accesskey="&znotes_mainmenubar_note_accesskey;"
+            label="&znotes_mainmenubar_note_label;">
+            <menupopup id="znotes_mainmenubar_note_popup">
+              <menuitem id="znotes_mainmenubar_note_popup_newnote"
+                class="menuitem-iconic"
+                command="znotes_newnote_command"
+                key="znotes_newnote_key"/>
+              <menuitem id="znotes_mainmenubar_note_popup_importnote"
+                class="menuitem-iconic"
+                command="znotes_importnote_command"
+                key="znotes_importnote_key"/>
+              <menuitem id="znotes_mainmenubar_note_popup_deletenote"
+                class="menuitem-iconic"
+                command="znotes_deletenote_command"
+                key="znotes_deletenote_key"/>
+              <menuitem id="znotes_mainmenubar_note_popup_renamenote"
+                class="menuitem-iconic"
+                command="znotes_renamenote_command"
+                key="znotes_renamenote_key"/>
+              <menuitem id="znotes_mainmenubar_note_popup_processnote"
+                class="menuitem-iconic"
+                command="znotes_processnote_command"
+                key="znotes_processnote_key"/>
+              <menuitem id="znotes_mainmenubar_note_popup_refreshnotetree"
+                class="menuitem-iconic"
+                command="znotes_refreshnotetree_command"
+                key="znotes_refreshnotetree_key"/>
+              <menuitem id="znotes_mainmenubar_note_popup_updatenote"
+                class="menuitem-iconic"
+                command="znotes_updatenote_command"
+                key="znotes_updatenote_key"/>
+            </menupopup>
+          </menu>
+          <menu id="znotes_mainmenubar_tools"
+            accesskey="&znotes_mainmenubar_tools_accesskey;"
+            label="&znotes_mainmenubar_tools_label;">
+            <menupopup id="znotes_mainmenubar_tools_popup">
+              <menu id="znotes_mainmenubar_tools_view"
+                accesskey="&znotes_mainmenubar_tools_view_accesskey;"
+                label="&znotes_mainmenubar_tools_view_label;">
+                <menupopup id="znotes_mainmenubar_tools_view_menupopup">
+                  <menuitem
+                    id="znotes_mainmenubar_tools_view_popup_showmainmenubar_menuitem"
+                    type="checkbox" checked="false"
+                    command="znotes_showmainmenubar_command"
+                    key="znotes_showmainmenubar_key"/>
+                  <menuitem
+                    id="znotes_mainmenubar_tools_view_popup_showmaintoolbar_menuitem"
+                    type="checkbox" checked="true"
+                    command="znotes_showmaintoolbar_command"
+                    key="znotes_showmaintoolbar_key"/>
+                </menupopup>
+              </menu>
+              <menuitem id="znotes_mainmenubar_tools_popup_openoptionsdialog"
+                class="menuitem-iconic"
+                command="znotes_openoptionsdialog_command"
+                key="znotes_openoptionsdialog_key"/>
+              <menuitem id="znotes_mainmenubar_tools_popup_addons"
+                class="menuitem-iconic"
+                command="znotes_addons_command"
+                key="znotes_addons_key"/>
+              <menuitem id="znotes_mainmenubar_tools_popup_update"
+                class="menuitem-iconic"
+                command="znotes_update_command"
+                key="znotes_update_key"/>
+              <menuitem id="znotes_mainmenubar_tools_popup_debug"
+                class="menuitem-iconic"
+                command="znotes_debug_command"
+                key="znotes_debug_key"/>
+            </menupopup>
+          </menu>
+          <menu id="znotes_mainmenubar_help"
+            accesskey="&znotes_mainmenubar_help_accesskey;"
+            label="&znotes_mainmenubar_help_label;">
+            <menupopup id="znotes_mainmenubar_help_popup">
+              <menuitem id="znotes_mainmenubar_help_popup_openhelp"
+                class="menuitem-iconic"
+                command="znotes_openhelp_command"
+                key="znotes_openhelp_key"/>
+              <menuitem id="znotes_mainmenubar_help_popup_openabout"
+                class="menuitem-iconic"
+                command="znotes_openabout_command"
+                key="znotes_openabout_key"/>
+            </menupopup>
+          </menu>
+          <spacer id="znotes_mainmenubar_spacer" flex="100%" />
+        </menubar>
+        <toolbarspring id="znotes_mainmenutoolbar_spring" removable="true"
+          flex="1"/>
+      </toolbar>
+      <toolbar id="znotes_maintoolbar"
+        class="inline-toolbar chromeclass-toolbar znotes_maintoolbar"
+        hidden="true"
+        toolbarname="&znotes_maintoolbar_name;"
+        fullscreentoolbar="true"
+        mode="icons"
+        iconsize="small"
+        customizable="true"
+        context="znotes_maintoolbar_menupopup"
+        defaultset="znotes_appendbook_button,znotes_deletebook_button,znotes_editbook_button,separator,znotes_newcategory_button,znotes_deletecategory_button,separator,znotes_newtag_button,znotes_deletetag_button,znotes_colortag_button,separator,znotes_newnote_button,znotes_deletenote_button,znotes_deletenote_button,separator,znotes_openoptionsdialog_button,separator,znotes_update_button,znotes_openabout_button,znotes_openhelp_button,spring,znotes_showfilterbar_button,znotes_debug_button,znotes_addons_button,znotes_update_button,znotes_showappmenu_button" />
+      <toolbarset id="znotes_maintoolbarset"
+        context="znotes_maintoolbar_menupopup" />
+    </toolbox>
+    <vbox id="znotes_maintabcontent"
+      class="znotes_maintabcontent" flex="1">
+      <notificationbox id="znotes_maintabnotificationbox" flex="1">
+        <browser id="znotes_maintabbrowser"
+          class="znotes_maintabbrowser"
+          type="content-primary"
+          flex="1"
+          disablehistory="true"
+          disableglobalhistory="true"/>
+      </notificationbox>
+      <findbar id="znotes_maintabfindbar"
+        browserid="znotes_maintabbrowser"/>
+    </vbox>
+  </vbox>
   
-  <statusbar id="status-bar">
-    <statusbarpanel id="znotes_statusbarpanel">
-      <image id="znotes_statusbarpanellogo" />
-      <label id="znotes_statusbarpanellabel" />
-    </statusbarpanel>
-  </statusbar>
+  <vbox id="znotes_contenttabpanel"
+    class="znotes_contenttabpanel" flex="1">
+    <commandset id="znotes_contentcommandset" />
+    <toolbox id="znotes_contenttoolbox"
+      class="mail-toolbox znotes_contenttoolbox"
+      mode="icons"
+      defaultmode="full"
+      labelalign="bottom"
+      defaultlabelalign="end"
+      orient="horizontal"
+      pack="start"
+      align="stretch"
+      iconsize="small" >
+    </toolbox>
+    <vbox id="znotes_contenttabcontent"
+      class="znotes_contenttabcontent" flex="1">
+      <notificationbox id="znotes_contenttabnotificationbox" flex="1">
+        <browser id="znotes_contenttabbrowser"
+          class="znotes_contenttabbrowser"
+          type="content-targetable"
+          flex="1"
+          disablehistory="true"
+          disableglobalhistory="true"/>
+      </notificationbox>
+      <findbar id="znotes_contenttabfindbar"
+        browserid="znotes_contenttabbrowser"/>
+    </vbox>
+  </vbox>
+  
+  <statusbarpanel id="znotes_statusbarpanel" hidden="true">
+    <image id="znotes_statusbarpanellogo" />
+    <label id="znotes_statusbarpanellabel" />
+  </statusbarpanel>
 
 </overlay>

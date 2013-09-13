@@ -34,13 +34,6 @@
 <!ENTITY edt_tab_source " Source ">
 <!ENTITY edt_tab_close " Close">
 
-<!ENTITY edt_redo "Redo">
-<!ENTITY edt_undo "Undo">
-<!ENTITY edt_delete "Delete">
-<!ENTITY edt_paste "Paste">
-<!ENTITY edt_copy "Copy">
-<!ENTITY edt_cut "Cut">
-<!ENTITY edt_selectall "Select all">
 <!ENTITY edt_remove_format "Remove format">
 <!ENTITY edt_subscript "Subscript">
 <!ENTITY edt_superscript "Superscript">

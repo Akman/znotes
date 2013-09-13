@@ -54,7 +54,7 @@ var Document = function() {
   pub.getInfo = function() {
     return {
       url: "chrome://znotes_documents/content/default/",
-      iconURL: "chrome://znotes/skin/documents/default/default.png",
+      iconURL: "chrome://znotes_images/skin/documents/default/default.png",
       type: "application/xhtml+xml",
       defaultNS: "http://www.w3.org/1999/xhtml",
       errorNS: "http://www.mozilla.org/newlayout/xml/parsererror.xml",

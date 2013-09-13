@@ -33,3 +33,6 @@
 <!ENTITY note_button_edit " Edit">
 <!ENTITY note_button_save " Save">
 <!ENTITY note_button_print " Print">
+
+<!ENTITY keyNoteSave "S">
+<!ENTITY keyNotePrint "P">

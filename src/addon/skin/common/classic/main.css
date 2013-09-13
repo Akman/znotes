@@ -34,24 +34,6 @@
 
 @import url("chrome://znotes/skin/common.css");
 
-.znotes_maintoolbox {
-  margin-top: -1px;
-  margin-bottom: -1px;
-  padding-left: 1px;
-  padding-right: 1px;
-}
-#znotes_maintabpanel {
-}
-.znotes_maintabpanel {
-  border-top: 1px solid ThreeDShadow;
-  border-bottom: 1px solid ThreeDShadow;
-}
-#status-bar {
-  -moz-appearance: none;
-  margin-bottom: -1px;
-  border: none;
-  border-top: 1px solid ThreeDShadow;
-}
 #folderTree {
   margin-top: -2px !important;
 }

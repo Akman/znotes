@@ -30,16 +30,3 @@
   -
   - ***** END LICENSE BLOCK ***** -->
 
-<!ENTITY edt_tab_design " Вид ">
-<!ENTITY edt_tab_close " Закрыть">
-
-<!ENTITY edt_fore_сolor "Цвет текста">
-<!ENTITY edt_font_name "Начертание шрифта">
-<!ENTITY edt_font_size "Размер шрифта">
-<!ENTITY edt_bold "Жирный">
-<!ENTITY edt_italic "Наклонный">
-<!ENTITY edt_underline "Подчёркнутый">
-<!ENTITY edt_justify_center "Выравнять по центру">
-<!ENTITY edt_justify_left "Выравнять по левому краю">
-<!ENTITY edt_justify_right "Выравнять по правому краю">
-<!ENTITY edt_justify_full "Выравнять по ширине">

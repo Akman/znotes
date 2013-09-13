@@ -61,8 +61,8 @@ var AddonsManager = function() {
     if ( flag ) {
     	ru.akman.znotes.Utils.MAIN_WINDOW.openDialog(
         "chrome://mozapps/content/extensions/extensions.xul?type=extensions",
-        "",
-        "chrome,dialog=no,resizable=yes"
+        "znotes:addons",
+        "chrome,dialog=no,resizable=yes,centerscreen"
       );
     }
   };

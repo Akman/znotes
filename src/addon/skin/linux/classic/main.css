@@ -34,14 +34,6 @@
 
 @import url("chrome://znotes_common/skin/main.css");
 
-.znotes_maintoolbox {
-}
-#znotes_maintabpanel {
-  border-bottom: 1px solid ThreeDShadow;
-}
-.znotes_maintabpanel {
-  margin-bottom: -1px;  
-}
 #bookTree, #folderTree, #tagTree {
   background-color: -moz-OddTreeRow !important;
 }

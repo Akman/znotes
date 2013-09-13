@@ -417,7 +417,7 @@ var Driver = function() {
       var updatedDateTime = this.entry.lastModifiedTime;
       var id = ru.akman.znotes.Utils.createUUID();
       var type = "unknown";
-      var userData = "{}";
+      var data = "{}";
       var result = false;
       if ( info[1] === undefined ) {
         info[1] = name;
@@ -456,7 +456,7 @@ var Driver = function() {
         result = true;
       }
       if ( info[10] === undefined ) {
-        info[10] = userData;
+        info[10] = data;
         result = true;
       }
       if ( info.length > 11 ) {
@@ -641,16 +641,16 @@ var Driver = function() {
       return this.getDescriptorItemField( 9 );
     };
 
-    this.getUserData = function() {
+    this.getData = function() {
       if ( this.isCategory() )
-        throw new EntryException( "Can't get category's 'UserData' property. This property does not exist." );
+        throw new EntryException( "Can't get category's 'Data' property. This property does not exist." );
       return this.getDescriptorItemField( 10 );
     };
     
-    this.setUserData = function( userData ) {
+    this.setData = function( data ) {
       if ( this.isCategory() )
-        throw new EntryException( "Can't set category's 'UserData' property. This property does not exist." );
-      this.setDescriptorItemField( 10, userData );
+        throw new EntryException( "Can't set category's 'Data' property. This property does not exist." );
+      this.setDescriptorItemField( 10, data );
     };
 
     this.setType = function( type ) {

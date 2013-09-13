@@ -30,7 +30,27 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/* ***** classic/1.0 linux **** */
+/* ***** classic/1.0 common **** */
 
-@import url("chrome://znotes_common/skin/znotes.css");
+@import url("chrome://znotes/skin/common.css");
 
+#znotes_maintabpanel {
+  margin-top: 0px;
+  margin-bottom: -1px;
+}
+#znotes_maintoolbox {
+  margin-top: 0px;
+  margin-bottom: 0px;
+  padding-top: 0px;
+  padding-bottom: 1px;
+  padding-left: 1px;
+  padding-right: 1px;
+}
+#znotes_maintoolbar {
+  -moz-appearance: none;
+  border: none;
+}
+#znotes_maintabcontent {
+  border-top: 1px solid ThreeDShadow;
+  border-bottom: 1px solid ThreeDShadow;
+}

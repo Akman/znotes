@@ -88,12 +88,13 @@ var Editor = function() {
     
     var designFrame = null;
     var designEditor = null;
-    var nsIEditor = null;
+    var designHTMLEditor = null;
+    
     var designToolBox = null;
     var editorToolBar1 = null;
     var editorToolBar2 = null;
     
-    var clipPopup = null;
+    var editMenuPopup = null;
     
     var sourceFrame = null;
     var sourceWindow = null;
@@ -115,44 +116,6 @@ var Editor = function() {
     var backColorEditorButton = null;
     var backColorDeleteEditorButton = null;
     
-    var edtBold = null;
-    var edtItalic = null;
-    var edtUnderline = null;
-    var edtStrikeThrough = null;
-    var edtCopy = null;
-    var edtCopyKey = null;
-    var edtCut = null;
-    var edtCutKey = null;
-    var edtPaste = null;
-    var edtPasteKey = null;
-    var edtDelete = null;
-    var edtDeleteKey = null;
-    var edtSelectAll = null;
-    var edtSelectAllKey = null;
-    var edtUndo = null;
-    var edtRedo = null;
-    var edtJustifyCenter = null;
-    var edtJustifyLeft = null;
-    var edtJustifyRight = null;
-    var edtJustifyFull = null;
-    var edtSubscript = null;
-    var edtSuperscript = null;
-    var edtIndent = null;
-    var edtOutdent = null;
-    var edtLink = null;
-    var edtUnlink = null;
-    var edtRemoveFormat = null;
-    var edtInsertOrderedList = null;
-    var edtInsertUnorderedList = null;
-    var edtInsertHorizontalRule = null;
-    var edtInsertTable = null;
-    var edtInsertImage = null;
-    var edtInsertParagraph = null;
-    var edtForeColor = null;
-    var edtForeColorDelete = null;
-    var edtBackColor = null;
-    var edtBackColorDelete = null;
-    
     var boldEditorButton = null;
     var italicEditorButton = null;
     var underlineEditorButton = null;
@@ -169,6 +132,47 @@ var Editor = function() {
     var fontMapping = ru.akman.znotes.Utils.getDefaultFontMapping();
     
     var formatBlockObject = {};
+
+    // C O N T R O L L E R S
+    
+    var designViewerController = {
+      supportsCommand: function ( cmd ) {
+        return false;
+      },
+      isCommandEnabled: function ( cmd ) {
+        return false;
+      },
+      doCommand: function ( cmd ) {
+      },
+      onEvent: function ( event ) {
+      }
+    };
+    
+    var designEditorController = {
+      supportsCommand: function ( cmd ) {
+        return false;
+      },
+      isCommandEnabled: function ( cmd ) {
+        return false;
+      },
+      doCommand: function ( cmd ) {
+      },
+      onEvent: function ( event ) {
+      }
+    };
+    
+    var sourceEditorController = {
+      supportsCommand: function ( cmd ) {
+        return false;
+      },
+      isCommandEnabled: function ( cmd ) {
+        return false;
+      },
+      doCommand: function ( cmd ) {
+      },
+      onEvent: function ( event ) {
+      }
+    };
     
     // U T I L S
     
@@ -284,6 +288,11 @@ var Editor = function() {
       return startContainer;
     };
 
+    function hasSelection() {
+      var selection = designFrame.contentWindow.getSelection();
+      return ( selection && !selection.isCollapsed && selection.rangeCount != 0 );
+    };
+    
     function cloneSelection() {
       var selection = designFrame.contentWindow.getSelection();
       if ( !selection || selection.rangeCount == 0 ) {
@@ -681,26 +690,27 @@ var Editor = function() {
       // parent.appendChild( root ) -> 
       // parent.removeChild( root ) -> designEditor.deleteNode( root )
       // document.createTextNode -> 
-      // document.createElement( tagName ) -> designEditor.createElementWithDefaults( tagName )
+      // document.createElement( tagName ) -> designHTMLEditor.createElementWithDefaults( tagName )
       // element.style.setProperty( name, value ) -> 
       // element.style.removeProperty( name ) -> 
       // -----------------------------------------------------------------------
-      // void setAttribute(in nsIDOMElement aElement, in AString attributestr,in AString attvalue);
-      // boolean getAttributeValue(in nsIDOMElement aElement, in AString attributestr, out AString resultValue);
-      // void removeAttribute(in nsIDOMElement aElement, in AString aAttribute);
-      // void cloneAttribute(in AString aAttribute, in nsIDOMNode aSourceNode);
-      // void cloneAttributes(in nsIDOMNode destNode, in nsIDOMNode sourceNode);
-      // nsIDOMNode createNode(in AString tag, in nsIDOMNode parent, in long position);
-      // void insertNode(in nsIDOMNode node, in nsIDOMNode parent, in long aPosition);
-      // void splitNode(in nsIDOMNode existingRightNode, in long offset, out nsIDOMNode newLeftNode);
-      // void joinNodes(in nsIDOMNode leftNode, in nsIDOMNode rightNode, in nsIDOMNode parent);
-      // void deleteNode(in nsIDOMNode child);
-      // void markNodeDirty(in nsIDOMNode node);      
+      // void designEditor.setAttribute(in nsIDOMElement aElement, in AString attributestr,in AString attvalue);
+      // boolean designEditor.getAttributeValue(in nsIDOMElement aElement, in AString attributestr, out AString resultValue);
+      // void designEditor.removeAttribute(in nsIDOMElement aElement, in AString aAttribute);
+      // void designEditor.cloneAttribute(in AString aAttribute, in nsIDOMNode aSourceNode);
+      // void designEditor.cloneAttributes(in nsIDOMNode destNode, in nsIDOMNode sourceNode);
+      // nsIDOMNode designEditor.createNode(in AString tag, in nsIDOMNode parent, in long position);
+      // void designEditor.insertNode(in nsIDOMNode node, in nsIDOMNode parent, in long aPosition);
+      // void designEditor.splitNode(in nsIDOMNode existingRightNode, in long offset, out nsIDOMNode newLeftNode);
+      // void designEditor.joinNodes(in nsIDOMNode leftNode, in nsIDOMNode rightNode, in nsIDOMNode parent);
+      // void designEditor.deleteNode(in nsIDOMNode child);
+      // void designEditor.markNodeDirty(in nsIDOMNode node);      
       try {
       } catch ( e ) {
         log( e );
       }
       onSelectionChanged();
+      return true;
     };
     */
     
@@ -847,7 +857,7 @@ var Editor = function() {
     
     // C O P Y  &  C U T  &  P A S T E  C O M M A N D S
     
-    function onEdtCopy( source ) {
+    function onCmdCopy( event ) {
       var transferable = Components.Constructor( "@mozilla.org/widget/transferable;1", "nsITransferable" )();
       transferable.init(
         currentWindow.QueryInterface( Components.interfaces.nsIInterfaceRequestor )
@@ -883,16 +893,15 @@ var Editor = function() {
       return true;
     };
     
-    function onEdtCut( source ) {
-      onEdtCopy( source );
+    function onCmdCut( event ) {
+      onCmdCopy( event );
       if ( !isSourceEditingActive && !isDesignEditingActive ) {
         return false;
       }
-      onEdtDelete( source );
-      return true;
+      return onCmdDelete( event );
     };
     
-    function onEdtPaste( source ) {
+    function onCmdPaste( event ) {
       if ( !isSourceEditingActive && !isDesignEditingActive ) {
         return false;
       }
@@ -924,7 +933,7 @@ var Editor = function() {
       return true;
     };
     
-    function onEdtDelete( source ) {
+    function onCmdDelete( event ) {
       if ( !isSourceEditingActive && !isDesignEditingActive ) {
         return false;
       }
@@ -937,7 +946,7 @@ var Editor = function() {
       return true;
     };
     
-    function onEdtSelectAll( source ) {
+    function onCmdSelectAll( event ) {
       if ( isSourceEditingActive ) {
         sourceEditor.execCommand( "selectAll" );
       } else {
@@ -951,7 +960,7 @@ var Editor = function() {
     
     // U N D O  &  R E D O  C O M M A N D S
 
-    function onEdtUndo( source ) {
+    function onCmdUndo( event ) {
       if ( !isSourceEditingActive && !isDesignEditingActive ) {
         return false;
       }
@@ -976,7 +985,7 @@ var Editor = function() {
       return true;
     };
     
-    function onEdtRedo( source ) {
+    function onCmdRedo( event ) {
       if ( !isSourceEditingActive && !isDesignEditingActive ) {
         return false;
       }
@@ -998,7 +1007,10 @@ var Editor = function() {
     // D E S I G N  C O M M A N D S
     
     function onEdtBold( source ) {
-      //designFrame.contentDocument.execCommand( 'bold', false, null );
+      // boldEditorButton.checked = !boldEditorButton.checked;
+      log( "onEdtBold()" );
+      designFrame.contentDocument.execCommand( 'bold', false, null );
+      /*
       processSelection( function( element ) {
         if ( boldEditorButton.checked ) {
           element.style.setProperty( "font-weight", "bold" );
@@ -1009,6 +1021,7 @@ var Editor = function() {
           }
         }
       } );
+      */
       designFrame.focus();
       return true;
     };
@@ -1016,7 +1029,7 @@ var Editor = function() {
     function onEdtItalic( source ) {
       //designFrame.contentDocument.execCommand( 'italic', false, null );
       processSelection( function( element ) {
-        if ( boldEditorButton.checked ) {
+        if ( italicEditorButton.checked ) {
           element.style.setProperty( "font-style", "italic" );
         } else {
           element.style.removeProperty( "font-style" );
@@ -1032,7 +1045,7 @@ var Editor = function() {
     function onEdtUnderline( source ) {
       //designFrame.contentDocument.execCommand( 'underline', false, null );
       processSelection( function( element ) {
-        if ( boldEditorButton.checked ) {
+        if ( underlineEditorButton.checked ) {
           element.style.setProperty( "text-decoration", "underline" );
         } else {
           element.style.removeProperty( "text-decoration" );
@@ -1048,7 +1061,7 @@ var Editor = function() {
     function onEdtStrikeThrough( source ) {
       //designFrame.contentDocument.execCommand( 'strikeThrough', false, null );
       processSelection( function( element ) {
-        if ( boldEditorButton.checked ) {
+        if ( strikeThroughEditorButton.checked ) {
           element.style.setProperty( "text-decoration", "line-through" );
         } else {
           element.style.removeProperty( "text-decoration" );
@@ -1064,7 +1077,7 @@ var Editor = function() {
     function onEdtJustifyCenter( source ) {
       //designFrame.contentDocument.execCommand( 'justifyCenter', false, null );
       processSelection( function( element ) {
-        if ( boldEditorButton.checked ) {
+        if ( justifyCenterEditorButton.checked ) {
           element.style.setProperty( "text-align", "center" );
         } else {
           element.style.removeProperty( "text-align" );
@@ -1083,7 +1096,7 @@ var Editor = function() {
     function onEdtJustifyLeft( source ) {
       //designFrame.contentDocument.execCommand( 'justifyLeft', false, null );
       processSelection( function( element ) {
-        if ( boldEditorButton.checked ) {
+        if ( justifyLeftEditorButton.checked ) {
           element.style.setProperty( "text-align", "left" );
         } else {
           element.style.removeProperty( "text-align" );
@@ -1102,7 +1115,7 @@ var Editor = function() {
     function onEdtJustifyRight( source ) {
       //designFrame.contentDocument.execCommand( 'justifyRight', false, null );
       processSelection( function( element ) {
-        if ( boldEditorButton.checked ) {
+        if ( justifyRightEditorButton.checked ) {
           element.style.setProperty( "text-align", "right" );
         } else {
           element.style.removeProperty( "text-align" );
@@ -1121,7 +1134,7 @@ var Editor = function() {
     function onEdtJustifyFull( source ) {
       //designFrame.contentDocument.execCommand( 'justifyFull', false, null );
       processSelection( function( element ) {
-        if ( boldEditorButton.checked ) {
+        if ( justifyFullEditorButton.checked ) {
           element.style.setProperty( "text-align", "justify" );
         } else {
           element.style.removeProperty( "text-align" );
@@ -1312,7 +1325,7 @@ var Editor = function() {
 
     function onEdtFormatBlock( source ) {
       var aBlockFormat = formatBlockMenuList.selectedItem.value;
-      designEditor.setParagraphFormat( aBlockFormat );
+      designHTMLEditor.setParagraphFormat( aBlockFormat );
       designFrame.focus();
       return true;
     };
@@ -1345,9 +1358,9 @@ var Editor = function() {
       if ( url.length == 0 ) {
         return true;
       }
-      var anAnchor = designEditor.createElementWithDefaults( "a" );
+      var anAnchor = designHTMLEditor.createElementWithDefaults( "a" );
       anAnchor.setAttribute( "href", encodeURI( url ) );
-      designEditor.insertLinkAroundSelection( anAnchor );
+      designHTMLEditor.insertLinkAroundSelection( anAnchor );
       return true;
     };
     
@@ -1373,27 +1386,27 @@ var Editor = function() {
       if ( url.length == 0 ) {
         return true;
       }
-      var anImage = designEditor.createElementWithDefaults( "img" );
+      var anImage = designHTMLEditor.createElementWithDefaults( "img" );
       anImage.setAttribute( "src", encodeURI( url ) );
-      designEditor.insertElementAtSelection( anImage, true /* aDeleteSelection */ );
-      designEditor.selectElement( anImage );
+      designHTMLEditor.insertElementAtSelection( anImage, true /* aDeleteSelection */ );
+      designHTMLEditor.selectElement( anImage );
       return true;
     };
     
     function onEdtInsertTable( source ) {
-      var aTable = designEditor.createElementWithDefaults( "table" );
+      var aTable = designHTMLEditor.createElementWithDefaults( "table" );
       aTable.setAttribute( "border", "1" );
       for ( var row = 0; row < 2; row++ ) {
-        var aRow = designEditor.createElementWithDefaults( "tr" );
+        var aRow = designHTMLEditor.createElementWithDefaults( "tr" );
         for ( var col = 0; col < 3; col++ ) {
-          var aColumn = designEditor.createElementWithDefaults( "td" );
+          var aColumn = designHTMLEditor.createElementWithDefaults( "td" );
           aColumn.setAttribute( "width", "30" );
           aRow.appendChild( aColumn );
         }
         aTable.appendChild( aRow );
       }
-      designEditor.insertElementAtSelection( aTable, true /* aDeleteSelection */ );
-      designEditor.selectElement( aTable );
+      designHTMLEditor.insertElementAtSelection( aTable, true /* aDeleteSelection */ );
+      designHTMLEditor.selectElement( aTable );
       return true;
     };
     
@@ -1416,7 +1429,7 @@ var Editor = function() {
     function contextMenuHandler( event ) {
       event.stopPropagation();
       event.preventDefault();
-      var popupBox = clipPopup.getBoundingClientRect();
+      var popupBox = editMenuPopup.getBoundingClientRect();
       var width = parseInt( popupBox.width );
       var height = parseInt( popupBox.height );
       var clientX = event.clientX;
@@ -1427,71 +1440,32 @@ var Editor = function() {
       if ( event.screenY + height > currentWindow.screen.availHeight ) {
         clientY -= height;
       }
-      clipPopup.openPopup( designFrame, null, clientX, clientY, true, false, null );
-      return false;
-    };
-    
-    function defaultClickHandler( event ) {
-      return ru.akman.znotes.Utils.clickHandler( event );
-    };
-
-    function defaultPressHandler( event ) {
-      if ( !event.isChar && !event.ctrlKey &&
-        !event.altKey && !event.shiftKey && !event.metaKey ) {
-        switch ( event.keyCode ) {
-          case event.DOM_VK_DELETE:
-            event.stopPropagation();
-            event.preventDefault();
-            onEdtDelete();
-            return;
-        }
-      }
-      if ( !event.isChar && event.ctrlKey &&
-        !event.altKey && !event.shiftKey && !event.metaKey ) {
-        switch ( event.charCode ) {
-          /*
-          case event.DOM_VK_T:
-            event.stopPropagation();
-            event.preventDefault();
-            onEdtTest();
-            return;
-          */
-          case event.DOM_VK_A:
-            event.stopPropagation();
-            event.preventDefault();
-            onEdtSelectAll();
-            return;
-          case event.DOM_VK_C:
-            event.stopPropagation();
-            event.preventDefault();
-            onEdtCopy();
-            return;
-          case event.DOM_VK_V:
-            event.stopPropagation();
-            event.preventDefault();
-            onEdtPaste();
-            return;
-          case event.DOM_VK_X:
-            event.stopPropagation();
-            event.preventDefault();
-            onEdtCut();
-            return;
-          case event.DOM_VK_Z:
-            event.stopPropagation();
-            event.preventDefault();
-            onEdtUndo();
-            return;
-          case event.DOM_VK_Y:
-            event.stopPropagation();
-            event.preventDefault();
-            onEdtRedo();
-            return;
-        }        
-      }
+      editMenuPopup.openPopup(
+        isSourceEditingActive ? sourceFrame : designFrame,
+        null,
+        clientX,
+        clientY,
+        true,
+        false,
+        null
+      );
       return true;
     };
     
-    function onClipPopupShowing( event ) {
+    function onEditMenuPopupShowing( event ) {
+      /*
+      currentWindow.goUpdateCommand( 'znotes_delete' );
+      currentDocument.getElementById( "deleteEditorButton" )
+                     .setAttribute(
+        "tooltiptext",
+        currentDocument.getElementById( "znotes_edit_delete_menuitem" )
+                       .getAttribute( "label" ) +
+        "\n" +
+        currentDocument.getElementById( "znotes_edit_delete_menuitem" )
+                       .getAttribute( "acceltext" )
+      );
+      */
+      /*
       var oEnabled, oCan;
       edtUndo.setAttribute( "disabled", "true" );
       edtRedo.setAttribute( "disabled", "true" );
@@ -1518,7 +1492,7 @@ var Editor = function() {
         }
         edtPaste.removeAttribute( "disabled" );
       } else {
-        if ( isDesignEditingActive ) {
+        if ( isDesignEditingActive && designEditor ) {
           oEnabled = {};
           oCan = {};
           designEditor.canUndo( oEnabled, oCan );
@@ -1550,6 +1524,7 @@ var Editor = function() {
           }
         }
       }
+      */
       return true;
     };    
  
@@ -1557,7 +1532,7 @@ var Editor = function() {
       if ( event && event.button ) {
         return true;
       }
-      onClipPopupShowing();
+      onEditMenuPopupShowing();
       if ( !isSourceEditingActive ) {
         var element = getSelectionStartElement();
         if ( element ) {
@@ -1814,10 +1789,19 @@ var Editor = function() {
       designFrame.contentDocument.execCommand( 'insertBrOnReturn', false, null );
       designFrame.contentDocument.addEventListener( "mouseup", onSelectionChanged, false );
       designFrame.contentDocument.addEventListener( "keyup", onSelectionChanged, false );
-      designEditor = designFrame.getHTMLEditor( designFrame.contentWindow );
+      designHTMLEditor = designFrame.getHTMLEditor( designFrame.contentWindow );
+      designEditor = designFrame.getEditor( designFrame.contentWindow );
       designEditor.addDocumentStateListener( documentStateListener );
-      designFrame.focus();
-      onSelectionChanged();
+      //designEditorController.defaultController =
+      //  designFrame.contentWindow.controllers.getControllerForCommand( "cmd_copy" );
+      //designFrame.contentWindow.controllers.insertControllerAt( 0, designEditorController );
+      // Restore last position of a cursor ...
+      // Where is my focus ?!
+      // We need to use setTimeout method :( !?
+      currentWindow.setTimeout( function() {
+        designFrame.focus();
+        onSelectionChanged();
+      }, 0 );
     };
     
     function doneDesignEditing() {
@@ -1826,21 +1810,15 @@ var Editor = function() {
       }
       isDesignEditingActive = false;
       designToolBox.setAttribute( "collapsed", "true" );
-      try {
-        if ( designEditor ) {
-          designEditor.removeDocumentStateListener( documentStateListener );
-        }
-      } catch ( e ) {
-        /*
-         * BUG: throws exception
-         * Message: "TypeError: editor is null"
-         * Source: "chrome://global/content/bindings/editor.xml", line: 94
-         */
+      if ( designEditor ) {
+        designEditor.removeDocumentStateListener( documentStateListener );
       }
-      designFrame.contentDocument.designMode = "off";
+      designEditor = null;
+      designHTMLEditor = null;
       designFrame.contentDocument.removeEventListener( "mouseup", onSelectionChanged, false );
       designFrame.contentDocument.removeEventListener( "keyup", onSelectionChanged, false );
-      designEditor = null;
+      //designFrame.contentWindow.controllers.removeController( designEditorController );
+      designFrame.contentDocument.designMode = "off";
       designFrame.blur();
     };
     
@@ -1858,8 +1836,13 @@ var Editor = function() {
       sourceEditor.on( "change", onSourceEditorChange );
       onSourceWindowResize();
       sourceEditor.clearHistory();
-      sourceEditor.focus();
-      onSelectionChanged();
+      // Restore last position of a cursor ...
+      // Where is my focus ?!
+      // We need to use setTimeout method :( !?
+      currentWindow.setTimeout( function() {
+        sourceEditor.focus();
+        onSelectionChanged();
+      }, 0 );
     };
     
     function doneSourceEditing() {
@@ -1916,123 +1899,57 @@ var Editor = function() {
       editorTabClose.setAttribute( "hidden", "true" );
       designToolBox.setAttribute( "collapsed", "true" );
       sourceToolBox.setAttribute( "collapsed", "true" );
-      designFrame.contentDocument.designMode = "on";
-      designFrame.contentDocument.designMode = "off";
       switchToDesignTab();
     };
     
     function addDefaultHandlers() {
+      designFrame.contentDocument.addEventListener( "click", ru.akman.znotes.Utils.clickHandler, false );
       sourceFrame.contentDocument.addEventListener( "contextmenu", contextMenuHandler, true );
       designFrame.contentDocument.addEventListener( "contextmenu", contextMenuHandler, true );
-      designFrame.contentDocument.addEventListener( "click", defaultClickHandler, true );
-      designFrame.contentDocument.addEventListener( "keypress", defaultPressHandler, false );
+      //designViewerController.defaultController =
+      //  designFrame.contentWindow.controllers.getControllerForCommand( "cmd_copy" );
+      //designFrame.contentWindow.controllers.insertControllerAt( 0, designViewerController );
+      //sourceEditorController.defaultController =
+      //  sourceFrame.contentWindow.controllers.getControllerForCommand( "cmd_copy" );
+      //sourceFrame.contentWindow.controllers.insertControllerAt( 0, sourceEditorController );
     };
     
+    function removeDefaultHandlers() {
+      if ( designFrame ) {
+        designFrame.contentDocument.removeEventListener( "click", ru.akman.znotes.Utils.clickHandler, false );
+        try {
+          //designFrame.contentWindow.controllers.removeController( designViewerController );
+        } catch ( e ) {
+          log( e );
+        }
+        designFrame.contentDocument.removeEventListener( "contextmenu", contextMenuHandler, true );
+      }
+      if ( sourceFrame ) {
+        try {
+          //sourceFrame.contentWindow.controllers.removeController( sourceEditorController );
+        } catch ( e ) {
+          log( e );
+        }
+        sourceFrame.contentDocument.removeEventListener( "contextmenu", contextMenuHandler, true );
+      }
+    };
+
     function addEventListeners() {
       editorTabs.addEventListener( "select", onEditorTabSelect, false );
       editorTabClose.addEventListener( "command", onEditorTabClose, false );
-      clipPopup.addEventListener( "popupshowing", onClipPopupShowing, false );
-      edtBold.addEventListener( "command", onEdtBold, false );
-      edtItalic.addEventListener( "command", onEdtItalic, false );
-      edtUnderline.addEventListener( "command", onEdtUnderline, false );
-      edtStrikeThrough.addEventListener( "command", onEdtStrikeThrough, false );
-      edtCopy.addEventListener( "command", onEdtCopy, false );
-      edtCopyKey.addEventListener( "command", onEdtCopy, false );
-      edtCut.addEventListener( "command", onEdtCut, false );
-      edtCutKey.addEventListener( "command", onEdtCut, false );
-      edtPaste.addEventListener( "command", onEdtPaste, false );
-      edtPasteKey.addEventListener( "command", onEdtPaste, false );
-      edtDelete.addEventListener( "command", onEdtDelete, false );
-      edtDeleteKey.addEventListener( "command", onEdtDelete, false );
-      edtSelectAll.addEventListener( "command", onEdtSelectAll, false );
-      edtSelectAllKey.addEventListener( "command", onEdtSelectAll, false );
-      edtUndo.addEventListener( "command", onEdtUndo, false );
-      edtRedo.addEventListener( "command", onEdtRedo, false );
-      edtJustifyCenter.addEventListener( "command", onEdtJustifyCenter, false );
-      edtJustifyLeft.addEventListener( "command", onEdtJustifyLeft, false );
-      edtJustifyRight.addEventListener( "command", onEdtJustifyRight, false );
-      edtJustifyFull.addEventListener( "command", onEdtJustifyFull, false );
-      edtSubscript.addEventListener( "command", onEdtSubscript, false );
-      edtSuperscript.addEventListener( "command", onEdtSuperscript, false );
+      editMenuPopup.addEventListener( "popupshowing", onEditMenuPopupShowing, false );
       fontSizeTextBox.addEventListener( "change", onEdtFontSize, false );
       fontSizeTextBox.addEventListener( "focus", onFontSizeTextBoxFocus, false );
-      edtIndent.addEventListener( "command", onEdtIndent, false );
-      edtOutdent.addEventListener( "command", onEdtOutdent, false );
-      edtLink.addEventListener( "command", onEdtLink, false );
-      edtUnlink.addEventListener( "command", onEdtUnlink, false );
-      edtRemoveFormat.addEventListener( "command", onEdtRemoveFormat, false );
-      edtInsertOrderedList.addEventListener( "command", onEdtInsertOrderedList, false );
-      edtInsertUnorderedList.addEventListener( "command", onEdtInsertUnorderedList, false );
-      edtInsertHorizontalRule.addEventListener( "command", onEdtInsertHorizontalRule, false );
-      edtInsertTable.addEventListener( "command", onEdtInsertTable, false );
-      edtInsertImage.addEventListener( "command", onEdtInsertImage, false );
-      edtInsertParagraph.addEventListener( "command", onEdtInsertParagraph, false );
-      edtForeColor.addEventListener( "command", onEdtForeColor, false );
-      edtForeColorDelete.addEventListener( "command", onEdtForeColorDelete, false );
-      edtBackColor.addEventListener( "command", onEdtBackColor, false );
-      edtBackColorDelete.addEventListener( "command", onEdtBackColorDelete, false );
-      srcBeautify.addEventListener( "command", onSrcBeautify, false );
-      //
       currentNote.addStateListener( noteStateListener );
       tagList.addStateListener( tagListStateListener );
-    };
-
-    function removeDefaultHandlers() {
-      if ( sourceFrame && sourceFrame.contentDocument ) {
-        sourceFrame.contentDocument.removeEventListener( "contextmenu", contextMenuHandler, true );
-      }
-      if ( designFrame && designFrame.contentDocument ) {
-        designFrame.contentDocument.removeEventListener( "contextmenu", contextMenuHandler, true );
-        designFrame.contentDocument.removeEventListener( "click", defaultClickHandler, true );
-        designFrame.contentDocument.removeEventListener( "keypress", defaultPressHandler, false );
-      }
     };
     
     function removeEventListeners() {
       editorTabs.removeEventListener( "select", onEditorTabSelect, false );
       editorTabClose.removeEventListener( "command", onEditorTabClose, false );
-      clipPopup.removeEventListener( "popupshowing", onClipPopupShowing, false );
-      edtBold.removeEventListener( "command", onEdtBold, false );
-      edtItalic.removeEventListener( "command", onEdtItalic, false );
-      edtUnderline.removeEventListener( "command", onEdtUnderline, false );
-      edtStrikeThrough.removeEventListener( "command", onEdtStrikeThrough, false );
-      edtCopy.removeEventListener( "command", onEdtCopy, false );
-      edtCopyKey.removeEventListener( "command", onEdtCopy, false );
-      edtCut.removeEventListener( "command", onEdtCut, false );
-      edtCutKey.removeEventListener( "command", onEdtCut, false );
-      edtPaste.removeEventListener( "command", onEdtPaste, false );
-      edtPasteKey.removeEventListener( "command", onEdtPaste, false );
-      edtDelete.removeEventListener( "command", onEdtDelete, false );
-      edtDeleteKey.removeEventListener( "command", onEdtDelete, false );
-      edtSelectAll.removeEventListener( "command", onEdtSelectAll, false );
-      edtSelectAllKey.removeEventListener( "command", onEdtSelectAll, false );
-      edtUndo.removeEventListener( "command", onEdtUndo, false );
-      edtRedo.removeEventListener( "command", onEdtRedo, false );
-      edtJustifyCenter.removeEventListener( "command", onEdtJustifyCenter, false );
-      edtJustifyLeft.removeEventListener( "command", onEdtJustifyLeft, false );
-      edtJustifyRight.removeEventListener( "command", onEdtJustifyRight, false );
-      edtJustifyFull.removeEventListener( "command", onEdtJustifyFull, false );
-      edtSubscript.removeEventListener( "command", onEdtSubscript, false );
-      edtSuperscript.removeEventListener( "command", onEdtSuperscript, false );
+      editMenuPopup.removeEventListener( "popupshowing", onEditMenuPopupShowing, false );
       fontSizeTextBox.removeEventListener( "change", onEdtFontSize, false );
       fontSizeTextBox.removeEventListener( "focus", onFontSizeTextBoxFocus, false );
-      edtIndent.removeEventListener( "command", onEdtIndent, false );
-      edtOutdent.removeEventListener( "command", onEdtOutdent, false );
-      edtLink.removeEventListener( "command", onEdtLink, false );
-      edtUnlink.removeEventListener( "command", onEdtUnlink, false );
-      edtRemoveFormat.removeEventListener( "command", onEdtRemoveFormat, false );
-      edtInsertOrderedList.removeEventListener( "command", onEdtInsertOrderedList, false );
-      edtInsertUnorderedList.removeEventListener( "command", onEdtInsertUnorderedList, false );
-      edtInsertHorizontalRule.removeEventListener( "command", onEdtInsertHorizontalRule, false );
-      edtInsertTable.removeEventListener( "command", onEdtInsertTable, false );
-      edtInsertImage.removeEventListener( "command", onEdtInsertImage, false );
-      edtInsertParagraph.removeEventListener( "command", onEdtInsertParagraph, false );
-      edtForeColor.removeEventListener( "command", onEdtForeColor, false );
-      edtForeColorDelete.removeEventListener( "command", onEdtForeColorDelete, false );
-      edtBackColor.removeEventListener( "command", onEdtBackColor, false );
-      edtBackColorDelete.removeEventListener( "command", onEdtBackColorDelete, false );
-      srcBeautify.removeEventListener( "command", onSrcBeautify, false );
-      //
       currentNote.removeStateListener( noteStateListener );
       tagList.removeStateListener( tagListStateListener );
     };
@@ -2041,14 +1958,19 @@ var Editor = function() {
       sourceWindow = sourceFrame.contentWindow;
       sourceEditorLibrary = sourceWindow.Source.getLibrary();
       sourceEditor = sourceWindow.Source.getEditor();
-      // @@@@ 1 getMainContent
-      sourceEditor.setValue( currentNote.getMainContent() );
+    };
+    
+    function initDesignEditor() {
+      designFrame.contentDocument.designMode = "on";
+      designFrame.contentDocument.designMode = "off";
     };
     
     function init( callback, wait ) {
       var initProgress = 0;
       var onCallback = function() {
         if ( initProgress == 10 ) {
+          // @@@@ 1 getMainContent
+          sourceEditor.setValue( currentNote.getMainContent() );
           addEventListeners();
           callback();
         }
@@ -2083,6 +2005,7 @@ var Editor = function() {
       isDesignMustBeUpdated = true;
       //
       editorStringsBundle = currentDocument.getElementById( "default.editor.stringbundle" );
+      //
       formatBlockObject[ editorStringsBundle.getString( "editor.formatblock.text" ) ] = "";
       formatBlockObject[ editorStringsBundle.getString( "editor.formatblock.paragraph" ) ] = "p";
       formatBlockObject[ editorStringsBundle.getString( "editor.formatblock.heading1" ) ] = "h1";
@@ -2114,70 +2037,38 @@ var Editor = function() {
       foreColorDeleteEditorButton = currentDocument.getElementById( "foreColorDeleteEditorButton" );
       backColorEditorButton = currentDocument.getElementById( "backColorEditorButton" );
       backColorDeleteEditorButton = currentDocument.getElementById( "backColorDeleteEditorButton" );
-      //
-      clipPopup = currentDocument.getElementById( "clipPopup" );
-      //
-      boldEditorButton = currentDocument.getElementById( "boldEditorButton" );
-      edtBold = currentDocument.getElementById( "edtBold" );
       italicEditorButton = currentDocument.getElementById( "italicEditorButton" );
-      edtItalic = currentDocument.getElementById( "edtItalic" );
       underlineEditorButton = currentDocument.getElementById( "underlineEditorButton" );
-      edtUnderline = currentDocument.getElementById( "edtUnderline" );
       strikeThroughEditorButton = currentDocument.getElementById( "strikeThroughEditorButton" );
-      edtStrikeThrough = currentDocument.getElementById( "edtStrikeThrough" );
-      edtCopy = currentDocument.getElementById( "edtCopy" );
-      edtCopyKey = currentDocument.getElementById( "edtCopyKey" );
-      edtCut = currentDocument.getElementById( "edtCut" );
-      edtCutKey = currentDocument.getElementById( "edtCutKey" );
-      edtPaste = currentDocument.getElementById( "edtPaste" );
-      edtPasteKey = currentDocument.getElementById( "edtPasteKey" );
-      edtDelete = currentDocument.getElementById( "edtDelete" );
-      edtDeleteKey = currentDocument.getElementById( "edtDeleteKey" );
-      edtSelectAll = currentDocument.getElementById( "edtSelectAll" );
-      edtSelectAllKey = currentDocument.getElementById( "edtSelectAllKey" );
-      edtUndo = currentDocument.getElementById( "edtUndo" );
-      edtRedo = currentDocument.getElementById( "edtRedo" );
-      edtJustifyCenter = currentDocument.getElementById( "edtJustifyCenter" );
+      boldEditorButton = currentDocument.getElementById( "boldEditorButton" );
       justifyCenterEditorButton = currentDocument.getElementById( "justifyCenterEditorButton" );
-      edtJustifyLeft = currentDocument.getElementById( "edtJustifyLeft" );
       justifyLeftEditorButton = currentDocument.getElementById( "justifyLeftEditorButton" );
-      edtJustifyRight = currentDocument.getElementById( "edtJustifyRight" );
       justifyRightEditorButton = currentDocument.getElementById( "justifyRightEditorButton" );
-      edtJustifyFull = currentDocument.getElementById( "edtJustifyFull" );
       justifyFullEditorButton = currentDocument.getElementById( "justifyFullEditorButton" );
-      edtSubscript = currentDocument.getElementById( "edtSubscript" );
-      edtSuperscript = currentDocument.getElementById( "edtSuperscript" );
-      edtIndent = currentDocument.getElementById( "edtIndent" );
-      edtOutdent = currentDocument.getElementById( "edtOutdent" );
-      edtLink = currentDocument.getElementById( "edtLink" );
-      edtUnlink = currentDocument.getElementById( "edtUnlink" );
-      edtRemoveFormat = currentDocument.getElementById( "edtRemoveFormat" );
-      edtInsertOrderedList = currentDocument.getElementById( "edtInsertOrderedList" );
-      edtInsertUnorderedList = currentDocument.getElementById( "edtInsertUnorderedList" );
-      edtInsertHorizontalRule = currentDocument.getElementById( "edtInsertHorizontalRule" );
-      edtInsertTable = currentDocument.getElementById( "edtInsertTable" );
-      edtInsertImage = currentDocument.getElementById( "edtInsertImage" );
-      edtInsertParagraph = currentDocument.getElementById( "edtInsertParagraph" );
-      edtForeColor = currentDocument.getElementById( "edtForeColor" );
-      edtForeColorDelete = currentDocument.getElementById( "edtForeColorDelete" );
-      edtBackColor = currentDocument.getElementById( "edtBackColor" );
-      edtBackColorDelete = currentDocument.getElementById( "edtBackColorDelete" );
-      srcBeautify = currentDocument.getElementById( "srcBeautify" );
+      //
       designFrame = currentDocument.getElementById( "designEditor" );
       sourceFrame = currentDocument.getElementById( "sourceEditor" );
       sourcePrintFrame = currentDocument.getElementById( "sourcePrintFrame" );
+      //
+      editMenuPopup = ru.akman.znotes.Utils.MAIN_WINDOW.document.getElementById( "znotes_edit_menupopup" );
+      // we have to start to open and hide editMenuPopup
+      // to correctly determine the size of it's boxObject,
+      // that are necessary in contextMenuHandler() later
+      editMenuPopup.openPopup( designFrame, null, 0, 0, true, false, null );
+      editMenuPopup.hidePopup();
+      //
       updateStyle();
       //
       if ( wait ) {
         var onDesignFrameLoad = function() {
           designFrame.removeEventListener( "load", onDesignFrameLoad, true );
           initProgress += 1;
+          initDesignEditor();
           onCallback();
         };
         var onSourceFrameLoad = function() {
           sourceFrame.removeEventListener( "load", onSourceFrameLoad, true );
-          // Without calling setTimeout()
-          // sourceWindow.Source.getEditor() returns NULL
+          // setTimeout()
           currentWindow.setTimeout( function() {
             initProgress += 2;
             initSourceEditor();
@@ -2195,6 +2086,7 @@ var Editor = function() {
       } else {
         initProgress = 6;
         initSourceEditor();
+        initDesignEditor();
       }
       onInitDone();
     };

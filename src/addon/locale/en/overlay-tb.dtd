@@ -30,33 +30,13 @@
   -
   - ***** END LICENSE BLOCK ***** -->
 
+<!ENTITY znotes_openmaintab_label "Notes">
+<!ENTITY znotes_openmaintab_tooltip "Switch to notes tab">
+<!ENTITY znotes_openmaintab_accesskey "N">
+<!ENTITY znotes_openmaintab_key "Z">
+<!ENTITY znotes_openmaintab_key_modifiers "accel shift">
+<!ENTITY znotes_openmaintab_keycode "">
 <!ENTITY znotes_menu_label "Notes">
 <!ENTITY znotes_menu_accesskey "N">
-
-<!ENTITY znotes_openmaintab_menuitem_label "Notes">
-<!ENTITY znotes_openmaintab_menuitem_accesskey "N">
-
-<!ENTITY znotes_newnote_menuitem_label_1 "Note">
-<!ENTITY znotes_newnote_menuitem_accesskey_1 "N">
-<!ENTITY znotes_newnote_menuitem_acceltext_1 "Ctrl+N">
-
-<!ENTITY znotes_newnote_menuitem_label_2 "New note">
-<!ENTITY znotes_newnote_menuitem_accesskey_2 "T">
-
-<!ENTITY znotes_openoptionsdialog_menuitem_label "Options">
-<!ENTITY znotes_openoptionsdialog_menuitem_accesskey "O">
-
-<!ENTITY znotes_debug_menuitem_label "Debug">
-<!ENTITY znotes_debug_menuitem_accesskey "D">
-
-<!ENTITY znotes_openhelp_menuitem_label "Help">
-<!ENTITY znotes_openhelp_menuitem_accesskey "H">
-
-<!ENTITY znotes_openabout_menuitem_label "About">
-<!ENTITY znotes_openabout_menuitem_accesskey "A">
-
-<!ENTITY newMsgButton-znotes-menuitem_label "Note">
-
 <!ENTITY znotes_menupopup_view_label "View">
-<!ENTITY znotes_showmainmenubar_label " Menubar">
-<!ENTITY znotes_showmaintoolbar_label " Toolbar">
+<!ENTITY znotes_menupopup_view_accesskey "V">

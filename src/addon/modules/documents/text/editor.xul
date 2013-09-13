@@ -33,7 +33,7 @@
 
 <?xml-stylesheet type="text/css" href="chrome://znotes/skin/documents/text/editor.css" ?>
 
-<!DOCTYPE window SYSTEM "chrome://znotes/locale/documents/text/editor.dtd">
+<!DOCTYPE overlay SYSTEM "chrome://znotes/locale/documents/text/editor.dtd">
 
 <overlay id="text" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
@@ -41,13 +41,6 @@
     <command id="edtBold" />
     <command id="edtItalic" />
     <command id="edtUnderline" />
-    <command id="edtCopy" />
-    <command id="edtCut" />
-    <command id="edtPaste" />
-    <command id="edtDelete" />
-    <command id="edtSelectAll" />
-    <command id="edtUndo" />
-    <command id="edtRedo" />
     <command id="edtForeColor" />
     <command id="edtJustifyCenter" />
     <command id="edtJustifyLeft" />
@@ -55,24 +48,9 @@
     <command id="edtJustifyFull" />
   </commandset>
 
-  <popupset id="popupSet">
-    <menupopup id="clipPopup">
-      <menuitem id="clipCut" label="&edt_cut;" key="edtCutKey" command="edtCut" />
-      <menuitem id="clipCopy" label="&edt_copy;" key="edtCopyKey" command="edtCopy" />
-      <menuitem id="clipPaste" label="&edt_paste;" key="edtPasteKey" command="edtPaste" />
-      <menuitem id="clipDelete" label="&edt_delete;" key="edtDeleteKey" command="edtDelete" />
-      <menuseparator id="clipSeparator" />
-      <menuitem id="clipSelectAll" label="&edt_selectall;" key="edtSelectAllKey" command="edtSelectAll" />
-    </menupopup>
-  </popupset>
+  <popupset id="popupSet" />
   
-  <keyset id="keySet">
-    <key id="edtCutKey" modifiers="accel" key="X" command="edtCut" />
-    <key id="edtCopyKey" modifiers="accel" key="C" command="edtCopy" />
-    <key id="edtPasteKey" modifiers="accel" key="V" command="edtPaste" />
-    <key id="edtDeleteKey" keycode="VK_DELETE" command="edtDelete" />
-    <key id="edtSelectAllKey" modifiers="accel" key="A" command="edtSelectAll" />
-  </keyset>
+  <keyset id="keySet" />
   
   <toolbar id="toolBar" />
 
@@ -164,30 +142,18 @@
                   command="edtJustifyFull" />
                 <toolbarseparator id="designToolBarSeparator4" />
                 <toolbarbutton id="copyEditorButton"
-                  class="menuitem-iconic"
-                  tooltiptext="&edt_copy;"
-                  command="edtCopy" />
+                  class="menuitem-iconic"/>
                 <toolbarbutton id="cutEditorButton"
-                  class="menuitem-iconic"
-                  tooltiptext="&edt_cut;"
-                  command="edtCut" />
+                  class="menuitem-iconic"/>
                 <toolbarbutton id="pasteEditorButton"
-                  class="menuitem-iconic"
-                  tooltiptext="&edt_paste;"
-                  command="edtPaste" />
+                  class="menuitem-iconic"/>
                 <toolbarbutton id="deleteEditorButton"
-                  class="menuitem-iconic"
-                  tooltiptext="&edt_delete;"
-                  command="edtDelete" />
+                  class="menuitem-iconic"/>
                 <toolbarseparator id="designToolBarSeparator4" />
                 <toolbarbutton id="undoEditorButton"
-                  class="menuitem-iconic"
-                  tooltiptext="&edt_undo;"
-                  command="edtUndo" />
+                  class="menuitem-iconic"/>
                 <toolbarbutton id="redoEditorButton"
-                  class="menuitem-iconic"
-                  tooltiptext="&edt_redo;"
-                  command="edtRedo" />
+                  class="menuitem-iconic"/>
               </toolbar>
             </toolbox>
           </vbox>

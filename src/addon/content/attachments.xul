@@ -71,11 +71,13 @@
 
   <toolbar id="toolBar">
     <toolbarbutton id="noteButtonAttachment"
+      class="toolbarbutton-1"
       tooltiptext="&note_button_attachment;"
       command="cmdNewAttachment"
       pack="end"
       insertafter="noteButtonTag"/>
     <toolbarbutton id="noteButtonContact"
+      class="toolbarbutton-1"
       hidden="true"
       tooltiptext="&note_button_contact;"
       command="cmdNewContact"

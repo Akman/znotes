@@ -61,10 +61,6 @@ ru.akman.znotes.ContentTabType = function() {
 
   };
 
-  pub.defaultClickHandler = function( aEvent ) {
-    return ru.akman.znotes.Utils.clickHandler( aEvent );
-  };
-
   pub.openTab = function( aTab, aArgs ) {
     if ( !( "note" in aArgs ) ) {
       return;
@@ -94,14 +90,14 @@ ru.akman.znotes.ContentTabType = function() {
     aTab.toolbox.setAttribute( "id", "znotes_contenttoolbox" + this.lastBrowserId );
     aTab.commandset = aTab.panel.getElementsByTagName( "commandset" )[0];
     aTab.commandset.setAttribute( "id", "znotes_contentcommandset" + this.lastBrowserId );
+    aTab.panel.getElementsByTagName( "vbox" )[0]
+              .setAttribute( "id", "znotes_contenttabcontent" + this.lastBrowserId );
     // Start setting up the browser.
     aTab.browser = aTab.panel.getElementsByTagName( "browser" )[0];
     // As we're opening this tab, showTab may not get called, so set
     // the type according to if we're opening in background or not.
     aTab.browser.setAttribute( "type", aTab.background ? "content-targetable" : "content-primary" );
     aTab.browser.setAttribute( "id", "znotes_contenttabbrowser" + this.lastBrowserId );
-    aTab.clickHandler = ru.akman.znotes.ContentTabType.defaultClickHandler;
-    aTab.browser.addEventListener( "click", aTab.clickHandler, false );
     // Set this attribute so that when favicons fail to load, we remove the
     // image attribute and just show the default tab icon.
     aTab.tabNode.addEventListener( "error", function() { this.removeAttribute( 'image' ); }, false );
@@ -121,8 +117,8 @@ ru.akman.znotes.ContentTabType = function() {
       aTab.browser.addEventListener(
         "load",
         function _znotesContentTab_onLoad( event ) {
-          aArgs.onLoad( event, aTab.browser );
           aTab.browser.removeEventListener( "load", _znotesContentTab_onLoad, true );
+          aArgs.onLoad( event, aTab.browser );
         },
         true
       );

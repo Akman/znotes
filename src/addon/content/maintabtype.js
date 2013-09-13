@@ -59,10 +59,6 @@ ru.akman.znotes.MainTabType = function() {
       }
     },
 
-    defaultClickHandler: function( aEvent ) {
-      return ru.akman.znotes.Utils.clickHandler( aEvent );
-    },
-    
     openTab: function( aTab, aArgs ) {
       if ( !("contentPage" in aArgs) ) {
         return;
@@ -79,8 +75,6 @@ ru.akman.znotes.MainTabType = function() {
       // the type according to if we're opening in background or not.
       var background = ( "background" in aArgs ) && aArgs.background;
       aTab.browser.setAttribute( "type", background ? "content-targetable" : "content-primary" );
-      aTab.clickHandler = ru.akman.znotes.MainTabType.defaultClickHandler;
-      aTab.browser.addEventListener( "click", aTab.clickHandler, false );
       // Set this attribute so that when favicons fail to load, we remove the
       // image attribute and just show the default tab icon.
       aTab.tabNode.addEventListener( "error", function() { this.removeAttribute( 'image' ); }, false );
@@ -98,8 +92,8 @@ ru.akman.znotes.MainTabType = function() {
         aTab.browser.addEventListener(
           "load",
           function _znotes_onLoad( event ) {
-            aArgs.onLoad( event, aTab.browser );
             aTab.browser.removeEventListener( "load", _znotes_onLoad, true );
+            aArgs.onLoad( event, aTab.browser );
           },
           true
         );

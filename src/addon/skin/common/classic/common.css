@@ -76,8 +76,14 @@
 #znotes_appmenu_addons, #znotes_mainmenubar_tools_popup_addons {
   list-style-image: url("chrome://znotes_images/skin/extension-16x16.png");
 }
-#znotes_appmenu_update, #znotes_mainmenubar_help_popup_update {
+#znotes_appmenu_addons[disabled="true"], #znotes_mainmenubar_tools_popup_addons[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/extension-disabled-16x16.png");
+}
+#znotes_appmenu_update, #znotes_mainmenubar_tools_popup_update {
   list-style-image: url("chrome://znotes_images/skin/check-16x16.png");
+}
+#znotes_appmenu_update[disabled="true"], #znotes_mainmenubar_tools_popup_update[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/check-disabled-16x16.png");
 }
 #znotes_appmenu_openabout, #znotes_mainmenubar_help_popup_openabout {
   list-style-image: url("chrome://znotes_images/skin/znotes-16x16.png");
@@ -655,18 +661,18 @@ toolbar[iconsize="small"] .znotes_showfilterbar_class[disabled="true"] {
   list-style-image: url("chrome://znotes_images/skin/filter-disabled-18x18.png");
 }
 
-.znotes_showappmenu_class {
+.znotes_showappmenu_button {
   list-style-image: url("chrome://znotes_images/skin/menu-18x18.png");
   min-width: 35px !important;
 }
-.znotes_showappmenu_class[disabled="true"] {
+.znotes_showappmenu_button[disabled="true"] {
   list-style-image: url("chrome://znotes_images/skin/menu-disabled-18x18.png");
   min-width: 35px !important;
 }
-toolbar[iconsize="small"] .znotes_showappmenu_class  {
+toolbar[iconsize="small"] .znotes_showappmenu_button  {
   list-style-image: url("chrome://znotes_images/skin/menu-18x18.png");
 }
-toolbar[iconsize="small"] .znotes_showappmenu_class[disabled="true"] {
+toolbar[iconsize="small"] .znotes_showappmenu_button[disabled="true"] {
   list-style-image: url("chrome://znotes_images/skin/menu-disabled-18x18.png");
 }
 

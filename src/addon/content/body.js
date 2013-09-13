@@ -244,7 +244,7 @@ ru.akman.znotes.Body = function() {
       var deletedButtons = [];
       for ( var i = 0; i < toolBarLength; i++ ) {
         var toolBarButton = toolBar.children[i];
-        if ( toolBarButton.getUserData( "type" ) == "tag" ) {
+        if ( toolBarButton.hasAttribute( "istag" ) && toolBarButton.getAttribute( "istag" ) == "true" ) {
           deletedButtons.push( toolBarButton );
         }
       }
@@ -256,8 +256,9 @@ ru.akman.znotes.Body = function() {
           var tag = tags[i];
           if ( tag ) {
             var toolBarButton = currentDocument.createElement( "toolbarbutton" );
-            toolBarButton.setUserData( "type", "tag", null );
+            toolBarButton.setAttribute( "istag", "true" );
             toolBarButton.setAttribute( "id", tag.getId() );
+            toolBarButton.setAttribute( "class", "toolbarbutton-1" );
             toolBarButton.setAttribute( "pack", "start" );
             toolBarButton.setAttribute( "tooltiptext", tag.getName() );
             toolBarButton.setAttribute( "image", ru.akman.znotes.Utils.makeTagImage( tag.getColor(), true, ( currentStyle.iconsize == "small" ) ? 16 : 24 ) );
@@ -551,7 +552,7 @@ ru.akman.znotes.Body = function() {
     function disableCurrentView() {
       var buttons = toolBar.childNodes;
       for ( var i = 0; i < buttons.length; i++ ) {
-        if ( buttons[i].getUserData( "type" ) == "tag" ) {
+        if ( buttons[i].hasAttribute( "istag" ) && buttons[i].getAttribute( "istag" ) == "true" ) {
           buttons[i].setAttribute( "disabled", "true" );
           buttons[i].setAttribute( "image", ru.akman.znotes.Utils.makeTagImage( "#C0C0C0", true, ( currentStyle.iconsize == "small" ) ? 16 : 24 ) );
         }

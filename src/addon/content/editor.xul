@@ -33,39 +33,37 @@
 
 <?xml-stylesheet type="text/css" href="chrome://znotes/skin/editor.css" ?>
 
-<!DOCTYPE window SYSTEM "chrome://znotes/locale/editor.dtd">
+<!DOCTYPE overlay SYSTEM "chrome://znotes/locale/editor.dtd">
 
 <overlay id="editor" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <script type="application/x-javascript" src="chrome://znotes/content/editor.js" />
 
-  <stringbundleset id="znotes_stringbundleset" />
-  
-  <keyset id="keySet" />
-  
-  <popupset id="popupSet" />
-  
+  <stringbundleset id="stringBundleset" />
   <commandset id="commandSet">
     <command id="cmdNoteEdit"/>
     <command id="cmdNoteSave"/>
     <command id="cmdNotePrint"/>
   </commandset>
+  <keyset id="keySet">
+  </keyset>
+  <popupset id="popupSet" />
 
   <toolbar id="toolBar">
     <toolbarbutton id="noteButtonEdit"
-      class="menuitem-iconic"
+      class="menuitem-iconic toolbarbutton-1"
       tooltiptext="&note_button_edit;"
       command="cmdNoteEdit"
       pack="end"
       insertbefore="noteButtonTag"/>
     <toolbarbutton id="noteButtonSave"
-      class="menuitem-iconic"
+      class="menuitem-iconic toolbarbutton-1"
       tooltiptext="&note_button_save;"
       command="cmdNoteSave"
       pack="end"
       insertbefore="noteButtonTag"/>
     <toolbarbutton id="noteButtonPrint"
-      class="menuitem-iconic"
+      class="menuitem-iconic toolbarbutton-1"
       tooltiptext="&note_button_print;"
       command="cmdNotePrint"
       pack="end"

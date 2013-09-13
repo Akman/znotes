@@ -52,7 +52,7 @@ var Utils = function() {
 
   var systemInfo = null;
 
-  var application = null;
+  var mainModule = null;
   var mainWindow = null;
   var stringsBundle = null;
   var isStandalone = true;
@@ -211,14 +211,14 @@ var Utils = function() {
 
     // C O M M O N  V A L U E S
 
-    get APPLICATION() {
-      return application;
+    get MAIN_MODULE() {
+      return mainModule;
     },
 
-    set APPLICATION( value ) {
-      application = value;
+    set MAIN_MODULE( value ) {
+      mainModule = value;
     },
-
+    
     get MAIN_WINDOW() {
       return mainWindow;
     },
@@ -322,6 +322,12 @@ var Utils = function() {
   };
   
   pub.dump = function( obj ) {
+    if ( obj == null ) {
+      pub.log( "NULL" );
+    }
+    if( obj === undefined ) {
+      pub.log( "UNDEFINED" );
+    }
     var msg = obj.toString() + "\n{\n";
     for ( var name in obj ) {
       msg += "  " + name + " = '" + obj[name] + "',\n";
@@ -486,10 +492,52 @@ var Utils = function() {
     return tabMail.tabInfo[ tabContainer.selectedIndex ];
   };
 
+  pub.isTabActive = function() {
+    var selectedTab = pub.getSelectedTab()
+    if ( !selectedTab ) {
+      return false;
+    }
+    return (
+      selectedTab.mode.type == "znotesContentTab" ||
+      selectedTab.mode.type == "znotesMainTab"
+    );
+  };
+  
+  pub.getPlatformWindow = function() {
+    return Components.classes["@mozilla.org/appshell/window-mediator;1"]
+                     .getService( Components.interfaces.nsIWindowMediator )
+                     .getMostRecentWindow( "znotes:platform" );
+  };
+
   pub.getMail3PaneWindow = function() {
     return Components.classes["@mozilla.org/appshell/window-mediator;1"]
                      .getService( Components.interfaces.nsIWindowMediator )
                      .getMostRecentWindow( "mail:3pane" );
+  };
+  
+  pub.initGlobals = function( aModule ) {
+    // STANDALONE APPLICATION
+    var aWindow = pub.getPlatformWindow();
+    if ( aWindow ) {
+      pub.MAIN_WINDOW = aWindow;
+      pub.MAIN_MODULE = aModule;
+      pub.IS_STANDALONE = true;
+      pub.STRINGS_BUNDLE = aWindow.document
+                                  .getElementById( "znotes_stringbundle" );
+      return;
+    }
+    // THUNDERBIRD ADDON
+    aWindow = pub.getMail3PaneWindow();
+    if ( aWindow ) {
+      pub.MAIN_WINDOW = aWindow;
+      pub.MAIN_MODULE = aModule;
+      pub.IS_STANDALONE = false;
+      pub.STRINGS_BUNDLE = aWindow.document
+                                  .getElementById( "znotes_stringbundle" );
+      return;
+    }
+    // UNKNOWN
+    throw Components.results.NS_ERROR_UNEXPECTED;
   };
 
   pub.clone = function( o ) {
@@ -1509,11 +1557,11 @@ var Utils = function() {
               .loadUrl( uri );
   };
 
-  pub.clickHandler = function( aEvent ) {
-    if ( !aEvent.isTrusted || aEvent.getPreventDefault() || aEvent.button ) {
+  pub.clickHandler = function( event ) {
+    if ( !event.isTrusted || event.getPreventDefault() || event.button ) {
       return true;
     }
-    var href = pub.getHREFForClickEvent( aEvent, true );
+    var href = pub.getHREFForClickEvent( event, true );
     if ( !href ) {
       return true;
     }
@@ -1523,21 +1571,22 @@ var Utils = function() {
                               .getService( Components.interfaces.nsIIOService );
     var uri = ioService.newURI( href, null, null );
     if ( uri.schemeIs( "znotes" ) ) {
-      aEvent.stopPropagation();
-      aEvent.preventDefault();
-      return pub.openNoteLink( href );
+      event.stopPropagation();
+      event.preventDefault();
+      return pub.openLinkInternally( href );
     } else if ( uri.schemeIs( "chrome" ) ) {
-      aEvent.stopPropagation();
-      aEvent.preventDefault();
+      event.stopPropagation();
+      event.preventDefault();
       return false;
     } else {
-      aEvent.preventDefault();
+      event.preventDefault();
       pub.openLinkExternally( href );
       return true;
     }
   };
 
-  pub.openNoteLink = function( href ) {
+  pub.openLinkInternally = function( href ) {
+    pub.log( href );
     return true;
   };
 

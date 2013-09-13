@@ -30,41 +30,29 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/* ***** classic/1.0 common **** */
-
-@import url("chrome://znotes/skin/common.css");
-
-.znotes_contenttoolbox {
-  border: none !important;
+#znotes_tabbox {
 }
-.znotes_maintoolbox {
-  padding-top: 7px;
-  padding-bottom: 7px;
+#znotes_tabs {
 }
-.znotes_contenttoolbox {
-  padding-left: 1px;
-  padding-right: 1px;
-  border: none !important;
+.znotes_tab {
+  -moz-appearance: none;
+  background-color: #F5F6F7;
+  padding-top: 2px;
+  padding-bottom: 2px;
+  min-width: 200px;
+  min-height: 24px;
+  margin-left: 24px;
+  border-top-left-radius: 32px;
+  border-top-right-radius: 32px;
 }
-
-.znotes_contenttabbrowser {
+#znotes_tabpanels {
+  -moz-appearance: none;
+  border: none;
+  padding: 0px;
 }
-
-.tabmail-tab[type="znotesMainTab"] {
-  list-style-image: url("chrome://znotes_images/skin/znotes-16x16.png");
-}
-.tabmail-tab[type="znotesContentTab"] {
-  list-style-image: url("chrome://znotes_images/skin/znotes-16x16.png");
-}
-#znotes_openmaintab_button {
-  list-style-image: url("chrome://znotes_images/skin/znotes-24x24.png");
-}
-toolbar[iconsize="small"] #znotes_openmaintab_button {
-  list-style-image: url("chrome://znotes_images/skin/znotes-16x16.png");
-}
-#znotes_openmaintab_tabbar_button {
-  list-style-image: url("chrome://znotes_images/skin/znotes-24x24.png");
-}
-toolbar[iconsize="small"] #znotes_openmaintab_tabbar_button {
-  list-style-image: url("chrome://znotes_images/skin/znotes-16x16.png");
+#znotes_statusbar {
+  -moz-appearance: none;
+  margin-bottom: -1px;
+  border: none;
+  border-top: 1px solid ThreeDShadow;
 }

@@ -30,5 +30,5 @@
   -
   - ***** END LICENSE BLOCK ***** -->
 
-<!ENTITY znotes_openmaintab_button_label "Заметки">
-<!ENTITY znotes_openmaintab_button_tooltip "Переключиться на вкладку заметок">
+<!ENTITY titlemodifier.label "">
+<!ENTITY titlemenuseparator.label "-">

@@ -45,11 +45,12 @@
   orient="vertical"
   persist="width height screenX screenY sizemode">
 
-  <script type="application/x-javascript" src="chrome://znotes/content/viewer.js" />
+  <script type="application/x-javascript"
+    src="chrome://znotes/content/viewer.js" />
 
-  <stringbundleset id="znotes_stringbundleset" />
-  <keyset id="keySet" />
+  <stringbundleset id="stringBundleset" />
   <commandset id="commandSet" />
+  <keyset id="keySet" />
   <popupset id="popupSet" />
 
   <vbox id="noteBodyView" pack="start" align="stretch" flex="1"/>

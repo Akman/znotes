@@ -36,6 +36,7 @@ if ( !ru.akman.znotes ) ru.akman.znotes = {};
 
 Components.utils.import( "resource://znotes/utils.js" , ru.akman.znotes );
 Components.utils.import( "resource://znotes/updatemanager.js" , ru.akman.znotes );
+Components.utils.import( "resource://znotes/commandmanager.js" , ru.akman.znotes );
 
 ru.akman.znotes.Debug = function() {
 
@@ -543,6 +544,14 @@ ru.akman.znotes.Debug = function() {
           log( "Apply downloaded updates now ..." );
           break;
       }
+    }
+  } );
+  
+  tests.push( {
+    name: "Command Manager",
+    description: "Command Manager",
+    code: function () {
+      ru.akman.znotes.CommandManager.doCommand( "znotes_print_command" );
     }
   } );
   

@@ -30,33 +30,13 @@
   -
   - ***** END LICENSE BLOCK ***** -->
 
+<!ENTITY znotes_openmaintab_label "Заметки">
+<!ENTITY znotes_openmaintab_tooltip "Переключиться на вкладку заметок">
+<!ENTITY znotes_openmaintab_accesskey "З">
+<!ENTITY znotes_openmaintab_key "Z">
+<!ENTITY znotes_openmaintab_key_modifiers "accel shift">
+<!ENTITY znotes_openmaintab_keycode "">
 <!ENTITY znotes_menu_label "Заметки">
 <!ENTITY znotes_menu_accesskey "З">
-
-<!ENTITY znotes_openmaintab_menuitem_label "Заметки">
-<!ENTITY znotes_openmaintab_menuitem_accesskey "З">
-
-<!ENTITY znotes_newnote_menuitem_label_1 "Заметку">
-<!ENTITY znotes_newnote_menuitem_accesskey_1 "З">
-<!ENTITY znotes_newnote_menuitem_acceltext_1 "Ctrl+З">
-
-<!ENTITY znotes_newnote_menuitem_label_2 "Новая заметка">
-<!ENTITY znotes_newnote_menuitem_accesskey_2 "Н">
-
-<!ENTITY znotes_openoptionsdialog_menuitem_label "Параметры">
-<!ENTITY znotes_openoptionsdialog_menuitem_accesskey "П">
-
-<!ENTITY znotes_debug_menuitem_label "Отладка">
-<!ENTITY znotes_debug_menuitem_accesskey "О">
-
-<!ENTITY znotes_openhelp_menuitem_label "Справка">
-<!ENTITY znotes_openhelp_menuitem_accesskey "С">
-
-<!ENTITY znotes_openabout_menuitem_label "О программе">
-<!ENTITY znotes_openabout_menuitem_accesskey "р">
-
-<!ENTITY newMsgButton-znotes-menuitem_label "Заметка">
-
 <!ENTITY znotes_menupopup_view_label "Вид">
-<!ENTITY znotes_showmainmenubar_label "Панель меню">
-<!ENTITY znotes_showmaintoolbar_label "Панель инструментов">
+<!ENTITY znotes_menupopup_view_accesskey "В">

@@ -264,9 +264,9 @@
       <then>
       </then>
       <else>
-        <exec executable="${config.markdown.path}">
+        <exec executable="${config.markdown.path}"
+          output="${bin.dir}/addon/readme.html">
           <arg value="${addon.dir}/readme.md" />
-          <arg value="&gt;${bin.dir}/addon/readme.html" />
         </exec>
       </else>
     </if>
@@ -500,9 +500,9 @@
           <then>
           </then>
           <else>
-            <exec executable="${config.markdown.path}">
+            <exec executable="${config.markdown.path}"
+              output="${bin.dir}/standalone/${platform}/${application.name}-${application.version}-${lang}/${application.applename}/Contents/Resources/readme.html">
               <arg value="${standalone.dir}/readme.md" />
-              <arg value="&gt;${bin.dir}/standalone/${platform}/${application.name}-${application.version}-${lang}/${application.applename}/Contents/Resources/readme.html" />
             </exec>
           </else>
         </if>
@@ -567,9 +567,9 @@
           <then>
           </then>
           <else>
-            <exec executable="${config.markdown.path}">
+            <exec executable="${config.markdown.path}"
+              output="${bin.dir}/standalone/${platform}/${application.fullname}-${lang}/readme.html">
               <arg value="${standalone.dir}/readme.md" />
-              <arg value="&gt;${bin.dir}/standalone/${platform}/${application.fullname}-${lang}/readme.html" />
             </exec>
           </else>
         </if>

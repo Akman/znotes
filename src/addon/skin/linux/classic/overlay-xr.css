@@ -30,8 +30,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/* ***** classic/1.0 common **** */
+/* ***** classic/1.0 linux **** */
 
-#newMsgButton-znotes-menuitem {
-  list-style-image: url("chrome://znotes_images/skin/new-note-16x16.png");
-}
+@import url("chrome://znotes_common/skin/overlay-xr.css");

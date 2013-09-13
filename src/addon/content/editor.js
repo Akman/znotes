@@ -43,6 +43,7 @@ ru.akman.znotes.Editor = function() {
 
     // !!!! %%%% !!!! STRINGS_BUNDLE
     var stringsBundle = ru.akman.znotes.Utils.STRINGS_BUNDLE;
+    var log = ru.akman.znotes.Utils.log;
 
     var currentMode = "viewer";
     var currentStyle = {
@@ -116,12 +117,14 @@ ru.akman.znotes.Editor = function() {
     };
 
     function onCmdNoteSave( source ) {
+      log( "onCmdNoteSave()" );
       if ( currentNote && currentNote.isExists() && currentEditor ) {
         currentEditor.save();
       }
     };
 
     function onCmdNotePrint( source ) {
+      log( "onCmdNotePrint()" );
       if ( currentNote && currentNote.isExists() && currentEditor ) {
         currentEditor.print();
       }

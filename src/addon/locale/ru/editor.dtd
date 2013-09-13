@@ -33,3 +33,6 @@
 <!ENTITY note_button_edit " Редактировать">
 <!ENTITY note_button_save " Сохранить">
 <!ENTITY note_button_print " Печатать">
+
+<!ENTITY keyNoteSave "S">
+<!ENTITY keyNotePrint "P">

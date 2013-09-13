@@ -34,13 +34,6 @@
 <!ENTITY edt_tab_source " Текст ">
 <!ENTITY edt_tab_close " Закрыть">
 
-<!ENTITY edt_redo "Повтор">
-<!ENTITY edt_undo "Отмена">
-<!ENTITY edt_delete "Удалить">
-<!ENTITY edt_paste "Вставить">
-<!ENTITY edt_copy "Копировать">
-<!ENTITY edt_cut "Вырезать">
-<!ENTITY edt_selectall "Выделить всё">
 <!ENTITY edt_remove_format "Удалить формат">
 <!ENTITY edt_subscript "Нижний индекс">
 <!ENTITY edt_superscript "Верхний индекс">

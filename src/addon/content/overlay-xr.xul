@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="UTF-8" ?>
 <!-- ***** BEGIN LICENSE BLOCK *****
   -
   - Version: GPL 3.0
@@ -30,16 +31,34 @@
   -
   - ***** END LICENSE BLOCK ***** -->
 
-<!ENTITY edt_tab_design " Вид ">
-<!ENTITY edt_tab_close " Закрыть">
+<?xml-stylesheet type="text/css" href="chrome://znotes/skin/overlay-xr.css" ?>
 
-<!ENTITY edt_fore_сolor "Цвет текста">
-<!ENTITY edt_font_name "Начертание шрифта">
-<!ENTITY edt_font_size "Размер шрифта">
-<!ENTITY edt_bold "Жирный">
-<!ENTITY edt_italic "Наклонный">
-<!ENTITY edt_underline "Подчёркнутый">
-<!ENTITY edt_justify_center "Выравнять по центру">
-<!ENTITY edt_justify_left "Выравнять по левому краю">
-<!ENTITY edt_justify_right "Выравнять по правому краю">
-<!ENTITY edt_justify_full "Выравнять по ширине">
+<?xul-overlay href="chrome://znotes/content/common.xul" ?>
+
+<!DOCTYPE overlay SYSTEM "chrome://znotes/locale/overlay-xr.dtd">
+
+<overlay id="znotes-overlay-xr"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script type="application/javascript"
+    src="chrome://znotes/content/overlay-xr.js" />
+
+  <window id="znotes">
+    <stringbundleset id="znotes_stringbundleset" />
+    <commandset id="znotes_commandset" />
+    <keyset id="znotes_keyset" />
+    <popupset id="znotes_popupset" />
+  </window>
+    
+  <vbox id="znotes_maintabpanel" />
+  
+  <vbox id="znotes_tabpanelcontainer">
+    <vbox id="znotes_contenttabpanel" />
+  </vbox>
+  
+  <statusbar id="znotes_statusbar">
+    <spacer id="znotes_statusbar_spacer" flex="1"/>
+    <statusbarpanel id="znotes_statusbarpanel" hidden="true"/>
+  </statusbar>
+    
+</overlay>

@@ -54,7 +54,7 @@ var Document = function() {
   pub.getInfo = function() {
     return {
       url: "chrome://znotes_documents/content/text/",
-      iconURL: "chrome://znotes/skin/documents/text/text.png",
+      iconURL: "chrome://znotes_images/skin/documents/text/text.png",
       type: "text/plain",
       defaultNS: "",
       errorNS: "",

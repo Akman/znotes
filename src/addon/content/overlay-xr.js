@@ -34,18 +34,24 @@ if ( !ru ) var ru = {};
 if ( !ru.akman ) ru.akman = {};
 if ( !ru.akman.znotes ) ru.akman.znotes = {};
 
-Components.utils.import( "resource://znotes/utils.js", ru.akman.znotes );
+Components.utils.import( "resource://znotes/utils.js",
+  ru.akman.znotes
+);
 
-ru.akman.znotes.Common = function() {
+ru.akman.znotes.ZNotes = function() {
 
   var pub = {};
 
-  pub.doCommand = function( aCommand, anEvent ) {
-    if ( ru.akman.znotes.Utils.APPLICATION ) {
-      ru.akman.znotes.Utils.APPLICATION.doCommand( aCommand, anEvent );
-    }
+  var log = ru.akman.znotes.Utils.log;
+
+  pub.load = function() {
+    removeEventListener( "load", ru.akman.znotes.ZNotes.load, false );
+    document.getElementById( "znotes_maintabbrowser" )
+            .setAttribute( "src", "chrome://znotes/content/main.xul" );
   };
 
   return pub;
 
 }();
+
+window.addEventListener( "load"  , ru.akman.znotes.ZNotes.load, false );

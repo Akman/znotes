@@ -122,51 +122,51 @@ var Note = function( aBook, anEntry, aCategory, aType, aTagID ) {
     this.entry.setType( type );
   };
 
-  this.getUserData = function() {
-    return this.userData;
+  this.getData = function() {
+    return this.data;
   };
 
-  this.setUserData = function() {
-    this.entry.setUserData( JSON.stringify( this.userData ) );
+  this.setData = function() {
+    this.entry.setData( JSON.stringify( this.data ) );
     this.notifyStateListener(
       new ru.akman.znotes.core.Event(
-        "NoteUserDataChanged",
+        "NoteDataChanged",
         { parentCategory: this.getParent(), changedNote: this } )
     );
   };
   
   this.loadPreference = function( name, value ) {
-    if ( "prefs" in this.userData ) {
-      if ( this.userData.prefs == null || 
-           Array.isArray( this.userData.prefs ) ||
-           typeof( this.userData.prefs ) !== "object" ) {
-        this.userData.prefs = {};
+    if ( "prefs" in this.data ) {
+      if ( this.data.prefs == null || 
+           Array.isArray( this.data.prefs ) ||
+           typeof( this.data.prefs ) !== "object" ) {
+        this.data.prefs = {};
       }
     } else {
-      this.userData.prefs = {};
+      this.data.prefs = {};
     }
-    if ( name in this.userData.prefs ) {
-      return this.userData.prefs[name];
+    if ( name in this.data.prefs ) {
+      return this.data.prefs[name];
     }
     return value;
   };
   
   this.savePreference = function( name, value ) {
-    if ( "prefs" in this.userData ) {
-      if ( this.userData.prefs == null || 
-           Array.isArray( this.userData.prefs ) ||
-           typeof( this.userData.prefs ) !== "object" ) {
-        this.userData.prefs = {};
+    if ( "prefs" in this.data ) {
+      if ( this.data.prefs == null || 
+           Array.isArray( this.data.prefs ) ||
+           typeof( this.data.prefs ) !== "object" ) {
+        this.data.prefs = {};
       }
     } else {
-      this.userData.prefs = {};
+      this.data.prefs = {};
     }
-    if ( name in this.userData.prefs && this.userData.prefs[name] == value ) {
+    if ( name in this.data.prefs && this.data.prefs[name] == value ) {
       return;
     }
-    var oldValue = ( name in this.userData.prefs ) ? this.userData.prefs[name] : undefined;
-    this.userData.prefs[name] = value;
-    this.entry.setUserData( JSON.stringify( this.userData ) );
+    var oldValue = ( name in this.data.prefs ) ? this.data.prefs[name] : undefined;
+    this.data.prefs[name] = value;
+    this.entry.setData( JSON.stringify( this.data ) );
     this.notifyStateListener(
       new ru.akman.znotes.core.Event(
         "NotePrefChanged",
@@ -565,6 +565,7 @@ var Note = function( aBook, anEntry, aCategory, aType, aTagID ) {
     frame.setAttribute( "id", "import_" + ru.akman.znotes.Utils.createUUID() );
     frame.setAttribute( "type", "content-primary" );
     frame.setAttribute( "disablehistory", "true" );
+    frame.setAttribute( "disableglobalhistory", "true" );
     frame.setAttribute( "collapsed", "true" );
     frame.setAttribute( "src", "about:blank" );
     aParent.appendChild( frame );
@@ -832,7 +833,7 @@ var Note = function( aBook, anEntry, aCategory, aType, aTagID ) {
   this.name = this.entry.getName();
   this.id = this.entry.getId();
   this.index = this.entry.getIndex();
-  this.userData = JSON.parse( this.entry.getUserData() );
+  this.data = JSON.parse( this.entry.getData() );
   this.type = this.entry.getType();
   if ( aType && aType != this.type ) {
     this.setType( aType );

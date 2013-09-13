@@ -34,19 +34,8 @@
 
 @import url("chrome://znotes_common/skin/main.css");
 
-#znotes_maintabpanel {
-  margin-bottom: -1px;
-}
-.znotes_maintabpanel {
-}
-.znotes_maintoolbox {
-  padding-bottom: 2px;
-}
 #noteTree {
   margin-left: -2px !important;
-}
-#status-bar {
-  background-color: hsl(210, 75%, 92%);
 }
 #bookTreeName {
   padding: 5px 4px 5px 4px;

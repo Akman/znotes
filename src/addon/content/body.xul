@@ -45,17 +45,14 @@
 
   <script type="application/javascript" src="chrome://znotes/content/body.js"/>
 
-  <stringbundleset id="znotes_stringbundleset"/>
-  
-  <keyset id="keySet" />
-  
+  <stringbundleset id="stringBundleset"/>
   <commandset id="commandSet">
     <command id="cmdNoteTag"/>
     <command id="cmdNoteDelete"/>
     <command id="cmdNoteRename"/>
     <command id="cmdNoteAddons"/>
   </commandset>
-
+  <keyset id="keySet"/>
   <popupset id="popupSet">
     <menupopup id="tagMenu"/>
   </popupset>
@@ -76,18 +73,22 @@
             align="stretch"
             flex="1" />
           <toolbarbutton id="noteButtonTag"
+            class="toolbarbutton-1"
             tooltiptext="&note_button_tag;"
             command="cmdNoteTag"
             pack="end"/>
           <toolbarbutton id="noteButtonRename"
+            class="toolbarbutton-1"
             tooltiptext="&note_button_rename;"
             command="cmdNoteRename"
             pack="end"/>
           <toolbarbutton id="noteButtonDelete"
+            class="toolbarbutton-1"
             tooltiptext="&note_button_delete;"
             command="cmdNoteDelete"
             pack="end"/>
           <toolbarbutton id="noteButtonAddons"
+            class="toolbarbutton-1"
             type="checkbox" autocheck="true"
             tooltiptext="&note_button_addons;"
             command="cmdNoteAddons"

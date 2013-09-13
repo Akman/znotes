@@ -32,11 +32,11 @@
 
 /* main */
 
-pref("toolkit.defaultChromeURI", "chrome://znotes/content/main.xul");
+pref("toolkit.defaultChromeURI", "chrome://znotes/content/znotes.xul");
 pref("toolkit.singletonWindowType", true);
 pref("toolkit.defaultChromeFeatures", "chrome=yes,dialog=no,resizable=yes,centerscreen=yes,menubar=yes,toolbar=yes,status=yes");
 pref("intl.locale.matchOS", false);
-
+pref("accessibility.typeaheadfind.flashBar", 0);
 /* debug mode */
 
 /*

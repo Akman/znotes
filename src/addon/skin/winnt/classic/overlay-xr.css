@@ -30,7 +30,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/* ***** classic/1.0 linux **** */
+/* ***** classic/1.0 winnt **** */
 
-@import url("chrome://znotes_common/skin/znotes.css");
-
+@import url("chrome://znotes_common/skin/overlay-xr.css");
