@@ -35,20 +35,23 @@
 
 <!DOCTYPE window SYSTEM "chrome://znotes/locale/loader.dtd">
 
-<overlay id="loader" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+<overlay id="loader"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <script type="application/x-javascript" src="chrome://znotes/content/loader.js" />
+  <script type="application/x-javascript"
+    src="chrome://znotes/content/loader.js" />
 
-  <commandset id="commandSet">
-    <command id="cmdNoteImportAbort"/>
-  </commandset>
+  <stringbundleset id="znotes_stringbundleset" />
+  <commandset id="znotes_commandset" />
+  <keyset id="znotes_keyset" />
+  <popupset id="znotes_popupset" />
   
   <vbox id="loadView">
 
-    <tabbox id="loaderTabBox" pack="start" align="stretch" flex="1">
-      <tabpanels id="loaderPanels" pack="start" align="stretch" flex="1">
-        <tabpanel id="loaderPanel" pack="start" align="stretch" flex="1">
-          <vbox id="loaderBox" pack="start" align="stretch" flex="1">
+    <tabbox id="loaderTabBox" flex="1">
+      <tabpanels id="loaderPanels" flex="1">
+        <tabpanel id="loaderPanel" flex="1">
+          <vbox id="loaderBox" flex="1">
             <label id="url" />
             <hbox id="progressbar">
               <progressmeter id="indicator"
@@ -56,7 +59,9 @@
                 value="0"
                 flex="1" />
               <button id="loaderAbortButton"
-                command="cmdNoteImportAbort" />
+                key="znotes_loaderabort_key"
+                class="znotes_loaderabort_class"
+                command="znotes_loaderabort_command" />
             </hbox>
             <textbox id="log"
               disabled="true"

@@ -30,12 +30,6 @@
   -
   - ***** END LICENSE BLOCK ***** -->
 
-<!ENTITY znotes_openmaintab_label "Notes">
-<!ENTITY znotes_openmaintab_tooltip "Switch to notes tab">
-<!ENTITY znotes_openmaintab_accesskey "N">
-<!ENTITY znotes_openmaintab_key "Z">
-<!ENTITY znotes_openmaintab_key_modifiers "accel shift">
-<!ENTITY znotes_openmaintab_keycode "">
 <!ENTITY znotes_menu_label "Notes">
 <!ENTITY znotes_menu_accesskey "N">
 <!ENTITY znotes_menupopup_view_label "View">

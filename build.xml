@@ -99,7 +99,12 @@
     description="- Clean all">
     <delete dir="${bin.dir}" quiet="true" includeemptydirs="true" />
     <delete dir="${releases.dir}" quiet="true" includeemptydirs="true" />
-    <delete dir="${config.local.thunderbird.profile.development.dir}/extensions/${application.id}" quiet="true" includeemptydirs="true" />
+    <if>
+      <equals arg1="${config.local.thunderbird.profile.development.dir}" arg2="" />
+      <else>
+        <delete dir="${config.local.thunderbird.profile.development.dir}/extensions/${application.id}" quiet="true" includeemptydirs="true" />
+      </else>
+    </if>
     <delete dir="${config.local.thunderbird.profile.work.dir}/extensions/${application.id}" quiet="true" includeemptydirs="true" />
     <delete dir="${config.local.znotes.dir}" quiet="true" includeemptydirs="true">
       <exclude name="profile/**" />
@@ -293,6 +298,16 @@
 
   <!-- STANDALONE -->
 
+  <target
+    name="standalone-resources-platform-skin"
+    description="- [Internal] Build platform skin for standalone application">
+    <zip destfile="${root}/chrome/platform.jar">
+      <fileset dir="${standalone.dir}">
+        <include name="skin/**" />
+      </fileset>
+    </zip>
+  </target>
+  
   <target
     name="standalone-resources-platform-language"
     description="- [Internal] Build language specific resources for standalone application">
@@ -514,6 +529,9 @@
         <antcall target="standalone-resources-platform-language">
           <param name="root" value="${bin.dir}/standalone/${platform}/${application.name}-${application.version}-${lang}/${application.applename}/Contents/Resources" />
         </antcall>
+        <antcall target="standalone-resources-platform-skin">
+          <param name="root" value="${bin.dir}/standalone/${platform}/${application.name}-${application.version}-${lang}/${application.applename}/Contents/Resources" />
+        </antcall>
         <xslt
           in="${config.product.xml.path}"
           out="${bin.dir}/standalone/${platform}/${application.name}-${application.version}-${lang}/${application.applename}/Contents/Info.plist"
@@ -574,6 +592,10 @@
           </else>
         </if>
         <antcall target="standalone-resources-platform-language">
+          <param name="root"
+            value="${bin.dir}/standalone/${platform}/${application.fullname}-${lang}" />
+        </antcall>
+        <antcall target="standalone-resources-platform-skin">
           <param name="root"
             value="${bin.dir}/standalone/${platform}/${application.fullname}-${lang}" />
         </antcall>
@@ -737,11 +759,16 @@
     name="deploy-addon-locally"
     depends="addon"
     description="- Deploy addon in local user profile directory">
-    <copy todir="${config.local.thunderbird.profile.development.dir}/extensions/${application.id}">
-      <fileset dir="${bin.dir}/addon">
-        <exclude name="install.amo.rdf" />
-      </fileset>
-    </copy>
+    <if>
+      <equals arg1="${config.local.thunderbird.profile.development.dir}" arg2="" />
+      <else>
+        <copy todir="${config.local.thunderbird.profile.development.dir}/extensions/${application.id}">
+          <fileset dir="${bin.dir}/addon">
+            <exclude name="install.amo.rdf" />
+          </fileset>
+        </copy>
+      </else>
+    </if>
     <copy todir="${config.local.thunderbird.profile.work.dir}/extensions/${application.id}">
       <fileset dir="${bin.dir}/addon">
         <exclude name="install.amo.rdf" />

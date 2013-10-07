@@ -35,8 +35,12 @@ if ( !ru.akman ) ru.akman = {};
 if ( !ru.akman.znotes ) ru.akman.znotes = {};
 if ( !ru.akman.znotes.core ) ru.akman.znotes.core = {};
 
-Components.utils.import( "resource://znotes/utils.js"  , ru.akman.znotes );
-Components.utils.import( "resource://znotes/event.js"  , ru.akman.znotes.core );
+Components.utils.import( "resource://znotes/utils.js",
+  ru.akman.znotes
+);
+Components.utils.import( "resource://znotes/event.js",
+  ru.akman.znotes.core
+);
 
 var EXPORTED_SYMBOLS = ["Editor"];
 
@@ -45,8 +49,8 @@ var Editor = function() {
   return function() {
 
     // !!!! %%%% !!!! STRINGS_BUNDLE
-    var stringsBundle = ru.akman.znotes.Utils.STRINGS_BUNDLE;
-    var log = ru.akman.znotes.Utils.log;
+    var Utils = ru.akman.znotes.Utils;
+    var stringsBundle = Utils.STRINGS_BUNDLE;
     
     var EditorException = function( message ) {
       this.name = "EditorException";
@@ -62,10 +66,9 @@ var Editor = function() {
     var currentDocument = null;
     var currentNote = null;
     var currentMode = null;
-    var currentState = null;
     var currentStyle = null;
     
-    //
+    var currentState = null;
     
     var currentNoteMainTagColor = null;
     var tagList = null;
@@ -114,7 +117,7 @@ var Editor = function() {
     
     var editMenuPopup = null;
     
-    // C O N T R O L L E R S
+    // CONTROLLERS
     
     var designViewerController = {
       supportsCommand: function ( cmd ) {
@@ -142,7 +145,7 @@ var Editor = function() {
       }
     };
     
-    // U T I L S
+    // HELPERS
     
     function createFontNameMenuList() {
       var fontNameArray = ru.akman.znotes.Utils.getFontNameArray();
@@ -170,13 +173,20 @@ var Editor = function() {
         style.setProperty( 'font-family', "'" + fontFamily + "'" );
       }
       edtFontSize.value = getFontSize( currentNote );
-      italicEditorButton.checked = ( getFontStyle( currentNote ) == "italic" );
-      boldEditorButton.checked = ( getFontWeight( currentNote ) == "bold" );
-      underlineEditorButton.checked = ( getTextDecoration( currentNote ) == "underline" );
-      justifyCenterEditorButton.checked = ( getTextAlign( currentNote ) == "center" );
-      justifyLeftEditorButton.checked = ( getTextAlign( currentNote ) == "start" );
-      justifyRightEditorButton.checked = ( getTextAlign( currentNote ) == "end" );
-      justifyFullEditorButton.checked = ( getTextAlign( currentNote ) == "justify" );
+      italicEditorButton.checked =
+        ( getFontStyle( currentNote ) == "italic" );
+      boldEditorButton.checked =
+        ( getFontWeight( currentNote ) == "bold" );
+      underlineEditorButton.checked =
+        ( getTextDecoration( currentNote ) == "underline" );
+      justifyCenterEditorButton.checked =
+        ( getTextAlign( currentNote ) == "center" );
+      justifyLeftEditorButton.checked =
+        ( getTextAlign( currentNote ) == "start" );
+      justifyRightEditorButton.checked =
+        ( getTextAlign( currentNote ) == "end" );
+      justifyFullEditorButton.checked =
+        ( getTextAlign( currentNote ) == "justify" );
     };
     
     function setColorButtonsImages() {
@@ -269,7 +279,7 @@ var Editor = function() {
       return designFrame.value;
     };
     
-    // V I E W  C O M M A N D S
+    // VIEW COMMANDS
     
     function onEdtBold( event ) {
       var fontWeight = boldEditorButton.checked ? "bold" : "normal";
@@ -368,8 +378,12 @@ var Editor = function() {
     function onEdtForeColor( event ) {
       var params = {
         input: {
-          title: stringsBundle.getString( "body.colorselectdialog.title" ),
-          message: stringsBundle.getString( "body.forecolorselectdialog.message" ),
+          title: stringsBundle.getString(
+            "body.colorselectdialog.title"
+          ),
+          message: stringsBundle.getString(
+            "body.forecolorselectdialog.message"
+          ),
           color: "#000000"
         },
         output: null
@@ -417,7 +431,7 @@ var Editor = function() {
       return true;
     };
     
-    // E D I T O R  C O M M A N D S
+    // EDITOR COMMANDS
     
     function onEdtSelectAll( source ) {
       if ( isDesignEditingActive ) {
@@ -436,18 +450,27 @@ var Editor = function() {
         designEditor.copy();
         onSelectionChanged();
       } else {
-        var transferable = Components.Constructor( "@mozilla.org/widget/transferable;1", "nsITransferable" )();
+        var transferable = Components.Constructor(
+          "@mozilla.org/widget/transferable;1",
+          "nsITransferable"
+        )();
         transferable.init(
-          currentWindow.QueryInterface( Components.interfaces.nsIInterfaceRequestor )
-                       .getInterface( Components.interfaces.nsIWebNavigation )
+          currentWindow.QueryInterface(
+            Components.interfaces.nsIInterfaceRequestor
+          ).getInterface( Components.interfaces.nsIWebNavigation )
         );
         transferable.addDataFlavor( "text/unicode" );
         var textData = designViewer.contentWindow.getSelection().toString();
-        var textSupportsString = Components.Constructor("@mozilla.org/supports-string;1", "nsISupportsString")();
+        var textSupportsString = Components.Constructor(
+          "@mozilla.org/supports-string;1",
+          "nsISupportsString"
+        )();
         textSupportsString.data = textData;
-        transferable.setTransferData( "text/unicode", textSupportsString, textData.length * 2 );
-        var clipboard = Components.classes['@mozilla.org/widget/clipboard;1']
-                                  .createInstance( Components.interfaces.nsIClipboard );
+        transferable.setTransferData(
+          "text/unicode", textSupportsString, textData.length * 2 );
+        var clipboard =
+          Components.classes['@mozilla.org/widget/clipboard;1']
+                    .createInstance( Components.interfaces.nsIClipboard );
         clipboard.setData( transferable, null, clipboard.kGlobalClipboard );
       }
       return true;
@@ -493,7 +516,7 @@ var Editor = function() {
       return true;
     };
     
-    // E V E N T S
+    // EVENTS
 
     function contextMenuHandler( event ) {
       event.stopPropagation();
@@ -509,7 +532,9 @@ var Editor = function() {
       if ( event.screenY + height > currentWindow.screen.availHeight ) {
         clientY -= height;
       }
-      editMenuPopup.openPopup( designViewer, null, clientX, clientY, true, false, null );
+      editMenuPopup.openPopup(
+        designViewer, null, clientX, clientY, true, false, null
+      );
       return true;
     };
     
@@ -525,7 +550,8 @@ var Editor = function() {
         edtPaste.setAttribute( "disabled", "true" );
         edtCopy.setAttribute( "disabled", "true" );
         var selection = designViewer.contentWindow.getSelection();
-        if ( selection && selection.rangeCount != 0 && !selection.isCollapsed ) {
+        if ( selection && selection.rangeCount != 0 &&
+             !selection.isCollapsed ) {
           edtCopy.removeAttribute( "disabled" );
         }
       } else {
@@ -673,14 +699,14 @@ var Editor = function() {
       }
     };
     
-    // E D I T O R  E V E N T S
+    // EDITOR EVENTS
     
     function onDocumentStateChanged( nowDirty ) {
       switchState( nowDirty );
       return true;
     };
     
-    // P R I V A T E  M E T H O D S
+    // PRIVATE
 
     function initDesignEditing() {
       if ( isDesignEditingActive ) {
@@ -747,14 +773,20 @@ var Editor = function() {
     function addDefaultHandlers() {
       designFrame.addEventListener( "contextmenu", contextMenuHandler, true );
       designFrame.addEventListener( "click", defaultClickHandler, false );
-      designViewer.contentDocument.addEventListener( "contextmenu", contextMenuHandler, true );
-      designViewer.contentDocument.addEventListener( "click", defaultClickHandler, false );
-      //designViewer.contentWindow.controllers.insertControllerAt( 0, designViewerController );
-      //designFrame.controllers.insertControllerAt( 0, designEditorController );
+      designViewer.contentDocument.addEventListener(
+        "contextmenu", contextMenuHandler, true );
+      designViewer.contentDocument.addEventListener( "click",
+        defaultClickHandler, false );
+      //designViewer.contentWindow.controllers
+      //                          .insertControllerAt( 0,
+      //                            designViewerController );
+      //designFrame.controllers
+      //           .insertControllerAt( 0, designEditorController );
     };
     
     function addEventListeners() {
-      editMenuPopup.addEventListener( "popupshowing", onEditMenuPopupShowing, false );
+      editMenuPopup.addEventListener( "popupshowing",
+        onEditMenuPopupShowing, false );
       edtBold.addEventListener( "command", onEdtBold, false );
       edtItalic.addEventListener( "command", onEdtItalic, false );
       edtUnderline.addEventListener( "command", onEdtUnderline, false );
@@ -773,15 +805,20 @@ var Editor = function() {
     
     function removeDefaultHandlers() {
       if ( designFrame ) {
-        designFrame.removeEventListener( "contextmenu", contextMenuHandler, true );
+        designFrame.removeEventListener( "contextmenu",
+          contextMenuHandler, true );
         designFrame.removeEventListener( "click", defaultClickHandler, false );
       }
       if ( designViewer ) {
-        designViewer.contentDocument.removeEventListener( "contextmenu", contextMenuHandler, true );
-        designViewer.contentDocument.removeEventListener( "click", defaultClickHandler, false );
+        designViewer.contentDocument.removeEventListener( "contextmenu",
+          contextMenuHandler, true );
+        designViewer.contentDocument.removeEventListener( "click",
+          defaultClickHandler, false );
       }
-      if ( designViewer && designViewer.contentWindow && designViewer.contentWindow.controllers ) {
-        //designViewer.contentWindow.controllers.removeController( designViewerController );
+      if ( designViewer && designViewer.contentWindow &&
+           designViewer.contentWindow.controllers ) {
+        //designViewer.contentWindow.controllers
+        //                          .removeController( designViewerController );
       }
       if ( designFrame && designFrame.controllers ) {    
         //designFrame.controllers.removeController( designEditorController );
@@ -789,16 +826,19 @@ var Editor = function() {
     };
     
     function removeEventListeners() {
-      editMenuPopup.removeEventListener( "popupshowing", onEditMenuPopupShowing, false );
+      editMenuPopup.removeEventListener( "popupshowing",
+        onEditMenuPopupShowing, false );
       edtBold.removeEventListener( "command", onEdtBold, false );
       edtItalic.removeEventListener( "command", onEdtItalic, false );
       edtUnderline.removeEventListener( "command", onEdtUnderline, false );
       edtForeColor.removeEventListener( "command", onEdtForeColor, false );
       edtFontSize.removeEventListener( "change", onEdtFontSize, false );
       edtFontSize.removeEventListener( "focus", onEdtFontSizeFocus, false );
-      edtJustifyCenter.removeEventListener( "command", onEdtJustifyCenter, false );
+      edtJustifyCenter.removeEventListener( "command",
+        onEdtJustifyCenter, false );
       edtJustifyLeft.removeEventListener( "command", onEdtJustifyLeft, false );
-      edtJustifyRight.removeEventListener( "command", onEdtJustifyRight, false );
+      edtJustifyRight.removeEventListener( "command",
+        onEdtJustifyRight, false );
       edtJustifyFull.removeEventListener( "command", onEdtJustifyFull, false );
       editorTabClose.removeEventListener( "command", onEditorTabClose, false );
       currentNote.removeStateListener( noteStateListener );
@@ -853,16 +893,26 @@ var Editor = function() {
       designFrame = currentDocument.getElementById( "designEditor" );
       designViewer = currentDocument.getElementById( "designViewer" );
       printFrame = currentDocument.getElementById( "printFrame" );
-      fontNameMenuPopup = currentDocument.getElementById( "fontNameMenuPopup" );
-      fontNameMenuList = currentDocument.getElementById( "fontNameMenuList" );
-      foreColorEditorButton = currentDocument.getElementById( "foreColorEditorButton" );
-      italicEditorButton = currentDocument.getElementById( "italicEditorButton" );
-      boldEditorButton = currentDocument.getElementById( "boldEditorButton" );
-      underlineEditorButton = currentDocument.getElementById( "underlineEditorButton" );
-      justifyCenterEditorButton = currentDocument.getElementById( "justifyCenterEditorButton" );
-      justifyLeftEditorButton = currentDocument.getElementById( "justifyLeftEditorButton" );
-      justifyRightEditorButton = currentDocument.getElementById( "justifyRightEditorButton" );
-      justifyFullEditorButton = currentDocument.getElementById( "justifyFullEditorButton" );
+      fontNameMenuPopup =
+        currentDocument.getElementById( "fontNameMenuPopup" );
+      fontNameMenuList =
+        currentDocument.getElementById( "fontNameMenuList" );
+      foreColorEditorButton =
+        currentDocument.getElementById( "foreColorEditorButton" );
+      italicEditorButton =
+        currentDocument.getElementById( "italicEditorButton" );
+      boldEditorButton =
+        currentDocument.getElementById( "boldEditorButton" );
+      underlineEditorButton =
+        currentDocument.getElementById( "underlineEditorButton" );
+      justifyCenterEditorButton =
+        currentDocument.getElementById( "justifyCenterEditorButton" );
+      justifyLeftEditorButton =
+        currentDocument.getElementById( "justifyLeftEditorButton" );
+      justifyRightEditorButton =
+        currentDocument.getElementById( "justifyRightEditorButton" );
+      justifyFullEditorButton =
+        currentDocument.getElementById( "justifyFullEditorButton" );
       //
       edtBold = currentDocument.getElementById( "edtBold" );
       edtItalic = currentDocument.getElementById( "edtItalic" );
@@ -874,7 +924,8 @@ var Editor = function() {
       edtJustifyRight = currentDocument.getElementById( "edtJustifyRight" );
       edtJustifyFull = currentDocument.getElementById( "edtJustifyFull" );
       //
-      editMenuPopup = ru.akman.znotes.Utils.MAIN_WINDOW.document.getElementById( "znotes_edit_menupopup" );
+      editMenuPopup =
+        currentDocument.getElementById( "znotes_edit_menupopup" );
       // we have to start to open and hide editMenuPopup
       // to correctly determine the size of it's boxObject,
       // that are necessary in contextMenuHandler() later
@@ -962,9 +1013,15 @@ var Editor = function() {
     function confirm() {
       var params = {
         input: {
-          title: stringsBundle.getString( "body.confirmSave.title" ),
-          message1: stringsBundle.getFormattedString( "body.confirmSave.message1", [ currentNote.getName() ] ),
-          message2: stringsBundle.getString( "body.confirmSave.message2" )
+          title: stringsBundle.getString(
+            "body.confirmSave.title"
+          ),
+          message1: stringsBundle.getFormattedString(
+            "body.confirmSave.message1", [ currentNote.getName() ]
+          ),
+          message2: stringsBundle.getString(
+            "body.confirmSave.message2"
+          )
         },
         output: null
       };
@@ -981,7 +1038,10 @@ var Editor = function() {
     };
 
     function print() {
-      printFrame.contentDocument.body.style.setProperty( 'background-color', currentNoteMainTagColor );
+      printFrame.contentDocument.body.style.setProperty(
+        'background-color',
+        currentNoteMainTagColor
+      );
       var content = printFrame.contentDocument.getElementById( "content" );
       if ( !content ) {
         content = printFrame.contentDocument.body.appendChild(
@@ -989,13 +1049,20 @@ var Editor = function() {
         );
         content.setAttribute( "id", "content" );
       }
-      content.style.setProperty( 'font-family', "'" + getFontFamily( currentNote ) + "'" );
-      content.style.setProperty( 'font-size', getFontSize( currentNote ) + "px" );
-      content.style.setProperty( 'font-style', getFontStyle( currentNote ) );
-      content.style.setProperty( 'font-weight', getFontWeight( currentNote ) );
-      content.style.setProperty( 'color', getColor( currentNote ) );
-      content.style.setProperty( 'text-decoration', getTextDecoration( currentNote ) );
-      content.style.setProperty( 'text-align', getTextAlign( currentNote ) );
+      content.style.setProperty( 'font-family',
+        "'" + getFontFamily( currentNote ) + "'" );
+      content.style.setProperty( 'font-size',
+        getFontSize( currentNote ) + "px" );
+      content.style.setProperty( 'font-style',
+        getFontStyle( currentNote ) );
+      content.style.setProperty( 'font-weight',
+        getFontWeight( currentNote ) );
+      content.style.setProperty( 'color',
+        getColor( currentNote ) );
+      content.style.setProperty( 'text-decoration',
+        getTextDecoration( currentNote ) );
+      content.style.setProperty( 'text-align',
+        getTextAlign( currentNote ) );
       content.textContent = designFrame.value;
       currentWindow.openDialog(
         "chrome://znotes/content/printpreview.xul",
@@ -1035,6 +1102,8 @@ var Editor = function() {
       }, wait );
     };
     
+    // LISTENERS
+    
     function notifyStateListener( event ) {
       for ( var i = 0; i < listeners.length; i++ ) {
         if ( listeners[i][ "on" + event.type ] ) {
@@ -1043,10 +1112,10 @@ var Editor = function() {
       }
     };
     
-    // P U B L I C  M E T H O D S
+    // PUBLIC
     
     /**
-     * Open a note and show it in the editor's view
+     * Open editor for a note
      * @param win Window in which Document live
      * @param doc Document in which will be loaded the editor
      * @param note Note that will be opened in the editor
@@ -1055,7 +1124,8 @@ var Editor = function() {
     this.open = function( win, doc, note, style ) {
       var editorView = doc.getElementById( "editorView" );
       var noteType = note.getType();
-      var editorType = editorView.hasAttribute( "type" ) ? editorView.getAttribute( "type" ) : "";
+      var editorType = editorView.hasAttribute( "type" ) ?
+        editorView.getAttribute( "type" ) : "";
       if ( editorType == noteType ) {
         editorInit( win, doc, note, style );
       } else {
@@ -1077,7 +1147,7 @@ var Editor = function() {
     };
     
     /**
-     * Close the current note and hide the editor's view
+     * Close editor for current note
      */
     this.close = function() {
       if ( !currentDocument ) {
@@ -1136,24 +1206,6 @@ var Editor = function() {
     };
     
     /**
-     * Enable buttons in parent toolbars if they placed there
-     */
-    this.enable = function() {
-      if ( !currentDocument ) {
-        throw new EditorException( "Editor was not loaded." );
-      }
-    };
-    
-    /**
-     * Disable buttons in parent toolbars if they placed there
-     */
-    this.disable = function() {
-      if ( !currentDocument ) {
-        throw new EditorException( "Editor was not loaded." );
-      }
-    };
-    
-    /**
      * Update style of toolbars
      * @param style { iconsize: "small" || "normal" }
      */
@@ -1168,7 +1220,7 @@ var Editor = function() {
     };
     
     /**
-     * Add listener
+     * Add state listener
      * @param stateListener Listener
      */
     this.addStateListener = function( stateListener ) {
@@ -1178,7 +1230,7 @@ var Editor = function() {
     };
     
     /**
-     * Remove listener
+     * Remove state listener
      * @param stateListener Listener
      */
     this.removeStateListener = function( stateListener ) {

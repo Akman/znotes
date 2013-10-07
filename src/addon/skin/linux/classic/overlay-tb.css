@@ -33,14 +33,3 @@
 /* ***** classic/1.0 linux **** */
 
 @import url("chrome://znotes_common/skin/overlay-tb.css");
-
-.znotes_maintoolbox {
-  padding-top: 6px !important;
-  padding-bottom: 5px !important;
-}
-.znotes_contenttoolbox {
-  padding-left: 3px;
-  padding-right: 3px;
-  padding-top: 2px;
-  padding-bottom: 0px;
-}

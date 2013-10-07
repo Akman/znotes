@@ -35,9 +35,11 @@
 
 <!DOCTYPE overlay SYSTEM "chrome://znotes/locale/documents/text/editor.dtd">
 
-<overlay id="text" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+<overlay id="text"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <commandset id="commandSet">
+  <stringbundleset id="znotes_stringbundleset" />
+  <commandset id="znotes_commandset">
     <command id="edtBold" />
     <command id="edtItalic" />
     <command id="edtUnderline" />
@@ -47,10 +49,8 @@
     <command id="edtJustifyRight" />
     <command id="edtJustifyFull" />
   </commandset>
-
-  <popupset id="popupSet" />
-  
-  <keyset id="keySet" />
+  <keyset id="znotes_keyset" />
+  <popupset id="znotes_popupset" />
   
   <toolbar id="toolBar" />
 

@@ -39,7 +39,7 @@
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   id="znotes"
   title="&title;"
-  windowtype="znotes"
+  windowtype="znotes:debug"
   persist="width height screenX screenY sizemode">
   
   <script type="application/javascript" src="chrome://znotes/content/debug.js"/>

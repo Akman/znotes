@@ -42,15 +42,17 @@ var EXPORTED_SYMBOLS = ["TabMonitor"];
 
 var TabMonitor = function() {
 
+  var Utils = ru.akman.znotes.Utils;
+  var sessionManager = ru.akman.znotes.SessionManager;
   var prefsManager = ru.akman.znotes.PrefsManager.getInstance();
-
+  
   var pub = {
 
     monitorName: "znotesMonitor",
 
     onTabTitleChanged: function( aTab ) {
       if ( aTab.mode.name == "znotesContentTab" ) {
-        ru.akman.znotes.SessionManager.updateState( aTab );
+        sessionManager.updateState( aTab );
       }
     },
 
@@ -59,7 +61,15 @@ var TabMonitor = function() {
         prefsManager.setBoolPref( "isOpened", true );
       }
       if ( aTab.mode.name == "znotesContentTab" ) {
-        ru.akman.znotes.SessionManager.updateState( aTab, { opened: true, background: true } );
+        sessionManager.updateState(
+          aTab, { opened: true, background: true } );
+      }
+      // xr only
+      if ( aTab.mode.name == "znotesMainTab" ||
+           aTab.mode.name == "znotesContentTab" ) {
+        if ( aTab.window ) {
+          aTab.window.focus();
+        }
       }
     },
 
@@ -68,7 +78,7 @@ var TabMonitor = function() {
         prefsManager.setBoolPref( "isOpened", false );
       }
       if ( aTab.mode.name == "znotesContentTab" ) {
-        ru.akman.znotes.SessionManager.updateState( aTab, { opened: false } );
+        sessionManager.updateState( aTab, { opened: false } );
       }
     },
 
@@ -78,22 +88,25 @@ var TabMonitor = function() {
     onTabRestored: function( aTab ) {
     },
 
-    // Unfortunately, tabmail doesn't provide a hideTab function on the tab
-    // type definitions. To make sure the commands are correctly disabled,
-    // we want to update template commands when switching away from
-    // those tabs.
     onTabSwitched: function( aNewTab, anOldTab ) {
       if ( anOldTab.mode.name == "znotesMainTab" ) {
         prefsManager.setBoolPref( "isActive", false );
       }
       if ( anOldTab.mode.name == "znotesContentTab" ) {
-        ru.akman.znotes.SessionManager.updateState( anOldTab, { background: true } );
+        sessionManager.updateState( anOldTab, { background: true } );
       }
       if ( aNewTab.mode.name == "znotesMainTab" ) {
         prefsManager.setBoolPref( "isActive", true );
       }
       if ( aNewTab.mode.name == "znotesContentTab" ) {
-        ru.akman.znotes.SessionManager.updateState( aNewTab, { background: false } );
+        sessionManager.updateState( aNewTab, { background: false } );
+      }
+      // tb only
+      if ( aNewTab.mode.name == "znotesMainTab" ||
+           aNewTab.mode.name == "znotesContentTab" ) {
+        if ( aNewTab.browser ) {
+          aNewTab.browser.contentWindow.focus();
+        }
       }
     }
 

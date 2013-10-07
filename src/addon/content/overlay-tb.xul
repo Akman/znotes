@@ -34,6 +34,8 @@
 <?xml-stylesheet type="text/css" href="chrome://znotes/skin/overlay-tb.css" ?>
 
 <?xul-overlay href="chrome://znotes/content/common.xul" ?>
+<?xul-overlay href="chrome://znotes/content/maintab.xul" ?>
+<?xul-overlay href="chrome://znotes/content/contenttab.xul" ?>
 
 <!DOCTYPE overlay SYSTEM "chrome://znotes/locale/overlay-tb.dtd">
 
@@ -41,46 +43,37 @@
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <script type="application/javascript"
+    src="chrome://znotes/content/common.js" />
+  <script type="application/javascript"
+    src="chrome://znotes/content/overlay-tb.js" />
+  <script type="application/javascript"
     src="chrome://znotes/content/maintabtype.js" />
   <script type="application/javascript"
     src="chrome://znotes/content/contenttabtype.js" />
-  <script type="application/javascript"
-    src="chrome://znotes/content/overlay-tb.js" />
-
+    
   <window id="messengerWindow">
     <stringbundleset id="znotes_stringbundleset" />
-    <commandset id="znotes_commandset">
-      <command id="znotes_openmaintab_command"
-        label="&znotes_openmaintab_label;"
-        title="&znotes_openmaintab_label;"
-        tooltiptext="&znotes_openmaintab_tooltip;"
-        accesskey="&znotes_openmaintab_accesskey;"
-        key="znotes_openmaintab_key"
-        oncommand="ru.akman.znotes.ZNotes.openMainTab( true );" />
-    </commandset>
-    <keyset id="znotes_keyset">
-      <key id="znotes_openmaintab_key" command="znotes_openmaintab_command"
-        key="&znotes_openmaintab_key;" modifiers="&znotes_openmaintab_key_modifiers;"
-        keycode="&znotes_openmaintab_keycode;"/>
-    </keyset>
+    <commandset id="znotes_commandset" />
+    <keyset id="znotes_keyset" />
     <popupset id="znotes_popupset" />
   </window>
 
   <toolbarpalette id="MailToolbarPalette">
-    <toolbarbutton id="znotes_openmaintab_button" сlass="toolbarbutton-1"
+    <toolbarbutton id="znotes_openmaintab_button"
+      сlass="toolbarbutton-1 znotes_openmaintab_class"
       command="znotes_openmaintab_command"/>
   </toolbarpalette>
 
   <toolbar id="tabbar-toolbar">
     <toolbarbutton id="znotes_openmaintab_tabbar_button"
-      class="toolbarbutton-1"
+      class="toolbarbutton-1 znotes_openmaintab_class"
       command="znotes_openmaintab_command"/>
   </toolbar>
 
   <toolbarbutton id="button-newmsg" type="menu-button">
     <menupopup id="button-newMsgPopup">
      <menuitem id="newMsgButton-znotes-menuitem"
-       class="menuitem-iconic"
+       class="menuitem-iconic znotes_newnote_class"
        command="znotes_newnote_command"
        key="znotes_newnote_key"
        insertafter="newMsgButton-mail-menuitem"/>
@@ -215,14 +208,9 @@
     </menu>
   </vbox>
 
-  <tabpanels id="tabpanelcontainer">
-    <vbox id="znotes_maintabpanel" flex="1" />
-  </tabpanels>
-
   <hbox id="tabmail-container">
-    <vbox id="znotesContentTab" collapsed="true">
-      <vbox id="znotes_contenttabpanel" flex="1" />
-    </vbox>
+    <vbox id="znotes_maintabpanel" collapsed="true" />
+    <vbox id="znotes_contenttabpanel" collapsed="true" />
   </hbox>
   
   <statusbar id="status-bar">

@@ -43,12 +43,12 @@ ru.akman.znotes.ConfirmDialog = function() {
 
   pub.onLoad = function() {
     args = window.arguments[0];
-    document.title = args.input.title;
-    document.getElementById("message1").value = args.input.message1;
-    document.getElementById("message2").value = args.input.message2;
-    if ( args.input.kind ) {
-      kind = args.input.kind;
-    }
+    document.title = args.input.title ? args.input.title : "";
+    document.getElementById("message1").value = args.input.message1 ?
+      args.input.message1 : "";
+    document.getElementById("message2").value = args.input.message2 ?
+      args.input.message2 : "";
+    kind = args.input.kind ? args.input.kind : 0;
     if ( kind == 1 ) {
       // question
       document.getElementById("imgWarning1").removeAttribute( "hidden" );

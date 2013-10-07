@@ -30,12 +30,6 @@
   -
   - ***** END LICENSE BLOCK ***** -->
 
-<!ENTITY znotes_openmaintab_label "Заметки">
-<!ENTITY znotes_openmaintab_tooltip "Переключиться на вкладку заметок">
-<!ENTITY znotes_openmaintab_accesskey "З">
-<!ENTITY znotes_openmaintab_key "Z">
-<!ENTITY znotes_openmaintab_key_modifiers "accel shift">
-<!ENTITY znotes_openmaintab_keycode "">
 <!ENTITY znotes_menu_label "Заметки">
 <!ENTITY znotes_menu_accesskey "З">
 <!ENTITY znotes_menupopup_view_label "Вид">

@@ -40,6 +40,6 @@ skin      znotes            classic/1.0 jar:chrome/znotes.jar!/skin/linux/classi
 skin      znotes_images     classic/1.0 jar:chrome/znotes.jar!/skin/images/classic/
 skin      znotes_sounds     classic/1.0 jar:chrome/znotes.jar!/skin/sounds/classic/
 skin      znotes_common     classic/1.0 jar:chrome/znotes.jar!/skin/common/classic/
-overlay   chrome://messenger/content/messenger.xul         chrome://znotes/content/overlay-tb.xul
-style     chrome://global/content/customizeToolbar.xul     chrome://znotes/skin/overlay-tb.css
+overlay   chrome://messenger/content/messenger.xul        chrome://znotes/content/overlay-tb.xul
+style     chrome://global/content/customizeToolbar.xul    chrome://znotes/skin/overlay-tb.css
 manifest  locale/localized.manifest

@@ -32,8 +32,13 @@
   - ***** END LICENSE BLOCK ***** -->
 
 <?xml-stylesheet type="text/css" href="chrome://global/skin/" ?>
+<?xml-stylesheet type="text/css" href="chrome://messenger/skin/primaryToolbar.css" ?>
+<?xml-stylesheet type="text/css" href="chrome://messenger/skin/messenger.css" ?>
+<?xml-stylesheet type="text/css" href="chrome://messenger/skin/messageHeader.css" ?>
 <?xml-stylesheet type="text/css" href="chrome://znotes/skin/main.css" ?>
 
+<?xul-overlay href="chrome://znotes/content/common.xul" ?>
+<?xul-overlay href="chrome://znotes/content/menu.xul" ?>
 <?xul-overlay href="chrome://znotes/content/body.xul" ?>
 
 <!DOCTYPE window SYSTEM "chrome://znotes/locale/main.dtd">
@@ -43,247 +48,453 @@
   windowtype="znotes:main"
   persist="width height screenX screenY sizemode">
   
-  <script type="application/javascript" src="chrome://znotes/content/main.js" />
+  <script type="application/javascript"
+    src="chrome://znotes/content/common.js" />
+  <script type="application/javascript"
+    src="chrome://znotes/content/main.js" />
 
-  <stringbundleset id="stringBundleset" />
-  <commandset id="commandSet" />
-  <keyset id="keySet" />
-  <popupset id="popupSet" />
+  <stringbundleset id="znotes_stringbundleset" />
+  <commandset id="znotes_commandset" />
+  <keyset id="znotes_keyset" />
+  
+  <popupset id="znotes_popupset">
 
-  <vbox id="znotes_maintabpanel" flex="1">
+    <!-- toolbox context -->
+    <menupopup id="znotes_maintoolbar_menupopup">
+      <menuitem id="znotes_showmainmenubar_menuitem"
+        class="menuitem-iconic znotes_showmainmenubar_class"
+        type="checkbox" checked="false"
+        command="znotes_showmainmenubar_command"
+        key="znotes_showmainmenubar_key"/>
+      <menuitem id="znotes_showmaintoolbar_menuitem"
+        class="menuitem-iconic znotes_showmaintoolbar_class"
+        type="checkbox" checked="true"
+        command="znotes_showmaintoolbar_command"
+        key="znotes_showmaintoolbar_key"/>
+      <menuseparator id="znotes_customizemaintoolbar_separator"/>
+      <menuitem id="znotes_customizemaintoolbar_menuitem"
+        class="menuitem-iconic znotes_customizemaintoolbar_class"
+        command="znotes_customizemaintoolbar_command"
+        key="znotes_customizemaintoolbar_key"/>
+    </menupopup>
+    
+    <!-- book tree context -->
+    <menupopup id="bookTreeMenu">
+      <menuitem id="bookTreeMenuOpen"
+        class="menuitem-iconic znotes_openbook_class"
+        command="znotes_openbook_command"
+        key="znotes_openbook_key"/>
+      <menuitem id="bookTreeMenuClose"
+        class="menuitem-iconic znotes_closebook_class"
+        command="znotes_closebook_command"
+        key="znotes_closebook_key"/>
+      <menuitem id="bookTreeMenuAppend"
+        class="menuitem-iconic znotes_appendbook_class"
+        command="znotes_appendbook_command"
+        key="znotes_appendbook_key"/>
+      <menuitem id="bookTreeMenuDelete"
+        class="menuitem-iconic znotes_deletebook_class"
+        command="znotes_deletebook_command"
+        key="znotes_deletebook_key"/>
+      <menuitem id="bookTreeMenuDeleteData"
+        class="menuitem-iconic znotes_deletebookdata_class"
+        command="znotes_deletebookdata_command"
+        key="znotes_deletebookdata_key"/>
+      <menuitem id="bookTreeMenuEdit"
+        class="menuitem-iconic znotes_editbook_class"
+        command="znotes_editbook_command"
+        key="znotes_editbook_key"/>
+      <menuitem id="bookTreeMenuRename"
+        class="menuitem-iconic znotes_renamebook_class"
+        command="znotes_renamebook_command"
+        key="znotes_renamebook_key"/>
+      <menuitem id="bookTreeMenuRefresh"
+        class="menuitem-iconic znotes_refreshbooktree_class"
+        command="znotes_refreshbooktree_command"
+        key="znotes_refreshbooktree_key"/>
+    </menupopup>
+    
+    <!-- category tree context -->
+    <menupopup id="folderTreeMenu">
+      <menuitem id="folderTreeMenuNew"
+        class="menuitem-iconic znotes_newcategory_class"
+        command="znotes_newcategory_command"
+        key="znotes_newcategory_key"/>
+      <menuitem  id="folderTreeMenuDelete"
+        class="menuitem-iconic znotes_deletecategory_class"
+        command="znotes_deletecategory_command"
+        key="znotes_deletecategory_key"/>
+      <menuitem id="folderTreeMenuRename"
+        class="menuitem-iconic znotes_renamecategory_class"
+        command="znotes_renamecategory_command"
+        key="znotes_renamecategory_key"/>
+      <menuitem id="folderTreeMenuRefresh"
+        class="menuitem-iconic znotes_refreshfoldertree_class"
+        command="znotes_refreshfoldertree_command"
+        key="znotes_refreshfoldertree_key"/>
+    </menupopup>
+    
+    <!-- note tree context -->
+    <menupopup id="noteTreeMenu">
+      <menuitem id="noteTreeMenuNew"
+        class="menuitem-iconic znotes_newnote_class"
+        command="znotes_newnote_command"
+        key="znotes_newnote_key"/>
+      <menuitem id="noteTreeMenuImport"
+        class="menuitem-iconic znotes_importnote_class"
+        command="znotes_importnote_command"
+        key="znotes_importnote_key"/>
+      <menuitem id="noteTreeMenuDelete"
+        class="menuitem-iconic znotes_deletenote_class"
+        command="znotes_deletenote_command"
+        key="znotes_deletenote_key"/>
+      <menuitem id="noteTreeMenuRename"
+        class="menuitem-iconic znotes_renamenote_class"
+        command="znotes_renamenote_command"
+        key="znotes_renamenote_key"/>
+      <menuitem id="noteTreeMenuProcess"
+        class="menuitem-iconic znotes_processnote_class"
+        command="znotes_processnote_command"
+        key="znotes_processnote_key"/>
+      <menuitem id="noteTreeMenuRefresh"
+        class="menuitem-iconic znotes_refreshnotetree_class"
+        command="znotes_refreshnotetree_command"
+        key="znotes_refreshnotetree_key"/>
+      <menuitem id="noteTreeMenuUpdate"
+        class="menuitem-iconic znotes_updatenote_class"
+        command="znotes_updatenote_command"
+        key="znotes_updatenote_key"/>
+    </menupopup>
+    
+    <!-- tag tree context -->
+    <menupopup id="tagTreeMenu">
+      <menuitem id="tagTreeMenuNew"
+        class="menuitem-iconic znotes_newtag_class"
+        command="znotes_newtag_command"
+        key="znotes_newtag_key"/>
+      <menuitem id="tagTreeMenuDelete"
+        class="menuitem-iconic znotes_deletetag_class"
+        command="znotes_deletetag_command"
+        key="znotes_deletetag_key"/>
+      <menuitem id="tagTreeMenuRename"
+        class="menuitem-iconic znotes_renametag_class"
+        command="znotes_renametag_command"
+        key="znotes_renametag_key"/>
+      <menuitem id="tagTreeMenuColor"
+        class="menuitem-iconic znotes_colortag_class"
+        command="znotes_colortag_command"
+        key="znotes_colortag_key"/>
+      <menuitem id="tagTreeMenuRefresh"
+        class="menuitem-iconic znotes_refreshtagtree_class"
+        command="znotes_refreshtagtree_command"
+        key="znotes_refreshtagtree_key"/>
+    </menupopup>
+    
+  </popupset>
 
-    <hbox pack="start" align="stretch" flex="1">
-
-      <vbox id="folderBox"
-        minwidth="50"
-        width="230"
-        pack="start"
-        align="stretch"
-        flex="1">
-
-        <vbox id="bookTreeView" flex="1">
-
-          <tree id="bookTree" class="plain" flex="1" seltype="single"
-            pack="start" align="stretch" minwidth="50"
-            hidecolumnpicker="true" keepcurrentinview="true"
-            disableKeyNavigation="true" enableColumnDrag="true">
-            <treecols id="bookTreeCols">
-              <treecol id="bookTreeName"
-                label="&book_tree_name;"
-                width="150"
-                flex="1"
-                crop="center"
-                persist="width ordinal hidden"
-                hideheader="true"
-                ignoreincolumnpicker="true"
-                primary="true"
-                sortActive="true"
-                sortDirection="ascending"/>
-            </treecols>
-            <treechildren id="bookTreeChildren"/>
-          </tree>
-
-        </vbox>
-
-        <splitter id="bookSplitter"
-          state="open"
-          collapse="before"
-          resizebefore="closest"
-          resizeafter="closest"/>
-
-        <vbox id="categoryBox" flex="1">
-
-          <vbox id="folderTreeView" flex="1">
-
-            <tree id="folderTree" class="plain" flex="1" seltype="single"
-              pack="start" align="stretch" minwidth="50"
-              hidecolumnpicker="true"
-              keepcurrentinview="true" disableKeyNavigation="true"
-              enableColumnDrag="true">
-              <treecols id="folderTreeCols">
-                <treecol id="folderTreeName"
-                  label="&folder_tree_name;"
-                  hideheader="true"
-                  width="150"
-                  flex="1"
-                  crop="center"
-                  persist="width ordinal hidden"
-                  ignoreincolumnpicker="true"
-                  primary="true"
-                  sortActive="true"
-                  sortDirection="ascending"/>
-                <splitter class="tree-splitter treeSplitter" />
-                <treecol id="folderTreeCount"
-                  label="&folder_tree_count;"
-                  hideheader="true"
-                  width="80"
-                  flex="1"
-                  crop="center"
-                  persist="width ordinal hidden"
-                  ignoreincolumnpicker="true"
-                  sortActive="true"
-                  sortDirection="ascending"/>
-              </treecols>
-              <treechildren id="folderTreeChildren"/>
-            </tree>
-
-          </vbox>
-
-          <splitter id="tagSplitter"
-            state="open"
-            collapse="after"
-            resizebefore="closest"
-            resizeafter="closest" />
-
-          <vbox id="tagTreeView" flex="1">
-
-            <tree id="tagTree" class="plain" flex="1" seltype="single"
-              pack="start" align="stretch" minwidth="50"
-              hidecolumnpicker="true"
-              keepcurrentinview="true" disableKeyNavigation="true"
-              enableColumnDrag="true">
-              <treecols id="tagTreeCols">
-                <treecol id="tagTreeName"
-                  label="&tag_tree_name;"
-                  hideheader="true"
-                  width="150"
-                  flex="1"
-                  crop="center"
-                  persist="width ordinal hidden"
-                  ignoreincolumnpicker="true"
-                  primary="true"
-                  sortActive="true"
-                  sortDirection="ascending"/>
-                <splitter class="tree-splitter treeSplitter" />
-                <treecol id="tagTreeColor"
-                  label="&tag_tree_color;"
-                  hideheader="true"
-                  flex="1"
-                  width="80"
-                  crop="center"
-                  persist="width ordinal hidden"
-                  ignoreincolumnpicker="true"
-                  sortActive="true"
-                  sortDirection="ascending"/>
-              </treecols>
-              <treechildren id="tagTreeChildren"/>
-            </tree>
-
-          </vbox>
-
-        </vbox>
-
+  <!-- main toolbox -->
+  <toolbox id="znotes_maintoolbox"
+    class="mail-toolbox znotes_maintoolbox"
+    mode="icons"
+    defaultmode="full"
+    labelalign="bottom"
+    defaultlabelalign="end"
+    iconsize="small">
+    <toolbarpalette id="znotes_maintoolbarpalette">
+      <!-- book -->
+      <toolbarbutton id="znotes_openbook_button"
+        class="toolbarbutton-1 znotes_openbook_class"
+        command="znotes_openbook_command"/>
+      <toolbarbutton id="znotes_closebook_button"
+        class="toolbarbutton-1 znotes_closebook_class"
+        command="znotes_closebook_command"/>
+      <toolbarbutton id="znotes_appendbook_button"
+        class="toolbarbutton-1 znotes_appendbook_class"
+        command="znotes_appendbook_command"/>
+      <toolbarbutton id="znotes_deletebook_button"
+        class="toolbarbutton-1 znotes_deletebook_class"
+        command="znotes_deletebook_command"/>
+      <toolbarbutton id="znotes_deletebookdata_button"
+        class="toolbarbutton-1 znotes_deletebookdata_class"
+        command="znotes_deletebookdata_command"/>
+      <toolbarbutton id="znotes_editbook_button"
+        class="toolbarbutton-1 znotes_editbook_class"
+        command="znotes_editbook_command"/>
+      <toolbarbutton id="znotes_renamebook_button"
+        class="toolbarbutton-1 znotes_renamebook_class"
+        command="znotes_renamebook_command"/>
+      <toolbarbutton id="znotes_refreshbooktree_button"
+        class="toolbarbutton-1 znotes_refreshbooktree_class"
+        command="znotes_refreshbooktree_command"/>
+      <!-- category -->
+      <toolbarbutton id="znotes_refreshfoldertree_button"
+        class="toolbarbutton-1 znotes_refreshfoldertree_class"
+        command="znotes_refreshfoldertree_command"/>
+      <toolbarbutton id="znotes_newcategory_button"
+        class="toolbarbutton-1 znotes_newcategory_class"
+        command="znotes_newcategory_command"/>
+      <toolbarbutton id="znotes_deletecategory_button"
+        class="toolbarbutton-1 znotes_deletecategory_class"
+        command="znotes_deletecategory_command"/>
+      <toolbarbutton id="znotes_renamecategory_button"
+        class="toolbarbutton-1 znotes_renamecategory_class"
+        command="znotes_renamecategory_command"/>
+      <!-- tag -->
+      <toolbarbutton id="znotes_refreshtagtree_button"
+        class="toolbarbutton-1 znotes_refreshtagtree_class"
+        command="znotes_refreshtagtree_command"/>
+      <toolbarbutton id="znotes_newtag_button"
+        class="toolbarbutton-1 znotes_newtag_class"
+        command="znotes_newtag_command"/>
+      <toolbarbutton id="znotes_deletetag_button"
+        class="toolbarbutton-1 znotes_deletetag_class"
+        command="znotes_deletetag_command"/>
+      <toolbarbutton id="znotes_renametag_button"
+        class="toolbarbutton-1 znotes_renametag_class"
+        command="znotes_renametag_command"/>
+      <toolbarbutton id="znotes_colortag_button"
+        class="toolbarbutton-1 znotes_colortag_class"
+        command="znotes_colortag_command"/>
+      <!-- note -->
+      <toolbarbutton id="znotes_newnote_button"
+        type="menu-button"
+        class="toolbarbutton-1 znotes_newnote_class"
+        command="znotes_newnote_command">
+        <menupopup id="znotes_newnote_button_menupopup" />
+      </toolbarbutton>
+      <toolbarbutton id="znotes_importnote_button"
+        type="menu-button"
+        class="toolbarbutton-1 znotes_importnote_class"
+        command="znotes_importnote_command">
+        <menupopup id="znotes_importnote_button_menupopup" />
+      </toolbarbutton>
+      <toolbarbutton id="znotes_deletenote_button"
+        class="toolbarbutton-1 znotes_deletenote_class"
+        command="znotes_deletenote_command"/>
+      <toolbarbutton id="znotes_renamenote_button"
+        class="toolbarbutton-1 znotes_renamenote_class"
+        command="znotes_renamenote_command"/>
+      <toolbarbutton id="znotes_processnote_button"
+        class="toolbarbutton-1 znotes_processnote_class"
+        command="znotes_processnote_command"/>
+      <toolbarbutton id="znotes_refreshnotetree_button"
+        class="toolbarbutton-1 znotes_refreshnotetree_class"
+        command="znotes_refreshnotetree_command"/>
+      <toolbarbutton id="znotes_updatenote_button"
+        class="toolbarbutton-1 znotes_updatenote_class"
+        command="znotes_updatenote_command"/>
+      <!-- platform -->
+      <toolbarbutton id="znotes_openoptionsdialog_button"
+        class="toolbarbutton-1 znotes_openoptionsdialog_class"
+        command="znotes_openoptionsdialog_command"/>
+      <toolbarbutton id="znotes_debug_button"
+        class="toolbarbutton-1 znotes_debug_class"
+        command="znotes_debug_command"/>
+      <toolbarbutton id="znotes_addons_button"
+        class="toolbarbutton-1 znotes_addons_class"
+        command="znotes_addons_command"/>
+      <toolbarbutton id="znotes_update_button"
+        class="toolbarbutton-1 znotes_update_class"
+        command="znotes_update_command"/>
+      <toolbarbutton id="znotes_openhelp_button"
+        class="toolbarbutton-1 znotes_openhelp_class"
+        command="znotes_openhelp_command"/>
+      <toolbarbutton id="znotes_openabout_button"
+        class="toolbarbutton-1 znotes_openabout_class"
+        command="znotes_openabout_command"/>
+      <toolbarbutton id="znotes_showfilterbar_button"
+        class="toolbarbutton-1 znotes_showfilterbar_class"
+        type="checkbox" autocheck="true" checked="false" checkState="0"
+        command="znotes_showfilterbar_command" />
+      <toolbarbutton id="znotes_showappmenu_button" type="menu"
+        class="toolbarbutton-1 znotes_showappmenu_class"
+        command="znotes_showappmenu_command">
+        <menupopup id="znotes_appmenu_popup" />
+      </toolbarbutton>
+      <!-- edit -->
+      <toolbarbutton id="znotes_edit_copy_button"
+        class="toolbarbutton-1 znotes_copy_class"
+        command="znotes_copy_command"/>
+      <toolbarbutton id="znotes_edit_cut_button"
+        class="toolbarbutton-1 znotes_cut_class"
+        command="znotes_cut_command"/>
+      <toolbarbutton id="znotes_edit_paste_button"
+        class="toolbarbutton-1 znotes_paste_class"
+        command="znotes_paste_command"/>
+      <toolbarbutton id="znotes_edit_delete_button"
+        class="toolbarbutton-1 znotes_delete_class"
+        command="znotes_delete_command"/>
+      <toolbarbutton id="znotes_edit_undo_button"
+        class="toolbarbutton-1 znotes_undo_class"
+        command="znotes_undo_command"/>
+      <toolbarbutton id="znotes_edit_redo_button"
+        class="toolbarbutton-1 znotes_redo_class"
+        command="znotes_redo_command"/>
+      <toolbarbutton id="znotes_edit_selectall_button"
+        class="toolbarbutton-1 znotes_selectall_class"
+        command="znotes_selectall_command"/>
+    </toolbarpalette>
+    <toolbar id="znotes_mainmenutoolbar"
+      type="menubar"
+      autohide="true"
+      class="inline-toolbar chromeclass-menubar znotes_mainmenutoolbar"
+      toolbarname="&znotes_mainmenutoolbar_name;"
+      fullscreentoolbar="true"
+      mode="full"
+      customizable="true"
+      context="znotes_maintoolbar_menupopup"
+      defaultset="znotes_mainmenubar,znotes_mainmenutoolbarspacer">
+      <menubar id="znotes_mainmenubar"
+        class="znotes_mainmenubar" />
+      <spacer id="znotes_mainmenutoolbarspacer" />
+    </toolbar>
+    <toolbar id="znotes_maintoolbar"
+      class="inline-toolbar chromeclass-toolbar znotes_maintoolbar"
+      toolbarname="&znotes_maintoolbar_name;"
+      fullscreentoolbar="true"
+      mode="icons"
+      iconsize="small"
+      customizable="true"
+      context="znotes_maintoolbar_menupopup"
+      defaultset="znotes_appendbook_button,znotes_deletebook_button,znotes_editbook_button,separator,znotes_newcategory_button,znotes_deletecategory_button,separator,znotes_newtag_button,znotes_deletetag_button,znotes_colortag_button,separator,znotes_newnote_button,znotes_deletenote_button,znotes_deletenote_button,separator,znotes_openoptionsdialog_button,separator,znotes_update_button,znotes_openabout_button,znotes_openhelp_button,spring,znotes_showfilterbar_button,znotes_debug_button,znotes_addons_button,znotes_update_button,znotes_showappmenu_button" />
+    <toolbarset id="znotes_maintoolbarset"
+      context="znotes_maintoolbar_menupopup" />
+  </toolbox>
+  
+  <!-- main panel -->
+  <hbox pack="start" align="stretch" flex="1">
+    <vbox id="folderBox" class="folderBox"
+      minwidth="50" width="230" flex="1">
+      <vbox id="bookTreeView" class="bookTreeView" flex="1">
+        <tree id="bookTree" class="plain bookTree" flex="1"
+          seltype="single" context="bookTreeMenu"
+          pack="start" align="stretch" minwidth="50"
+          hidecolumnpicker="true" keepcurrentinview="true"
+          disableKeyNavigation="true" enableColumnDrag="true">
+          <treecols id="bookTreeCols">
+            <treecol id="bookTreeName" label="&book_tree_name;"
+              width="150" flex="1" crop="center" 
+              persist="width ordinal hidden" ignoreincolumnpicker="true"
+              primary="true" sortActive="true" sortDirection="ascending"/>
+          </treecols>
+          <treechildren id="bookTreeChildren"/>
+        </tree>
       </vbox>
-
-      <splitter id="folderSplitter"
-        collapse="before"
-        resizebefore="closest"
-        resizeafter="closest" />
-
-      <vbox id="noteBox" flex="1">
-        <vbox id="filterBox" flex="1">
-          <hbox id="qfBox">
-            <toolbarspacer id="qfSpacer"
-              flex="200"
-              align="end" />
-            <textbox id="qfText"
-              flex="1"
-              type="search"
-              placeholder="&qf_text_placeholder;"
-              emptytextbase="&qf_text_emptybase;"
-              timeout="500"
-              aria-autocomplete="list" />
-          </hbox>
-        </vbox>
-        <vbox id="noteTreeView" flex="1">
-          <tree id="noteTree" flex="1" class="plain" seltype="single"
-            height="150"
-            hidecolumnpicker="true"
+      <splitter id="bookSplitter" state="open" collapse="before"
+        resizebefore="closest" resizeafter="closest">
+        <grippy id="bookSplitterGrippy" class="bookGrippy" />
+      </splitter>
+      <vbox id="categoryBox" class="categoryBox" flex="1">
+        <vbox id="folderTreeView" class="folderTreeView" flex="1">
+          <tree id="folderTree" class="plain folderTree" flex="1"
+            seltype="single" context="folderTreeMenu"
+            pack="start" align="stretch" minwidth="50" hidecolumnpicker="true"
             keepcurrentinview="true" disableKeyNavigation="true"
             enableColumnDrag="true">
-            <treecols id="noteTreeCols">
-              <treecol id="noteTreeAttachments"
-                label="&note_tree_attachments;"
-                flex="1"
-                crop="center"
-                persist="width ordinal hidden"
-                hideheader="false"
-                ignoreincolumnpicker="true"
-                primary="true"
-                sortActive="true"
-                fixed="true"
-                sortDirection="ascending"
-                width="16"
-                maxwidth="16"
-                minwidth="16"
-                class="treecol-image"/>
-              <splitter class="tree-splitter"/>
-              <treecol id="noteTreeName"
-                label="&note_tree_name;"
-                flex="1"
-                crop="center"
-                persist="width ordinal hidden"
-                hideheader="false"
-                ignoreincolumnpicker="true"
-                primary="true"
-                sortActive="true"
-                sortDirection="ascending"/>
-              <splitter class="tree-splitter"/>
-              <treecol id="noteTreeCategory"
-                label="&note_tree_category;"
-                flex="1"
-                crop="center"
-                persist="width ordinal hidden"
-                hideheader="false"
-                ignoreincolumnpicker="true"
-                sortActive="true"
-                sortDirection="ascending"/>
-              <splitter class="tree-splitter"/>
-              <treecol id="noteTreeTag"
-                label="&note_tree_tag;"
-                flex="1"
-                crop="center"
-                persist="width ordinal hidden"
-                hideheader="false"
-                ignoreincolumnpicker="true"
-                sortActive="true"
-                sortDirection="ascending"/>
-              <splitter class="tree-splitter"/>
-              <treecol id="noteTreeCreateDateTime"
-                label="&note_tree_create_datetime;"
-                flex="1"
-                crop="center"
-                persist="width ordinal hidden"
-                hideheader="false"
-                ignoreincolumnpicker="true"
-                sortActive="true"
-                sortDirection="ascending"/>
-              <splitter class="tree-splitter"/>
-              <treecol id="noteTreeUpdateDateTime"
-                label="&note_tree_update_datetime;"
-                flex="1"
-                crop="center"
-                persist="width ordinal hidden"
-                hideheader="false"
-                ignoreincolumnpicker="true"
-                sortActive="true"
-                sortDirection="ascending"/>
+            <treecols id="folderTreeCols">
+              <treecol id="folderTreeName" label="&folder_tree_name;"
+                width="150" flex="1" crop="center"
+                persist="width ordinal hidden" ignoreincolumnpicker="true"
+                primary="true" sortActive="true" sortDirection="ascending"/>
+              <splitter id="folderTreeNameSplitter" class="tree-splitter"/>
+              <treecol id="folderTreeCount" label="&folder_tree_count;"
+                width="80" flex="1" crop="center"
+                persist="width ordinal hidden" ignoreincolumnpicker="true"
+                sortActive="true" sortDirection="ascending"/>
             </treecols>
-            <treechildren id="noteTreeChildren"/>
+            <treechildren id="folderTreeChildren"/>
           </tree>
         </vbox>
-        <splitter
-          id="noteTreeSplitter"
-          collapse="before"
-          resizebefore="closest"
-          resizeafter="closest" />
-        <vbox id="noteBodyBox" flex="1">
-          <vbox id="noteBodyView" flex="1" />
+        <splitter id="tagSplitter" state="open" collapse="after"
+          resizebefore="closest" resizeafter="closest">
+          <grippy id="tagSplitterGrippy" class="tagGrippy"/>
+        </splitter>
+        <vbox id="tagTreeView" class="tagTreeView" flex="1">
+          <tree id="tagTree" class="plain tagTree" flex="1"
+            seltype="single" context="tagTreeMenu"
+            pack="start" align="stretch" minwidth="50" hidecolumnpicker="true"
+            keepcurrentinview="true" disableKeyNavigation="true"
+            enableColumnDrag="true">
+            <treecols id="tagTreeCols">
+              <treecol id="tagTreeName" label="&tag_tree_name;"
+                 width="150" flex="1"
+                crop="center" persist="width ordinal hidden"
+                ignoreincolumnpicker="true" primary="true"
+                sortActive="true" sortDirection="ascending"/>
+              <splitter id="tagTreeNameSplitter" class="tree-splitter"/>
+              <treecol id="tagTreeColor" label="&tag_tree_color;"
+                 flex="1" width="80" crop="center"
+                persist="width ordinal hidden" ignoreincolumnpicker="true"
+                sortActive="true" sortDirection="ascending"/>
+            </treecols>
+            <treechildren id="tagTreeChildren"/>
+          </tree>
         </vbox>
       </vbox>
-      
-    </hbox>
-
-  </vbox>
+    </vbox>
+    <splitter id="folderSplitter" collapse="before"
+      resizebefore="closest" resizeafter="closest">
+      <grippy id="folderSplitterGrippy" class="folderGrippy"/>
+    </splitter>
+    <vbox id="noteBox" class="noteBox" flex="1">
+      <vbox id="filterBox" flex="1">
+        <hbox id="qfBox">
+          <toolbarspacer id="qfSpacer" flex="200" align="end" />
+          <textbox id="qfText" flex="1" type="search"
+            placeholder="&qf_text_placeholder;"
+            emptytextbase="&qf_text_emptybase;"
+            timeout="500" aria-autocomplete="list" />
+        </hbox>
+      </vbox>
+      <vbox id="noteTreeView" class="noteTreeView" flex="1">
+        <tree id="noteTree" class="plain noteTree" flex="1"
+          seltype="single" context="noteTreeMenu"
+          height="150" hidecolumnpicker="true" keepcurrentinview="true"
+          disableKeyNavigation="true" enableColumnDrag="true">
+          <treecols id="noteTreeCols">
+            <treecol id="noteTreeAttachments" label="&note_tree_attachments;"
+              flex="1" crop="center" persist="width ordinal hidden"
+              hideheader="false" ignoreincolumnpicker="true" primary="true"
+              sortActive="true" fixed="true" sortDirection="ascending"
+              width="16" maxwidth="16" minwidth="16" class="treecol-image"/>
+            <splitter id="noteTreeAttachmentsSplitter" class="tree-splitter"/>
+            <treecol id="noteTreeName" label="&note_tree_name;" flex="1"
+              crop="center" persist="width ordinal hidden" hideheader="false"
+              ignoreincolumnpicker="true" primary="true" sortActive="true"
+              sortDirection="ascending"/>
+            <splitter id="noteTreeNameSplitter" class="tree-splitter"/>
+            <treecol id="noteTreeCategory" label="&note_tree_category;"
+              flex="1" crop="center" persist="width ordinal hidden"
+              hideheader="false" ignoreincolumnpicker="true"
+              sortActive="true" sortDirection="ascending"/>
+            <splitter id="noteTreeCategorySplitter" class="tree-splitter"/>
+            <treecol id="noteTreeTag" label="&note_tree_tag;" flex="1"
+              crop="center" persist="width ordinal hidden" hideheader="false"
+              ignoreincolumnpicker="true" sortActive="true"
+              sortDirection="ascending"/>
+            <splitter id="noteTreeTagSplitter" class="tree-splitter"/>
+            <treecol id="noteTreeCreateDateTime" flex="1" crop="center"
+              label="&note_tree_create_datetime;" hideheader="false"
+              persist="width ordinal hidden" ignoreincolumnpicker="true"
+              sortActive="true" sortDirection="ascending"/>
+            <splitter id="noteTreeCreateDateTimeSplitter" class="tree-splitter"/>
+            <treecol id="noteTreeUpdateDateTime" flex="1" crop="center"
+              label="&note_tree_update_datetime;" hideheader="false"
+              persist="width ordinal hidden" ignoreincolumnpicker="true"
+              sortActive="true" sortDirection="ascending"/>
+          </treecols>
+          <treechildren id="noteTreeChildren"/>
+        </tree>
+      </vbox>
+      <splitter
+        id="noteTreeSplitter" collapse="before" resizebefore="closest"
+        resizeafter="closest">
+        <grippy id="noteTreeSplitterGrippy" class="noteGrippy"/>
+      </splitter>
+      <vbox id="noteBodyBox" class="noteBodyBox" flex="1">
+        <vbox id="noteBodyView" flex="1" />
+      </vbox>
+    </vbox>
+  </hbox>
 
 </window>

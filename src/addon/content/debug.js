@@ -36,12 +36,13 @@ if ( !ru.akman.znotes ) ru.akman.znotes = {};
 
 Components.utils.import( "resource://znotes/utils.js" , ru.akman.znotes );
 Components.utils.import( "resource://znotes/updatemanager.js" , ru.akman.znotes );
-Components.utils.import( "resource://znotes/commandmanager.js" , ru.akman.znotes );
 
 ru.akman.znotes.Debug = function() {
 
   var pub = {};
 
+  var Utils = ru.akman.znotes.Utils;
+  
   var mozPrefs = Components.classes["@mozilla.org/preferences-service;1"]
                            .getService( Components.interfaces.nsIPrefBranch );
 
@@ -63,7 +64,7 @@ ru.akman.znotes.Debug = function() {
     log( header );
     log( delimiter );
     try {
-      tests[testIndex].code();
+      tests[testIndex].code( event );
     } catch ( e ) {
       log( e );
     }
@@ -71,12 +72,12 @@ ru.akman.znotes.Debug = function() {
   };
   
   pub.onLoad = function( event ) {
-    ru.akman.znotes.Utils.IS_DEBUG_ACTIVE = true;
+    Utils.IS_DEBUG_ACTIVE = true;
     mozPrefs.setBoolPref( "extensions.znotes.debug.active", true );
     debugTextBox = document.getElementById( "debugTextBox" );
-    ru.akman.znotes.Utils.DEBUG_TEXTBOX = debugTextBox;
+    Utils.DEBUG_TEXTBOX = debugTextBox;
     alwaysRaisedButton = document.getElementById( "alwaysRaisedButton" );
-    alwaysRaisedButton.checked = ru.akman.znotes.Utils.IS_DEBUG_RAISED;
+    alwaysRaisedButton.checked = Utils.IS_DEBUG_RAISED;
     pub.alwaysRaised();
     ctx = window.arguments[0];
     win = ctx.win;
@@ -84,8 +85,8 @@ ru.akman.znotes.Debug = function() {
   };
   
   pub.onClose = function( event ) {
-    ru.akman.znotes.Utils.DEBUG_TEXTBOX = null;
-    ru.akman.znotes.Utils.IS_DEBUG_ACTIVE = false;
+    Utils.DEBUG_TEXTBOX = null;
+    Utils.IS_DEBUG_ACTIVE = false;
     mozPrefs.setBoolPref( "extensions.znotes.debug.active", false );
   };
   
@@ -129,7 +130,7 @@ ru.akman.znotes.Debug = function() {
                        .QueryInterface( Components.interfaces.nsIInterfaceRequestor)
                        .getInterface( Components.interfaces.nsIXULWindow );
     var value = alwaysRaisedButton.checked
-    ru.akman.znotes.Utils.IS_DEBUG_RAISED = value;
+    Utils.IS_DEBUG_RAISED = value;
     mozPrefs.setBoolPref( "extensions.znotes.debug.raised", value );
     value = value ? xulWin.raisedZ : xulWin.normalZ;
     window.setTimeout(
@@ -162,7 +163,7 @@ ru.akman.znotes.Debug = function() {
                               "system: " + cl0 + "\n" +
                               "application: " + cl1 + "\n" +
                               "useragent: " + cl2 + "\n\n" +
-                              "languages: " + ru.akman.znotes.Utils.LANGUAGES.join( ", " ) + "\n";
+                              "languages: " + Utils.LANGUAGES.join( ", " ) + "\n";
       }
     }
   );
@@ -208,78 +209,78 @@ ru.akman.znotes.Debug = function() {
       description: "Get application info",
       code: function () {
         debugTextBox.value += "\n";
-        debugTextBox.value += "ID :: "  + ru.akman.znotes.Utils.ID + "\n";
-        debugTextBox.value += "BUNDLE :: "  + ru.akman.znotes.Utils.BUNDLE + "\n";
-        debugTextBox.value += "NAME :: "  + ru.akman.znotes.Utils.NAME + "\n";
-        debugTextBox.value += "VENDOR :: "  + ru.akman.znotes.Utils.VENDOR + "\n";
-        debugTextBox.value += "VERSION :: "  + ru.akman.znotes.Utils.VERSION + "\n";
-        debugTextBox.value += "BUILD :: "  + ru.akman.znotes.Utils.BUILD + "\n";
-        debugTextBox.value += "LANGUAGES :: "  + ru.akman.znotes.Utils.LANGUAGES + "\n";
-        debugTextBox.value += "SITE :: "  + ru.akman.znotes.Utils.SITE + "\n";
-        debugTextBox.value += "SITE_LANGUAGES :: "  + ru.akman.znotes.Utils.SITE_LANGUAGES + "\n";
-        debugTextBox.value += "TITLE :: "  + ru.akman.znotes.Utils.decodeUTF8( ru.akman.znotes.Utils.TITLE ) + "\n";
-        debugTextBox.value += "DESCRIPTION :: "  + ru.akman.znotes.Utils.decodeUTF8( ru.akman.znotes.Utils.DESCRIPTION ) + "\n";
+        debugTextBox.value += "ID :: "  + Utils.ID + "\n";
+        debugTextBox.value += "BUNDLE :: "  + Utils.BUNDLE + "\n";
+        debugTextBox.value += "NAME :: "  + Utils.NAME + "\n";
+        debugTextBox.value += "VENDOR :: "  + Utils.VENDOR + "\n";
+        debugTextBox.value += "VERSION :: "  + Utils.VERSION + "\n";
+        debugTextBox.value += "BUILD :: "  + Utils.BUILD + "\n";
+        debugTextBox.value += "LANGUAGES :: "  + Utils.LANGUAGES + "\n";
+        debugTextBox.value += "SITE :: "  + Utils.SITE + "\n";
+        debugTextBox.value += "SITE_LANGUAGES :: "  + Utils.SITE_LANGUAGES + "\n";
+        debugTextBox.value += "TITLE :: "  + Utils.decodeUTF8( Utils.TITLE ) + "\n";
+        debugTextBox.value += "DESCRIPTION :: "  + Utils.decodeUTF8( Utils.DESCRIPTION ) + "\n";
         debugTextBox.value += "LICENSES :: \n";
-        for ( var i = 0; i < ru.akman.znotes.Utils.LICENSES.length; i++ ) {
-          var license = ru.akman.znotes.Utils.LICENSES[i];
+        for ( var i = 0; i < Utils.LICENSES.length; i++ ) {
+          var license = Utils.LICENSES[i];
           debugTextBox.value += "[" + (i+1) + "] name = " + license.name + "\n";
           debugTextBox.value += "[" + (i+1) + "] link = " + license.link + "\n";
         }
         debugTextBox.value += "REPOSITORIES :: \n";
-        for ( var i = 0; i < ru.akman.znotes.Utils.REPOSITORIES.length; i++ ) {
-          var repository = ru.akman.znotes.Utils.REPOSITORIES[i];
+        for ( var i = 0; i < Utils.REPOSITORIES.length; i++ ) {
+          var repository = Utils.REPOSITORIES[i];
           debugTextBox.value += "[" + (i+1) + "] name = " + repository.name + "\n";
           debugTextBox.value += "[" + (i+1) + "] link = " + repository.link + "\n";
         }
         debugTextBox.value += "CREATORS :: \n";
-        for ( var i = 0; i < ru.akman.znotes.Utils.CREATORS.length; i++ ) {
-          var creator = ru.akman.znotes.Utils.CREATORS[i];
-          debugTextBox.value += "[" + (i+1) + "] name = " + ru.akman.znotes.Utils.decodeUTF8( creator.name ) + "\n";
+        for ( var i = 0; i < Utils.CREATORS.length; i++ ) {
+          var creator = Utils.CREATORS[i];
+          debugTextBox.value += "[" + (i+1) + "] name = " + Utils.decodeUTF8( creator.name ) + "\n";
           debugTextBox.value += "[" + (i+1) + "] link = " + creator.link + "\n";
         }
         debugTextBox.value += "CONTRIBUTORS :: \n";
-        for ( var i = 0; i < ru.akman.znotes.Utils.CONTRIBUTORS.length; i++ ) {
-          var contributor = ru.akman.znotes.Utils.CONTRIBUTORS[i];
-          debugTextBox.value += "[" + (i+1) + "] name = " + ru.akman.znotes.Utils.decodeUTF8( contributor.name ) + "\n";
-          debugTextBox.value += "[" + (i+1) + "] title = " + ru.akman.znotes.Utils.decodeUTF8( contributor.title ) + "\n";
-          debugTextBox.value += "[" + (i+1) + "] description = " + ru.akman.znotes.Utils.decodeUTF8( contributor.description ) + "\n";
+        for ( var i = 0; i < Utils.CONTRIBUTORS.length; i++ ) {
+          var contributor = Utils.CONTRIBUTORS[i];
+          debugTextBox.value += "[" + (i+1) + "] name = " + Utils.decodeUTF8( contributor.name ) + "\n";
+          debugTextBox.value += "[" + (i+1) + "] title = " + Utils.decodeUTF8( contributor.title ) + "\n";
+          debugTextBox.value += "[" + (i+1) + "] description = " + Utils.decodeUTF8( contributor.description ) + "\n";
           debugTextBox.value += "[" + (i+1) + "] link = " + contributor.link + "\n";
           debugTextBox.value += "  LICENSES :: \n";
           for ( var j = 0; j < contributor.licenses.length; j++ ) {
-            debugTextBox.value += "  [" + (j+1) + "] name = " + ru.akman.znotes.Utils.decodeUTF8( contributor.licenses[j].name ) + "\n";
+            debugTextBox.value += "  [" + (j+1) + "] name = " + Utils.decodeUTF8( contributor.licenses[j].name ) + "\n";
             debugTextBox.value += "  [" + (j+1) + "] link = " + contributor.licenses[j].link + "\n";
           }
         }
         debugTextBox.value += "CREDITS :: \n";
-        for ( var i = 0; i < ru.akman.znotes.Utils.CREDITS.length; i++ ) {
-          var credit = ru.akman.znotes.Utils.CREDITS[i];
-          debugTextBox.value += "[" + (i+1) + "] name = " + ru.akman.znotes.Utils.decodeUTF8( credit.name ) + "\n";
-          debugTextBox.value += "[" + (i+1) + "] title = " + ru.akman.znotes.Utils.decodeUTF8( credit.title ) + "\n";
-          debugTextBox.value += "[" + (i+1) + "] description = " + ru.akman.znotes.Utils.decodeUTF8( credit.description ) + "\n";
+        for ( var i = 0; i < Utils.CREDITS.length; i++ ) {
+          var credit = Utils.CREDITS[i];
+          debugTextBox.value += "[" + (i+1) + "] name = " + Utils.decodeUTF8( credit.name ) + "\n";
+          debugTextBox.value += "[" + (i+1) + "] title = " + Utils.decodeUTF8( credit.title ) + "\n";
+          debugTextBox.value += "[" + (i+1) + "] description = " + Utils.decodeUTF8( credit.description ) + "\n";
           debugTextBox.value += "[" + (i+1) + "] link = " + credit.link + "\n";
           debugTextBox.value += "  LICENSES :: \n";
           for ( var j = 0; j < credit.licenses.length; j++ ) {
-            debugTextBox.value += "  [" + (j+1) + "] name = " + ru.akman.znotes.Utils.decodeUTF8( credit.licenses[j].name ) + "\n";
+            debugTextBox.value += "  [" + (j+1) + "] name = " + Utils.decodeUTF8( credit.licenses[j].name ) + "\n";
             debugTextBox.value += "  [" + (j+1) + "] link = " + credit.licenses[j].link + "\n";
           }
         }
         debugTextBox.value += "TRANSLATORS :: \n";
-        for ( var i = 0; i < ru.akman.znotes.Utils.TRANSLATORS.length; i++ ) {
-          var translator = ru.akman.znotes.Utils.TRANSLATORS[i];
-          debugTextBox.value += "[" + (i+1) + "] name = " + ru.akman.znotes.Utils.decodeUTF8( translator.name ) + "\n";
+        for ( var i = 0; i < Utils.TRANSLATORS.length; i++ ) {
+          var translator = Utils.TRANSLATORS[i];
+          debugTextBox.value += "[" + (i+1) + "] name = " + Utils.decodeUTF8( translator.name ) + "\n";
           debugTextBox.value += "[" + (i+1) + "] link = " + translator.link + "\n";
         }
         debugTextBox.value += "COPYRIGHTS :: \n";
-        for ( var i = 0; i < ru.akman.znotes.Utils.COPYRIGHTS.length; i++ ) {
-          var copyright = ru.akman.znotes.Utils.COPYRIGHTS[i];
-          debugTextBox.value += "[" + (i+1) + "] prefix = " + ru.akman.znotes.Utils.decodeUTF8( copyright.prefix ) + "\n";
+        for ( var i = 0; i < Utils.COPYRIGHTS.length; i++ ) {
+          var copyright = Utils.COPYRIGHTS[i];
+          debugTextBox.value += "[" + (i+1) + "] prefix = " + Utils.decodeUTF8( copyright.prefix ) + "\n";
           debugTextBox.value += "[" + (i+1) + "] year = " + copyright.year + "\n";
-          debugTextBox.value += "[" + (i+1) + "] author = " + ru.akman.znotes.Utils.decodeUTF8( copyright.author ) + "\n";
-          debugTextBox.value += "[" + (i+1) + "] reserved = " + ru.akman.znotes.Utils.decodeUTF8( copyright.reserved ) + "\n";
+          debugTextBox.value += "[" + (i+1) + "] author = " + Utils.decodeUTF8( copyright.author ) + "\n";
+          debugTextBox.value += "[" + (i+1) + "] reserved = " + Utils.decodeUTF8( copyright.reserved ) + "\n";
         }
         debugTextBox.value += "URLS :: \n";
-        debugTextBox.value += "index = " + ru.akman.znotes.Utils.SITE + ru.akman.znotes.Utils.URLS.index + "\n";
-        debugTextBox.value += "forum = " + ru.akman.znotes.Utils.SITE + ru.akman.znotes.Utils.URLS.forum + "\n";
+        debugTextBox.value += "index = " + Utils.SITE + Utils.URLS.index + "\n";
+        debugTextBox.value += "forum = " + Utils.SITE + Utils.URLS.forum + "\n";
       }
     }
   );
@@ -409,13 +410,13 @@ ru.akman.znotes.Debug = function() {
           ctx.book,
           ctx.category,
           "debug note 1",
-          ru.akman.znotes.Utils.DEFAULT_DOCUMENT_TYPE
+          Utils.DEFAULT_DOCUMENT_TYPE
         );
         var aNote2 = ctx.createNote(
           ctx.book,
           ctx.category,
           "debug note 2",
-          ru.akman.znotes.Utils.DEFAULT_DOCUMENT_TYPE
+          Utils.DEFAULT_DOCUMENT_TYPE
         );
         aNote1.load( "https://developer.mozilla.org/ru/docs/DOM/Node.replaceChild" );
         aNote2.load( "https://developer.mozilla.org/ru/docs/DOM/Node.appendChild" );
@@ -428,7 +429,7 @@ ru.akman.znotes.Debug = function() {
       name: "Fonts",
       description: "Font's prefs",
       code: function () {
-        var fontMapping = ru.akman.znotes.Utils.getDefaultFontMapping();
+        var fontMapping = Utils.getDefaultFontMapping();
         log( "default-name: " + fontMapping.defaultName );
         log( "default-value: " + fontMapping.defaultValue );
         log( "" );
@@ -471,7 +472,7 @@ ru.akman.znotes.Debug = function() {
     name: "Messenger",
     description: "Get message info",
     code: function () {
-      var mWindow = ru.akman.znotes.Utils.getMail3PaneWindow();
+      var mWindow = Utils.getMail3PaneWindow();
       if ( !mWindow ) {
         log( "TB required" );
         return;
@@ -544,14 +545,6 @@ ru.akman.znotes.Debug = function() {
           log( "Apply downloaded updates now ..." );
           break;
       }
-    }
-  } );
-  
-  tests.push( {
-    name: "Command Manager",
-    description: "Command Manager",
-    code: function () {
-      ru.akman.znotes.CommandManager.doCommand( "znotes_print_command" );
     }
   } );
   

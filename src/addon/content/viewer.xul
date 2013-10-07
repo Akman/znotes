@@ -32,34 +32,46 @@
   - ***** END LICENSE BLOCK ***** -->
 
 <?xml-stylesheet type="text/css" href="chrome://global/skin/" ?>
+<?xml-stylesheet type="text/css" href="chrome://messenger/skin/primaryToolbar.css" ?>
+<?xml-stylesheet type="text/css" href="chrome://messenger/skin/messenger.css" ?>
+<?xml-stylesheet type="text/css" href="chrome://messenger/skin/messageHeader.css" ?>
 <?xml-stylesheet type="text/css" href="chrome://znotes/skin/viewer.css" ?>
 
+<?xul-overlay href="chrome://znotes/content/common.xul" ?>
 <?xul-overlay href="chrome://znotes/content/body.xul" ?>
 
 <!DOCTYPE window SYSTEM "chrome://znotes/locale/viewer.dtd">
 
 <window xmlns:html="http://www.w3.org/1999/xhtml" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   id="znotes"
-  windowtype="znotes"
+  windowtype="znotes:viewer"
   title="&viewer_window_title;"
   orient="vertical"
   persist="width height screenX screenY sizemode">
 
-  <script type="application/x-javascript"
+  <script type="application/javascript"
+    src="chrome://znotes/content/common.js" />
+  <script type="application/javascript"
     src="chrome://znotes/content/viewer.js" />
 
-  <stringbundleset id="stringBundleset" />
-  <commandset id="commandSet" />
-  <keyset id="keySet" />
-  <popupset id="popupSet" />
+  <stringbundleset id="znotes_stringbundleset" />
+  <commandset id="znotes_commandset" />
+  <keyset id="znotes_keyset" />
+  <popupset id="znotes_popupset" />
 
-  <vbox id="noteBodyView" pack="start" align="stretch" flex="1"/>
+  <toolbox id="znotes_viewertoolbox"
+    class="mail-toolbox znotes_viewertoolbox"
+    mode="icons"
+    defaultmode="full"
+    labelalign="bottom"
+    defaultlabelalign="end"
+    iconsize="small" />
+  
+  <vbox id="noteBodyView" flex="1" class="noteBodyView" />
 
-  <statusbar id="statusbar" hidden="true">
-    <spacer id="statusbar-spacer" flex="1" />
-    <!--
-    <statusbarpanel id="viewer-statusbar-panel" flex="1" hidden="false"/>
-    -->
+  <statusbar id="znotes_statusbar" class="chromeclass-status znotes_statusbar">
+    <spacer id="znotes_statusbar_spacer" flex="1"/>
+    <statusbarpanel id="znotes_statusbarpanel"/>
   </statusbar>
   
 </window>

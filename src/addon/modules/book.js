@@ -45,6 +45,8 @@ var EXPORTED_SYMBOLS = ["Book"];
 
 var Book = function( aList, anId, aName, aDescription, aDriver, aConnection, aPreferences, anIndex, anOpened ) {
 
+  var Utils = ru.akman.znotes.Utils;
+
   this.updateRegistryObject = function() {
     this.list.updateRegistryObject();
   };
@@ -175,6 +177,54 @@ var Book = function( aList, anId, aName, aDescription, aDriver, aConnection, aPr
     if ( !this.isLocked() ) {
       this.updateRegistryObject();
     }
+  };
+
+  this.getSelectedTree = function() {
+    var selectedTree = this.loadPreference( "currentTree", "Categories" );
+    switch ( selectedTree ) {
+      case "Categories":
+      case "Tags":
+        break;
+      default:
+        selectedTree = "Categories";
+    }
+    return selectedTree;
+  };
+  
+  this.setSelectedTree = function( selectedTree ) {
+    switch ( selectedTree ) {
+      case "Categories":
+      case "Tags":
+        break;
+      default:
+        selectedTree = "Categories";
+    }
+    if ( this.getSelectedTree() == selectedTree ) {
+      return;
+    }
+    this.savePreference( "currentTree", selectedTree );
+  };
+
+  this.getSelectedCategory = function() {
+    return this.loadPreference( "currentCategory", 0 );
+  };
+  
+  this.setSelectedCategory = function( selectedCategory ) {
+    if ( this.getSelectedCategory() == selectedCategory ) {
+      return;
+    }
+    this.savePreference( "currentCategory", selectedCategory );
+  };
+
+  this.getSelectedTag = function() {
+    return this.loadPreference( "currentTag", 0 );
+  };
+  
+  this.setSelectedTag = function( selectedTag ) {
+    if ( this.getSelectedTag() == selectedTag ) {
+      return;
+    }
+    this.savePreference( "currentTag", selectedTag );
   };
 
   this.remove = function() {

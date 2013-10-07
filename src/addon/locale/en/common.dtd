@@ -30,40 +30,17 @@
   -
   - ***** END LICENSE BLOCK ***** -->
 
-<!ENTITY znotes_mainmenutoolbar_name "Menu">
-<!ENTITY znotes_maintoolbar_name "Notes">
+<!-- tb -->
 
-<!-- MENU -->
-
-<!ENTITY znotes_mainmenubar_file_label "File">
-<!ENTITY znotes_mainmenubar_file_accesskey "F">
-
-<!ENTITY znotes_mainmenubar_edit_label "Edit">
-<!ENTITY znotes_mainmenubar_edit_accesskey "E">
-
-<!ENTITY znotes_mainmenubar_book_label "Book">
-<!ENTITY znotes_mainmenubar_book_accesskey "B">
-
-<!ENTITY znotes_mainmenubar_category_label "Category">
-<!ENTITY znotes_mainmenubar_category_accesskey "C">
-
-<!ENTITY znotes_mainmenubar_tag_label "Tag">
-<!ENTITY znotes_mainmenubar_tag_accesskey "T">
-
-<!ENTITY znotes_mainmenubar_note_label "Note">
-<!ENTITY znotes_mainmenubar_note_accesskey "N">
-
-<!ENTITY znotes_mainmenubar_tools_label "Tools">
-<!ENTITY znotes_mainmenubar_tools_accesskey "l">
-
-<!ENTITY znotes_mainmenubar_tools_view_label "View">
-<!ENTITY znotes_mainmenubar_tools_view_accesskey "V">
-
-<!ENTITY znotes_mainmenubar_help_label "Help">
-<!ENTITY znotes_mainmenubar_help_accesskey "H">
-
-<!-- COMMANDS -->
-
+<!ENTITY znotes_openmaintab_label "Notes">
+<!ENTITY znotes_openmaintab_tooltip "Switch to notes tab">
+<!ENTITY znotes_openmaintab_accesskey "N">
+<!ENTITY znotes_openmaintab_key "Z">
+<!ENTITY znotes_openmaintab_key_modifiers "accel shift">
+<!ENTITY znotes_openmaintab_keycode "">
+  
+<!-- main -->
+  
 <!ENTITY znotes_showmainmenubar_label "Menubar">
 <!ENTITY znotes_showmainmenubar_tooltip "Show menubar">
 <!ENTITY znotes_showmainmenubar_accesskey "M">
@@ -95,8 +72,8 @@
 <!ENTITY znotes_debug_label "Debug">
 <!ENTITY znotes_debug_tooltip "Open debug window">
 <!ENTITY znotes_debug_accesskey "D">
-<!ENTITY znotes_debug_key "">
-<!ENTITY znotes_debug_key_modifiers "">
+<!ENTITY znotes_debug_key "D">
+<!ENTITY znotes_debug_key_modifiers "accel,alt">
 <!ENTITY znotes_debug_keycode "">
 
 <!ENTITY znotes_addons_label "Addons">
@@ -323,12 +300,7 @@
 <!ENTITY znotes_exit_key_modifiers "accel">
 <!ENTITY znotes_exit_keycode "">
 
-<!ENTITY znotes_print_label "Print">
-<!ENTITY znotes_print_tooltip "Print">
-<!ENTITY znotes_print_accesskey "P">
-<!ENTITY znotes_print_key "P">
-<!ENTITY znotes_print_key_modifiers "accel">
-<!ENTITY znotes_print_keycode "">
+<!-- edit -->
 
 <!ENTITY znotes_undo_label "Undo">
 <!ENTITY znotes_undo_tooltip "Undo">
@@ -378,3 +350,153 @@
 <!ENTITY znotes_selectall_key "A">
 <!ENTITY znotes_selectall_key_modifiers "accel">
 <!ENTITY znotes_selectall_keycode "">
+
+<!-- body -->
+
+<!ENTITY znotes_bodydeletenote_label "Delete note">
+<!ENTITY znotes_bodydeletenote_tooltip "Delete note">
+<!ENTITY znotes_bodydeletenote_accesskey "">
+<!ENTITY znotes_bodydeletenote_key "">
+<!ENTITY znotes_bodydeletenote_key_modifiers "">
+<!ENTITY znotes_bodydeletenote_keycode "">
+
+<!ENTITY znotes_bodyrenamenote_label "Rename note">
+<!ENTITY znotes_bodyrenamenote_tooltip "Rename note">
+<!ENTITY znotes_bodyrenamenote_accesskey "">
+<!ENTITY znotes_bodyrenamenote_key "">
+<!ENTITY znotes_bodyrenamenote_key_modifiers "">
+<!ENTITY znotes_bodyrenamenote_keycode "">
+
+<!ENTITY znotes_bodycustomizetoolbar_label "Customize">
+<!ENTITY znotes_bodycustomizetoolbar_tooltip "Customize toolbar">
+<!ENTITY znotes_bodycustomizetoolbar_accesskey "C">
+<!ENTITY znotes_bodycustomizetoolbar_key "">
+<!ENTITY znotes_bodycustomizetoolbar_key_modifiers "">
+<!ENTITY znotes_bodycustomizetoolbar_keycode "">
+
+<!ENTITY znotes_bodytagsmenu_label "Tags">
+<!ENTITY znotes_bodytagsmenu_tooltip "Tags">
+<!ENTITY znotes_bodytagsmenu_accesskey "T">
+<!ENTITY znotes_bodytagsmenu_key "T">
+<!ENTITY znotes_bodytagsmenu_key_modifiers "accel">
+<!ENTITY znotes_bodytagsmenu_keycode "">
+
+<!ENTITY znotes_bodyaddonspanel_label "Addons">
+<!ENTITY znotes_bodyaddonspanel_tooltip "Show/hide addons panel">
+<!ENTITY znotes_bodyaddonspanel_accesskey "A">
+<!ENTITY znotes_bodyaddonspanel_key "">
+<!ENTITY znotes_bodyaddonspanel_key_modifiers "">
+<!ENTITY znotes_bodyaddonspanel_keycode "">
+
+<!-- attachments -->
+
+<!ENTITY znotes_attachmentsaddcontact_label "Attach contact">
+<!ENTITY znotes_attachmentsaddcontact_tooltip "Attach contact">
+<!ENTITY znotes_attachmentsaddcontact_accesskey "C">
+<!ENTITY znotes_attachmentsaddcontact_key "">
+<!ENTITY znotes_attachmentsaddcontact_key_modifiers "">
+<!ENTITY znotes_attachmentsaddcontact_keycode "">
+
+<!ENTITY znotes_attachmentsaddfile_label "Attach file">
+<!ENTITY znotes_attachmentsaddfile_tooltip "Attach file">
+<!ENTITY znotes_attachmentsaddfile_accesskey "F">
+<!ENTITY znotes_attachmentsaddfile_key "">
+<!ENTITY znotes_attachmentsaddfile_key_modifiers "">
+<!ENTITY znotes_attachmentsaddfile_keycode "">
+
+<!ENTITY znotes_attachmentsopen_label "Open">
+<!ENTITY znotes_attachmentsopen_tooltip "Open attachment">
+<!ENTITY znotes_attachmentsopen_accesskey "O">
+<!ENTITY znotes_attachmentsopen_key "">
+<!ENTITY znotes_attachmentsopen_key_modifiers "">
+<!ENTITY znotes_attachmentsopen_keycode "">
+
+<!ENTITY znotes_attachmentsopenwith_label "Open with">
+<!ENTITY znotes_attachmentsopenwith_tooltip "Open attachment with">
+<!ENTITY znotes_attachmentsopenwith_accesskey "W">
+<!ENTITY znotes_attachmentsopenwith_key "">
+<!ENTITY znotes_attachmentsopenwith_key_modifiers "">
+<!ENTITY znotes_attachmentsopenwith_keycode "">
+
+<!ENTITY znotes_attachmentssave_label "Save">
+<!ENTITY znotes_attachmentssave_tooltip "Save attachment as">
+<!ENTITY znotes_attachmentssave_accesskey "S">
+<!ENTITY znotes_attachmentssave_key "">
+<!ENTITY znotes_attachmentssave_key_modifiers "">
+<!ENTITY znotes_attachmentssave_keycode "">
+
+<!ENTITY znotes_attachmentsdelete_label "Delete">
+<!ENTITY znotes_attachmentsdelete_tooltip "Delete attachment">
+<!ENTITY znotes_attachmentsdelete_accesskey "D">
+<!ENTITY znotes_attachmentsdelete_key "">
+<!ENTITY znotes_attachmentsdelete_key_modifiers "">
+<!ENTITY znotes_attachmentsdelete_keycode "">
+
+<!-- content -->
+
+<!ENTITY znotes_contentaddfile_label "Add file">
+<!ENTITY znotes_contentaddfile_tooltip "Add file">
+<!ENTITY znotes_contentaddfile_accesskey "F">
+<!ENTITY znotes_contentaddfile_key "">
+<!ENTITY znotes_contentaddfile_key_modifiers "">
+<!ENTITY znotes_contentaddfile_keycode "">
+
+<!ENTITY znotes_contentopen_label "Open">
+<!ENTITY znotes_contentopen_tooltip "Open file">
+<!ENTITY znotes_contentopen_accesskey "O">
+<!ENTITY znotes_contentopen_key "">
+<!ENTITY znotes_contentopen_key_modifiers "">
+<!ENTITY znotes_contentopen_keycode "">
+
+<!ENTITY znotes_contentopenwith_label "Open with">
+<!ENTITY znotes_contentopenwith_tooltip "Open file with">
+<!ENTITY znotes_contentopenwith_accesskey "W">
+<!ENTITY znotes_contentopenwith_key "">
+<!ENTITY znotes_contentopenwith_key_modifiers "">
+<!ENTITY znotes_contentopenwith_keycode "">
+
+<!ENTITY znotes_contentsave_label "Save">
+<!ENTITY znotes_contentsave_tooltip "Save file as">
+<!ENTITY znotes_contentsave_accesskey "S">
+<!ENTITY znotes_contentsave_key "">
+<!ENTITY znotes_contentsave_key_modifiers "">
+<!ENTITY znotes_contentsave_keycode "">
+
+<!ENTITY znotes_contentdelete_label "Delete">
+<!ENTITY znotes_contentdelete_tooltip "Delete file">
+<!ENTITY znotes_contentdelete_accesskey "D">
+<!ENTITY znotes_contentdelete_key "">
+<!ENTITY znotes_contentdelete_key_modifiers "">
+<!ENTITY znotes_contentdelete_keycode "">
+
+<!-- loader -->
+
+<!ENTITY znotes_loaderabort_label "">
+<!ENTITY znotes_loaderabort_tooltip "Abort import">
+<!ENTITY znotes_loaderabort_accesskey "">
+<!ENTITY znotes_loaderabort_key "">
+<!ENTITY znotes_loaderabort_key_modifiers "">
+<!ENTITY znotes_loaderabort_keycode "">
+
+<!-- editor -->
+
+<!ENTITY znotes_editoredit_label "Edit">
+<!ENTITY znotes_editoredit_tooltip "Edit">
+<!ENTITY znotes_editoredit_accesskey "E">
+<!ENTITY znotes_editoredit_key "">
+<!ENTITY znotes_editoredit_key_modifiers "">
+<!ENTITY znotes_editoredit_keycode "">
+
+<!ENTITY znotes_editorsave_label "Save">
+<!ENTITY znotes_editorsave_tooltip "Save">
+<!ENTITY znotes_editorsave_accesskey "S">
+<!ENTITY znotes_editorsave_key "S">
+<!ENTITY znotes_editorsave_key_modifiers "accel">
+<!ENTITY znotes_editorsave_keycode "">
+
+<!ENTITY znotes_editorprint_label "Print">
+<!ENTITY znotes_editorprint_tooltip "Print">
+<!ENTITY znotes_editorprint_accesskey "P">
+<!ENTITY znotes_editorprint_key "P">
+<!ENTITY znotes_editorprint_key_modifiers "accel">
+<!ENTITY znotes_editorprint_keycode "">

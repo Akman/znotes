@@ -35,76 +35,82 @@ if ( !ru.akman ) ru.akman = {};
 if ( !ru.akman.znotes ) ru.akman.znotes = {};
 if ( !ru.akman.znotes.core ) ru.akman.znotes.core = {};
 
-Components.utils.import( "resource://znotes/utils.js"           , ru.akman.znotes );
-Components.utils.import( "resource://znotes/drivermanager.js"   , ru.akman.znotes );
-Components.utils.import( "resource://znotes/documentmanager.js" , ru.akman.znotes );
-Components.utils.import( "resource://znotes/commandmanager.js"  , ru.akman.znotes );
-Components.utils.import( "resource://znotes/booklist.js"        , ru.akman.znotes.core );
-Components.utils.import( "resource://znotes/event.js"           , ru.akman.znotes.core );
-Components.utils.import( "resource://znotes/tabmonitor.js"      , ru.akman.znotes );
-Components.utils.import( "resource://znotes/sessionmanager.js"  , ru.akman.znotes );
-Components.utils.import( "resource://znotes/prefsmanager.js"    , ru.akman.znotes );
-Components.utils.import( "resource://znotes/addonsmanager.js"    , ru.akman.znotes );
-Components.utils.import( "resource://znotes/updatemanager.js"    , ru.akman.znotes );
+Components.utils.import( "resource://znotes/utils.js",
+  ru.akman.znotes
+);
+Components.utils.import( "resource://znotes/drivermanager.js",
+  ru.akman.znotes
+);
+Components.utils.import( "resource://znotes/documentmanager.js",
+  ru.akman.znotes
+);
+Components.utils.import( "resource://znotes/booklist.js",
+  ru.akman.znotes.core
+);
+Components.utils.import( "resource://znotes/event.js",
+  ru.akman.znotes.core
+);
+Components.utils.import( "resource://znotes/tabmonitor.js",
+  ru.akman.znotes
+);
+Components.utils.import( "resource://znotes/sessionmanager.js",
+  ru.akman.znotes
+);
+Components.utils.import( "resource://znotes/prefsmanager.js",
+  ru.akman.znotes
+);
+Components.utils.import( "resource://znotes/addonsmanager.js",
+  ru.akman.znotes
+);
+Components.utils.import( "resource://znotes/updatemanager.js",
+  ru.akman.znotes
+);
 
 ru.akman.znotes.Main = function() {
 
-  var log = ru.akman.znotes.Utils.log;
+  var pub = {};
 
-  var mainWindow = null;
-  var tabMail = null;
-  var isStandalone = null;
+  var Utils = ru.akman.znotes.Utils;
+  var Common = ru.akman.znotes.Common;
 
-  var windowsMonitor = null;
+  var prefsMozilla =
+    Components.classes["@mozilla.org/preferences-service;1"]
+              .getService( Components.interfaces.nsIPrefBranch );
+  var prefsBundle = ru.akman.znotes.PrefsManager.getInstance();
+
   var windowsList = null;
-  var currentWindow = null;
-  
-  var commandManager = null;
-  var mainController = null;
-
-  var statusBarPanel = null;
-  var statusBarLogo = null;
-  var statusBarLabel = null;
-
-  var bShowAppMenu = null;
-  var popupAppMenu = null;
-  var newNoteButton = null;
-  var newNoteButtonMenuPopup = null;
-  var importNoteButton = null;
-  var importNoteButtonMenuPopup = null;
+  var windowsMonitor = null;
   
   var mainToolBox = null;
   var mainMenuBar = null;
   var mainToolBar = null;
 
+  var statusBarPanel = null;
+  var statusBarLogo = null;
+  var statusBarLabel = null;
+
+  var newNoteButtonMenuPopup = null;
+  var importNoteButtonMenuPopup = null;
+  var selectedPopupItem = null;
+  
+  var mutationObservers = null;
+  
   var folderBox = null;
-    var bookTreeView = null;
-    var bookSplitter = null;
-    var categoryBox = null;
-      var folderTreeView = null;
-      var tagSplitter = null;
-      var tagTreeView = null;
+  var bookTreeView = null;
+  var bookSplitter = null;
+  var categoryBox = null;
+  var folderTreeView = null;
+  var tagSplitter = null;
+  var tagTreeView = null;
   var folderSplitter = null;
   var noteBox = null;
-    var noteTreeView = null;
-    var noteTreeSplitter = null;
-    var noteBodyBox = null;
-      var noteBodyView = null;
+  var noteTreeView = null;
+  var noteTreeSplitter = null;
+  var noteBodyBox = null;
+  var noteBodyView = null;
   
   var qfButton = null;
   var qfBox = null;
-
-  var mozPrefObserver = null;  
-  var prefObserver = null;
-  var prefsBundle = null;
-
-  var mutationObservers = null;
-
-  var stringsBundle = null;
-
-  var bookTreeMenu = null;
-  var noteTreeMenu = null;
-  var tagTreeMenu = null;
 
   var bookTree = null;
   var bookTreeChildren = null;
@@ -139,6 +145,7 @@ ru.akman.znotes.Main = function() {
   var tagTreeSeparator = null;
   var tagTreeBoxObject = null;
 
+  // DRAG & DROP INFO
   var isDragDropActive = false;
   var infoDragDrop = {
     folderTreeRowCount: null,
@@ -153,517 +160,804 @@ ru.akman.znotes.Main = function() {
     dropEffect: null
   };
 
-  // ------------------------------------
-
   var books = null;
-
-  var booksStateListener = null;
-  var contentTreeStateListener = null;
-  var tagListStateListener = null;
-
+  
   var booksList = null;
   var categoriesList = null;
   var tagsList = null;
   var notesList = null;
-
+  
   var currentBook = null;
   var currentTree = null;
   var currentCategory = null;
   var currentTag = null;
   var currentNote = null;
-
-  var welcomeNote = null;
-  
-  var body = null;
-
-  // -------------------------------------
-
-  var cmdExit = null;
-  var cmdPageSetup = null;
-  var cmdPrint = null;
-  var cmdShowMainMenubar = null;
-  var cmdShowMainToolbar = null;
-  var cmdCustomizeMainToolbar = null;
-  var cmdOpenOptionsDialog = null;
-  var cmdDebug = null;
-  var cmdAddons = null;
-  var cmdUpdate = null;
-  var cmdOpenHelp = null;
-  var cmdOpenAbout = null;
-  var cmdShowFilterBar = null;
-  var cmdShowAppMenu = null;
-
-  var cmdOpenBook = null;
-  var cmdCloseBook = null;
-  var cmdAppendBook = null;
-  var cmdDeleteBook = null;
-  var cmdDeleteBookData = null;
-  var cmdEditBook = null;
-  var cmdRenameBook = null;
-  var cmdRefreshBookTree = null;
-
-  var cmdNewCategory = null;
-  var cmdDeleteCategory =null;
-  var cmdRenameCategory = null;
-  var cmdRefreshFolderTree = null;
-
-  var cmdNewNote = null;
-  var cmdDeleteNote = null;
-  var cmdImportNote = null;
-  var cmdRenameNote = null;
-  var cmdProcessNote = null;
-  var cmdRefreshNoteTree = null;
-  var cmdUpdateNote = null;
-
-  var cmdNewTag = null;
-  var cmdDeleteTag = null;
-  var cmdRenameTag = null;
-  var cmdColorTag = null;
-  var cmdRefreshTagTree = null;
-
-  // -------------------------------------
-  
-  var oldValue = null;
-  var newValue = null;
-
-  var selectedPopupItem = null;
   
   var anEditCategory = null;
   var anEditNote = null;
   var anEditTagIndex = null;
   var anEditBookIndex = null;
 
-  var hiddenFrame = null;
-
-  var debugTextBox = null;
-
-  var pub = {};
-
-  // E R R O R  D I A L O G
-  function openErrorDialog( message1, message2 ) {
-    var params = {
-      input: {
-        title: stringsBundle.getString( "main.errordialog.title" ),
-        message1: message1,
-        message2: message2
-      },
-      output: null
-    };
-    window.openDialog(
-      "chrome://znotes/content/messagedialog.xul",
-      "",
-      "chrome,dialog=yes,modal=yes,centerscreen,resizable=yes",
-      params
-    ).focus();
-  }
-
+  var oldValue = null;
+  var newValue = null;
+  var welcomeNote = null;
+  
+  var body = null;
+  
   //
-  // C O M M A N D S
+  // DOMAIN MODEL LISTENERS
   //
-
-  function initCommandManager() {
-    commandManager = ru.akman.znotes.CommandManager;
-    commandManager.init( mainWindow );
-  };
-
-  function doneCommandManager() {
-    commandManager.done();
+  
+  var booksStateListener = {
+    onBookChanged: onBookChanged,
+    onBookOpened: onBookOpened,
+    onBookClosed: onBookClosed,
+    onBookAppended: onBookAppended,
+    onBookRemoved: onBookRemoved,
+    onBookInserted: onBookInserted
   };
   
-  function initCommandController() {
-    mainController = {
-      supportsCommand: function( cmd ) {
-        //log( "mainController :: supportsCommand() :: " + cmd );
-        switch ( cmd ) {
-          case "cmd_print" :
-            return ( isStandalone || ru.akman.znotes.Utils.isTabActive() );
-        }
-        return commandManager.supportsCommand( cmd );
-      },
-      isCommandEnabled: function( cmd ) {
-        //log( "mainController :: isCommandEnabled() :: " + cmd );
-        switch ( cmd ) {
-          case "cmd_print" :
-            return ( isStandalone || ru.akman.znotes.Utils.isTabActive() );
-        }
-        return commandManager.isCommandEnabled( cmd );
-      },
-      doCommand: function( cmd ) {
-        log( "mainController :: doCommand() :: " + cmd );
-        switch ( cmd ) {
-          case "znotes_pagesetup_command" :
-            doPageSetup();
-            break;
-          case "cmd_print" :
-          case "znotes_print_command" :
-            doPrint();
-            break;
-          case "znotes_exit_command" :
-            doExit();
-            break;
-          case "znotes_showmainmenubar_command" :
-            doShowMainMenubar();
-            break;
-          case "znotes_showmaintoolbar_command" :
-            doShowMainToolbar();
-            break;
-          case "znotes_customizemaintoolbar_command" :
-            doCustomizeMainToolbar();
-            break;
-          case "znotes_openoptionsdialog_command" :
-            doOpenOptionsDialog();
-            break;
-          case "znotes_debug_command" :
-            doOpenDebugWindow();
-            break;
-          case "znotes_addons_command" :
-            doOpenAddonsManager();
-            break;
-          case "znotes_update_command" :
-            doOpenUpdateManager();
-            break;
-          case "znotes_openhelp_command" :
-            doOpenHelp();
-            break;
-          case "znotes_openabout_command" :
-            doOpenAbout();
-            break;
-          case "znotes_openbook_command" :
-            doOpenBook();
-            break;
-          case "znotes_closebook_command" :
-            doCloseBook();
-            break;
-          case "znotes_appendbook_command" :
-            doAppendBook();
-            break;
-          case "znotes_deletebook_command" :
-            doDeleteBook();
-            break;
-          case "znotes_deletebookdata_command" :
-            doDeleteBookData();
-            break;
-          case "znotes_editbook_command" :
-            doEditBook();
-            break;
-          case "znotes_renamebook_command" :
-            doRenameBook();
-            break;
-          case "znotes_refreshbooktree_command" :
-            doRefreshBookTree();
-            break;
-          case "znotes_refreshfoldertree_command" :
-            doRefreshFolderTree();
-            break;
-          case "znotes_newcategory_command" :
-            doNewCategory();
-            break;
-          case "znotes_deletecategory_command" :
-            doDeleteCategory();
-            break;
-          case "znotes_renamecategory_command" :
-            doRenameCategory();
-            break;
-          case "znotes_refreshtagtree_command" :
-            doRefreshTagTree();
-            break;
-          case "znotes_newtag_command" :
-            doNewTag();
-            break;
-          case "znotes_deletetag_command" :
-            doDeleteTag();
-            break;
-          case "znotes_renametag_command" :
-            doRenameTag();
-            break;
-          case "znotes_colortag_command" :
-            doColorTag();
-            break;
-          case "znotes_newnote_command" :
-            doNewNote();
-            break;
-          case "znotes_importnote_command" :
-            doImportNote();
-            break;
-          case "znotes_deletenote_command" :
-            doDeleteNote();
-            break;
-          case "znotes_renamenote_command" :
-            doRenameNote();
-            break;
-          case "znotes_processnote_command" :
-            doProcessNote();
-            break;
-          case "znotes_updatenote_command" :
-            doUpdateNote();
-            break;
-          case "znotes_refreshnotetree_command" :
-            doRefreshNoteTree();
-            break;
-          case "znotes_showfilterbar_command" :
-            doToggleFilterBar();
-            break;
-          case "znotes_showappmenu_command" :
-            doShowAppMenu();
-            break;
-          default:
-            log( "mainController :: doCommand() :: WAS NOT FOUND DEFAULT HANDLER" );
-        }
-      },
-      onEvent: function( event ) {
+  var contentTreeStateListener = {
+    onCategoryChanged: onCategoryChanged,
+    onNoteChanged: onNoteChanged,
+    onNoteLoadingChanged: onNoteLoadingChanged,
+    onNoteStatusChanged: onNoteStatusChanged,
+    onNoteTagsChanged: onNoteTagsChanged,
+    onNoteMainTagChanged: onNoteMainTagChanged,
+    onNoteMainContentChanged: onNoteMainContentChanged,
+    onNoteContentLoaded: onNoteContentLoaded,
+    onNoteContentAppended: onNoteContentAppended,
+    onNoteContentRemoved: onNoteContentRemoved,
+    onNoteAttachmentAppended: onNoteAttachmentAppended,
+    onNoteAttachmentRemoved: onNoteAttachmentRemoved,
+    onCategoryAppended: onCategoryAppended,
+    onCategoryInserted: onCategoryInserted,
+    onCategoryRemoved: onCategoryRemoved,
+    onNoteAppended: onNoteAppended,
+    onNoteInserted: onNoteInserted,
+    onNoteRemoved: onNoteRemoved
+  };
+  
+  var tagListStateListener = {
+    onTagChanged: onTagChanged,
+    onTagAppended: onTagAppended,
+    onTagRemoved: onTagRemoved,
+    onTagInserted: onTagInserted
+  };
+  
+  //
+  // SHUTDOWN
+  //
+  
+  var platformBundleObserver = {
+    onPlatformClose: function( event ) {
+      event.data.canClose = close();
+    },
+    register: function() {
+      if ( Utils.IS_STANDALONE ) {
+        Utils.MAIN_WINDOW.ru.akman.znotes.ZNotes.addObserver( this );
       }
-    };
-    try {
-      mainWindow.controllers.insertControllerAt( 0, mainController );
-      commandManager.updateCommands();
-    } catch ( e ) {
-      log( e );
+    },
+    unregister: function() {
+      if ( Utils.IS_STANDALONE ) {
+        Utils.MAIN_WINDOW.ru.akman.znotes.ZNotes.removeObserver( this );
+      }
     }
   };
   
-  function doneCommandController() {
-    if ( !mainController ) {
-      return;
+  //
+  // PREFERENCES
+  //
+  
+  var prefsBundleObserver = {
+    onPrefChanged: function( event ) {
+      switch( event.data.name ) {
+        case "isSavePosition":
+          Utils.IS_SAVE_POSITION = event.data.newValue;
+          saveNotesTreeSelection();
+          break;
+        case "isEditSourceEnabled":
+          Utils.IS_EDIT_SOURCE_ENABLED = event.data.newValue;
+          currentNoteChanged();
+          break;
+        case "isOpened":
+          var isOpened = event.data.newValue;
+          if ( !isOpened ) {
+            unload();
+          }
+          break;
+        case "isMainMenubarVisible":
+          Utils.IS_MAINMENUBAR_VISIBLE = event.data.newValue;
+          updateMainMenubarVisibility();
+          break;
+        case "isMainToolbarVisible":
+          Utils.IS_MAINTOOLBAR_VISIBLE = event.data.newValue;
+          updateMainToolbarVisibility();
+          break;
+        case "defaultDocumentType":
+          Utils.DEFAULT_DOCUMENT_TYPE = event.data.newValue;
+          break;
+      }
+    },
+    register: function() {
+      prefsBundle.addObserver( this );
+    },
+    unregister: function() {
+      prefsBundle.removeObserver( this );
+    }
+  };
+  
+  var prefsMozillaObserver = {
+    observe: function( subject, topic, data ) {
+      switch ( data ) {
+        case "debug":
+          Utils.IS_DEBUG_ENABLED = this.branch.getBoolPref( "debug" );
+          Common.goSetCommandHidden( "znotes_debug_command",
+            !Utils.IS_DEBUG_ENABLED );
+          Common.goUpdateCommand( "znotes_debug_command" );
+          break;
+      }
+    },
+    register: function() {
+      var prefService =
+        Components.classes["@mozilla.org/preferences-service;1"]
+                  .getService( Components.interfaces.nsIPrefService );
+      this.branch = prefService.getBranch( "extensions.znotes.");
+      this.branch.addObserver( "", this, false );
+    },
+    unregister: function() {
+      this.branch.removeObserver( "", this );
+    }
+  };
+  
+  function loadPrefs() {
+    if ( prefsMozilla.prefHasUserValue( "extensions.znotes.debug" ) ) {
+      Utils.IS_DEBUG_ENABLED =
+        prefsMozilla.getBoolPref( "extensions.znotes.debug" );
+    }
+    if ( prefsMozilla.prefHasUserValue( "extensions.znotes.debug.active" ) ) {
+      Utils.IS_DEBUG_ACTIVE =
+        prefsMozilla.getBoolPref( "extensions.znotes.debug.active" );
+    }
+    if ( prefsMozilla.prefHasUserValue( "extensions.znotes.debug.raised" ) ) {
+      Utils.IS_DEBUG_RAISED =
+        prefsMozilla.getBoolPref( "extensions.znotes.debug.raised" );
+    }
+    if ( prefsMozilla.prefHasUserValue( "extensions.znotes.sanitize" ) ) {
+      Utils.IS_SANITIZE_ENABLED =
+        prefsMozilla.getBoolPref( "extensions.znotes.sanitize" );
+    }
+    if ( prefsMozilla.prefHasUserValue( "extensions.znotes.ad" ) ) {
+      Utils.IS_AD_ENABLED =
+        prefsMozilla.getBoolPref( "extensions.znotes.ad" );
     }
     try {
-      mainWindow.controllers.removeController( mainController );
-      mainController = null;
+      if ( !prefsBundle.hasPref( "isFirstRun" ) ) {
+        prefsBundle.setBoolPref( "isFirstRun",
+          Utils.IS_FIRST_RUN );
+      }
+      Utils.IS_FIRST_RUN =
+        prefsBundle.getBoolPref( "isFirstRun" );
+      //
+      if ( Utils.IS_FIRST_RUN ) {
+        prefsBundle.setBoolPref( "isFirstRun", false );
+      }
+      // -----------------------------------------------------------------------
+      if ( !prefsBundle.hasPref( "version" ) ) {
+        prefsBundle.setCharPref( "version",
+          Utils.VERSION );
+      }
+      if ( prefsBundle.getCharPref( "version" ) != Utils.VERSION ) {
+        prefsBundle.setCharPref( "version",
+          Utils.VERSION );
+        Utils.IS_FIRST_RUN = true;
+      }
+      // -----------------------------------------------------------------------
+      if ( !prefsBundle.hasPref( "isSavePosition" ) ) {
+        prefsBundle.setBoolPref( "isSavePosition",
+          Utils.IS_SAVE_POSITION );
+      }
+      Utils.IS_SAVE_POSITION =
+        prefsBundle.getBoolPref( "isSavePosition" );
+      //
+      if ( !prefsBundle.hasPref( "isEditSourceEnabled" ) ) {
+        prefsBundle.setBoolPref( "isEditSourceEnabled",
+          Utils.IS_EDIT_SOURCE_ENABLED );
+      }
+      Utils.IS_EDIT_SOURCE_ENABLED =
+        prefsBundle.getBoolPref( "isEditSourceEnabled" );
+      //
+      if ( !prefsBundle.hasPref( "isPlaySound" ) ) {
+        prefsBundle.setBoolPref( "isPlaySound",
+          Utils.IS_PLAY_SOUND );
+      }
+      Utils.IS_PLAY_SOUND =
+        prefsBundle.getBoolPref( "isPlaySound" );
+      //
+      if ( !prefsBundle.hasPref( "isMainMenubarVisible" ) ) {
+        prefsBundle.setBoolPref( "isMainMenubarVisible",
+          Utils.IS_MAINMENUBAR_VISIBLE );
+      }
+      Utils.IS_MAINMENUBAR_VISIBLE =
+        prefsBundle.getBoolPref( "isMainMenubarVisible" );
+      //
+      if ( !prefsBundle.hasPref( "isMainToolbarVisible" ) ) {
+        prefsBundle.setBoolPref( "isMainToolbarVisible",
+          Utils.IS_MAINTOOLBAR_VISIBLE );
+      }
+      Utils.IS_MAINTOOLBAR_VISIBLE =
+        prefsBundle.getBoolPref( "isMainToolbarVisible" );
+      //
+      if ( !prefsBundle.hasPref( "defaultDocumentType" ) ) {
+        prefsBundle.setCharPref( "defaultDocumentType",
+          Utils.DEFAULT_DOCUMENT_TYPE );
+      }
+      Utils.DEFAULT_DOCUMENT_TYPE =
+        prefsBundle.getCharPref( "defaultDocumentType" );
     } catch ( e ) {
-      log( e );
+      Utils.log( e );
+    }
+    if ( Utils.IS_FIRST_RUN || Utils.IS_DEBUG_ENABLED ) {
+      var observerService =
+        Components.classes["@mozilla.org/observer-service;1"]
+                  .getService( Components.interfaces.nsIObserverService );
+		  observerService.notifyObservers( null, "startupcache-invalidate", null );
+		  observerService.notifyObservers( null, "chrome-flush-skin-caches", null );
+		  observerService.notifyObservers( null, "chrome-flush-caches", null );
     }
   };
   
-  function initCommands() {
-    cmdPrint = commandManager.getCommand( "znotes_print_command" );
-    cmdPageSetup = commandManager.getCommand( "znotes_pagesetup_command" );
-    cmdExit = commandManager.getCommand( "znotes_exit_command" );
-    cmdShowMainMenubar = commandManager.getCommand( "znotes_showmainmenubar_command" );
-    cmdShowMainToolbar = commandManager.getCommand( "znotes_showmaintoolbar_command" );
-    cmdCustomizeMainToolbar = commandManager.getCommand( "znotes_customizemaintoolbar_command" );
-    cmdOpenOptionsDialog = commandManager.getCommand( "znotes_openoptionsdialog_command" );
-    cmdDebug = commandManager.getCommand( "znotes_debug_command" );
-    cmdAddons = commandManager.getCommand( "znotes_addons_command" );
-    cmdUpdate = commandManager.getCommand( "znotes_update_command" );
-    cmdOpenHelp = commandManager.getCommand( "znotes_openhelp_command" );
-    cmdOpenAbout = commandManager.getCommand( "znotes_openabout_command" );
-    cmdShowAppMenu = commandManager.getCommand( "znotes_showappmenu_command" );
-    cmdShowFilterBar = commandManager.getCommand( "znotes_showfilterbar_command" );
-    cmdAppendBook = commandManager.getCommand( "znotes_appendbook_command" );
-    cmdDeleteBook = commandManager.getCommand( "znotes_deletebook_command" );
-    cmdDeleteBookData = commandManager.getCommand( "znotes_deletebookdata_command" );
-    cmdEditBook = commandManager.getCommand( "znotes_editbook_command" );
-    cmdOpenBook = commandManager.getCommand( "znotes_openbook_command" );
-    cmdCloseBook = commandManager.getCommand( "znotes_closebook_command" );
-    cmdRenameBook = commandManager.getCommand( "znotes_renamebook_command" );
-    cmdRefreshBookTree = commandManager.getCommand( "znotes_refreshbooktree_command" );
-    cmdRefreshFolderTree = commandManager.getCommand( "znotes_refreshfoldertree_command" );
-    cmdNewCategory = commandManager.getCommand( "znotes_newcategory_command" );
-    cmdDeleteCategory = commandManager.getCommand( "znotes_deletecategory_command" );
-    cmdRenameCategory = commandManager.getCommand( "znotes_renamecategory_command" );
-    cmdNewNote = commandManager.getCommand( "znotes_newnote_command" );
-    cmdDeleteNote = commandManager.getCommand( "znotes_deletenote_command" );
-    cmdImportNote = commandManager.getCommand( "znotes_importnote_command" );
-    cmdRenameNote = commandManager.getCommand( "znotes_renamenote_command" );
-    cmdProcessNote = commandManager.getCommand( "znotes_processnote_command" );
-    cmdRefreshNoteTree = commandManager.getCommand( "znotes_refreshnotetree_command" );
-    cmdUpdateNote = commandManager.getCommand( "znotes_updatenote_command" );
-    cmdNewTag = commandManager.getCommand( "znotes_newtag_command" );
-    cmdDeleteTag = commandManager.getCommand( "znotes_deletetag_command" );
-    cmdRenameTag = commandManager.getCommand( "znotes_renametag_command" );
-    cmdColorTag = commandManager.getCommand( "znotes_colortag_command" );
-    cmdRefreshTagTree = commandManager.getCommand( "znotes_refreshtagtree_command" );
+  // DRIVERS
+
+  function loadDrivers() {
+    var driverDirectory = Utils.getDriverDirectory();
+    var entries = driverDirectory.directoryEntries;
+    var driver = null;
+    var name = null;
+    var entry = null;
+    while( entries.hasMoreElements() ) {
+      entry = entries.getNext();
+      entry.QueryInterface( Components.interfaces.nsIFile );
+      if ( !entry.isDirectory() ) {
+        continue;
+      }
+      name = entry.leafName;
+      try {
+        driver = ru.akman.znotes.DriverManager.registerDriver( name );
+      } catch ( e ) {
+        driver = null;
+        Utils.log( e );
+      }
+      if ( driver == null ) {
+        Utils.log( "Error loading driver: " + entry.path );
+      }
+    }
   };
 
-  function disableCommands() {
-    cmdPageSetup.setAttribute( "disabled", "true" );
-    cmdPrint.setAttribute( "disabled", "true" );
-    cmdExit.setAttribute( "disabled", "true" );
-    cmdShowMainMenubar.setAttribute( "disabled", "true" );
-    cmdShowMainToolbar.setAttribute( "disabled", "true" );
-    cmdCustomizeMainToolbar.setAttribute( "disabled", "true" );
-    cmdOpenOptionsDialog.setAttribute( "disabled", "true" );
-    cmdDebug.setAttribute( "disabled", "true" );
-    cmdAddons.setAttribute( "disabled", "true" );
-    cmdUpdate.setAttribute( "disabled", "true" );
-    cmdOpenHelp.setAttribute( "disabled", "true" );
-    cmdOpenAbout.setAttribute( "disabled", "true" );
-    cmdShowAppMenu.setAttribute( "disabled", "true" );
-    cmdShowFilterBar.setAttribute( "disabled", "true" );
-    cmdOpenBook.setAttribute( "disabled", "true" );
-    cmdCloseBook.setAttribute( "disabled", "true" );
-    cmdAppendBook.setAttribute( "disabled", "true" );
-    cmdDeleteBook.setAttribute( "disabled", "true" );
-    cmdDeleteBookData.setAttribute( "disabled", "true" );
-    cmdEditBook.setAttribute( "disabled", "true" );
-    cmdRenameBook.setAttribute( "disabled", "true" );
-    cmdRefreshBookTree.setAttribute( "disabled", "true" );
-    cmdNewCategory.setAttribute( "disabled", "true" );
-    cmdDeleteCategory.setAttribute( "disabled", "true" );
-    cmdRenameCategory.setAttribute( "disabled", "true" );
-    cmdRefreshFolderTree.setAttribute( "disabled", "true" );
-    cmdNewNote.setAttribute( "disabled", "true" );
-    cmdDeleteNote.setAttribute( "disabled", "true" );
-    cmdImportNote.setAttribute( "disabled", "true" );
-    cmdRenameNote.setAttribute( "disabled", "true" );
-    cmdProcessNote.setAttribute( "disabled", "true" );
-    cmdRefreshNoteTree.setAttribute( "disabled", "true" );
-    cmdUpdateNote.setAttribute( "disabled", "true" );
-    cmdNewTag.setAttribute( "disabled", "true" );
-    cmdDeleteTag.setAttribute( "disabled", "true" );
-    cmdRenameTag.setAttribute( "disabled", "true" );
-    cmdColorTag.setAttribute( "disabled", "true" );
-    cmdRefreshTagTree.setAttribute( "disabled", "true" );
+  // DOCUMENTS
+
+  function loadDocuments() {
+    var documentDirectory = Utils.getDocumentDirectory();
+    var entries = documentDirectory.directoryEntries;
+    var doc = null;
+    var name = null;
+    var entry = null;
+    while( entries.hasMoreElements() ) {
+      entry = entries.getNext();
+      entry.QueryInterface( Components.interfaces.nsIFile );
+      if ( !entry.isDirectory() ) {
+        continue;
+      }
+      name = entry.leafName;
+      try {
+        doc = ru.akman.znotes.DocumentManager.registerDocument( name );
+      } catch ( e ) {
+        doc = null;
+        Utils.log( e );
+      }
+      if ( doc == null ) {
+        Utils.log( "Error loading document: " + entry.path );
+      }
+    }
   };
   
   //
-  
-  function updateSelectedPopupItem( event ) {
-    selectedPopupItem = event.target;
+  // COMMANDS
+  //
+
+  var mainCommands = {
+    // book
+    "znotes_openbook_command": null,
+    "znotes_closebook_command": null,
+    "znotes_appendbook_command": null,
+    "znotes_deletebook_command": null,
+    "znotes_deletebookdata_command": null,
+    "znotes_editbook_command": null,
+    "znotes_renamebook_command": null,
+    "znotes_refreshbooktree_command": null,
+    // category
+    "znotes_refreshfoldertree_command": null,
+    "znotes_newcategory_command": null,
+    "znotes_deletecategory_command": null,
+    "znotes_renamecategory_command": null,
+    // tag
+    "znotes_refreshtagtree_command": null,
+    "znotes_newtag_command": null,
+    "znotes_deletetag_command": null,
+    "znotes_renametag_command": null,
+    "znotes_colortag_command": null,
+    // note
+    "znotes_newnote_command": null,
+    "znotes_importnote_command": null,
+    "znotes_deletenote_command": null,
+    "znotes_renamenote_command": null,
+    "znotes_processnote_command": null,
+    "znotes_updatenote_command": null,
+    "znotes_refreshnotetree_command": null,
+    // platform
+    "znotes_showappmenu_command": null,
+    "znotes_exit_command": null,
+    "znotes_showmainmenubar_command": null,
+    "znotes_showmaintoolbar_command": null,
+    "znotes_customizemaintoolbar_command": null,
+    "znotes_openoptionsdialog_command": null,
+    "znotes_openhelp_command": null,
+    "znotes_openabout_command": null,
+    "znotes_pagesetup_command": null,
+    "znotes_showfilterbar_command": null,
+    "znotes_debug_command": null,
+    "znotes_addons_command": null,
+    "znotes_update_command": null,
+    // edit
+    "znotes_undo_command": null,
+    "znotes_redo_command": null,
+    "znotes_cut_command": null,
+    "znotes_copy_command": null,
+    "znotes_paste_command": null,
+    "znotes_delete_command": null,
+    "znotes_selectall_command": null
   };
-  
-  function updateNewNoteMenuPopup() {
-    newNoteButton = mainWindow.document.getElementById( "znotes_newnote_button" );
-    if ( !newNoteButton ) {
-      return;
-    }
-    newNoteButtonMenuPopup = mainWindow.document.getElementById( "znotes_newnote_button_menupopup" );
-    if ( !newNoteButtonMenuPopup ) {
-      newNoteButtonMenuPopup = mainWindow.document.createElement( "menupopup" );
-      newNoteButtonMenuPopup.setAttribute( "id", "znotes_newnote_button_menupopup" );
-      newNoteButton.appendChild( newNoteButtonMenuPopup );
-    } else {
-      while ( newNoteButtonMenuPopup.firstChild ) {
-        newNoteButtonMenuPopup.removeChild( newNoteButtonMenuPopup.firstChild );
+
+  var mainController = {
+    supportsCommand: function( cmd ) {
+      if ( !( cmd in mainCommands ) ) {
+        return false;
       }
-    }
-    var docs = ru.akman.znotes.DocumentManager.getDocuments();
-    for ( var name in docs ) {
-      var doc = docs[name];
-      var menuItem = mainWindow.document.createElement( "menuitem" );
-      menuItem.className = "menuitem-iconic";
-      menuItem.setAttribute( "id", "newNoteButtonMenuPopup_" + doc.getName() );
-      menuItem.setAttribute( "label", " " + doc.getDescription() );
-      menuItem.setAttribute( "tooltiptext", doc.getName() + "-" + doc.getVersion() + " : " + doc.getType() );
-      menuItem.style.setProperty( "list-style-image", "url( '" + doc.getIconURL() + "' )" , "important" );
-      menuItem.addEventListener( "command", updateSelectedPopupItem, false );
-      newNoteButtonMenuPopup.appendChild( menuItem );
-    }
- };
-  
-  function updateImportNoteMenuPopup() {
-    importNoteButton = mainWindow.document.getElementById( "znotes_importnote_button" );
-    if ( !importNoteButton ) {
-      return;
-    }
-    importNoteButtonMenuPopup = mainWindow.document.getElementById( "znotes_importnote_button_menupopup" );
-    if ( !importNoteButtonMenuPopup ) {
-      importNoteButtonMenuPopup = mainWindow.document.createElement( "menupopup" );
-      importNoteButtonMenuPopup.setAttribute( "id", "znotes_importnote_button_menupopup" );
-      importNoteButton.appendChild( importNoteButtonMenuPopup );
-    } else {
-      while ( importNoteButtonMenuPopup.firstChild ) {
-        importNoteButtonMenuPopup.removeChild( importNoteButtonMenuPopup.firstChild );
+      //Utils.log( this.getName() + "::supportsCommand() '" + cmd + "'" );
+      return true;
+    },
+    isCommandEnabled: function( cmd ) {
+      if ( !( cmd in mainCommands ) ) {
+        return false;
       }
-    }
-    var docs = ru.akman.znotes.DocumentManager.getDocuments();
-    for ( var name in docs ) {
-      var doc = docs[name];
-      var menuItem = mainWindow.document.createElement( "menuitem" );
-      menuItem.className = "menuitem-iconic";
-      menuItem.setAttribute( "id", "importNoteButtonMenuPopup_" + doc.getName() );
-      menuItem.setAttribute( "label", " " + doc.getDescription() );
-      menuItem.setAttribute( "tooltiptext", doc.getName() + "-" + doc.getVersion() + " : " + doc.getType() );
-      menuItem.style.setProperty( "list-style-image", "url( '" + doc.getIconURL() + "' )" , "important" );
-      menuItem.addEventListener( "command", updateSelectedPopupItem, false );
-      importNoteButtonMenuPopup.appendChild( menuItem );
-    }
-  };
-  
-  function refreshCommandState( aCommand ) {
-    var hasAttr = aCommand.hasAttribute( "disabled" );
-    aCommand.setAttribute( "disabled", "true" );
-    if ( !hasAttr ) {
-      aCommand.removeAttribute( "disabled" );
-    }
-    switch ( aCommand ) {
-      case cmdDebug:
-        if ( !ru.akman.znotes.Utils.IS_DEBUG_ENABLED ) {
-          cmdDebug.setAttribute( "disabled", "true" );
-          cmdDebug.setAttribute( "hidden", "true" );
-        } else {
-          if ( cmdDebug.hasAttribute( "hidden" ) ) {
-            cmdDebug.removeAttribute( "hidden" );
+      var activeElementId = document.activeElement.getAttribute( "id" );
+      switch ( cmd ) {
+        // platform
+        case "znotes_debug_command":
+          return Utils.IS_DEBUG_ENABLED;
+        case "znotes_addons_command":
+          return Utils.IS_STANDALONE; 
+        case "znotes_update_command":
+          return Utils.IS_STANDALONE &&
+            ru.akman.znotes.UpdateManager.canUpdate(); 
+        case "znotes_showappmenu_command":
+        case "znotes_exit_command":
+        case "znotes_showmainmenubar_command":
+        case "znotes_showmaintoolbar_command":
+        case "znotes_customizemaintoolbar_command":
+        case "znotes_openoptionsdialog_command":
+        case "znotes_openhelp_command":
+        case "znotes_openabout_command":
+        case "znotes_pagesetup_command":
+          return true;
+        // book
+        case "znotes_openbook_command":
+        case "znotes_editbook_command":
+          return currentBook && !currentBook.isOpen();
+        case "znotes_closebook_command":
+        case "znotes_showfilterbar_command":
+          return currentBook && currentBook.isOpen();
+        case "znotes_renamebook_command":
+        case "znotes_deletebook_command":
+        case "znotes_deletebookdata_command":
+          return currentBook;
+        case "znotes_appendbook_command":
+        case "znotes_refreshbooktree_command":
+          return true;
+        // category
+        case "znotes_deletecategory_command":
+        case "znotes_renamecategory_command":
+          return currentBook && currentBook.isOpen() &&
+                 currentBook.getSelectedTree() == "Categories" &&
+                 currentCategory &&
+                 ( categoriesList.indexOf( currentCategory ) != 0 );
+        case "znotes_refreshfoldertree_command":
+        case "znotes_newcategory_command":
+          return currentBook && currentBook.isOpen() &&
+                 currentBook.getSelectedTree() == "Categories";
+          // tag
+        case "znotes_deletetag_command":
+        case "znotes_renametag_command":
+          return currentBook && currentBook.isOpen() &&
+                 currentBook.getSelectedTree() == "Tags" &&
+                 currentTag && !currentTag.isNoTag();
+        case "znotes_refreshtagtree_command":
+        case "znotes_newtag_command":
+          return currentBook && currentBook.isOpen() &&
+                 currentBook.getSelectedTree() == "Tags";
+        case "znotes_colortag_command":
+          return currentBook && currentBook.isOpen() &&
+                 currentBook.getSelectedTree() == "Tags" &&
+                 currentTag;
+          // note
+        case "znotes_deletenote_command":
+        case "znotes_renamenote_command":
+        case "znotes_processnote_command":
+        case "znotes_updatenote_command":
+          return currentBook && currentBook.isOpen() && currentNote;
+        case "znotes_newnote_command":
+        case "znotes_importnote_command":
+        case "znotes_refreshnotetree_command":
+          return currentBook && currentBook.isOpen();
+        // edit
+        case "znotes_undo_command":
+        case "znotes_redo_command":
+        case "znotes_paste_command":
+        case "znotes_selectall_command":
+        case "znotes_copy_command":
+        case "znotes_cut_command":
+          return false;
+        case "znotes_delete_command":
+          switch ( activeElementId ) {
+            case "bookTree":
+              return currentBook;
+            case "folderTree":
+              return currentBook && currentBook.isOpen() &&
+                     currentBook.getSelectedTree() == "Categories" &&
+                     currentCategory &&
+                     ( categoriesList.indexOf( currentCategory ) != 0 );
+            case "tagTree":
+              return currentBook && currentBook.isOpen() &&
+                     currentBook.getSelectedTree() == "Tags" &&
+                     currentTag && !currentTag.isNoTag();
+            case "noteTree":
+              return currentBook && currentBook.isOpen() && currentNote;
           }
-          if ( cmdDebug.hasAttribute( "disabled" ) ) {
-            cmdDebug.removeAttribute( "disabled" );
+          return false;
+      }
+      //Utils.log( this.getName() + "::isCommandEnabled() '" + cmd + "'" );
+      return false;
+    },
+    doCommand: function( cmd ) {
+      if ( !( cmd in mainCommands ) ) {
+        return;
+      }
+      //Utils.log( this.getName() + "::doCommand() '" + cmd + "'" );
+      var activeElementId = document.activeElement.getAttribute( "id" );
+      switch ( cmd ) {
+        case "znotes_pagesetup_command":
+          doPageSetup();
+          break;
+        case "znotes_exit_command":
+          doExit();
+          break;
+        case "znotes_showmainmenubar_command":
+          doShowMainMenubar();
+          break;
+        case "znotes_showmaintoolbar_command":
+          doShowMainToolbar();
+          break;
+        case "znotes_customizemaintoolbar_command":
+          doCustomizeMainToolbar();
+          break;
+        case "znotes_openoptionsdialog_command":
+          doOpenOptionsDialog();
+          break;
+        case "znotes_debug_command":
+          doOpenDebugWindow();
+          break;
+        case "znotes_addons_command":
+          doOpenAddonsManager();
+          break;
+        case "znotes_update_command":
+          doOpenUpdateManager();
+          break;
+        case "znotes_openhelp_command":
+          doOpenHelp();
+          break;
+        case "znotes_openabout_command":
+          doOpenAbout();
+          break;
+        case "znotes_openbook_command":
+          doOpenBook();
+          break;
+        case "znotes_closebook_command":
+          doCloseBook();
+          break;
+        case "znotes_appendbook_command":
+          doAppendBook();
+          break;
+        case "znotes_deletebook_command":
+          doDeleteBook();
+          break;
+        case "znotes_deletebookdata_command":
+          doDeleteBookData();
+          break;
+        case "znotes_editbook_command":
+          doEditBook();
+          break;
+        case "znotes_renamebook_command":
+          doRenameBook();
+          break;
+        case "znotes_refreshbooktree_command":
+          doRefreshBookTree();
+          break;
+        case "znotes_refreshfoldertree_command":
+          doRefreshFolderTree();
+          break;
+        case "znotes_newcategory_command":
+          doNewCategory();
+          break;
+        case "znotes_deletecategory_command":
+          doDeleteCategory();
+          break;
+        case "znotes_renamecategory_command":
+          doRenameCategory();
+          break;
+        case "znotes_refreshtagtree_command":
+          doRefreshTagTree();
+          break;
+        case "znotes_newtag_command":
+          doNewTag();
+          break;
+        case "znotes_deletetag_command":
+          doDeleteTag();
+          break;
+        case "znotes_renametag_command":
+          doRenameTag();
+          break;
+        case "znotes_colortag_command":
+          doColorTag();
+          break;
+        case "znotes_newnote_command":
+          doNewNote();
+          break;
+        case "znotes_importnote_command":
+          doImportNote();
+          break;
+        case "znotes_deletenote_command":
+          doDeleteNote();
+          break;
+        case "znotes_renamenote_command":
+          doRenameNote();
+          break;
+        case "znotes_processnote_command":
+          doProcessNote();
+          break;
+        case "znotes_updatenote_command":
+          doUpdateNote();
+          break;
+        case "znotes_refreshnotetree_command":
+          doRefreshNoteTree();
+          break;
+        case "znotes_showfilterbar_command":
+          doToggleFilterBar();
+          break;
+        case "znotes_showappmenu_command":
+          break;
+        // edit
+        case "znotes_undo_command":
+          doUndo();
+          break;
+        case "znotes_redo_command":
+          doRedo();
+          break;
+        case "znotes_selectall_command":
+          switch ( activeElementId ) {
+            case "bookTree":
+              doSelectAllBook();
+              break;
+            case "folderTree":
+              doSelectAllCategory();
+              break;
+            case "tagTree":
+              doSelectAllTag();
+              break;
+            case "noteTree":
+              doSelectAllNote();
+              break;
           }
-        }
-        break;
-      case cmdAddons:
-        cmdAddons.setAttribute( "disabled", "true" );
-        /** NOW ALWAYS DISABLED
-        if ( !ru.akman.znotes.Utils.IS_STANDALONE ) {
-          cmdAddons.setAttribute( "disabled", "true" );
-        } else {
-          if ( cmdAddons.hasAttribute( "disabled" ) ) {
-            cmdAddons.removeAttribute( "disabled" );
+          break;
+        case "znotes_paste_command":
+          switch ( activeElementId ) {
+            case "bookTree":
+              doPasteBook();
+              break;
+            case "folderTree":
+              doPasteCategory();
+              break;
+            case "tagTree":
+              doPasteTag();
+              break;
+            case "noteTree":
+              doPasteNote();
+              break;
           }
-        }
-        */
-        break;
-      case cmdUpdate:
-        cmdUpdate.setAttribute( "disabled", "true" );
-        /** NOW ALWAYS DISABLED 
-        if ( !ru.akman.znotes.Utils.IS_STANDALONE ) {
-          cmdUpdate.setAttribute( "disabled", "true" );
-        } else {
-          if ( ru.akman.znotes.UpdateManager.canUpdate() ) {
-            cmdUpdate.removeAttribute( "disabled" );
-          } else {
-            cmdUpdate.setAttribute( "disabled", "true" );
+          break;
+        case "znotes_copy_command":
+          switch ( activeElementId ) {
+            case "bookTree":
+              doCopyBook();
+              break;
+            case "folderTree":
+              doCopyCategory();
+              break;
+            case "tagTree":
+              doCopyTag();
+              break;
+            case "noteTree":
+              doCopyNote();
+              break;
           }
-        }
-        */
-        break;
-      case cmdNewNote:
-        updateNewNoteMenuPopup();
-        break;
-      case cmdImportNote:
-        updateImportNoteMenuPopup();
-      case cmdShowFilterBar:
-        var isCollapsed = true;
-        if ( !qfBox.hasAttribute( "collapsed" ) ) {
-          isCollapsed = false;
-        } else {
-          if ( qfBox.getAttribute( "collapsed" ) == "false" ) {
-            isCollapsed = false;
+          break;
+        case "znotes_cut_command":
+          switch ( activeElementId ) {
+            case "bookTree":
+              doCutBook();
+              break;
+            case "folderTree":
+              doCutCategory();
+              break;
+            case "tagTree":
+              doCutTag();
+              break;
+            case "noteTree":
+              doCutNote();
+              break;
           }
-        }
-        if ( isCollapsed ) {
-          qfButton.setAttribute( "checked" , "false" );
-          qfButton.setAttribute( "checkState" , "0" );
-        } else {
-          qfButton.setAttribute( "checked" , "true" );
-          qfButton.setAttribute( "checkState" , "1" );
-        }
-        break;
+          break;
+        case "znotes_delete_command":
+          switch ( activeElementId ) {
+            case "bookTree":
+              doDeleteBook();
+              break;
+            case "folderTree":
+              doDeleteCategory();
+              break;
+            case "tagTree":
+              doDeleteTag();
+              break;
+            case "noteTree":
+              doDeleteNote();
+              break;
+          }
+          break;
+      }
+    },
+    onEvent: function( event ) {
+      Utils.log( this.getName() + "::onEvent() '" + event + "'" );
+    },
+    getName: function() {
+      return "MAIN";
+    },
+    getCommand: function( cmd ) {
+      if ( cmd in mainCommands ) {
+        return document.getElementById( cmd );
+      }
+      return null;
+    },
+    register: function() {
+      Utils.appendAccelText( mainCommands, document );
+      try {
+        top.controllers.insertControllerAt( 0, this );
+      } catch ( e ) {
+        Components.utils.reportError(
+          "An error occurred registering '" + this.getName() + "' controller: " + e
+        );
+      }
+    },
+    unregister: function() {
+      try {
+        top.controllers.removeController( this );
+      } catch ( e ) {
+        Components.utils.reportError(
+          "An error occurred unregistering '" + this.getName() + "' controller: " + e
+        );
+      }
+      Utils.removeAccelText( mainCommands, document );
     }
   };
 
-  pub.customizeMainToolbarDone = function( isChanged ) {
-    body.updateStyle( { iconsize: mainToolBar.getAttribute( "iconsize" ) } );
-    pub.onAppMenuShowing();
+  function updateCommandsVisibility() {
+    Common.goSetCommandHidden( "znotes_addons_command", !Utils.IS_STANDALONE );
+    Common.goSetCommandHidden( "znotes_update_command", !Utils.IS_STANDALONE );
+    Common.goSetCommandHidden( "znotes_debug_command", !Utils.IS_DEBUG_ENABLED );
+  };
+  
+  function updateCommands() {
+    for ( var cmd in mainCommands ) {
+      ru.akman.znotes.Common.goUpdateCommand( cmd );
+    }
   };
 
+  function updatePlatformCommands() {
+    Common.goUpdateCommand( "znotes_debug_command" );
+    Common.goUpdateCommand( "znotes_addons_command" );
+    Common.goUpdateCommand( "znotes_update_command" );
+    Common.goUpdateCommand( "znotes_showappmenu_command" );
+    Common.goUpdateCommand( "znotes_exit_command" );
+    Common.goUpdateCommand( "znotes_showmainmenubar_command" );
+    Common.goUpdateCommand( "znotes_showmaintoolbar_command" );
+    Common.goUpdateCommand( "znotes_customizemaintoolbar_command" );
+    Common.goUpdateCommand( "znotes_openoptionsdialog_command" );
+    Common.goUpdateCommand( "znotes_openhelp_command" );
+    Common.goUpdateCommand( "znotes_openabout_command" );
+    Common.goUpdateCommand( "znotes_pagesetup_command" );
+  };
+  
+  function updateBookCommands() {
+    Common.goUpdateCommand( "znotes_openbook_command" );
+    Common.goUpdateCommand( "znotes_closebook_command" );
+    Common.goUpdateCommand( "znotes_appendbook_command" );
+    Common.goUpdateCommand( "znotes_deletebook_command" );
+    Common.goUpdateCommand( "znotes_deletebookdata_command" );
+    Common.goUpdateCommand( "znotes_editbook_command" );
+    Common.goUpdateCommand( "znotes_renamebook_command" );
+    Common.goUpdateCommand( "znotes_refreshbooktree_command" );
+    Common.goUpdateCommand( "znotes_showfilterbar_command" );
+  };
+  
+  function updateCategoryCommands() {
+    Common.goUpdateCommand( "znotes_refreshfoldertree_command" );
+    Common.goUpdateCommand( "znotes_newcategory_command" );
+    Common.goUpdateCommand( "znotes_deletecategory_command" );
+    Common.goUpdateCommand( "znotes_renamecategory_command" );
+  };
+  
+  function updateTagCommands() {
+    Common.goUpdateCommand( "znotes_refreshtagtree_command" );
+    Common.goUpdateCommand( "znotes_newtag_command" );
+    Common.goUpdateCommand( "znotes_deletetag_command" );
+    Common.goUpdateCommand( "znotes_renametag_command" );
+    Common.goUpdateCommand( "znotes_colortag_command" );
+  };
+
+  function updateNoteCommands() {
+    Common.goUpdateCommand( "znotes_newnote_command" );
+    Common.goUpdateCommand( "znotes_importnote_command" );
+    Common.goUpdateCommand( "znotes_deletenote_command" );
+    Common.goUpdateCommand( "znotes_renamenote_command" );
+    Common.goUpdateCommand( "znotes_processnote_command" );
+    Common.goUpdateCommand( "znotes_updatenote_command" );
+    Common.goUpdateCommand( "znotes_refreshnotetree_command" );
+  };
+
+  function updateEditCommands() {
+    Common.goUpdateCommand( "znotes_undo_command" );
+    Common.goUpdateCommand( "znotes_redo_command" );
+    Common.goUpdateCommand( "znotes_cut_command" );
+    Common.goUpdateCommand( "znotes_copy_command" );
+    Common.goUpdateCommand( "znotes_paste_command" );
+    Common.goUpdateCommand( "znotes_delete_command" );
+    Common.goUpdateCommand( "znotes_selectall_command" );
+  };
+  
   // znotes_exit_command
   function doExit() {
-    var appStartupSvc = Components.classes["@mozilla.org/toolkit/app-startup;1"]
-                                  .getService(Components.interfaces.nsIAppStartup);
+    if ( !close() ) {
+      return true;
+    }
+    // This is necessary for correct session saving
+    var appStartupSvc =
+      Components.classes["@mozilla.org/toolkit/app-startup;1"]
+                .getService( Components.interfaces.nsIAppStartup );
     /*
       eConsiderQuit 0x01  Attempt to quit if all windows are closed.
       eAttemptQuit  0x02  Try to close all windows, then quit if successful.
       eForceQuit    0x03  Force all windows to close, then quit.
-      eRestart      0x10  Restart the application after quitting. The application will be restarted with the same profile and an empty command line.
+      eRestart      0x10  Restart the application after quitting.
+                          The application will be restarted with the same
+                          profile and an empty command line.
     */
     appStartupSvc.quit( Components.interfaces.nsIAppStartup.eAttemptQuit );
     return true;
@@ -709,7 +1003,7 @@ ru.akman.znotes.Main = function() {
           settings = printSettingsService.newPrintSettings;
         }
       } catch (e) {
-        log( e );
+        Utils.log( e );
       }
       if ( settings ) {
         settings.isCancelled = false;
@@ -719,38 +1013,53 @@ ru.akman.znotes.Main = function() {
         printSettingsService.savePrintSettingsToPrefs( settings, true, settings.kInitSaveNativeData );
       }
     } catch (e) {
-      log( e );
+      Utils.log( e );
       return false;
     }
     return true;
   };
 
-  // znotes_print_command
-  function doPrint() {
-    body.print();
-    return true;
+  // znotes_showmainmenubar_command
+
+  function updateMainMenubarVisibility() {
+    if ( Utils.IS_MAINMENUBAR_VISIBLE ) {
+      mainMenuBar.removeAttribute( "autohide" );
+    } else {
+      mainMenuBar.setAttribute( "autohide", "true" );
+    }
+    Common.goSetCommandAttribute( "znotes_showmainmenubar_command",
+      "checked", Utils.IS_MAINMENUBAR_VISIBLE );
   };
 
-  // znotes_showmainmenubar_command
   function doShowMainMenubar() {
-    prefsBundle.setBoolPref( "isMainMenubarVisible", !ru.akman.znotes.Utils.IS_MAINMENUBAR_VISIBLE );
+    prefsBundle.setBoolPref( "isMainMenubarVisible", !Utils.IS_MAINMENUBAR_VISIBLE );
     return true;
   };
 
   // znotes_showmaintoolbar_command
+
+  function updateMainToolbarVisibility() {
+    if ( Utils.IS_MAINTOOLBAR_VISIBLE ) {
+      mainToolBar.removeAttribute( "hidden" );
+    } else {
+      mainToolBar.setAttribute( "hidden", "true" );
+    }
+    Common.goSetCommandAttribute( "znotes_showmaintoolbar_command",
+      "checked", Utils.IS_MAINTOOLBAR_VISIBLE );
+  };
+
   function doShowMainToolbar() {
-    prefsBundle.setBoolPref( "isMainToolbarVisible", !ru.akman.znotes.Utils.IS_MAINTOOLBAR_VISIBLE );
+    prefsBundle.setBoolPref( "isMainToolbarVisible", !Utils.IS_MAINTOOLBAR_VISIBLE );
     return true;
   };
 
   // znotes_customizemaintoolbar_command
   function doCustomizeMainToolbar() {
-    var win = ru.akman.znotes.Utils.MAIN_WINDOW;
-    win.openDialog(
+    window.openDialog(
       "chrome://global/content/customizeToolbar.xul",
       "",
       "chrome,all,dependent",
-      win.document.getElementById( "znotes_maintoolbox" )
+      document.getElementById( "znotes_maintoolbox" )
     ).focus();
     return true;
   };
@@ -779,7 +1088,12 @@ ru.akman.znotes.Main = function() {
   function doOpenDebugWindow() {
     var windowService = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
                                   .getService( Components.interfaces.nsIWindowWatcher );
+    var windowMediator = Components.classes["@mozilla.org/appshell/window-mediator;1"]
+                                   .getService( Components.interfaces.nsIWindowMediator );
+    var win = windowMediator.getMostRecentWindow( "znotes:debug" );
+    /*
     var win = windowService.getWindowByName( "znotes:debug", null );
+    */
     if ( win ) {
       windowService.activeWindow = win;
     } else {
@@ -797,8 +1111,8 @@ ru.akman.znotes.Main = function() {
 
   // znotes_openhelp_command
   function doOpenHelp() {
-    ru.akman.znotes.Utils.openLinkExternally(
-      ru.akman.znotes.Utils.SITE + ru.akman.znotes.Utils.getSiteLanguage() + "/documentation.xhtml"
+    Utils.openLinkExternally(
+      Utils.SITE + Utils.getSiteLanguage() + "/documentation.xhtml"
     );
     return true;
   };
@@ -816,7 +1130,7 @@ ru.akman.znotes.Main = function() {
   // znotes_newtag_command
   function doNewTag() {
     if ( currentBook && currentBook.isOpen() ) {
-      var name = stringsBundle.getString( "main.tag.newName" );
+      var name = getString( "main.tag.newName" );
       var color = "#FFFFFF";
       var newTag = createTag( currentBook, name, color );
       var aRow = tagsList.indexOf( newTag );
@@ -835,9 +1149,9 @@ ru.akman.znotes.Main = function() {
     }
     var params = {
       input: {
-        title: stringsBundle.getString( "main.tag.confirmDelete.title" ),
-        message1: stringsBundle.getFormattedString( "main.tag.confirmDelete.message1", [ currentTag.getName() ] ),
-        message2: stringsBundle.getString( "main.tag.confirmDelete.message2" )
+        title: getString( "main.tag.confirmDelete.title" ),
+        message1: getFormattedString( "main.tag.confirmDelete.message1", [ currentTag.getName() ] ),
+        message2: getString( "main.tag.confirmDelete.message2" )
       },
       output: null
     };
@@ -869,8 +1183,8 @@ ru.akman.znotes.Main = function() {
   function doColorTag() {
     var params = {
       input: {
-        title: stringsBundle.getString( "main.tag.colorselectdialog.title" ),
-        message: stringsBundle.getFormattedString( "main.tag.colorselectdialog.message", [ currentTag.getName() ] ),
+        title: getString( "main.tag.colorselectdialog.title" ),
+        message: getFormattedString( "main.tag.colorselectdialog.message", [ currentTag.getName() ] ),
         color: currentTag.getColor()
       },
       output: null
@@ -895,10 +1209,32 @@ ru.akman.znotes.Main = function() {
   };
 
   // znotes_newnote_command
+
+  function updateNewNoteMenuPopup() {
+    while ( newNoteButtonMenuPopup.firstChild ) {
+      newNoteButtonMenuPopup.removeChild( newNoteButtonMenuPopup.firstChild );
+    }
+    var docs = ru.akman.znotes.DocumentManager.getDocuments();
+    for ( var name in docs ) {
+      var doc = docs[name];
+      var menuItem = document.createElement( "menuitem" );
+      menuItem.className = "menuitem-iconic";
+      menuItem.setAttribute( "id",
+        "newNoteButtonMenuPopup_" + doc.getName() );
+      menuItem.setAttribute( "label", " " + doc.getDescription() );
+      menuItem.setAttribute( "tooltiptext", doc.getName() +
+        "-" + doc.getVersion() + " : " + doc.getType() );
+      menuItem.style.setProperty( "list-style-image",
+        "url( '" + doc.getIconURL() + "' )" , "important" );
+      menuItem.addEventListener( "command", updateSelectedPopupItem, false );
+      newNoteButtonMenuPopup.appendChild( menuItem );
+    }
+  };
+  
   function doNewNote() {
     var id = selectedPopupItem ? selectedPopupItem.getAttribute( "id" ) : "";
     selectedPopupItem = null;
-    var docType = ru.akman.znotes.Utils.DEFAULT_DOCUMENT_TYPE;
+    var docType = Utils.DEFAULT_DOCUMENT_TYPE;
     if ( id.indexOf( "newNoteButtonMenuPopup_" ) == 0 ) {
       var doc = ru.akman.znotes.DocumentManager.getDocumentByName(
         // document name starts from position 23 of id
@@ -911,10 +1247,10 @@ ru.akman.znotes.Main = function() {
       }
     }
     var category = currentCategory;
-    if ( currentTree == "Tags" ) {
+    if ( currentBook.getSelectedTree() == "Tags" ) {
       category = currentBook.getContentTree().getRoot();
     }
-    var name = stringsBundle.getString( "main.note.newName" );
+    var name = getString( "main.note.newName" );
     var index = 1;
     var suffix = "";
     while ( category.noteExists( name + suffix ) ) {
@@ -931,10 +1267,33 @@ ru.akman.znotes.Main = function() {
   };
 
   // znotes_importnote_command
+  
+  function updateImportNoteMenuPopup() {
+    while ( importNoteButtonMenuPopup.firstChild ) {
+      importNoteButtonMenuPopup.removeChild(
+        importNoteButtonMenuPopup.firstChild );
+    }
+    var docs = ru.akman.znotes.DocumentManager.getDocuments();
+    for ( var name in docs ) {
+      var doc = docs[name];
+      var menuItem = document.createElement( "menuitem" );
+      menuItem.className = "menuitem-iconic";
+      menuItem.setAttribute( "id", "importNoteButtonMenuPopup_" +
+        doc.getName() );
+      menuItem.setAttribute( "label", " " + doc.getDescription() );
+      menuItem.setAttribute( "tooltiptext", doc.getName() +
+        "-" + doc.getVersion() + " : " + doc.getType() );
+      menuItem.style.setProperty( "list-style-image",
+        "url( '" + doc.getIconURL() + "' )" , "important" );
+      menuItem.addEventListener( "command", updateSelectedPopupItem, false );
+      importNoteButtonMenuPopup.appendChild( menuItem );
+    }
+  };
+  
   function doImportNote() {
     var id = selectedPopupItem ? selectedPopupItem.getAttribute( "id" ) : "";
     selectedPopupItem = null;
-    var docType = ru.akman.znotes.Utils.DEFAULT_DOCUMENT_TYPE;
+    var docType = Utils.DEFAULT_DOCUMENT_TYPE;
     if ( id.indexOf( "importNoteButtonMenuPopup_" ) == 0 ) {
       var doc = ru.akman.znotes.DocumentManager.getDocumentByName(
         // document name starts from position 26
@@ -948,8 +1307,8 @@ ru.akman.znotes.Main = function() {
     }
     var params = {
       input: {
-        title: stringsBundle.getString( "main.note.import.title" ),
-        caption: " " + stringsBundle.getString( "main.note.import.caption" ) + " ",
+        title: getString( "main.note.import.title" ),
+        caption: " " + getString( "main.note.import.caption" ) + " ",
         value: "http://"
       },
       output: null
@@ -969,9 +1328,9 @@ ru.akman.znotes.Main = function() {
       return true;
     }
     var category = currentCategory;
-    if ( currentTree == "Tags" )
+    if ( currentBook.getSelectedTree() == "Tags" )
       category = currentBook.getContentTree().getRoot();
-    var name = stringsBundle.getString( "main.note.import.name" );
+    var name = getString( "main.note.import.name" );
     var index = 1;
     var suffix = "";
     while ( category.noteExists( name + suffix ) ) {
@@ -990,9 +1349,10 @@ ru.akman.znotes.Main = function() {
   function doDeleteNote() {
     var params = {
       input: {
-        title: stringsBundle.getString( "main.note.confirmDelete.title" ),
-        message1: stringsBundle.getFormattedString( "main.note.confirmDelete.message1", [ currentNote.name ] ),
-        message2: stringsBundle.getString( "main.note.confirmDelete.message2" )
+        title: getString( "main.note.confirmDelete.title" ),
+        message1: getFormattedString(
+          "main.note.confirmDelete.message1", [ currentNote.name ] ),
+        message2: getString( "main.note.confirmDelete.message2" )
       },
       output: null
     };
@@ -1019,8 +1379,8 @@ ru.akman.znotes.Main = function() {
 
   // znotes_processnote_command
   function doProcessNote() {
-    var title = stringsBundle.getString( "utils.openuri.apppicker.title" );
-    ru.akman.znotes.Utils.openURI( currentNote.getURI(), true, mainWindow, title );
+    var title = getString( "utils.openuri.apppicker.title" );
+    Utils.openURI( currentNote.getURI(), true, window, title );
     return true;
   };
 
@@ -1029,7 +1389,7 @@ ru.akman.znotes.Main = function() {
     var defaultDriver = ru.akman.znotes.DriverManager.getDefaultDriver();
     var params = {
       input: {
-        name: stringsBundle.getString( "main.book.newName" ),
+        name: getString( "main.book.newName" ),
         description: "",
         driver: defaultDriver.getName(),
         connection: defaultDriver.getParameters()
@@ -1059,9 +1419,10 @@ ru.akman.znotes.Main = function() {
   function doDeleteBook() {
     var params = {
       input: {
-        title: stringsBundle.getString( "main.book.confirmDelete.title" ),
-        message1: stringsBundle.getFormattedString( "main.book.confirmDelete.message1", [ currentBook.getName() ] ),
-        message2: stringsBundle.getString( "main.book.confirmDelete.message2" )
+        title: getString( "main.book.confirmDelete.title" ),
+        message1: getFormattedString(
+          "main.book.confirmDelete.message1", [ currentBook.getName() ] ),
+        message2: getString( "main.book.confirmDelete.message2" )
       },
       output: null
     };
@@ -1081,9 +1442,10 @@ ru.akman.znotes.Main = function() {
   function doDeleteBookData() {
     var params = {
       input: {
-        title: stringsBundle.getString( "main.book.confirmDeleteData.title" ),
-        message1: stringsBundle.getFormattedString( "main.book.confirmDeleteData.message1", [ currentBook.getName() ] ),
-        message2: stringsBundle.getString( "main.book.confirmDeleteData.message2" )
+        title: getString( "main.book.confirmDeleteData.title" ),
+        message1: getFormattedString(
+          "main.book.confirmDeleteData.message1", [ currentBook.getName() ] ),
+        message2: getString( "main.book.confirmDeleteData.message2" )
       },
       output: null
     };
@@ -1116,7 +1478,9 @@ ru.akman.znotes.Main = function() {
 
   // znotes_openbook_command
   function doOpenBook() {
-    openBook( currentBook );
+    if ( currentBook && !currentBook.isOpen() ) {
+      openBook( currentBook );
+    }
     return true;
   };
 
@@ -1142,7 +1506,7 @@ ru.akman.znotes.Main = function() {
 
   // znotes_newcategory_command
   function doNewCategory() {
-    var name = stringsBundle.getString( "main.category.newName" );
+    var name = getString( "main.category.newName" );
     var index = 1;
     var suffix = "";
     while ( currentCategory.categoryExists( name + suffix ) ) {
@@ -1155,7 +1519,8 @@ ru.akman.znotes.Main = function() {
     folderTreeBoxObject.ensureRowIsVisible( aRow );
     folderTree.view.selection.select( aRow );
     folderTree.setAttribute( "editable", "true" );
-    folderTree.startEditing( aRow, folderTree.columns.getNamedColumn( "folderTreeName" ) );
+    folderTree.startEditing( aRow,
+      folderTree.columns.getNamedColumn( "folderTreeName" ) );
     return true;
   };
 
@@ -1163,12 +1528,12 @@ ru.akman.znotes.Main = function() {
   function doDeleteCategory() {
     var params = {
       input: {
-        title: stringsBundle.getString( "main.category.confirmDelete.title" ),
-        message1: stringsBundle.getFormattedString(
+        title: getString( "main.category.confirmDelete.title" ),
+        message1: getFormattedString(
           "main.category.confirmDelete.message1",
           [ currentCategory.name ]
         ),
-        message2: stringsBundle.getString( "main.category.confirmDelete.message2" )
+        message2: getString( "main.category.confirmDelete.message2" )
       },
       output: null
     };
@@ -1202,46 +1567,131 @@ ru.akman.znotes.Main = function() {
 
   // znotes_refreshnotetree_command
   function doRefreshNoteTree() {
-    refreshNotesList();
-    restoreNotesTreeSelection();
+    updateNoteView();
     return true;
   };
 
   // znotes_showfilterbar_command
-  function doToggleFilterBar() {
-    var isCollapsed = false;
+  
+  function isQuickFilterCollapsed() {
+    var isCollapsed = true;
     if ( !qfBox.hasAttribute( "collapsed" ) ) {
-      isCollapsed = true;
+      isCollapsed = false;
     } else {
       if ( qfBox.getAttribute( "collapsed" ) == "false" ) {
-        isCollapsed = true;
+        isCollapsed = false;
       }
     }
-    qfBox.setAttribute( "collapsed", isCollapsed );
-    if ( currentBook ) {
-      currentBook.savePreference( "qfBoxCollapsed", isCollapsed );
-    }
-    if ( isCollapsed ) {
+    return isCollapsed;
+  };
+
+  function updateQuickFilterState() {
+    if ( isQuickFilterCollapsed() ) {
       qfButton.setAttribute( "checked" , "false" );
       qfButton.setAttribute( "checkState" , "0" );
     } else {
       qfButton.setAttribute( "checked" , "true" );
       qfButton.setAttribute( "checkState" , "1" );
     }
+  };
+  
+  function doToggleFilterBar() {
+    var isCollapsed = !isQuickFilterCollapsed();
+    qfBox.setAttribute( "collapsed", isCollapsed );
+    if ( currentBook ) {
+      currentBook.savePreference( "qfBoxCollapsed", isCollapsed );
+    }
+    updateQuickFilterState();
     return true;
   };
 
-  // znotes_showappmenu_command
-  function doShowAppMenu() {
-    popupAppMenu.openPopup( bShowAppMenu, "after_end", null, null, false, false, null );
-    return true;
+  // edit commands
+
+  // selectAll
+  
+  function doSelectAllBook() {
+  };
+  
+  function doSelectAllCategory() {
+  };
+  
+  function doSelectAllTag() {
+  };
+  
+  function doSelectAllNote() {
+  };
+
+  // copy
+  
+  function doCopyBook() {
+  };
+  
+  function doCopyCategory() {
+  };
+  
+  function doCopyTag() {
+  };
+  
+  function doCopyNote() {
+  };
+
+  // cut
+  
+  function doCutBook() {
+  };
+  
+  function doCutCategory() {
+  };
+  
+  function doCutTag() {
+  };
+  
+  function doCutNote() {
+  };
+  
+  // paste
+  
+  function doPasteBook() {
+  };
+  
+  function doPasteCategory() {
+  };
+  
+  function doPasteTag() {
+  };
+  
+  function doPasteNote() {
+  };
+  
+  // undo
+  
+  function doUndo() {
+  };
+  
+  // redo
+  
+  function doRedo() {
+  };
+
+  // znotes_shownote_command ( not command )
+  function doShowNote() {
+    if ( currentNote ) {
+      showNote( currentNote, false );
+    }
+  };
+
+  // znotes_togglecategorystate_command ( not command )
+  function doToggleCategoryState() {
+    if ( currentCategory ) {
+      toggleCategoryState( currentCategory );
+    }
   };
   
   //
-  // C O M M O N  E V E N T S
+  // COMMON EVENTS 
   //
 
-  pub.onSplitterDblClick = function( event ) {
+  function onSplitterDblClick( event ) {
     var source = event.target;
     var state = source.getAttribute( "state" );
     if ( !state ) {
@@ -1254,73 +1704,18 @@ ru.akman.znotes.Main = function() {
     }
     return true;
   };
-  
-  //
-  // A P P L I C A T I O N  M E N U
-  //
-  
-  pub.onAppMenuShowing = function( event ) {
-    refreshCommandState( cmdDebug );
-    updateDebugButtonState();
-    //
-    refreshCommandState( cmdAddons );
-    refreshCommandState( cmdUpdate );
-    updateUpdateAndAddonsButtonsState();    
-    //
-    refreshCommandState( cmdPageSetup );
-    refreshCommandState( cmdPrint );
-    refreshCommandState( cmdExit );
-    //
-    refreshCommandState( cmdShowMainMenubar );
-    refreshCommandState( cmdShowMainToolbar );
-    refreshCommandState( cmdCustomizeMainToolbar );
-    //
-    refreshCommandState( cmdOpenOptionsDialog );
-    refreshCommandState( cmdOpenHelp );
-    refreshCommandState( cmdOpenAbout );
-    refreshCommandState( cmdShowFilterBar );
-    refreshCommandState( cmdShowAppMenu );
-    //
-    refreshCommandState( cmdOpenBook );
-    refreshCommandState( cmdCloseBook );
-    refreshCommandState( cmdAppendBook );
-    refreshCommandState( cmdDeleteBook );
-    refreshCommandState( cmdDeleteBookData );
-    refreshCommandState( cmdEditBook );
-    refreshCommandState( cmdRenameBook );
-    refreshCommandState( cmdRefreshBookTree );
-    //
-    refreshCommandState( cmdNewCategory );
-    refreshCommandState( cmdDeleteCategory );
-    refreshCommandState( cmdRenameCategory );
-    refreshCommandState( cmdRefreshFolderTree );
-    //
-    refreshCommandState( cmdNewNote );
-    refreshCommandState( cmdDeleteNote );
-    refreshCommandState( cmdImportNote );
-    refreshCommandState( cmdRenameNote );
-    refreshCommandState( cmdProcessNote );
-    refreshCommandState( cmdRefreshNoteTree );
-    refreshCommandState( cmdUpdateNote );
-    //
-    refreshCommandState( cmdNewTag );
-    refreshCommandState( cmdDeleteTag );
-    refreshCommandState( cmdRenameTag );
-    refreshCommandState( cmdColorTag );
-    refreshCommandState( cmdRefreshTagTree );
-  };
-  
-  //
-  // F O L D E R  T R E E
-  //
 
-  /*
-  function getFolderTreeItem( aCategory )
-  function getFolderTreeItemAtItemIndex( anItemIndex )
-  function getFolderTreeItemAndCategoryAtRowIndex( aRowIndex )
-  function getFolderTreeItemRowDepth( anItem )
-  function getFolderTreeRow( aCategory )
-  */
+  function onCustomizeMainToolbarDone( isChanged ) {
+    window.focus();
+    body.updateStyle( { iconsize: mainToolBar.getAttribute( "iconsize" ) } );
+    updateCommands();
+    updateQuickFilterState();
+    return true;
+  };
+
+  //
+  // CATEGORIES
+  //
 
   function processFolderTree( aTreeChildren, aProcessor ) {
     for ( var i = 0; i < aTreeChildren.children.length; i++ ) {
@@ -1408,26 +1803,14 @@ ru.akman.znotes.Main = function() {
     return result;
   };
 
-  //
-  // C A T E G O R I E S
-  //
-
   function enableCategoriesList() {
     folderTree.removeAttribute( "disabled" );
-    cmdNewCategory.removeAttribute( "disabled" );
-    cmdDeleteCategory.removeAttribute( "disabled" );
-    cmdRenameCategory.removeAttribute( "disabled" );
-    cmdRefreshFolderTree.removeAttribute( "disabled" );
   };
 
   function disableCategoriesList() {
     folderTree.setAttribute( "disabled", "true" );
-    cmdNewCategory.setAttribute( "disabled", "true" );
-    cmdDeleteCategory.setAttribute( "disabled", "true" );
-    cmdRenameCategory.setAttribute( "disabled", "true" );
-    cmdRefreshFolderTree.setAttribute( "disabled", "true" );
   };
-
+  
   function createCategoriesList() {
     var append = function( aCategory ) {
       if ( aCategory == null ) {
@@ -1467,7 +1850,7 @@ ru.akman.znotes.Main = function() {
   };
 
   function showCategoriesList() {
-    folderTree.removeEventListener( "select", pub.onFolderSelect, false );
+    folderTree.removeEventListener( "select", onFolderSelect, false );
     while ( folderTreeChildren.firstChild ) {
       folderTreeChildren.removeChild( folderTreeChildren.firstChild );
     }
@@ -1477,7 +1860,7 @@ ru.akman.znotes.Main = function() {
     } else {
       disableCategoriesList();
     }
-    folderTree.addEventListener( "select", pub.onFolderSelect, false );
+    folderTree.addEventListener( "select", onFolderSelect, false );
   }
 
   function refreshCategoriesList() {
@@ -1523,7 +1906,7 @@ ru.akman.znotes.Main = function() {
       treeItem.setAttribute( "open", "false" );
       treeItem.setAttribute( "container", "false" );
       //
-      folderTree.removeEventListener( "select", pub.onFolderSelect, false );
+      folderTree.removeEventListener( "select", onFolderSelect, false );
       treeChildren = treeItem.lastChild;
       while ( treeChildren.firstChild ) {
         treeChildren.removeChild( treeChildren.firstChild );
@@ -1532,13 +1915,17 @@ ru.akman.znotes.Main = function() {
       for ( var i = 0; i < categories.length; i++ ) {
         createFolderTreeChildren( categories[i], treeChildren );
       }
-      folderTree.addEventListener( "select", pub.onFolderSelect, false );
+      folderTree.addEventListener( "select", onFolderSelect, false );
       //
       treeItem.setAttribute( "container", aCategory.hasCategories() ? "true" : "false" );
       treeItem.setAttribute( "open", aCategory.isOpen() ? "true" : "false" );
     }
   };
 
+  function toggleCategoryState( aCategory ) {
+    aCategory.setOpenState( !aCategory.isOpen() );
+  };
+  
   function createCategory( aRoot, aName ) {
     return aRoot.createCategory( aName );
   };
@@ -1547,9 +1934,9 @@ ru.akman.znotes.Main = function() {
     try {
       aCategory.rename( aNewName );
     } catch ( e ) {
-      log( e );
+      Utils.log( e );
       openErrorDialog(
-        stringsBundle.getFormattedString( "main.errordialog.category", [ aCategory.getName() ] ),
+        getFormattedString( "main.errordialog.category", [ aCategory.getName() ] ),
         e.message
       );
       throw e;
@@ -1591,9 +1978,9 @@ ru.akman.znotes.Main = function() {
     }
     currentCategory.moveTo( anIndex );
     var aSelectionRow = getFolderTreeRow( currentCategory );
-    folderTree.removeEventListener( "select", pub.onFolderSelect, false );
+    folderTree.removeEventListener( "select", onFolderSelect, false );
     folderTree.view.selection.select( aSelectionRow );
-    folderTree.addEventListener( "select", pub.onFolderSelect, false );
+    folderTree.addEventListener( "select", onFolderSelect, false );
   };
 
   function categoryMoveInto( aRow ) {
@@ -1605,84 +1992,95 @@ ru.akman.znotes.Main = function() {
         aNewParent = aNewParent.getParent();
       }
       var aSelectionRow = getFolderTreeRow( currentCategory );
-      folderTree.removeEventListener( "select", pub.onFolderSelect, false );
+      folderTree.removeEventListener( "select", onFolderSelect, false );
       folderTree.view.selection.select( aSelectionRow );
-      folderTree.addEventListener( "select", pub.onFolderSelect, false );
+      folderTree.addEventListener( "select", onFolderSelect, false );
     } catch ( e ) {
-      log( e );
+      Utils.log( e );
       openErrorDialog(
-        stringsBundle.getFormattedString( "main.errordialog.category", [ currentCategory.getName() ] ),
+        getFormattedString( "main.errordialog.category", [ currentCategory.getName() ] ),
         e.message
       );
       throw e;
     }
   };
 
-  // C A T E G O R I E S  T R E E  E V E N T S
+  // CATEGORIES EVENTS
 
-  pub.onFolderClick = function( event ) {
-    event.preventDefault();
-    event.stopPropagation();
-    folderTree.removeEventListener( "select", pub.onFolderSelect, false );
-    restoreCategoriesTreeSelection();
-    folderTree.addEventListener( "select", pub.onFolderSelect, false );
-    if ( event.button != "2" ) {
-      return false;
-    }
-    folderTreeMenu.openPopupAtScreen(
-      event.clientX + window.mozInnerScreenX + 2,
-      event.clientY + window.mozInnerScreenY + 2,
-      false
-    );
-    return true;
+  function onFolderBlur( event ) {
+    updateEditCommands();
   };
 
-  pub.onFolderDblClick = function( event ) {
-    event.preventDefault();
-    event.stopPropagation();
-    if ( event.button != "0" || anEditCategory != null ) {
-      return false;
+  function onFolderFocus( event ) {
+    switch ( currentBook.getSelectedTree() ) {
+      case "Categories":
+        break;
+      case "Tags":
+        restoreCategoriesTreeSelection();
+        break;
     }
-    var aRow = folderTreeBoxObject.getRowAt( event.clientX, event.clientY );
-    if ( aRow >= 0 && aRow <= folderTree.view.rowCount - 1 ) {
-      var anInfo = getFolderTreeItemAndCategoryAtRowIndex( aRow );
-      var aCategory = anInfo.category;
-      if ( aCategory ) {
-        aCategory.setOpenState( !aCategory.isOpen() );
-      }
-    }
+    updateEditCommands();
     return true;
   };
-
-  pub.onFolderSelect = function( event ) {
+  
+  function onFolderSelect( event ) {
     if ( isDragDropActive ) {
       event.stopPropagation();
       event.preventDefault();
-      return;
+      return false;
     }
     var category = null;
     if ( folderTree.currentIndex >= 0 ) {
-      category = getFolderTreeItemAndCategoryAtRowIndex( folderTree.currentIndex ).category;
+      category = getFolderTreeItemAndCategoryAtRowIndex(
+        folderTree.currentIndex ).category;
     }
-    if ( currentTree && currentTree == "Categories" && currentCategory && currentCategory == category ) {
+    if ( currentBook &&
+         currentBook.getSelectedTree() == "Categories" &&
+         currentCategory &&
+         currentCategory == category ) {
       event.stopPropagation();
       event.preventDefault();
-      return;
+      return true;
     }
-    tagTree.removeEventListener( "select", pub.onTagSelect, false );
-    tagTree.view.selection.select( -1 );
-    tagTree.addEventListener( "select", pub.onTagSelect, false );
-    selectTree( "Categories" );
-    currentBook.savePreference( "currentTree", currentTree );
     currentCategory = category;
+    currentTag = null;
+    currentNote = null;
+    currentBook.setSelectedTree( "Categories" );
+    saveCategoriesTreeSelection();
+    clearTagTreeSelection();
     currentCategoryChanged();
-    if ( currentCategory ) {
-      refreshNotesList();
-      restoreNotesTreeSelection();
-    }
+    return true;
   };
 
-  pub.onFolderTreeTextBoxEvent = function( event ) {
+  function clearFolderTreeSelection() {
+    folderTree.removeEventListener( "select", onFolderSelect, false );
+    folderTree.view.selection.select( -1 );
+    folderTree.addEventListener( "select", onFolderSelect, false );
+  };
+  
+  function onFolderDblClick( event ) {
+    var aRow = folderTreeBoxObject.getRowAt( event.clientX, event.clientY );
+    if ( event.button != "0" || anEditCategory != null ||
+         aRow < 0 || aRow > folderTree.view.rowCount - 1 ) {
+      event.preventDefault();
+      event.stopPropagation();
+      return false;
+    }
+    doToggleCategoryState();
+    return true;
+  };
+
+  function onFolderContextMenu( event ) {
+    var aRow = folderTreeBoxObject.getRowAt( event.clientX, event.clientY );
+    if ( folderTree.view.rowCount > 0 && ( aRow < 0 || aRow > folderTree.view.rowCount - 1 ) ) {
+      event.stopPropagation();
+      event.preventDefault();
+      return false;
+    }
+    return true;
+  };  
+
+  function onFolderTreeTextBoxEvent( event ) {
     var aRow = null;
     var aColumn = null;
     switch ( event.type ) {
@@ -1728,8 +2126,8 @@ ru.akman.znotes.Main = function() {
     }
   };
 
-  // Drag & Drop
-
+  // CATEGORIES DRAG & DROP
+  
   function clearFolderTreeSeparator() {
     if ( folderTreeSeparatorRow != null ) {
       if ( folderTreeSeparator.parentNode != null )
@@ -1806,7 +2204,7 @@ ru.akman.znotes.Main = function() {
     }
   };
 
-  pub.onFolderDragDrop = function( event ) {
+  function onFolderDragDrop( event ) {
     var dropEffect = event.dataTransfer.dropEffect;
     var isCategory = event.dataTransfer.types.contains( "znotes/x-category" );
     var isNote = event.dataTransfer.types.contains( "znotes/x-note" );
@@ -1818,7 +2216,7 @@ ru.akman.znotes.Main = function() {
       aRow = -1;
     }
     var isDisabled = (
-      ( currentTree == "Tags" ) ||
+      ( currentBook && currentBook.getSelectedTree() == "Tags" ) ||
       ( !isNote && !isCategory ) ||
       ( isNote && dropEffect != "move" ) ||
       ( isCategory && dropEffect != "copy" && dropEffect != "move" ) ||
@@ -1854,7 +2252,7 @@ ru.akman.znotes.Main = function() {
           return;
         }
         getDragDropInfo();
-        folderTree.removeEventListener( "select", pub.onFolderSelect, false );
+        folderTree.removeEventListener( "select", onFolderSelect, false );
         isDragDropActive = true;
         event.dataTransfer.setData( "znotes/x-category", "CATEGORY" );
         return;
@@ -1925,7 +2323,7 @@ ru.akman.znotes.Main = function() {
         clearFolderTreeDragMarkers();
         clearNoteTreeDragMarkers();
         isDragDropActive = false;
-        folderTree.addEventListener( "select", pub.onFolderSelect, false );
+        folderTree.addEventListener( "select", onFolderSelect, false );
         if ( dropEffect == "none" ) {
           return;
         }
@@ -1942,33 +2340,17 @@ ru.akman.znotes.Main = function() {
   };
 
   //
-  // N O T E S
+  // NOTES
   //
 
-  function updateNoteCommands() {
-    if ( currentBook && currentBook.isOpen() && currentNote ) {
-      if ( !currentNote.isLoading() ) {
-        cmdDeleteNote.removeAttribute( "disabled" );
-        cmdProcessNote.removeAttribute( "disabled" );
-        cmdRenameNote.removeAttribute( "disabled" );
-        cmdUpdateNote.removeAttribute( "disabled" );
-        cmdPrint.removeAttribute( "disabled" );
-      } else {
-        cmdDeleteNote.setAttribute( "disabled", "true" );
-        cmdProcessNote.setAttribute( "disabled", "true" );
-        cmdRenameNote.setAttribute( "disabled", "true" );
-        cmdUpdateNote.setAttribute( "disabled", "true" );
-        cmdPrint.setAttribute( "disabled", "true" );
-      }
-    } else {
-      cmdDeleteNote.setAttribute( "disabled", "true" );
-      cmdProcessNote.setAttribute( "disabled", "true" );
-      cmdRenameNote.setAttribute( "disabled", "true" );
-      cmdUpdateNote.setAttribute( "disabled", "true" );
-      cmdPrint.setAttribute( "disabled", "true" );
-    }
+  function enableNotesList() {
+    noteTree.removeAttribute( "disabled" );
   };
 
+  function disableNotesList() {
+    noteTree.setAttribute( "disabled", "true" );
+  };
+  
   function createNotesList() {
     if ( currentBook && currentBook.isOpen() ) {
       var contentTree = currentBook.getContentTree();
@@ -1978,10 +2360,13 @@ ru.akman.znotes.Main = function() {
         } else {
           notesList = [];
         }
-        if ( currentTree == "Categories" ) {
-          notesList = currentCategory.getNotes();
-        } else if ( currentTree == "Tags" ) {
-          notesList = contentTree.getNotesByTag( currentTag.getId() );
+        switch ( currentBook.getSelectedTree() ) {
+          case "Categories":
+            notesList = currentCategory.getNotes();
+            break;
+          case "Tags":
+            notesList = contentTree.getNotesByTag( currentTag.getId() );
+            break;
         }
       } else {
         notesList = null;
@@ -1991,30 +2376,8 @@ ru.akman.znotes.Main = function() {
     }
   };
 
-  function enableNotesList() {
-    noteTree.removeAttribute( "disabled" );
-    cmdNewNote.removeAttribute( "disabled" );
-    cmdImportNote.removeAttribute( "disabled" );
-    cmdDeleteNote.removeAttribute( "disabled" );
-    cmdProcessNote.removeAttribute( "disabled" );
-    cmdPrint.removeAttribute( "disabled" );
-    cmdRenameNote.removeAttribute( "disabled" );
-    cmdRefreshNoteTree.removeAttribute( "disabled" );
-  };
-
-  function disableNotesList() {
-    noteTree.setAttribute( "disabled", "true" );
-    cmdNewNote.setAttribute( "disabled", "true" );
-    cmdImportNote.setAttribute( "disabled", "true" );
-    cmdDeleteNote.setAttribute( "disabled", "true" );
-    cmdProcessNote.setAttribute( "disabled", "true" );
-    cmdPrint.setAttribute( "disabled", "true" );
-    cmdRenameNote.setAttribute( "disabled", "true" );
-    cmdRefreshNoteTree.setAttribute( "disabled", "true" );
-  };
-
   function showNotesList() {
-    noteTree.removeEventListener( "select", pub.onNoteSelect, false );
+    noteTree.removeEventListener( "select", onNoteSelect, false );
     while ( noteTreeChildren.firstChild ) {
       noteTreeChildren.removeChild( noteTreeChildren.firstChild );
     }
@@ -2023,7 +2386,7 @@ ru.akman.znotes.Main = function() {
         noteTreeChildren.appendChild( createNoteTreeItem( notesList[i] ) );
       }
     }
-    noteTree.addEventListener( "select", pub.onNoteSelect, false );
+    noteTree.addEventListener( "select", onNoteSelect, false );
     if ( notesList ) {
       enableNotesList();
     } else {
@@ -2073,7 +2436,7 @@ ru.akman.znotes.Main = function() {
     treeCell = document.createElement( "treecell" );
     if ( isLoading ) {
       treeCell.setAttribute( "properties", "loading" );
-      treeCell.setAttribute( "label", " " + stringsBundle.getString( "main.note.loading" ) );
+      treeCell.setAttribute( "label", " " + getString( "main.note.loading" ) );
     } else {
     treeCell.setAttribute( "properties", "note" );
       treeCell.setAttribute( "label", aName );
@@ -2119,7 +2482,7 @@ ru.akman.znotes.Main = function() {
       var isLoading = aNote.isLoading();
       if ( isLoading ) {
         treeCell.setAttribute( "properties", "loading" );
-        treeCell.setAttribute( "label", " " + stringsBundle.getString( "main.note.loading" ) );
+        treeCell.setAttribute( "label", " " + getString( "main.note.loading" ) );
       } else {
         treeCell.setAttribute( "properties", "note" );
         treeCell.setAttribute( "label", aNote.getName() );
@@ -2166,7 +2529,7 @@ ru.akman.znotes.Main = function() {
       return null;
     }
     var aTagID = null;
-    if ( currentBook && currentBook == aBook && currentTree == "Tags" ) {
+    if ( currentBook && currentBook == aBook && currentBook.getSelectedTree() == "Tags" ) {
       aTagID = currentTag.getId();
       if ( aTagID == "00000000000000000000000000000000" ) {
         aTagID = null;
@@ -2174,14 +2537,115 @@ ru.akman.znotes.Main = function() {
     }
     return aRoot.createNote( aName, aType, aTagID );
   };
+  
+  function createWelcomeNote( aBook ) {
+    var card = null;
+    var cards = null;
+    var abManager = null;
+    var directories = null;
+    var directory = null;
+    var dir = null;
+    var found = null;
+    if ( !aBook || !aBook.isOpen() ) {
+      return null;
+    }
+    var contentTree = aBook.getContentTree();
+    var aRoot = contentTree.getRoot();
+    var name = getString( "main.welcome.notename" );
+    var index = 1;
+    var suffix = "";
+    while ( aRoot.noteExists( name + suffix ) ) {
+      index++;
+      suffix = " (" + index + ")";
+    }
+    name = name + suffix;
+    var note = createNote( aBook, aRoot, name, "application/xhtml+xml" );
+    if ( !Utils.IS_STANDALONE ) {
+      abManager = Components.classes["@mozilla.org/abmanager;1"]
+                            .getService( Components.interfaces.nsIAbManager );
+      directories = abManager.directories;
+      while ( directories.hasMoreElements() ) {
+        dir = directories.getNext().QueryInterface( Components.interfaces.nsIAbDirectory );
+        if ( dir instanceof Components.interfaces.nsIAbDirectory ) {
+          directory = dir;
+          if ( directory.fileName == "abook.mab" && directory.dirType == 2 ) {
+            break;
+          }
+        }
+      }
+      if ( directory != null ) {
+        var creator = Utils.CREATORS[0];
+        var vendor = Utils.VENDOR;
+        var firstName = Utils.decodeUTF8(
+          creator.name.substring( 0, creator.name.indexOf( " " ) ) );
+        var lastName = Utils.decodeUTF8( creator.name.substr(
+          creator.name.indexOf( " " ) + 1 ) );
+        var primaryEmail = creator.link.substr(
+          creator.link.indexOf( ":" ) + 1 );
+        found = false;
+        cards = directory.childCards;
+        while ( cards.hasMoreElements() ) {
+          card = cards.getNext().QueryInterface(
+            Components.interfaces.nsIAbCard );
+          if ( card instanceof Components.interfaces.nsIAbCard ) {
+            if ( card.firstName == firstName &&
+                 card.lastName == lastName ) {
+              found = true;
+              note.addAttachment( [ card.directoryId + "\t" +
+                card.localId, "contact" ] );
+              break;
+            }
+          }
+        }
+        if ( !found ) {
+          card = Components.classes["@mozilla.org/addressbook/cardproperty;1"]
+                           .createInstance( Components.interfaces.nsIAbCard );
+          card.firstName = firstName;
+          card.lastName = lastName;
+          card.displayName = firstName + " " + lastName;
+          card.primaryEmail = primaryEmail;
+          card.setProperty( "Company", vendor );
+          card.setProperty( "NickName", "Akman" );
+          card.setProperty( "PhotoType", "web" );
+          card.setProperty( "PhotoURI", "http://www.gravatar.com/avatar/" +
+            "bc59d4f48198e2e6c4145c995fe9d339.png" );
+          try {
+            card = directory.addCard( card );
+          } catch( e ) {
+            card = null;
+          }
+          if ( card ) {
+            cards = directory.childCards;
+            while ( cards.hasMoreElements() ) {
+              card = cards.getNext().QueryInterface(
+                Components.interfaces.nsIAbCard );
+              if ( card instanceof Components.interfaces.nsIAbCard ) {
+                if ( card.firstName == firstName &&
+                     card.lastName == lastName ) {
+                  found = true;
+                  note.addAttachment( [ card.directoryId + "\t" +
+                    card.localId, "contact" ] );
+                  break;
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    var url = "chrome://znotes_welcome/content/index_" +
+      Utils.getSiteLanguage() + ".xhtml";
+    note.load( url );
+    return note;
+  };
 
   function renameNote( aNote, aNewName ) {
     try {
       aNote.rename( aNewName );
     } catch ( e ) {
-      log( e );
+      Utils.log( e );
       openErrorDialog(
-        stringsBundle.getFormattedString( "main.errordialog.note", [ currentNote.getName() ] ),
+        getFormattedString( "main.errordialog.note", [ currentNote.getName() ] ),
         e.message
       );
       throw e;
@@ -2202,9 +2666,9 @@ ru.akman.znotes.Main = function() {
       }
     }
     currentNote.moveTo( aNewNoteIndex );
-    noteTree.removeEventListener( "select", pub.onNoteSelect, false );
+    noteTree.removeEventListener( "select", onNoteSelect, false );
     noteTree.view.selection.select( aNewNoteIndex );
-    noteTree.addEventListener( "select", pub.onNoteSelect, false );
+    noteTree.addEventListener( "select", onNoteSelect, false );
     saveNotesTreeSelection();
   };
 
@@ -2219,65 +2683,235 @@ ru.akman.znotes.Main = function() {
       currentNote.moveInto( aNewParent );
       noteTree.view.selection.select( anIndex );
     } catch ( e ) {
-      log( e );
+      Utils.log( e );
       openErrorDialog(
-        stringsBundle.getFormattedString( "main.errordialog.note", [ currentNote.getName() ] ),
+        getFormattedString( "main.errordialog.note", [ currentNote.getName() ] ),
         e.message
       );
       throw e;
     }
   };
 
-  // N O T E S  T R E E  E V E N T S
-
-  pub.onNoteClick = function( event ) {
-    event.preventDefault();
-    event.stopPropagation();
-    if ( event.button != "2" ) {
-      return false;
+  function getNoteByBookIdAndNoteId( bookId, noteId ) {
+    if ( !books ) {
+      return null;
     }
-    updateNoteCommands();
-    noteTreeMenu.openPopupAtScreen(
-      event.clientX + window.mozInnerScreenX + 2,
-      event.clientY + window.mozInnerScreenY + 2,
-      false
-    );
-    return true;
+    var book = books.getBookById( bookId );
+    if ( !book ) {
+      return null;
+    }
+    var ALREADY_OPENED = 2;
+    var DRIVER_ERROR = 4;
+    var CONNECTION_ERROR = 8;
+    var NOT_EXISTS = 16;
+    var NOT_PERMITS = 32;
+    var result = CONNECTION_ERROR;
+    if ( !book.isOpen() ) {
+      try {
+        result = book.open();
+      } catch ( e ) {
+        Utils.log( e );
+      }
+      if ( result != 0 ) {
+        var message = "";
+        switch ( result ) {
+          case ALREADY_OPENED:
+            message = getString( "main.book.openerror.already_opened" );
+            break;
+          case DRIVER_ERROR:
+            message = getString( "main.book.openerror.driver_error" );
+            break;
+          case CONNECTION_ERROR:
+            if ( !message ) {
+              message = getString( "main.book.openerror.connection_error" );
+            }
+            break;
+          case NOT_EXISTS:
+            message = getString( "main.book.openerror.not_exists" );
+            break;
+          case NOT_PERMITS:
+            message = getString( "main.book.openerror.not_permits" );
+            break;
+        }
+        var params = {
+          input: {
+            title: getString( "main.book.openerror.title" ),
+            message1: getFormattedString( "main.book.openerror.message", [ book.getName() ] ),
+            message2: message
+          },
+          output: null
+        };
+        window.openDialog(
+          "chrome://znotes/content/messagedialog.xul",
+          "",
+          "chrome,dialog=yes,modal=yes,centerscreen,resizable=yes",
+          params
+        ).focus();
+        return null;
+      }
+    }
+    var notes = book.getContentTree().getNoteById( noteId );
+    return ( notes.length > 0 ) ? notes[0] : null;
+  };
+  
+  function showNote( aNote, aBackground ) {
+    if ( !aNote ) {
+      return;
+    }
+    var tabMail = Utils.getTabMail();
+    var bookId = aNote.getBook().getId();
+    var noteId = aNote.getId();
+    var windowName = bookId + "&" + noteId;
+    if ( tabMail ) {
+      var tabInfo = tabMail.tabInfo;
+      var tabIndex = -1;
+      for ( var i = 0; i < tabInfo.length; i++ ) {
+        var tab = tabInfo[i];
+        if ( tab.mode.type == "znotesContentTab" &&
+             tab.noteId == noteId &&
+             tab.bookId == bookId ) {
+          tabIndex = i;
+          break;
+        }
+      }
+      if ( tabIndex < 0 ) { 
+        tabMail.openTab(
+          "znotesContentTab",
+          {
+            contentPage: "chrome://znotes/content/viewer.xul?" + windowName,
+            note: aNote,
+            background: aBackground,
+            style: {
+              iconsize: mainToolBar.getAttribute( "iconsize" )
+            }
+          }
+        );
+      } else {
+        var tabContainer = Utils.getTabContainer();
+        tabContainer.selectedIndex = tabIndex;
+      }
+    } else {
+      var windowService =
+        Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
+                  .getService( Components.interfaces.nsIWindowWatcher );
+      var win = windowService.getWindowByName( windowName, null );
+      if ( win ) {
+        windowService.activeWindow = win;
+        win.focus();        
+      } else {
+        win = window.open(
+          "chrome://znotes/content/viewer.xul?" + windowName,
+          windowName,
+          "chrome,toolbar,resizable,centerscreen"
+        );
+        win.arguments = [
+          "chrome://znotes/content/viewer.xul?" + windowName,
+          aNote,
+          aBackground,
+          {
+            iconsize: mainToolBar.getAttribute( "iconsize" )
+          }
+        ];
+        // session support for windows (not tabs)
+        win.addEventListener( "load"  , function() {
+          windowsList.push( win.name );
+          if ( windowsMonitor && "onTabOpened" in windowsMonitor ) {
+            windowsMonitor.onTabOpened(
+              {
+                window: win,
+                bookId: bookId,
+                noteId: noteId,
+                mode: {
+                  name: "znotesContentTab"
+                }
+              }
+            );
+          }
+        }, false );
+        win.addEventListener( "unload"  , function() {
+          var index = windowsList.indexOf( win.name );
+          if ( index != -1 ) {
+            windowsList.splice( index, 1 );
+          }
+          var tab = {
+            window: win,
+            bookId: bookId,
+            noteId: noteId,
+            mode: {
+              name: "znotesContentTab"
+            }
+          };
+          if ( windowsMonitor && "onTabClosing" in windowsMonitor ) {
+            windowsMonitor.onTabClosing( tab );
+          }
+        }, false );
+        if ( aBackground ) {
+          setTimeout(
+            function() {
+              windowService.activeWindow = window;
+              window.focus();
+            },
+            0
+          );
+        }
+      }
+    }
+  };
+  
+  // NOTES EVENTS
+
+  function onNoteBlur( event ) {
+    updateEditCommands();
   };
 
-  pub.onNoteSelect = function( event ) {
+  function onNoteFocus( event ) {
+    updateEditCommands();
+    return true;
+  };
+  
+  function onNoteSelect( event ) {
     if ( isDragDropActive ) {
       event.stopPropagation();
       event.preventDefault();
-      return;
+      return false;
     }
-    var note = null;
-    if ( noteTree.currentIndex >= 0 ) {
-      note = notesList[noteTree.currentIndex];
-    }
+    var note = noteTree.currentIndex >= 0 ?
+      notesList[noteTree.currentIndex] : null;
     if ( currentNote && currentNote == note ) {
       event.stopPropagation();
       event.preventDefault();
-      return;
+      return true;
     }
     currentNote = note;
+    saveNotesTreeSelection();
     currentNoteChanged();
-  };
-
-  pub.onNoteDblClick = function( event ) {
-    event.stopPropagation();
-    event.preventDefault();
-    if ( event.button != "0" || anEditNote != null ) {
-      return false;
-    }
-    if ( isDragDropActive || noteTree.currentIndex < 0 || currentNote == null ) {
-      return false;
-    }
-    showNoteWindow( currentNote, false );
     return true;
   };
 
-  pub.onNoteTreeTextBoxEvent = function( event ) {
+  function onNoteDblClick( event ) {
+    var aRow = noteTreeBoxObject.getRowAt( event.clientX, event.clientY );
+    if ( !currentNote || event.button != "0" || anEditNote != null ||
+         aRow < 0 || aRow > noteTree.view.rowCount - 1 ||
+         isDragDropActive || noteTree.currentIndex < 0 ) {
+      event.stopPropagation();
+      event.preventDefault();
+      return false;
+    }
+    doShowNote();
+    return true;
+  };
+  
+  function onNoteContextMenu( event ) {
+    var aRow = noteTreeBoxObject.getRowAt( event.clientX, event.clientY );
+    if ( noteTree.view.rowCount > 0 && ( aRow < 0 || aRow > noteTree.view.rowCount - 1 ) ) {
+      event.stopPropagation();
+      event.preventDefault();
+      return false;
+    }
+    return true;
+  };  
+
+  function onNoteTreeTextBoxEvent( event ) {
     var aRow = null;
     var aColumn = null;
     switch ( event.type ) {
@@ -2324,7 +2958,7 @@ ru.akman.znotes.Main = function() {
     }
   };
 
-  // Drag & Drop
+  // NOTES DRAG & DROP
 
   function clearNoteTreeSeparator() {
     if ( noteTreeSeparatorRow != null ) {
@@ -2350,7 +2984,7 @@ ru.akman.znotes.Main = function() {
     clearNoteTreeSeparator();
   };
 
-  pub.onNoteDragDrop = function( event ) {
+  function onNoteDragDrop( event ) {
     var dropEffect = event.dataTransfer.dropEffect;
     var isNote = event.dataTransfer.types.contains("znotes/x-note");
     var aRow = noteTreeBoxObject.getRowAt( event.clientX, event.clientY );
@@ -2358,7 +2992,7 @@ ru.akman.znotes.Main = function() {
       aRow = -1;
     var isDisabled = (
       ( currentNote == null ) ||
-      ( currentTree == "Tags" ) ||
+      ( currentBook && currentBook.getSelectedTree() == "Tags" ) ||
       ( !isNote ) ||
       ( dropEffect != "move" ) ||
       ( aRow == currentNote.getIndex() ) ||
@@ -2367,7 +3001,7 @@ ru.akman.znotes.Main = function() {
     );
     switch ( event.type ) {
       case "dragstart" :
-        noteTree.removeEventListener( "select", pub.onNoteSelect, false );
+        noteTree.removeEventListener( "select", onNoteSelect, false );
         isDragDropActive = true;
         getDragDropInfo();
         event.dataTransfer.setData("znotes/x-note", "NOTE" );
@@ -2412,7 +3046,7 @@ ru.akman.znotes.Main = function() {
         clearFolderTreeDragMarkers();
         clearNoteTreeDragMarkers();
         isDragDropActive = false;
-        noteTree.addEventListener( "select", pub.onNoteSelect, false );
+        noteTree.addEventListener( "select", onNoteSelect, false );
         if ( dropEffect != "none" ) {
           switch ( infoDragDrop.dropEffect ) {
             case "move" :
@@ -2428,9 +3062,17 @@ ru.akman.znotes.Main = function() {
   };
 
   //
-  // T A G S
+  // TAGS
   //
 
+  function enableTagsList() {
+    tagTree.removeAttribute( "disabled" );
+  };
+
+  function disableTagsList() {
+    tagTree.setAttribute( "disabled", "true" );
+  };
+  
   function createTagsList() {
     if ( currentBook && currentBook.isOpen() ) {
       var tagList = currentBook.getTagList();
@@ -2449,26 +3091,8 @@ ru.akman.znotes.Main = function() {
     }
   };
 
-  function enableTagsList() {
-    tagTree.removeAttribute( "disabled" );
-    cmdNewTag.removeAttribute( "disabled" );
-    cmdDeleteTag.removeAttribute( "disabled" );
-    cmdRenameTag.removeAttribute( "disabled" );
-    cmdColorTag.removeAttribute( "disabled" );
-    cmdRefreshTagTree.removeAttribute( "disabled" );
-  };
-
-  function disableTagsList() {
-    tagTree.setAttribute( "disabled", "true" );
-    cmdNewTag.setAttribute( "disabled", "true" );
-    cmdDeleteTag.setAttribute( "disabled", "true" );
-    cmdRenameTag.setAttribute( "disabled", "true" );
-    cmdColorTag.setAttribute( "disabled", "true" );
-    cmdRefreshTagTree.setAttribute( "disabled", "true" );
-  };
-
   function showTagsList() {
-    tagTree.removeEventListener( "select", pub.onTagSelect, false );
+    tagTree.removeEventListener( "select", onTagSelect, false );
     while ( tagTreeChildren.firstChild ) {
       tagTreeChildren.removeChild( tagTreeChildren.firstChild );
     }
@@ -2476,13 +3100,11 @@ ru.akman.znotes.Main = function() {
       for ( var i = 0; i < tagsList.length; i++ ) {
         tagTreeChildren.appendChild( createTagTreeItem( tagsList[i] ) );
       }
-    }
-    tagTree.addEventListener( "select", pub.onTagSelect, false );
-    if ( tagsList ) {
       enableTagsList();
     } else {
       disableTagsList();
     }
+    tagTree.addEventListener( "select", onTagSelect, false );
   };
 
   function refreshTagsList() {
@@ -2498,17 +3120,17 @@ ru.akman.znotes.Main = function() {
     var id = tag.getId();
     var name = tag.getName();
     var color = tag.getColor();
-    ru.akman.znotes.Utils.addCSSRule(
+    Utils.addCSSRule(
       document,
       "treechildren::-moz-tree-cell(TAG_" + id + ")",
       "background-color: " + color + ";border: 1px solid;"
     );
-    ru.akman.znotes.Utils.addCSSRule(
+    Utils.addCSSRule(
       document,
       "treechildren::-moz-tree-image(NOTE_TAG_" + id + ")",
-      "list-style-image: url('" + ru.akman.znotes.Utils.makeTagImage( color, true, 16 ) + "');"
+      "list-style-image: url('" + Utils.makeTagImage( color, true, 16 ) + "');"
     );
-    ru.akman.znotes.Utils.addCSSRule(
+    Utils.addCSSRule(
       document,
       "treechildren::-moz-tree-cell-text(NOTE_TAG_" + id + ")",
       "padding-left: 3px;"
@@ -2520,7 +3142,7 @@ ru.akman.znotes.Main = function() {
     treeRow.appendChild( treeCell );
     treeCell = document.createElement( "treecell" );
     treeCell.setAttribute( "label", "" );
-    treeCell.setAttribute( "properties", "TAG_" + id );
+    treeCell.setAttribute( "properties", "tag_color TAG_" + id );
     treeRow.appendChild( treeCell );
     treeItem = document.createElement( "treeitem" );
     treeItem.appendChild( treeRow );
@@ -2543,17 +3165,17 @@ ru.akman.znotes.Main = function() {
       var treeCell = treeRow.childNodes[ tagTree.columns.getNamedColumn( "tagTreeName" ).index ];
       treeCell.setAttribute( "label", name );
       // Color
-      ru.akman.znotes.Utils.changeCSSRule(
+      Utils.changeCSSRule(
         document,
         "treechildren::-moz-tree-cell(TAG_" + id + ")",
         "background-color: " + color + ";border: 1px solid;"
       );
-      ru.akman.znotes.Utils.changeCSSRule(
+      Utils.changeCSSRule(
         document,
         "treechildren::-moz-tree-image(NOTE_TAG_" + id + ")",
-        "list-style-image: url('" + ru.akman.znotes.Utils.makeTagImage( color, true, 16 ) + "');"
+        "list-style-image: url('" + Utils.makeTagImage( color, true, 16 ) + "');"
       );
-      ru.akman.znotes.Utils.changeCSSRule(
+      Utils.changeCSSRule(
         document,
         "treechildren::-moz-tree-cell-text(NOTE_TAG_" + id + ")",
         "padding-left: 3px;"
@@ -2599,78 +3221,87 @@ ru.akman.znotes.Main = function() {
       }
     }
     currentTag.getBook().getTagList().moveTag( currentTag, aNewTagIndex );
-    tagTree.removeEventListener( "select", pub.onTagSelect, false );
+    tagTree.removeEventListener( "select", onTagSelect, false );
     tagTree.view.selection.select( aNewTagIndex );
-    tagTree.addEventListener( "select", pub.onTagSelect, false );
+    tagTree.addEventListener( "select", onTagSelect, false );
   };
 
-  // T A G S  T R E E  E V E N T S
+  // TAG EVENTS
 
-  pub.onTagClick = function( event ) {
-    event.preventDefault();
-    event.stopPropagation();
-    tagTree.removeEventListener( "select", pub.onTagSelect, false );
-    restoreTagsTreeSelection();
-    tagTree.addEventListener( "select", pub.onTagSelect, false );
-    if ( event.button != "2" ) {
-      return false;
+  function onTagBlur( event ) {
+    updateEditCommands();
+  };
+
+  function onTagFocus( event ) {
+    switch ( currentBook.getSelectedTree() ) {
+      case "Categories":
+        restoreTagsTreeSelection();
+        break;
+      case "Tags":
+        break;
     }
-    tagTreeMenu.openPopupAtScreen(
-      event.clientX + window.mozInnerScreenX + 2,
-      event.clientY + window.mozInnerScreenY + 2,
-      false
-    );
+    updateEditCommands();
     return true;
   };
-
-  pub.onTagDblClick = function( event ) {
-    event.stopPropagation();
-    event.preventDefault();
-    if ( event.button != "0" || anEditTagIndex != null ) {
-      return false;
-    }
-    if ( isDragDropActive || tagTree.currentIndex < 0 || currentTag == null ) {
-      return false;
-    }
-    /*
-    var aRow = tagTreeBoxObject.getRowAt( event.clientX, event.clientY );
-    if ( aRow == -1 || aRow > tagTree.view.rowCount - 1 ) {
-      return;
-    }
-    */
-    doColorTag();
-    return true;
-  };
-
-  pub.onTagSelect = function( event ) {
+  
+  function onTagSelect( event ) {
     if ( isDragDropActive ) {
       event.stopPropagation();
       event.preventDefault();
-      return;
+      return false;
     }
     var tag = null;
     if ( tagTree.currentIndex >= 0 ) {
       tag = tagsList[tagTree.currentIndex];
     }
-    if ( currentTree && currentTree == "Tags" && currentTag && currentTag == tag ) {
+    if ( currentBook &&
+         currentBook.getSelectedTree() == "Tags" &&
+         currentTag &&
+         currentTag == tag ) {
       event.stopPropagation();
       event.preventDefault();
-      return;
+      return true;
     }
-    folderTree.removeEventListener( "select", pub.onFolderSelect, false );
-    folderTree.view.selection.select( -1 );
-    folderTree.addEventListener( "select", pub.onFolderSelect, false );
-    selectTree( "Tags" );
-    currentBook.savePreference( "currentTree", currentTree );
     currentTag = tag;
+    currentCategory = null;
+    currentNote = null;
+    currentBook.setSelectedTree( "Tags" );
+    saveTagsTreeSelection();
+    clearFolderTreeSelection();
     currentTagChanged();
-    if ( currentTag ) {
-      refreshNotesList();
-      restoreNotesTreeSelection();
-    }
+    return true;
   };
 
-  pub.onTagTreeTextBoxEvent = function( event ) {
+  function clearTagTreeSelection() {
+    tagTree.removeEventListener( "select", onTagSelect, false );
+    tagTree.view.selection.select( -1 );
+    tagTree.addEventListener( "select", onTagSelect, false );
+  };
+  
+  function onTagDblClick( event ) {
+    var aRow = tagTreeBoxObject.getRowAt( event.clientX, event.clientY );
+    if ( !currentTag || event.button != "0" || anEditTagIndex != null ||
+         aRow < 0 || aRow > tagTree.view.rowCount - 1 ||
+         isDragDropActive || tagTree.currentIndex < 0 ) {
+      event.stopPropagation();
+      event.preventDefault();
+      return false;
+    }
+    doColorTag();
+    return true;
+  };
+
+  function onTagContextMenu( event ) {
+    var aRow = tagTreeBoxObject.getRowAt( event.clientX, event.clientY );
+    if ( tagTree.view.rowCount > 0 && ( aRow < 0 || aRow > tagTree.view.rowCount - 1 ) ) {
+      event.stopPropagation();
+      event.preventDefault();
+      return false;
+    }
+    return true;
+  };  
+
+  function onTagTreeTextBoxEvent( event ) {
     var aRow = null;
     var aColumn = null;
     switch ( event.type ) {
@@ -2709,7 +3340,7 @@ ru.akman.znotes.Main = function() {
             var tag = currentBook.getTagList().getTagById( treeItem.getAttribute( "value" ) );
             renameTag( tag, newValue );
           } catch ( e ) {
-            log( e );
+            Utils.log( e );
             tagTree.view.setCellText( aRow, aColumn, oldValue );
           }
         }
@@ -2719,7 +3350,7 @@ ru.akman.znotes.Main = function() {
     }
   };
 
-  // Drag & Drop
+  // TAG DRAG & DROP
 
   function clearTagTreeSeparator() {
     if ( tagTreeSeparatorRow != null ) {
@@ -2745,7 +3376,7 @@ ru.akman.znotes.Main = function() {
     clearTagTreeSeparator();
   };
 
-  pub.onTagDragDrop = function( event ) {
+  function onTagDragDrop( event ) {
     var dropEffect = event.dataTransfer.dropEffect;
     var isTag = event.dataTransfer.types.contains("znotes/x-tag");
     var aRow = tagTreeBoxObject.getRowAt( event.clientX, event.clientY );
@@ -2766,7 +3397,7 @@ ru.akman.znotes.Main = function() {
         if ( aRow == 0 ) {
           return;
         }
-        tagTree.removeEventListener( "select", pub.onTagSelect, false );
+        tagTree.removeEventListener( "select", onTagSelect, false );
         isDragDropActive = true;
         event.dataTransfer.setData("znotes/x-tag", "TAG" );
         return;
@@ -2809,7 +3440,7 @@ ru.akman.znotes.Main = function() {
       case "dragend" :
         clearTagTreeDragMarkers();
         isDragDropActive = false;
-        tagTree.addEventListener( "select", pub.onTagSelect, false );
+        tagTree.addEventListener( "select", onTagSelect, false );
         if ( dropEffect == "none" ) {
           return;
         }
@@ -2823,29 +3454,82 @@ ru.akman.znotes.Main = function() {
   };
 
   //
-  // B O O K S
+  // BOOK
   //
 
+  function updateBookView() {
+    refreshCategoriesList();
+    refreshTagsList();
+    if ( !currentBook || !currentBook.isOpen() ) {
+      updateNoteView();
+      return;
+    }
+    switch ( currentBook.getSelectedTree() ) {
+      case "Categories":
+        restoreCategoriesTreeSelection();
+        break;
+      case "Tags":
+        restoreTagsTreeSelection();
+        break;
+    }
+  };
+  
+  function loadBooks() {
+    books = new ru.akman.znotes.core.BookList();
+    books.load();
+    var bookList = books.getBooksAsArray();
+    var book = null;
+    var tagList = null;
+    var contentTree = null;
+    for ( var i = 0; i < bookList.length; i++ ) {
+      book = bookList[i];
+      if ( book.isOpen() ) {
+        tagList = book.getTagList();
+        tagList.getNoTag().setName( getString( "main.notag.name" ) );
+        tagList.addStateListener( tagListStateListener );
+        contentTree = book.getContentTree();
+        contentTree.addStateListener( contentTreeStateListener );
+      }
+    }
+    books.addStateListener( booksStateListener );
+    if ( books.hasBooks() || !Utils.IS_FIRST_RUN ) {
+      return;
+    }
+    try {
+      var defaultBook = books.createBook();
+      if ( defaultBook ) {
+        defaultBook.createData();
+        if ( defaultBook.open() == 0 ) {
+          welcomeNote = createWelcomeNote( defaultBook );
+          if ( welcomeNote && !Utils.IS_STANDALONE ) {
+            var data = welcomeNote.getData();
+            data.isAddonsVisible = true;
+            welcomeNote.setData();
+          }
+        }
+      }
+    } catch ( e ) {
+      Utils.log( e );
+    }
+  };
+  
   function createBooksList() {
     if ( booksList ) {
       booksList.splice( 0, booksList.length );
     }
-    if ( books ) {
-      booksList = books.getBooksAsArray();
-    } else {
-      booksList = [];
-    }
+    loadBooks();
+    booksList = books ? books.getBooksAsArray() : [];
   };
 
   function showBooksList() {
-    bookTree.removeEventListener( "select", pub.onBookSelect, false );
+    bookTree.removeEventListener( "select", onBookSelect, false );
     while ( bookTreeChildren.firstChild ) {
       bookTreeChildren.removeChild( bookTreeChildren.firstChild );
     }
     for ( var i = 0; i < booksList.length; i++ ) {
       bookTreeChildren.appendChild( createBookTreeItem( booksList[i] ) );
     }
-    bookTree.addEventListener( "select", pub.onBookSelect, false );
+    bookTree.addEventListener( "select", onBookSelect, false );
   };
 
   function refreshBooksList() {
@@ -2878,10 +3562,7 @@ ru.akman.znotes.Main = function() {
   };
 
   function updateBookTreeItem( book ) {
-    if ( book == null ) {
-      return;
-    }
-    if ( bookTree.view.rowCount == 0 ) {
+    if ( book == null || bookTree.view.rowCount == 0 ) {
       return;
     }
     var index = booksList.indexOf( book );
@@ -2897,23 +3578,6 @@ ru.akman.znotes.Main = function() {
       } else {
         treeCell.setAttribute( "properties", "book" );
       }
-    }
-  };
-
-  function updateCurrentBookView() {
-    refreshCategoriesList();
-    refreshTagsList();
-    restoreCurrentBookPreferences();
-    if ( currentBook && currentBook.isOpen() ) {
-      selectTree( currentBook.loadPreference( "currentTree", "Categories" ) );
-      if ( currentTree == "Categories" ) {
-        restoreCategoriesTreeSelection();
-      } else if ( currentTree == "Tags" ) {
-        restoreTagsTreeSelection();
-      }
-    } else {
-      refreshNotesList();
-      currentNoteChanged();
     }
   };
 
@@ -2944,27 +3608,27 @@ ru.akman.znotes.Main = function() {
     }
     switch ( result ) {
      case ALREADY_OPENED:
-       message = stringsBundle.getString( "main.book.openerror.already_opened" );
+       message = getString( "main.book.openerror.already_opened" );
        break;
      case DRIVER_ERROR:
-       message = stringsBundle.getString( "main.book.openerror.driver_error" );
+       message = getString( "main.book.openerror.driver_error" );
        break;
      case NOT_EXISTS:
-       message = stringsBundle.getString( "main.book.openerror.not_exists" );
+       message = getString( "main.book.openerror.not_exists" );
        break;
      case NOT_PERMITS:
-       message = stringsBundle.getString( "main.book.openerror.not_permits" );
+       message = getString( "main.book.openerror.not_permits" );
        break;
      case CONNECTION_ERROR:
        if ( !message ) {
-         message = stringsBundle.getString( "main.book.openerror.connection_error" );
+         message = getString( "main.book.openerror.connection_error" );
        }
        break;
     }
     params = {
       input: {
-        title: stringsBundle.getString( "main.book.openerror.title" ),
-        message1: stringsBundle.getFormattedString(
+        title: getString( "main.book.openerror.title" ),
+        message1: getFormattedString(
           "main.book.openerror.message",
           [ aBook.getName() ]
         ),
@@ -2983,11 +3647,11 @@ ru.akman.znotes.Main = function() {
       return result;
     }
     // BOOK DOES NOT EXISTS
-    params.input.message1 = stringsBundle.getFormattedString(
+    params.input.message1 = getFormattedString(
       "main.book.confirmCreate.message1",
       [ aBook.getName() ]
     );
-    params.input.message2 = stringsBundle.getString( "main.book.confirmCreate.message2" );
+    params.input.message2 = getString( "main.book.confirmCreate.message2" );
     params.input.kind = 1;
     window.openDialog(
       "chrome://znotes/content/confirmdialog.xul",
@@ -3003,8 +3667,8 @@ ru.akman.znotes.Main = function() {
         }
       } catch ( e ) {
         result = CONNECTION_ERROR;
-        params.input.title = stringsBundle.getString( "main.book.createerror.title" );
-        params.input.message1 = stringsBundle.getFormattedString(
+        params.input.title = getString( "main.book.createerror.title" );
+        params.input.message1 = getFormattedString(
           "main.book.createerror.message",
           [ aBook.getName() ]
         );
@@ -3025,7 +3689,6 @@ ru.akman.znotes.Main = function() {
     if ( !aBook.isOpen() ) {
       return;
     }
-    saveCurrentBookPreferences();
     aBook.close();
   };
 
@@ -3083,7 +3746,7 @@ ru.akman.znotes.Main = function() {
     if ( params.output.driver != params.input.driver ) {
       aBook.setDriver( params.output.driver );
     }
-    if ( ru.akman.znotes.Utils.compareObjects( params.output.connection, params.input.connection ) ) {
+    if ( Utils.compareObjects( params.output.connection, params.input.connection ) ) {
       aBook.setConnection( params.output.connection );
     }
   };
@@ -3101,48 +3764,46 @@ ru.akman.znotes.Main = function() {
       }
     }
     books.moveBook( currentBook, anIndex );
-    bookTree.removeEventListener( "select", pub.onBookSelect, false );
+    bookTree.removeEventListener( "select", onBookSelect, false );
     bookTree.view.selection.select( anIndex );
-    bookTree.addEventListener( "select", pub.onBookSelect, false );
+    bookTree.addEventListener( "select", onBookSelect, false );
   };
 
-  // B O O K  T R E E  E V E N T S
+  // BOOK EVENTS
 
-  pub.onBookClick = function( event ) {
-    event.preventDefault();
-    event.stopPropagation();
-    if ( event.button != "2" ) {
-      return false;
-    }
-    bookTreeMenu.openPopupAtScreen(
-      event.clientX + window.mozInnerScreenX + 2,
-      event.clientY + window.mozInnerScreenY + 2,
-      false
-    );
+  function onBookBlur( event ) {
+    updateEditCommands();
+  };
+
+  function onBookFocus( event ) {
+    updateEditCommands();
     return true;
   };
-
-  pub.onBookSelect = function( event ) {
+  
+  function onBookSelect( event ) {
     if ( isDragDropActive ) {
       event.stopPropagation();
       event.preventDefault();
-      return;
+      return false;
     }
-    var book = null;
-    if ( bookTree.currentIndex >= 0 ) {
-      book = booksList[bookTree.currentIndex];
-    }
+    var book = bookTree.currentIndex >= 0 ?
+      booksList[bookTree.currentIndex] : null;
     if ( currentBook && currentBook == book ) {
       event.stopPropagation();
       event.preventDefault();
-      return;
+      return true;
     }
-    saveCurrentBookPreferences();
     currentBook = book;
+    currentCategory = null;
+    currentTag = null;
+    currentNote = null;
+    saveBooksTreeSelection();
+    restoreCurrentBookLayout();
     currentBookChanged();
+    return true;
   };
 
-  pub.onBookTreeTextBoxEvent = function( event ) {
+  function onBookTreeTextBoxEvent( event ) {
     var aColumn = null;
     switch ( event.type ) {
       case "keypress" :
@@ -3178,7 +3839,7 @@ ru.akman.znotes.Main = function() {
             var book = books.getBookById( treeItem.getAttribute( "value" ) );
             renameBook( book, newValue );
           } catch ( e ) {
-            log( e );
+            Utils.log( e );
             bookTree.view.setCellText( anEditBookIndex, aColumn, oldValue );
           }
         }
@@ -3189,22 +3850,30 @@ ru.akman.znotes.Main = function() {
     return true;
   };
 
-  pub.onBookDblClick = function( event ) {
-    event.stopPropagation();
-    event.preventDefault();
-    if ( event.button != "0" || anEditBookIndex != null ) {
+  function onBookDblClick( event ) {
+    var aRow = bookTreeBoxObject.getRowAt( event.clientX, event.clientY );
+    if ( event.button != "0" || !currentBook || isDragDropActive ||
+         aRow < 0 || aRow > bookTree.view.rowCount - 1 ||
+         anEditBookIndex != null || bookTree.currentIndex < 0 ) {
+      event.preventDefault();
+      event.stopPropagation();
       return false;
     }
-    if ( isDragDropActive || bookTree.currentIndex < 0 || currentBook == null ) {
-      return false;
-    }
-    if ( !currentBook.isOpen() ) {
-      doOpenBook();
-    }
+    doOpenBook();
     return true;
   };
-
-  // Drag & Drop
+  
+  function onBookContextMenu( event ) {
+    var aRow = bookTreeBoxObject.getRowAt( event.clientX, event.clientY );
+    if ( bookTree.view.rowCount > 0 && ( aRow < 0 || aRow > bookTree.view.rowCount - 1 ) ) {
+      event.stopPropagation();
+      event.preventDefault();
+      return false;
+    }
+    return true;
+  };  
+  
+  // BOOK DRAG & DROP
 
   function clearBookTreeSeparator() {
     if ( bookTreeSeparatorRow != null ) {
@@ -3230,7 +3899,7 @@ ru.akman.znotes.Main = function() {
     clearBookTreeSeparator();
   };
 
-  pub.onBookDragDrop = function( event ) {
+  function onBookDragDrop( event ) {
     var dropEffect = event.dataTransfer.dropEffect;
     var isBook = event.dataTransfer.types.contains("znotes/x-book");
     var aRow = bookTreeBoxObject.getRowAt( event.clientX, event.clientY );
@@ -3247,7 +3916,7 @@ ru.akman.znotes.Main = function() {
     );
     switch ( event.type ) {
       case "dragstart" :
-        bookTree.removeEventListener( "select", pub.onBookSelect, false );
+        bookTree.removeEventListener( "select", onBookSelect, false );
         isDragDropActive = true;
         event.dataTransfer.setData("znotes/x-book", "BOOK" );
         return;
@@ -3290,7 +3959,7 @@ ru.akman.znotes.Main = function() {
       case "dragend" :
         clearBookTreeDragMarkers();
         isDragDropActive = false;
-        bookTree.addEventListener( "select", pub.onBookSelect, false );
+        bookTree.addEventListener( "select", onBookSelect, false );
         if ( dropEffect == "none" ) {
           return;
         }
@@ -3304,15 +3973,8 @@ ru.akman.znotes.Main = function() {
   };
 
   //
-  // CONTENT TREE EVENTS
+  // CONTENTTREE STATE LISTENER
   //
-
-  /*
-  function onCategoryCreated( e ) {
-    var aCategory = e.data.parentCategory;
-    var aCreatedCategory = e.data.createdCategory;
-  };
-  */
 
   function onCategoryChanged( e ) {
     var aCategory = e.data.parentCategory;
@@ -3327,13 +3989,6 @@ ru.akman.znotes.Main = function() {
       updateNoteTreeItem( aNotesList[i] );
     }
   };
-
-  /*
-  function onCategoryDeleted( e ) {
-    var aCategory = e.data.parentCategory;
-    var aDeletedCategory = e.data.deletedCategory;
-  };
-  */
 
   function onCategoryAppended( e ) {
     var aCategory = e.data.parentCategory;
@@ -3391,42 +4046,45 @@ ru.akman.znotes.Main = function() {
     var aRow = null;
     var aTreeItem = null;
     updateFolderTreeItem( aCategory );
-    if ( currentTree == "Tags" ) {
-      var aCurrentTagID = currentTag.getId();
-      var anAppendedNoteIDs = anAppendedNote.getTags();
-      if ( currentTag.isNoTag() ) {
-        if ( anAppendedNoteIDs.length > 0 ) {
-          return;
-        }
-      } else {
-        if ( anAppendedNoteIDs.indexOf( aCurrentTagID ) < 0 ) {
-          return;
-        }
-      }
-      if ( notesList.indexOf( anAppendedNote ) < 0 ) {
-        notesList.push( anAppendedNote );
-        aRow = notesList.length - 1;
-        aTreeItem = createNoteTreeItem( anAppendedNote );
-        noteTree.removeEventListener( "select", pub.onNoteSelect, false );
-        noteTreeChildren.appendChild( aTreeItem );
-        noteTree.addEventListener( "select", pub.onNoteSelect, false );
-      }
-    } else if ( currentTree == "Categories" ) {
-      if ( currentCategory != aCategory ) {
-        return;
-      }
-      if ( notesList.indexOf( anAppendedNote ) < 0 ) {
-        aRow = anAppendedNote.getIndex();
-        notesList.splice( aRow, 0, anAppendedNote );
-        aTreeItem = createNoteTreeItem( anAppendedNote );
-        noteTree.removeEventListener( "select", pub.onNoteSelect, false );
-        if ( aRow == notesList.length - 1 ) {
-          noteTreeChildren.appendChild( aTreeItem );
+    switch ( currentBook.getSelectedTree() ) {
+      case "Tags":
+        var aCurrentTagID = currentTag.getId();
+        var anAppendedNoteIDs = anAppendedNote.getTags();
+        if ( currentTag.isNoTag() ) {
+          if ( anAppendedNoteIDs.length > 0 ) {
+            return;
+          }
         } else {
-          noteTreeChildren.insertBefore( aTreeItem, noteTree.view.getItemAtIndex( aRow ) );
+          if ( anAppendedNoteIDs.indexOf( aCurrentTagID ) < 0 ) {
+            return;
+          }
         }
-        noteTree.addEventListener( "select", pub.onNoteSelect, false );
-      }
+        if ( notesList.indexOf( anAppendedNote ) < 0 ) {
+          notesList.push( anAppendedNote );
+          aRow = notesList.length - 1;
+          aTreeItem = createNoteTreeItem( anAppendedNote );
+          noteTree.removeEventListener( "select", onNoteSelect, false );
+          noteTreeChildren.appendChild( aTreeItem );
+          noteTree.addEventListener( "select", onNoteSelect, false );
+        }
+        break;
+      case "Categories":
+        if ( currentCategory != aCategory ) {
+          return;
+        }
+        if ( notesList.indexOf( anAppendedNote ) < 0 ) {
+          aRow = anAppendedNote.getIndex();
+          notesList.splice( aRow, 0, anAppendedNote );
+          aTreeItem = createNoteTreeItem( anAppendedNote );
+          noteTree.removeEventListener( "select", onNoteSelect, false );
+          if ( aRow == notesList.length - 1 ) {
+            noteTreeChildren.appendChild( aTreeItem );
+          } else {
+            noteTreeChildren.insertBefore( aTreeItem, noteTree.view.getItemAtIndex( aRow ) );
+          }
+          noteTree.addEventListener( "select", onNoteSelect, false );
+        }
+        break;
     }
   };
 
@@ -3447,22 +4105,25 @@ ru.akman.znotes.Main = function() {
     var anItemInfo = null;
     var aTreeIndex = null;
     updateFolderTreeItem( aCategory );
-    if ( currentTree == "Tags" ) {
-      var aCurrentTagID = currentTag.getId();
-      var aRemovedNoteIDs = aRemovedNote.getTags();
-      if ( currentTag.isNoTag() ) {
-        if ( aRemovedNoteIDs.length > 0 ) {
+    switch ( currentBook.getSelectedTree() ) {
+      case "Tags":
+        var aCurrentTagID = currentTag.getId();
+        var aRemovedNoteIDs = aRemovedNote.getTags();
+        if ( currentTag.isNoTag() ) {
+          if ( aRemovedNoteIDs.length > 0 ) {
+            return;
+          }
+        } else {
+          if ( aRemovedNoteIDs.indexOf( aCurrentTagID ) < 0 ) {
+            return;
+          }
+        }
+        break;
+      case "Categories":
+        if ( currentCategory != aCategory ) {
           return;
         }
-      } else {
-        if ( aRemovedNoteIDs.indexOf( aCurrentTagID ) < 0 ) {
-          return;
-        }
-      }
-    } else if ( currentTree == "Categories" ) {
-      if ( currentCategory != aCategory ) {
-        return;
-      }
+        break;
     }
     anItemInfo = getNoteTreeItemAndIndex( aRemovedNote );
     aTreeItem = anItemInfo.item;
@@ -3472,9 +4133,9 @@ ru.akman.znotes.Main = function() {
       if ( aTreeIndex == ( noteTree.view.rowCount - 1 ) ) {
         aTreeIndex--;
       }
-      noteTree.removeEventListener( "select", pub.onNoteSelect, false );
+      noteTree.removeEventListener( "select", onNoteSelect, false );
       aTreeItem.parentNode.removeChild( aTreeItem );
-      noteTree.addEventListener( "select", pub.onNoteSelect, false );
+      noteTree.addEventListener( "select", onNoteSelect, false );
       if ( !currentNote.isExists() && currentNote == aRemovedNote ) {
         noteTree.view.selection.select( aTreeIndex );
       }
@@ -3490,53 +4151,55 @@ ru.akman.znotes.Main = function() {
     if ( !currentBook || currentBook != aBook ) {
       return;
     }
-    if ( currentTree == "Categories" ) {
-      return;
-    } else if ( currentTree == "Tags" ) {
-      var aCurrentTagID = currentTag.getId();
-      var aNoteIDs = aNote.getTags();
-      var isNoteMustBeInNotesList = true;
-      if ( currentTag.isNoTag() ) {
-        if ( aNoteIDs.length > 0 ) {
-          isNoteMustBeInNotesList = false;
-        }
-      } else {
-        if ( aNoteIDs.indexOf( aCurrentTagID ) < 0 ) {
-          isNoteMustBeInNotesList = false;
-        }
-      }
-      var anItemInfo = null;
-      var anIndex = null;
-      var anItem = null;
-      var aRow = null;
-      if ( isNoteMustBeInNotesList ) {
-        if ( currentNote == aNote ) {
-          return;
-        }
-        notesList.push( aNote );
-        noteTree.removeEventListener( "select", pub.onNoteSelect, false );
-        noteTreeChildren.appendChild( createNoteTreeItem( aNote ) );
-        noteTree.addEventListener( "select", pub.onNoteSelect, false );
-        if ( noteTree.view.rowCount == 1 ) {
-          noteTree.view.selection.select( 0 );
-        }
-      } else {
-        anItemInfo = getNoteTreeItemAndIndex( aNote );
-        anItem = anItemInfo.item;
-        anIndex = anItemInfo.index;
-        if ( anItem ) {
-          notesList.splice( anIndex, 1 );
-          if ( anIndex == ( noteTree.view.rowCount - 1 ) ) {
-            anIndex--;
+    switch ( currentBook.getSelectedTree() ) {
+      case "Categories":
+        return;
+      case "Tags":
+        var aCurrentTagID = currentTag.getId();
+        var aNoteIDs = aNote.getTags();
+        var isNoteMustBeInNotesList = true;
+        if ( currentTag.isNoTag() ) {
+          if ( aNoteIDs.length > 0 ) {
+            isNoteMustBeInNotesList = false;
           }
-          noteTree.removeEventListener( "select", pub.onNoteSelect, false );
-          anItem.parentNode.removeChild( anItem );
-          noteTree.addEventListener( "select", pub.onNoteSelect, false );
+        } else {
+          if ( aNoteIDs.indexOf( aCurrentTagID ) < 0 ) {
+            isNoteMustBeInNotesList = false;
+          }
+        }
+        var anItemInfo = null;
+        var anIndex = null;
+        var anItem = null;
+        var aRow = null;
+        if ( isNoteMustBeInNotesList ) {
           if ( currentNote == aNote ) {
-            noteTree.view.selection.select( anIndex );
+            return;
+          }
+          notesList.push( aNote );
+          noteTree.removeEventListener( "select", onNoteSelect, false );
+          noteTreeChildren.appendChild( createNoteTreeItem( aNote ) );
+          noteTree.addEventListener( "select", onNoteSelect, false );
+          if ( noteTree.view.rowCount == 1 ) {
+            noteTree.view.selection.select( 0 );
+          }
+        } else {
+          anItemInfo = getNoteTreeItemAndIndex( aNote );
+          anItem = anItemInfo.item;
+          anIndex = anItemInfo.index;
+          if ( anItem ) {
+            notesList.splice( anIndex, 1 );
+            if ( anIndex == ( noteTree.view.rowCount - 1 ) ) {
+              anIndex--;
+            }
+            noteTree.removeEventListener( "select", onNoteSelect, false );
+            anItem.parentNode.removeChild( anItem );
+            noteTree.addEventListener( "select", onNoteSelect, false );
+            if ( currentNote == aNote ) {
+              noteTree.view.selection.select( anIndex );
+            }
           }
         }
-      }
+        break;
     }
   };
 
@@ -3546,13 +4209,12 @@ ru.akman.znotes.Main = function() {
     var oldLoading = e.data.oldValue;
     var newLoading = e.data.newValue;
     var aBook = aCategory.getBook();
-    if ( currentBook && currentBook == aBook ) {
-      updateNoteTreeItem( aNote );
-      if ( currentNote == aNote ) {
-        if ( !currentNote.isLoading() ) {
-          currentNoteChanged( true );
-        }
-      }
+    if ( !currentBook || currentBook != aBook ) {
+      return;
+    }
+    updateNoteTreeItem( aNote );
+    if ( currentNote && currentNote == aNote && !currentNote.isLoading() ) {
+      currentNoteChanged( true );
     }
   };
 
@@ -3566,22 +4228,22 @@ ru.akman.znotes.Main = function() {
     }
     switch ( newStatus.type ) {
       case "success" :
-        ru.akman.znotes.Utils.showPopup(
+        Utils.showPopup(
           "chrome://znotes/skin/message-32x32.png",
-          stringsBundle.getString( "main.note.import.title" ),
-          stringsBundle.getString( "main.note.loading.success" )
+          getString( "main.note.import.title" ),
+          getString( "main.note.loading.success" )
         );
         break;
       case "error" :
-        ru.akman.znotes.Utils.showPopup(
+        Utils.showPopup(
           "chrome://znotes/skin/warning-32x32.png",
-          stringsBundle.getString( "main.note.import.title" ),
+          getString( "main.note.import.title" ),
           newStatus.message
         );
         var params = {
           input: {
-            title: stringsBundle.getString( "main.note.confirmDelete.title" ),
-            message1: stringsBundle.getFormattedString( "main.note.confirmDelete.message1", [ aNote.getName() ] ),
+            title: getString( "main.note.confirmDelete.title" ),
+            message1: getFormattedString( "main.note.confirmDelete.message1", [ aNote.getName() ] ),
             message2: aNote.getOrigin()
           },
           output: null
@@ -3599,8 +4261,8 @@ ru.akman.znotes.Main = function() {
       case "abort" :
         var params = {
           input: {
-            title: stringsBundle.getString( "main.note.confirmDelete.title" ),
-            message1: stringsBundle.getFormattedString( "main.note.confirmDelete.message1", [ aNote.getName() ] ),
+            title: getString( "main.note.confirmDelete.title" ),
+            message1: getFormattedString( "main.note.confirmDelete.message1", [ aNote.getName() ] ),
             message2: aNote.getOrigin()
           },
           output: null
@@ -3659,10 +4321,9 @@ ru.akman.znotes.Main = function() {
     if ( !currentBook || currentBook != aBook ) {
       return;
     }
-    if ( currentNote == aNote ) {
-      if ( !currentNote.isLoading() ) {
-        currentNoteChanged( true );
-      }
+    if ( currentNote && currentNote == aNote &&
+         !currentNote.isLoading() ) {
+      currentNoteChanged( true );
     }
   };
 
@@ -3709,20 +4370,8 @@ ru.akman.znotes.Main = function() {
   };
 
   //
-  // TAGS LIST EVENTS
+  // TAGLIST STATE LISTENER
   //
-
-  /*
-  function onTagCreated( e ) {
-    var aTag = e.data.createdTag;
-  };
-  */
-
-  /*
-  function onTagDeleted( e ) {
-    var aTag = e.data.deletedTag;
-  };
-  */
 
   function onTagChanged( e ) {
     var aTag = e.data.changedTag;
@@ -3742,13 +4391,13 @@ ru.akman.znotes.Main = function() {
       var aRow = aTag.getIndex();
       tagsList.splice( aRow, 0, aTag );
       var aTreeItem = createTagTreeItem( aTag );
-      tagTree.removeEventListener( "select", pub.onTagSelect, false );
+      tagTree.removeEventListener( "select", onTagSelect, false );
       if ( aRow == tagsList.length - 1 ) {
         tagTreeChildren.appendChild( aTreeItem );
       } else {
         tagTreeChildren.insertBefore( aTreeItem, tagTree.view.getItemAtIndex( aRow ) );
       }
-      tagTree.addEventListener( "select", pub.onTagSelect, false );
+      tagTree.addEventListener( "select", onTagSelect, false );
     }
   };
 
@@ -3763,38 +4412,24 @@ ru.akman.znotes.Main = function() {
     var aTreeItem = tagTree.view.getItemAtIndex( aTreeIndex );
     if ( aTreeItem ) {
       tagsList.splice( aTreeIndex, 1 );
-      tagTree.removeEventListener( "select", pub.onTagSelect, false );
+      tagTree.removeEventListener( "select", onTagSelect, false );
       aTreeItem.parentNode.removeChild( aTreeItem );
-      tagTree.addEventListener( "select", pub.onTagSelect, false );
+      tagTree.addEventListener( "select", onTagSelect, false );
     }
   };
 
   //
-  // BOOKS LIST EVENTS
+  // BOOKS STATE LISTENER
   //
-
-  /*
-  function onBookCreated( e ) {
-    var aBook = e.data.createdBook;
-  };
-  */
-
-  /*
-  function onBookDeleted( e ) {
-    var aBook = e.data.deletedBook;
-  };
-  */
 
   function onBookOpened( e ) {
     var aBook = e.data.openedBook;
     var tagList = aBook.getTagList();
-    tagList.getNoTag().setName( stringsBundle.getString( "main.notag.name" ) );
+    tagList.getNoTag().setName( getString( "main.notag.name" ) );
     tagList.addStateListener( tagListStateListener );
     var contentTree = aBook.getContentTree();
     contentTree.addStateListener( contentTreeStateListener );
-    if ( booksList && booksList.indexOf( aBook ) >= 0 ) {
-      updateBookTreeItem( aBook );
-    }
+    updateBookTreeItem( aBook );
     if ( currentBook && currentBook == aBook ) {
       currentBookChanged();
     }
@@ -3802,23 +4437,19 @@ ru.akman.znotes.Main = function() {
 
   function onBookClosed( e ) {
     var aBook = e.data.closedBook;
+    updateBookTreeItem( aBook );
     if ( currentBook && currentBook == aBook ) {
-      selectTree( null );
-      currentCategory = null;
-      currentTag = null;
-      currentNote = null;
-      updateBookTreeItem( aBook );
       currentBookChanged();
     }
   };
 
   function onBookChanged( e ) {
     var aBook = e.data.changedBook;
+    updateBookTreeItem( aBook );
     if ( currentBook && currentBook == aBook ) {
-      updateBookTreeItem( aBook );
       if ( aBook.isOpen() ) {
         var tagList = aBook.getTagList();
-        tagList.getNoTag().setName( stringsBundle.getString( "main.notag.name" ) );
+        tagList.getNoTag().setName( getString( "main.notag.name" ) );
         var contentTree = aBook.getContentTree();
         var aRoot = contentTree.getRoot();
         updateFolderTreeItem( aRoot );
@@ -3832,13 +4463,13 @@ ru.akman.znotes.Main = function() {
       var aRow = aBook.getIndex();
       booksList.splice( aRow, 0, aBook );
       var aTreeItem = createBookTreeItem( aBook );
-      bookTree.removeEventListener( "select", pub.onBookSelect, false );
+      bookTree.removeEventListener( "select", onBookSelect, false );
       if ( aRow == booksList.length - 1 ) {
         bookTreeChildren.appendChild( aTreeItem );
       } else {
         bookTreeChildren.insertBefore( aTreeItem, bookTree.view.getItemAtIndex( aRow ) );
       }
-      bookTree.addEventListener( "select", pub.onBookSelect, false );
+      bookTree.addEventListener( "select", onBookSelect, false );
     }
   };
 
@@ -3853,247 +4484,73 @@ ru.akman.znotes.Main = function() {
     var aTreeItem = bookTree.view.getItemAtIndex( aTreeIndex );
     if ( aTreeItem ) {
       booksList.splice( aTreeIndex, 1 );
-      bookTree.removeEventListener( "select", pub.onBookSelect, false );
+      bookTree.removeEventListener( "select", onBookSelect, false );
       aTreeItem.parentNode.removeChild( aTreeItem );
-      bookTree.addEventListener( "select", pub.onBookSelect, false );
+      bookTree.addEventListener( "select", onBookSelect, false );
     }
   };
 
-  // S T A T E
+  // STATE CHANGED
   
-  function selectTree( aTree ) {
-    currentTree = aTree;
-    if ( currentTree == null ) {
-      cmdNewTag.setAttribute( "disabled", "true" );
-      cmdDeleteTag.setAttribute( "disabled", "true" );
-      cmdRenameTag.setAttribute( "disabled", "true" );
-      cmdColorTag.setAttribute( "disabled", "true" );
-      cmdRefreshTagTree.setAttribute( "disabled", "true" );
-      //
-      cmdNewCategory.setAttribute( "disabled", "true" );
-      cmdDeleteCategory.setAttribute( "disabled", "true" );
-      cmdRenameCategory.setAttribute( "disabled", "true" );
-      cmdRefreshFolderTree.setAttribute( "disabled", "true" );
-    } else if ( currentTree == "Categories" ) {
-      cmdNewTag.setAttribute( "disabled", "true" );
-      cmdDeleteTag.setAttribute( "disabled", "true" );
-      cmdRenameTag.setAttribute( "disabled", "true" );
-      cmdColorTag.setAttribute( "disabled", "true" );
-      cmdRefreshTagTree.setAttribute( "disabled", "true" );
-      //
-      cmdNewCategory.removeAttribute( "disabled" );
-      cmdDeleteCategory.removeAttribute( "disabled" );
-      cmdRenameCategory.removeAttribute( "disabled" );
-      cmdRefreshFolderTree.removeAttribute( "disabled" );
-    } else if ( currentTree == "Tags" ) {
-      cmdNewCategory.setAttribute( "disabled", "true" );
-      cmdDeleteCategory.setAttribute( "disabled", "true" );
-      cmdRenameCategory.setAttribute( "disabled", "true" );
-      cmdRefreshFolderTree.setAttribute( "disabled", "true" );
-      //
-      cmdNewTag.removeAttribute( "disabled" );
-      cmdDeleteTag.removeAttribute( "disabled" );
-      cmdRenameTag.removeAttribute( "disabled" );
-      cmdColorTag.removeAttribute( "disabled" );
-      cmdRefreshTagTree.removeAttribute( "disabled" );
-    }
+  function updateNoteView() {
+    refreshNotesList();
+    restoreNotesTreeSelection();
+  };
+
+  function updateBodyView( forced ) {
+    body.show( currentNote, forced );
   };
   
   function currentBookChanged() {
-    if ( currentBook == null ) {
-      selectTree( null );
-      currentCategory = null;
-      currentTag = null;
-      currentNote = null;
-      cmdDeleteBook.setAttribute( "disabled", "true" );
-      cmdDeleteBookData.setAttribute( "disabled", "true" );
-      cmdRenameBook.setAttribute( "disabled", "true" );
-      cmdOpenBook.setAttribute( "disabled", "true" );
-      cmdEditBook.setAttribute( "disabled", "true" );
-      cmdCloseBook.setAttribute( "disabled", "true" );
-    } else {
-      cmdDeleteBook.removeAttribute( "disabled" );
-      cmdDeleteBookData.removeAttribute( "disabled" );
-      cmdRenameBook.removeAttribute( "disabled" );
-      if ( currentBook.isOpen() ) {
-        cmdOpenBook.setAttribute( "disabled", "true" );
-        cmdEditBook.setAttribute( "disabled", "true" );
-        cmdCloseBook.removeAttribute( "disabled" );
-      } else {
-        selectTree( null );
-        currentCategory = null;
-        currentTag = null;
-        currentNote = null;
-        cmdOpenBook.removeAttribute( "disabled" );
-        cmdEditBook.removeAttribute( "disabled" );
-        cmdCloseBook.setAttribute( "disabled", "true" );
-      }
+    updateEditCommands();
+    updateBookCommands();
+    if ( !currentBook || !currentBook.isOpen() ) {
+      updateCategoryCommands();
+      updateTagCommands();
     }
-    cmdRefreshBookTree.removeAttribute( "disabled" );
-    cmdAppendBook.removeAttribute( "disabled" );
-    updateCurrentBookView();
-    saveBooksTreeSelection();
-  };
-
-  function currentNoteChanged( forced ) {
-    updateNoteCommands();
-    body.show( currentNote, !!forced );
-    saveNotesTreeSelection();
+    updateBookView();
   };
 
   function currentCategoryChanged() {
-    if ( currentCategory == null ) {
-      folderTree.view.selection.select( -1 );
-      return;
-    }
-    if ( categoriesList.indexOf( currentCategory ) == 0 ) {
-      cmdDeleteCategory.setAttribute( "disabled", "true" );
-      cmdRenameCategory.setAttribute( "disabled", "true" );
-    } else {
-      cmdDeleteCategory.removeAttribute( "disabled" );
-      cmdRenameCategory.removeAttribute( "disabled" );
-    }
-    saveCategoriesTreeSelection();
+    updateEditCommands();
+    updateCategoryCommands();
+    updateTagCommands();
+    updateNoteView();
   };
 
   function currentTagChanged() {
-    if ( currentTag.isNoTag() ) {
-      cmdDeleteTag.setAttribute( "disabled", "true" );
-      cmdRenameTag.setAttribute( "disabled", "true" );
-    } else {
-      cmdDeleteTag.removeAttribute( "disabled" );
-      cmdRenameTag.removeAttribute( "disabled" );
-    }
-    saveTagsTreeSelection();
+    updateEditCommands();
+    updateCategoryCommands();
+    updateTagCommands();
+    updateNoteView();
+  };
+  
+  function currentNoteChanged( forced ) {
+    updateEditCommands();
+    updateNoteCommands();
+    updateBodyView( !!forced );
   };
 
-  // W I N D O W S
-
-  function onWindowLoad( win, bookId, noteId ) {
-    windowsList.push( win.name );
-    if ( windowsMonitor && "onTabOpened" in windowsMonitor ) {
-      windowsMonitor.onTabOpened(
-        {
-          bookId: bookId,
-          noteId: noteId,
-          mode: {
-            name: "znotesContentTab"
-          }
-        }
-      );
-    }
-  };
-
-  function onWindowUnload( win, bookId, noteId ) {
-    var index = windowsList.indexOf( win.name );
-    if ( index != -1 ) {
-      windowsList.splice( index, 1 );
-    }
-    var tab = {
-      bookId: bookId,
-      noteId: noteId,
-      mode: {
-        name: "znotesContentTab"
-      }
-    };
-    if ( windowsMonitor && "onTabClosing" in windowsMonitor ) {
-      windowsMonitor.onTabClosing( tab );
-    }
-  };
-
-  function showNoteWindow( aNote, aBackground ) {
-    if ( !aNote ) {
-      return;
-    }
-    var bookId = aNote.getBook().getId();
-    var noteId = aNote.getId();
-    var windowName = bookId + "&" + noteId;
-    if ( tabMail ) {
-      var tabInfo = tabMail.tabInfo;
-      var tabIndex = -1;
-      for ( var i = 0; i < tabInfo.length; i++ ) {
-        var tab = tabInfo[i];
-        if ( tab.mode.type == "znotesContentTab" &&
-             tab.noteId == noteId &&
-             tab.bookId == bookId ) {
-          tabIndex = i;
-          break;
-        }
-      }
-      if ( tabIndex < 0 ) { 
-        tabMail.openTab(
-          "znotesContentTab",
-          {
-            contentPage: "chrome://znotes/content/viewer.xul?" + windowName,
-            note: aNote,
-            background: aBackground,
-            style: {
-              iconsize: mainToolBox.getAttribute( "iconsize" )
-            }
-          }
-        );
-      } else {
-        var tabContainer = ru.akman.znotes.Utils.getTabContainer();
-        tabContainer.selectedIndex = tabIndex;
-      }
-    } else {
-      var windowService = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
-                                    .getService( Components.interfaces.nsIWindowWatcher );
-      var win = windowService.getWindowByName( windowName, null );
-      if ( win ) {
-        windowService.activeWindow = win;
-      } else {
-        win = window.open(
-          "chrome://znotes/content/viewer.xul?" + windowName,
-          windowName,
-          "chrome,resizable,centerscreen"
-        );
-        win.arguments = [
-          "chrome://znotes/content/viewer.xul?" + windowName,
-          aNote,
-          aBackground,
-          {
-            iconsize: mainToolBox.getAttribute( "iconsize" )
-          }
-        ];
-        win.addEventListener( "load"  , function() { onWindowLoad( win, bookId, noteId ); }, false );
-        win.addEventListener( "unload"  , function() { onWindowUnload( win, bookId, noteId ); }, false );
-        if ( aBackground ) {
-          setTimeout(
-            function() {
-              windowService.activeWindow = mainWindow;
-            },
-            0
-          );
-        }
-      }
-    }
-  };
-
-  // P R E F E R E N S E S
+  // PREFERENSES
 
   function saveBooksTreeSelection() {
-    var currentBookIndex = -1;
-    if ( currentBook ) {
-      currentBookIndex = currentBook.getIndex();
-    }
-    prefsBundle.setIntPref( "currentBook", currentBookIndex );
+    prefsBundle.setIntPref( "currentBook",
+      currentBook ? currentBook.getIndex() : -1 );
   };
 
   function restoreBooksTreeSelection() {
-    var currentBookIndex = -1;
-    try {
-      if ( !prefsBundle.hasPref( "currentBook" ) ) {
-        prefsBundle.setIntPref( "currentBook", currentBookIndex );
-      } else {
-        currentBookIndex = prefsBundle.getIntPref( "currentBook" );
-      }
-    } catch ( e ) {
-      log( e );
-    }
-    if ( currentBookIndex < 0 || currentBookIndex > bookTree.view.rowCount - 1 ) {
-      currentBookIndex = books.hasBooks() ? 0 : -1;
+    var currentBookIndex = books.hasBooks() ? 0 : -1;
+    if ( !prefsBundle.hasPref( "currentBook" ) ) {
+      prefsBundle.setIntPref( "currentBook", currentBookIndex );
     } else {
+      currentBookIndex = prefsBundle.getIntPref( "currentBook" );
+    }
+    if ( currentBookIndex < 0 ||
+         currentBookIndex > bookTree.view.rowCount - 1 ) {
+      currentBookIndex = books.hasBooks() ? 0 : -1;
+      prefsBundle.setIntPref( "currentBook", currentBookIndex );
+    }
+    if ( currentBookIndex >= 0 ) {
       bookTreeBoxObject.ensureRowIsVisible( currentBookIndex );
     }
     bookTree.view.selection.select( currentBookIndex );
@@ -4101,111 +4558,484 @@ ru.akman.znotes.Main = function() {
 
   function saveCategoriesTreeSelection() {
     if ( currentBook && currentBook.isOpen() ) {
-      currentBook.savePreference( "currentCategory", categoriesList.indexOf( currentCategory ) );
+      currentBook.setSelectedCategory(
+        categoriesList.indexOf( currentCategory )
+      )
     }
   };
 
   function restoreCategoriesTreeSelection() {
-    if ( currentBook && currentBook.isOpen() ) {
-      tagTree.view.selection.select( -1 );
-      var currentItemIndex = currentBook.loadPreference( "currentCategory", 0 );
-      var currentTreeItem = getFolderTreeItemAtItemIndex( currentItemIndex );
-      var currentRow = 0;
-      if ( currentTreeItem ) {
-        currentRow = folderTree.view.getIndexOfItem( currentTreeItem );
-      }
-      folderTreeBoxObject.ensureRowIsVisible( currentRow );
-      folderTree.view.selection.select( currentRow );
+    if ( !currentBook || !currentBook.isOpen() ) {
+      return;
     }
+    var currentCategoryIndex = currentBook.getSelectedCategory();
+    if ( currentCategoryIndex < 0 ||
+         currentCategoryIndex > folderTree.view.rowCount - 1 ) {
+      currentCategoryIndex = 0;
+    }
+    var currentTreeItem = getFolderTreeItemAtItemIndex( currentCategoryIndex );
+    var currentRow = currentTreeItem ?
+      folderTree.view.getIndexOfItem( currentTreeItem ) : 0;
+    folderTreeBoxObject.ensureRowIsVisible( currentRow );
+    folderTree.view.selection.select( currentRow );
   };
 
   function saveTagsTreeSelection() {
     if ( currentBook && currentBook.isOpen() ) {
-      currentBook.savePreference( "currentTag", currentTag.getIndex() );
+      currentBook.setSelectedTag( currentTag.getIndex() );
     }
   };
 
   function restoreTagsTreeSelection() {
-    if ( currentBook && currentBook.isOpen() ) {
-      folderTree.view.selection.select( -1 );
-      var currentTagIndex = currentBook.loadPreference( "currentTag", 0 );
-      if ( currentTagIndex < 0 || currentTagIndex > tagTree.view.rowCount - 1 ) {
-        currentTagIndex = 0;
-      }
-      tagTreeBoxObject.ensureRowIsVisible( currentTagIndex );
-      tagTree.view.selection.select( currentTagIndex );
+    if ( !currentBook || !currentBook.isOpen() ) {
+      return;
     }
+    var currentTagIndex = currentBook.getSelectedTag();
+    if ( currentTagIndex < 0 || currentTagIndex > tagTree.view.rowCount - 1 ) {
+      currentTagIndex = 0;
+    }
+    tagTreeBoxObject.ensureRowIsVisible( currentTagIndex );
+    tagTree.view.selection.select( currentTagIndex );
   };
 
   function saveNotesTreeSelection() {
-    if ( currentBook && currentBook.isOpen() ) {
-      var index = notesList.indexOf( currentNote );
-      if ( ru.akman.znotes.Utils.IS_SAVE_POSITION ) {
-        if ( currentTree == "Categories" && currentCategory != null ) {
+    if ( !currentBook || !currentBook.isOpen() || !currentNote ||
+         !Utils.IS_SAVE_POSITION ) {
+      return;
+    }
+    var index = notesList.indexOf( currentNote );
+    switch ( currentBook.getSelectedTree() ) {
+      case "Categories":
+        if ( currentCategory != null ) {
           if ( currentCategory.isRoot() ) {
             currentBook.savePreference( "rootPosition", index );
           } else {
             currentCategory.setSelectedIndex( index );
           }
-        } else if ( currentTree == "Tags" && currentTag != null ) {
+        }
+        break;
+      case "Tags":
+        if ( currentTag != null ) {
           currentTag.setSelectedIndex( index );
         }
-      }
+        break;
     }
   };
 
   function restoreNotesTreeSelection() {
-    if ( currentBook && currentBook.isOpen() ) {
-      var index = 0;
-      if ( currentTree == "Categories" ) {
+    if ( !currentBook && !currentBook.isOpen() ) {
+      return;
+    }
+    var index = -1;
+    switch ( currentBook.getSelectedTree() ) {
+      case "Categories":
         if ( noteTree.view.rowCount > 0 ) {
-          if ( ru.akman.znotes.Utils.IS_SAVE_POSITION ) {
+          index = 0;
+          if ( Utils.IS_SAVE_POSITION ) {
             if ( currentCategory.isRoot() ) {
-              index = currentBook.loadPreference( "rootPosition", -1 );
+              index = currentBook.loadPreference( "rootPosition", 0 );
             } else {
               index = currentCategory.getSelectedIndex();
             }
-            if ( index < 0 ) {
-              index = 0;
-            }
+            index = index < 0 ? 0 : index;
           }
-          noteTreeBoxObject.ensureRowIsVisible( index );
-          noteTree.view.selection.select( index );
-        } else {
-          noteTree.view.selection.select( -1 );
         }
-      } else if ( currentTree == "Tags" ) {
+        break;
+      case "Tags":
         if ( noteTree.view.rowCount > 0 ) {
-          if ( ru.akman.znotes.Utils.IS_SAVE_POSITION ) {
+          index = 0;
+          if ( Utils.IS_SAVE_POSITION ) {
             index = currentTag.getSelectedIndex();
-            if ( index < 0 ) {
-              index = 0;
-            }
+            index = index < 0 ? 0 : index;
           }
-          noteTreeBoxObject.ensureRowIsVisible( index );
-          noteTree.view.selection.select( index );
-        } else {
-          noteTree.view.selection.select( -1 );
         }
+        break;
+    }
+    if ( index != -1 ) {
+      noteTreeBoxObject.ensureRowIsVisible( index );
+    }
+    noteTree.view.selection.select( index );
+  };
+
+  function restoreCurrentBookLayout() {
+    if ( currentBook == null ) {
+      var defaultPreferences = books.getDefaultPreferences();
+      folderBox.setAttribute( "width",
+        defaultPreferences["folderBoxWidth"] );
+      bookTreeView.setAttribute( "height",
+        defaultPreferences["bookTreeViewHeight"] );
+      bookSplitter.setAttribute( "state",
+        defaultPreferences["bookSplitterState"] );
+      categoryBox.setAttribute( "height",
+        defaultPreferences["categoryBoxHeight"] );
+      folderTreeView.setAttribute( "height",
+        defaultPreferences["folderTreeViewHeight"] );
+      tagSplitter.setAttribute( "state",
+        defaultPreferences["tagSplitterState"] );
+      tagTreeView.setAttribute( "height",
+        defaultPreferences["tagTreeViewHeight"] );
+      folderSplitter.setAttribute( "state",
+        defaultPreferences["folderSplitterState"] );
+      noteBox.setAttribute( "width",
+        defaultPreferences["noteBoxWidth"] );
+      noteTreeView.setAttribute( "height",
+        defaultPreferences["noteTreeViewHeight"] );
+      noteTreeSplitter.setAttribute( "state",
+        defaultPreferences["noteTreeSplitterState"] );
+      noteBodyBox.setAttribute( "height",
+        defaultPreferences["noteBodyBoxHeight"] );
+      noteBodyView.setAttribute( "height",
+        defaultPreferences["noteBodyViewHeight"] );
+      qfBox.setAttribute( "collapsed",
+        defaultPreferences["qfBoxCollapsed"] );
+    } else {
+      folderBox.setAttribute( "width",
+        currentBook.loadPreference( "folderBoxWidth", "200" ) );
+      bookTreeView.setAttribute( "height",
+        currentBook.loadPreference( "bookTreeViewHeight", "250" ) );
+      bookSplitter.setAttribute( "state",
+        currentBook.loadPreference( "bookSplitterState", "open" ) );
+      categoryBox.setAttribute( "height",
+        currentBook.loadPreference( "categoryBoxHeight", "700" ) );
+      folderTreeView.setAttribute( "height",
+        currentBook.loadPreference( "folderTreeViewHeight", "500" ) );
+      tagSplitter.setAttribute( "state",
+        currentBook.loadPreference( "tagSplitterState", "open" ) );
+      tagTreeView.setAttribute( "height",
+        currentBook.loadPreference( "tagTreeViewHeight", "300" ) );
+      folderSplitter.setAttribute( "state",
+        currentBook.loadPreference( "folderSplitterState", "open" ) );
+      noteBox.setAttribute( "width",
+        currentBook.loadPreference( "noteBoxWidth", "800" ) );
+      noteTreeView.setAttribute( "height",
+        currentBook.loadPreference( "noteTreeViewHeight", "250" ) );
+      noteTreeSplitter.setAttribute( "state",
+        currentBook.loadPreference( "noteTreeSplitterState", "open" ) );
+      noteBodyBox.setAttribute( "height",
+        currentBook.loadPreference( "noteBodyBoxHeight", "700" ) );
+      noteBodyView.setAttribute( "height",
+        currentBook.loadPreference( "noteBodyViewHeight", "700" ) );
+      qfBox.setAttribute( "collapsed",
+        currentBook.loadPreference( "qfBoxCollapsed", "true" ) );
+    }
+    updateQuickFilterState();
+  };
+
+  // SESSIONS
+
+  function getPersistedState() {
+    var persistedState = null;
+    if ( Utils.IS_STANDALONE ) {
+      persistedState = ru.akman.znotes.SessionManager.getPersistedState();
+    } else {
+      var tab = Utils.getMainTab();
+      if ( tab && tab.persistedState ) {
+        persistedState = tab.persistedState;
+      }
+    }
+    return persistedState;
+  };
+
+  function loadPersistedSession() {
+    var persistedState = getPersistedState();
+    if ( !persistedState ) {
+      return;
+    }
+    var tabMail = Utils.getTabMail();
+    for ( var i = 0; i < persistedState.tabs.length; i++ ) {
+      var mode = persistedState.tabs[i].mode;
+      if ( mode != "znotesContentTab" ) {
+        continue;
+      }
+      var state = persistedState.tabs[i].state;
+      var note = getNoteByBookIdAndNoteId( state.bookId, state.noteId );
+      var background = tabMail ? state.background : true;
+      if ( note ) {
+        showNote( note, background );
       }
     }
   };
 
+  // INIT & DONE
+  
+  function initGlobals() {
+    Utils.initGlobals();
+    if ( !Utils.IS_STANDALONE ) {
+      return;
+    }
+    // XR only
+    platformBundleObserver.register();
+    windowsList = [];
+    windowsMonitor = ru.akman.znotes.TabMonitor;
+  };
+  
+  function initMain() {
+    document.title = getString( "main.window.title" );
+    // toolbox
+    mainMenuBar = document.getElementById( "znotes_mainmenutoolbar" );
+    mainToolBox = document.getElementById( "znotes_maintoolbox" );
+    mainToolBar = document.getElementById( "znotes_maintoolbar" );
+    mainToolBox.customizeDone = onCustomizeMainToolbarDone;
+    // statusbar
+    statusBarPanel = Utils.getStatusbarPanel();
+    /*
+    if ( statusBarPanel.hasAttribute( "hidden" ) ) {
+      statusBarPanel.removeAttribute( "hidden" );
+    }
+    */
+    statusBarLogo = statusBarPanel.querySelector(
+      "znotes_statusbarpanellogo" );
+    statusBarLabel = statusBarPanel.querySelector(
+      "znotes_statusbarpanellabel" );
+    // view
+    folderBox = document.getElementById( "folderBox" );
+    bookTreeView = document.getElementById( "bookTreeView" );
+    bookSplitter = document.getElementById( "bookSplitter" );
+    categoryBox = document.getElementById( "categoryBox" );
+    folderTreeView = document.getElementById( "folderTreeView" );
+    tagSplitter = document.getElementById( "tagSplitter" );
+    tagTreeView = document.getElementById( "tagTreeView" );
+    folderSplitter = document.getElementById( "folderSplitter" );
+    noteBox = document.getElementById( "noteBox" );
+    noteTreeView = document.getElementById( "noteTreeView" );
+    noteTreeSplitter = document.getElementById( "noteTreeSplitter" );
+    noteBodyBox = document.getElementById( "noteBodyBox" );
+    noteBodyView = document.getElementById( "noteBodyView" );
+    // book
+    bookTree = document.getElementById( "bookTree" );
+    bookTreeChildren = document.getElementById( "bookTreeChildren" );
+    bookTreeTextBox = bookTree.inputField;
+    bookTreeTextBox.setAttribute( "clickSelectsAll", "true" );
+    bookTreeSeparator = document.createElement( "treeseparator" );
+    bookTreeSeparator.setAttribute( "properties", "booktreeseparator" );
+    bookTreeBoxObject = bookTree.boxObject;
+    bookTreeBoxObject.QueryInterface(
+      Components.interfaces.nsITreeBoxObject );
+    bookTree.setAttribute( "editable", "false" );
+    // category
+    folderTree = document.getElementById( "folderTree" );
+    folderTreeChildren = document.getElementById( "folderTreeChildren" );
+    folderTreeTextBox = folderTree.inputField;
+    folderTreeTextBox.setAttribute( "clickSelectsAll", "true" );
+    folderTreeSeparator = document.createElement( "treeseparator" );
+    folderTreeSeparator.setAttribute( "properties", "foldertreeseparator" );
+    folderTreeBoxObject = folderTree.boxObject;
+    folderTreeBoxObject.QueryInterface(
+      Components.interfaces.nsITreeBoxObject );
+    folderTreeMenu = document.getElementById( "folderTreeMenu" );
+    folderTree.setAttribute( "editable", "false" );
+    // tag
+    tagTree = document.getElementById( "tagTree" );
+    tagTreeChildren = document.getElementById( "tagTreeChildren" );
+    tagTreeTextBox = tagTree.inputField;
+    tagTreeTextBox.setAttribute( "clickSelectsAll", "true" );
+    tagTreeSeparator = document.createElement( "treeseparator" );
+    tagTreeSeparator.setAttribute( "properties", "tagtreeseparator" );
+    tagTreeBoxObject = tagTree.boxObject;
+    tagTreeBoxObject.QueryInterface(
+      Components.interfaces.nsITreeBoxObject );
+    tagTree.setAttribute( "editable", "false" );
+    // note
+    noteTree = document.getElementById( "noteTree" );
+    noteTreeChildren = document.getElementById( "noteTreeChildren" );
+    noteTreeTextBox = noteTree.inputField;
+    noteTreeTextBox.setAttribute( "clickSelectsAll", "true" );
+    noteTreeSeparator = document.createElement( "treeseparator" );
+    noteTreeSeparator.setAttribute( "properties", "notetreeseparator" );
+    noteTreeBoxObject = noteTree.boxObject;
+    noteTreeBoxObject.QueryInterface(
+      Components.interfaces.nsITreeBoxObject );
+    noteTree.setAttribute( "editable", "false" );
+    // quick filter
+    qfButton = document.getElementById( "znotes_showfilterbar_button" );
+    qfBox = document.getElementById( "filterBox" );
+    // doctype menupopups
+    newNoteButtonMenuPopup = document.getElementById(
+      "znotes_newnote_button_menupopup" );
+    importNoteButtonMenuPopup = document.getElementById(
+      "znotes_importnote_button_menupopup" );
+  };
+  
+  function addEventListeners() {
+    // splitters
+    bookSplitter.addEventListener( "dblclick", onSplitterDblClick, false );
+    tagSplitter.addEventListener( "dblclick", onSplitterDblClick, false );
+    folderSplitter.addEventListener( "dblclick", onSplitterDblClick, false );
+    noteTreeSplitter.addEventListener( "dblclick", onSplitterDblClick, false );
+    // books
+    bookTree.addEventListener( "select", onBookSelect, false );
+    bookTree.addEventListener( "focus", onBookFocus, false );
+    bookTree.addEventListener( "blur", onBookBlur, false );
+    bookTree.addEventListener( "dblclick", onBookDblClick, true );
+    bookTree.addEventListener( "contextmenu", onBookContextMenu, true );
+    bookTreeChildren.addEventListener( "dragstart", onBookDragDrop, false );
+    bookTreeChildren.addEventListener( "dragenter", onBookDragDrop, false );
+    bookTreeChildren.addEventListener( "dragover", onBookDragDrop, false );
+    bookTreeChildren.addEventListener( "dragleave", onBookDragDrop, false );
+    bookTreeChildren.addEventListener( "drag", onBookDragDrop, false );
+    bookTreeChildren.addEventListener( "drop", onBookDragDrop, false );
+    bookTreeChildren.addEventListener( "dragend", onBookDragDrop, false );
+    bookTreeTextBox.addEventListener( "focus", onBookTreeTextBoxEvent, false );
+    bookTreeTextBox.addEventListener( "keypress", onBookTreeTextBoxEvent, false );
+    bookTreeTextBox.addEventListener( "blur", onBookTreeTextBoxEvent, false );
+    // categories
+    folderTree.addEventListener( "select", onFolderSelect, false );
+    folderTree.addEventListener( "focus", onFolderFocus, false );
+    folderTree.addEventListener( "blur", onFolderBlur, false );
+    folderTree.addEventListener( "dblclick", onFolderDblClick, true );
+    folderTree.addEventListener( "contextmenu", onFolderContextMenu, true );
+    folderTreeChildren.addEventListener( "dragstart", onFolderDragDrop, false );
+    folderTreeChildren.addEventListener( "dragenter", onFolderDragDrop, false );
+    folderTreeChildren.addEventListener( "dragover", onFolderDragDrop, false );
+    folderTreeChildren.addEventListener( "dragleave", onFolderDragDrop, false );
+    folderTreeChildren.addEventListener( "drag", onFolderDragDrop, false );
+    folderTreeChildren.addEventListener( "drop", onFolderDragDrop, false );
+    folderTreeChildren.addEventListener( "dragend", onFolderDragDrop, false );
+    folderTreeTextBox.addEventListener( "focus", onFolderTreeTextBoxEvent, false );
+    folderTreeTextBox.addEventListener( "keypress", onFolderTreeTextBoxEvent, false );
+    folderTreeTextBox.addEventListener( "blur", onFolderTreeTextBoxEvent, false );
+    // tags
+    tagTree.addEventListener( "select", onTagSelect, false );
+    tagTree.addEventListener( "focus", onTagFocus, false );
+    tagTree.addEventListener( "blur", onTagBlur, false );
+    tagTree.addEventListener( "dblclick", onTagDblClick, true );
+    tagTree.addEventListener( "contextmenu", onTagContextMenu, true );
+    tagTreeChildren.addEventListener( "dragstart", onTagDragDrop, false );
+    tagTreeChildren.addEventListener( "dragenter", onTagDragDrop, false );
+    tagTreeChildren.addEventListener( "dragover", onTagDragDrop, false );
+    tagTreeChildren.addEventListener( "dragleave", onTagDragDrop, false );
+    tagTreeChildren.addEventListener( "drag", onTagDragDrop, false );
+    tagTreeChildren.addEventListener( "drop", onTagDragDrop, false );
+    tagTreeChildren.addEventListener( "dragend", onTagDragDrop, false );
+    tagTreeTextBox.addEventListener( "focus", onTagTreeTextBoxEvent, false );
+    tagTreeTextBox.addEventListener( "keypress", onTagTreeTextBoxEvent, false );
+    tagTreeTextBox.addEventListener( "blur", onTagTreeTextBoxEvent, false );
+    // notes
+    noteTree.addEventListener( "select", onNoteSelect, false );
+    noteTree.addEventListener( "focus", onNoteFocus, false );
+    noteTree.addEventListener( "blur", onNoteBlur, false );
+    noteTree.addEventListener( "dblclick", onNoteDblClick, true );
+    noteTree.addEventListener( "contextmenu", onNoteContextMenu, true );
+    noteTreeChildren.addEventListener( "dragstart", onNoteDragDrop, false );
+    noteTreeChildren.addEventListener( "dragenter", onNoteDragDrop, false );
+    noteTreeChildren.addEventListener( "dragover", onNoteDragDrop, false );
+    noteTreeChildren.addEventListener( "dragleave", onNoteDragDrop, false );
+    noteTreeChildren.addEventListener( "drag", onNoteDragDrop, false );
+    noteTreeChildren.addEventListener( "drop", onNoteDragDrop, false );
+    noteTreeChildren.addEventListener( "dragend", onNoteDragDrop, false );
+    noteTreeTextBox.addEventListener( "focus", onNoteTreeTextBoxEvent, false );
+    noteTreeTextBox.addEventListener( "keypress", onNoteTreeTextBoxEvent, false );
+    noteTreeTextBox.addEventListener( "blur", onNoteTreeTextBoxEvent, false );
+  };
+
+  function removeEventListeners() {
+    // splitters
+    bookSplitter.removeEventListener( "dblclick", onSplitterDblClick, false );
+    folderSplitter.removeEventListener( "dblclick", onSplitterDblClick, false );
+    tagSplitter.removeEventListener( "dblclick", onSplitterDblClick, false );
+    noteTreeSplitter.removeEventListener( "dblclick", onSplitterDblClick, false );
+    // books
+    bookTree.removeEventListener( "select", onBookSelect, false );
+    bookTree.removeEventListener( "focus", onBookFocus, false );
+    bookTree.removeEventListener( "blur", onBookBlur, false );
+    bookTree.removeEventListener( "dblclick", onBookDblClick, true );
+    bookTree.removeEventListener( "contextmenu", onBookContextMenu, true );
+    bookTreeChildren.removeEventListener( "dragstart", onBookDragDrop, false );
+    bookTreeChildren.removeEventListener( "dragenter", onBookDragDrop, false );
+    bookTreeChildren.removeEventListener( "dragover", onBookDragDrop, false );
+    bookTreeChildren.removeEventListener( "dragleave", onBookDragDrop, false );
+    bookTreeChildren.removeEventListener( "drag", onBookDragDrop, false );
+    bookTreeChildren.removeEventListener( "drop", onBookDragDrop, false );
+    bookTreeChildren.removeEventListener( "dragend", onBookDragDrop, false );
+    bookTreeTextBox.removeEventListener( "focus", onBookTreeTextBoxEvent, false );
+    bookTreeTextBox.removeEventListener( "keypress", onBookTreeTextBoxEvent, false );
+    bookTreeTextBox.removeEventListener( "blur", onBookTreeTextBoxEvent, false );
+    // categories
+    folderTree.removeEventListener( "select", onFolderSelect, false );
+    folderTree.removeEventListener( "focus", onFolderFocus, false );
+    folderTree.removeEventListener( "blur", onFolderBlur, false );
+    folderTree.removeEventListener( "dblclick", onFolderDblClick, true );
+    folderTree.removeEventListener( "contextmenu", onFolderContextMenu, true );
+    folderTreeChildren.removeEventListener( "dragstart", onFolderDragDrop, false );
+    folderTreeChildren.removeEventListener( "dragenter", onFolderDragDrop, false );
+    folderTreeChildren.removeEventListener( "dragover", onFolderDragDrop, false );
+    folderTreeChildren.removeEventListener( "dragleave", onFolderDragDrop, false );
+    folderTreeChildren.removeEventListener( "drag", onFolderDragDrop, false );
+    folderTreeChildren.removeEventListener( "drop", onFolderDragDrop, false );
+    folderTreeChildren.removeEventListener( "dragend", onFolderDragDrop, false );
+    folderTreeTextBox.removeEventListener( "focus", onFolderTreeTextBoxEvent, false );
+    folderTreeTextBox.removeEventListener( "keypress", onFolderTreeTextBoxEvent, false );
+    folderTreeTextBox.removeEventListener( "blur", onFolderTreeTextBoxEvent, false );
+    // tags
+    tagTree.removeEventListener( "select", onTagSelect, false );
+    tagTree.removeEventListener( "focus", onTagFocus, false );
+    tagTree.removeEventListener( "blur", onTagBlur, false );
+    tagTree.removeEventListener( "dblclick", onTagDblClick, true );
+    tagTree.removeEventListener( "contextmenu", onTagContextMenu, true );
+    tagTreeChildren.removeEventListener( "dragstart", onTagDragDrop, false );
+    tagTreeChildren.removeEventListener( "dragenter", onTagDragDrop, false );
+    tagTreeChildren.removeEventListener( "dragover", onTagDragDrop, false );
+    tagTreeChildren.removeEventListener( "dragleave", onTagDragDrop, false );
+    tagTreeChildren.removeEventListener( "drag", onTagDragDrop, false );
+    tagTreeChildren.removeEventListener( "drop", onTagDragDrop, false );
+    tagTreeChildren.removeEventListener( "dragend", onTagDragDrop, false );
+    tagTreeTextBox.removeEventListener( "focus", onTagTreeTextBoxEvent, false );
+    tagTreeTextBox.removeEventListener( "keypress", onTagTreeTextBoxEvent, false );
+    tagTreeTextBox.removeEventListener( "blur", onTagTreeTextBoxEvent, false );
+    // notes
+    noteTree.removeEventListener( "select", onNoteSelect, false );
+    noteTree.removeEventListener( "focus", onNoteFocus, false );
+    noteTree.removeEventListener( "blur", onNoteBlur, false );
+    noteTree.removeEventListener( "dblclick", onNoteDblClick, true );
+    noteTree.removeEventListener( "contextmenu", onNoteContextMenu, true );
+    noteTreeChildren.removeEventListener( "dragstart", onNoteDragDrop, false );
+    noteTreeChildren.removeEventListener( "dragenter", onNoteDragDrop, false );
+    noteTreeChildren.removeEventListener( "dragover", onNoteDragDrop, false );
+    noteTreeChildren.removeEventListener( "dragleave", onNoteDragDrop, false );
+    noteTreeChildren.removeEventListener( "drag", onNoteDragDrop, false );
+    noteTreeChildren.removeEventListener( "drop", onNoteDragDrop, false );
+    noteTreeChildren.removeEventListener( "dragend", onNoteDragDrop, false );
+    noteTreeTextBox.removeEventListener( "focus", onNoteTreeTextBoxEvent, false );
+    noteTreeTextBox.removeEventListener( "keypress", onNoteTreeTextBoxEvent, false );
+    noteTreeTextBox.removeEventListener( "blur", onNoteTreeTextBoxEvent, false );
+  };
+  
+  function addControllers() {
+    mainController.register();
+  };
+
+  function removeControllers() {
+    mainController.unregister();
+  };
+  
   function connectMutationObservers() {
     mutationObservers = [];
-    mutationObservers.push( connectMutationObserver( folderBox, "width", "folderBoxWidth" ) );
-    mutationObservers.push( connectMutationObserver(   bookTreeView, "height", "bookTreeViewHeight" ) );
-    mutationObservers.push( connectMutationObserver(   bookSplitter, "state", "bookSplitterState" ) );
-    mutationObservers.push( connectMutationObserver(   categoryBox, "height", "categoryBoxHeight" ) );
-    mutationObservers.push( connectMutationObserver(     folderTreeView, "height", "folderTreeViewHeight" ) );
-    mutationObservers.push( connectMutationObserver(     tagSplitter, "state", "tagSplitterState" ) );
-    mutationObservers.push( connectMutationObserver(     tagTreeView, "height", "tagTreeViewHeight" ) );
-    mutationObservers.push( connectMutationObserver( folderSplitter, "state", "folderSplitterState" ) );
-    mutationObservers.push( connectMutationObserver( noteBox, "width", "noteBoxWidth" ) );
-    mutationObservers.push( connectMutationObserver(   noteTreeView, "height", "noteTreeViewHeight" ) );
-    mutationObservers.push( connectMutationObserver(   noteTreeSplitter, "state", "noteTreeSplitterState" ) );
-    mutationObservers.push( connectMutationObserver(   noteBodyBox, "height", "noteBodyBoxHeight" ) );
-    mutationObservers.push( connectMutationObserver(     noteBodyView, "height", "noteBodyViewHeight" ) );
+    mutationObservers.push( connectMutationObserver(
+      folderBox, "width", "folderBoxWidth" ) );
+    mutationObservers.push( connectMutationObserver(
+      bookTreeView, "height", "bookTreeViewHeight" ) );
+    mutationObservers.push( connectMutationObserver(
+      bookSplitter, "state", "bookSplitterState" ) );
+    mutationObservers.push( connectMutationObserver(
+      categoryBox, "height", "categoryBoxHeight" ) );
+    mutationObservers.push( connectMutationObserver(
+      folderTreeView, "height", "folderTreeViewHeight" ) );
+    mutationObservers.push( connectMutationObserver(
+      tagSplitter, "state", "tagSplitterState" ) );
+    mutationObservers.push( connectMutationObserver(
+      tagTreeView, "height", "tagTreeViewHeight" ) );
+    mutationObservers.push( connectMutationObserver(
+      folderSplitter, "state", "folderSplitterState" ) );
+    mutationObservers.push( connectMutationObserver(
+      noteBox, "width", "noteBoxWidth" ) );
+    mutationObservers.push( connectMutationObserver(
+      noteTreeView, "height", "noteTreeViewHeight" ) );
+    mutationObservers.push( connectMutationObserver(
+      noteTreeSplitter, "state", "noteTreeSplitterState" ) );
+    mutationObservers.push( connectMutationObserver(
+      noteBodyBox, "height", "noteBodyBoxHeight" ) );
+    mutationObservers.push( connectMutationObserver(
+      noteBodyView, "height", "noteBodyViewHeight" ) );
   };
 
   function connectMutationObserver( target, attrName, prefName ) {
@@ -4238,658 +5068,188 @@ ru.akman.znotes.Main = function() {
       mutationObservers[i].disconnect();
     }
   };
-
-  function restoreCurrentBookPreferences() {
-    if ( currentBook == null ) {
-      return;
-    }
-    folderBox.setAttribute( "width", currentBook.loadPreference( "folderBoxWidth", "200" ) );
-      bookTreeView.setAttribute( "height", currentBook.loadPreference( "bookTreeViewHeight", "250" ) );
-      bookSplitter.setAttribute( "state", currentBook.loadPreference( "bookSplitterState", "open" ) );
-      categoryBox.setAttribute( "height", currentBook.loadPreference( "categoryBoxHeight", "700" ) );
-        folderTreeView.setAttribute( "height", currentBook.loadPreference( "folderTreeViewHeight", "500" ) );
-        tagSplitter.setAttribute( "state", currentBook.loadPreference( "tagSplitterState", "open" ) );
-        tagTreeView.setAttribute( "height", currentBook.loadPreference( "tagTreeViewHeight", "300" ) );
-    folderSplitter.setAttribute( "state", currentBook.loadPreference( "folderSplitterState", "open" ) );
-    noteBox.setAttribute( "width", currentBook.loadPreference( "noteBoxWidth", "800" ) );
-      noteTreeView.setAttribute( "height", currentBook.loadPreference( "noteTreeViewHeight", "250" ) );
-      noteTreeSplitter.setAttribute( "state", currentBook.loadPreference( "noteTreeSplitterState", "open" ) );
-      noteBodyBox.setAttribute( "height", currentBook.loadPreference( "noteBodyBoxHeight", "700" ) );
-      noteBodyView.setAttribute( "height", currentBook.loadPreference( "noteBodyViewHeight", "700" ) );
-    qfBox.setAttribute( "collapsed", currentBook.loadPreference( "qfBoxCollapsed", "true" ) );
-    if ( qfBox.getAttribute( "collapsed" ) == "true" ) {
-      qfButton.setAttribute( "checked" , "false" );
-      qfButton.setAttribute( "checkState" , "0" );
-    } else {
-      qfButton.setAttribute( "checked" , "true" );
-      qfButton.setAttribute( "checkState" , "1" );
-    }
-  };
-
-  function saveCurrentBookPreferences() {
-    if ( currentBook == null ) {
-      return;
-    }
-    currentBook.savePreference( "folderBoxWidth", folderBox.getAttribute( "width" ) );
-      currentBook.savePreference( "bookTreeViewHeight", bookTreeView.getAttribute( "height" ) );
-      currentBook.savePreference( "bookSplitterState", bookSplitter.getAttribute( "state" ) );
-      currentBook.savePreference( "categoryBoxHeight", categoryBox.getAttribute( "height" ) );
-        currentBook.savePreference( "folderTreeViewHeight", folderTreeView.getAttribute( "height" ) );
-        currentBook.savePreference( "tagSplitterState", tagSplitter.getAttribute( "state" ) );
-        currentBook.savePreference( "tagTreeViewHeight", tagTreeView.getAttribute( "height" ) );
-    currentBook.savePreference( "folderSplitterState", folderSplitter.getAttribute( "state" ) );
-    currentBook.savePreference( "noteBoxWidth", noteBox.getAttribute( "width" ) );
-      currentBook.savePreference( "noteTreeViewHeight", noteTreeView.getAttribute( "height" ) );
-      currentBook.savePreference( "noteTreeSplitterState", noteTreeSplitter.getAttribute( "state" ) );
-      currentBook.savePreference( "noteBodyBoxHeight", noteBodyBox.getAttribute( "height" ) );
-        currentBook.savePreference( "noteBodyViewHeight", noteBodyView.getAttribute( "height" ) );
-  };
-
-  function definePrefObservers() {
-    prefObserver = {
-      onPrefChanged: function( event ) {
-        switch( event.data.name ) {
-          case "isSavePosition":
-            ru.akman.znotes.Utils.IS_SAVE_POSITION = event.data.newValue;
-            currentNoteChanged();
-            break;
-          case "isEditSourceEnabled":
-            ru.akman.znotes.Utils.IS_EDIT_SOURCE_ENABLED = event.data.newValue;
-            currentNoteChanged();
-            break;
-          case "isOpened":
-            var isOpened = event.data.newValue;
-            if ( !isOpened ) {
-              done();
-            }
-            break;
-          case "isMainMenubarVisible":
-            ru.akman.znotes.Utils.IS_MAINMENUBAR_VISIBLE = event.data.newValue;
-            cmdShowMainMenubar.setAttribute( "checked", ru.akman.znotes.Utils.IS_MAINMENUBAR_VISIBLE );
-            updateMainMenubarView();
-            break;
-          case "isMainToolbarVisible":
-            ru.akman.znotes.Utils.IS_MAINTOOLBAR_VISIBLE = event.data.newValue;
-            cmdShowMainToolbar.setAttribute( "checked", ru.akman.znotes.Utils.IS_MAINTOOLBAR_VISIBLE );
-            updateMainToolbarView();
-            break;
-          case "defaultDocumentType":
-            ru.akman.znotes.Utils.DEFAULT_DOCUMENT_TYPE = event.data.newValue;
-            break;
-        }
-      }
-    };
-    mozPrefObserver = {
-      observe: function( subject, topic, data ) {
-        switch ( data ) {
-          case "debug":
-            ru.akman.znotes.Utils.IS_DEBUG_ENABLED = 
-              this.branch.getBoolPref( "debug" );
-            pub.onAppMenuShowing();
-            break;
-        }
-      },
-      register: function() {
-        var prefService = Components.classes["@mozilla.org/preferences-service;1"]
-                                    .getService( Components.interfaces.nsIPrefService );
-        this.branch = prefService.getBranch( "extensions.znotes.");
-        this.branch.addObserver( "", this, false );
-      },
-      unregister: function() {
-        this.branch.removeObserver( "", this );
-      }
-    };
-  };
-
+  
   function connectPrefsObservers() {
-    prefsBundle.addObserver( prefObserver );
-    mozPrefObserver.register();
+    prefsBundleObserver.register();
+    prefsMozillaObserver.register();
   };
   
   function disconnectPrefsObservers() {
-    prefsBundle.removeObserver( prefObserver );
-    mozPrefObserver.unregister();
+    prefsBundleObserver.unregister();
+    prefsMozillaObserver.unregister();
   };
   
-  function loadPrefs() {
-    var mozPrefs = Components.classes["@mozilla.org/preferences-service;1"]
-                             .getService( Components.interfaces.nsIPrefBranch );
-    if ( mozPrefs.prefHasUserValue( "extensions.znotes.debug" ) ) {
-      ru.akman.znotes.Utils.IS_DEBUG_ENABLED = mozPrefs.getBoolPref( "extensions.znotes.debug" );
-    }
-    if ( mozPrefs.prefHasUserValue( "extensions.znotes.debug.active" ) ) {
-      ru.akman.znotes.Utils.IS_DEBUG_ACTIVE = mozPrefs.getBoolPref( "extensions.znotes.debug.active" );
-    }
-    if ( mozPrefs.prefHasUserValue( "extensions.znotes.debug.raised" ) ) {
-      ru.akman.znotes.Utils.IS_DEBUG_RAISED = mozPrefs.getBoolPref( "extensions.znotes.debug.raised" );
-    }
-    if ( mozPrefs.prefHasUserValue( "extensions.znotes.sanitize" ) ) {
-      ru.akman.znotes.Utils.IS_SANITIZE_ENABLED = mozPrefs.getBoolPref( "extensions.znotes.sanitize" );
-    }
-    if ( mozPrefs.prefHasUserValue( "extensions.znotes.ad" ) ) {
-      ru.akman.znotes.Utils.IS_AD_ENABLED = mozPrefs.getBoolPref( "extensions.znotes.ad" );
-    }
-    var version = ru.akman.znotes.Utils.VERSION;
-    var isFirstRun = ru.akman.znotes.Utils.IS_FIRST_RUN;
-    var isSavePosition = ru.akman.znotes.Utils.IS_SAVE_POSITION;
-    var isEditSourceEnabled = ru.akman.znotes.Utils.IS_EDIT_SOURCE_ENABLED;
-    var isPlaySound = ru.akman.znotes.Utils.IS_PLAY_SOUND;
-    var isMainMenubarVisible = ru.akman.znotes.Utils.IS_MAINMENUBAR_VISIBLE;
-    var isMainToolbarVisible = ru.akman.znotes.Utils.IS_MAINTOOLBAR_VISIBLE;
-    var defaultDocumentType = ru.akman.znotes.Utils.DEFAULT_DOCUMENT_TYPE;
-    prefsBundle = ru.akman.znotes.PrefsManager.getInstance();
-    try {
-      //
-      if ( !prefsBundle.hasPref( "version" ) ) {
-        prefsBundle.setCharPref( "version", version );
-      } else {
-        version = prefsBundle.getCharPref( "version" );
+  function initBody() {
+    body = new ru.akman.znotes.Body(
+      {
+        name: "main",
+        mode: "viewer",
+        style: {
+          iconsize: mainToolBar.getAttribute( "iconsize" )
+        }
       }
-      //
-      if ( !prefsBundle.hasPref( "isFirstRun" ) ) {
-        prefsBundle.setBoolPref( "isFirstRun", isFirstRun );
-      } else {
-        isFirstRun = prefsBundle.getBoolPref( "isFirstRun" );
-      }
-      //
-      if ( version != ru.akman.znotes.Utils.VERSION ) {
-        prefsBundle.setCharPref( "version", ru.akman.znotes.Utils.VERSION );
-        isFirstRun = true;
-      }
-      if ( isFirstRun ) {
-        prefsBundle.setBoolPref( "isFirstRun", false );
-      }
-      ru.akman.znotes.Utils.IS_FIRST_RUN = isFirstRun;
-      //
-      if ( !prefsBundle.hasPref( "isSavePosition" ) ) {
-        prefsBundle.setBoolPref( "isSavePosition", isSavePosition );
-      } else {
-        isSavePosition = prefsBundle.getBoolPref( "isSavePosition" );
-      }
-      ru.akman.znotes.Utils.IS_SAVE_POSITION = isSavePosition;
-      //
-      if ( !prefsBundle.hasPref( "isEditSourceEnabled" ) ) {
-        prefsBundle.setBoolPref( "isEditSourceEnabled", isEditSourceEnabled );
-      } else {
-        isEditSourceEnabled = prefsBundle.getBoolPref( "isEditSourceEnabled" );
-      }
-      ru.akman.znotes.Utils.IS_EDIT_SOURCE_ENABLED = isEditSourceEnabled;
-      //
-      if ( !prefsBundle.hasPref( "isPlaySound" ) ) {
-        prefsBundle.setBoolPref( "isPlaySound", isPlaySound );
-      } else {
-        isPlaySound = prefsBundle.getBoolPref( "isPlaySound" );
-      }
-      ru.akman.znotes.Utils.IS_PLAY_SOUND = isPlaySound;
-      //
-      if ( !prefsBundle.hasPref( "isMainMenubarVisible" ) ) {
-        prefsBundle.setBoolPref( "isMainMenubarVisible", isMainMenubarVisible );
-      } else {
-        isMainMenubarVisible = prefsBundle.getBoolPref( "isMainMenubarVisible" );
-      }
-      ru.akman.znotes.Utils.IS_MAINMENUBAR_VISIBLE = isMainMenubarVisible;
-      //
-      if ( !prefsBundle.hasPref( "isMainToolbarVisible" ) ) {
-        prefsBundle.setBoolPref( "isMainToolbarVisible", isMainToolbarVisible );
-      } else {
-        isMainToolbarVisible = prefsBundle.getBoolPref( "isMainToolbarVisible" );
-      }
-      ru.akman.znotes.Utils.IS_MAINTOOLBAR_VISIBLE = isMainToolbarVisible;
-      //
-      if ( !prefsBundle.hasPref( "defaultDocumentType" ) ) {
-        prefsBundle.setCharPref( "defaultDocumentType", defaultDocumentType );
-      } else {
-        defaultDocumentType = prefsBundle.getCharPref( "defaultDocumentType" );
-      }
-      ru.akman.znotes.Utils.DEFAULT_DOCUMENT_TYPE = defaultDocumentType;
-      //
-    } catch ( e ) {
-      log( e );
-    }
-    definePrefObservers();
-    //
-    if ( ru.akman.znotes.Utils.IS_FIRST_RUN || ru.akman.znotes.Utils.IS_DEBUG_ENABLED ) {
-      var observerService = Components.classes["@mozilla.org/observer-service;1"]
-                                      .getService( Components.interfaces.nsIObserverService );
-		  observerService.notifyObservers( null, "startupcache-invalidate", null );
-		  observerService.notifyObservers( null, "chrome-flush-skin-caches", null );
-		  observerService.notifyObservers( null, "chrome-flush-caches", null );
-    }
-  };
-
-  // D R I V E R  M A N A G E R
-
-  function loadDrivers() {
-    var driverDirectory = ru.akman.znotes.Utils.getDriverDirectory();
-    var entries = driverDirectory.directoryEntries;
-    var driver = null;
-    var name = null;
-    var entry = null;
-    while( entries.hasMoreElements() ) {
-      entry = entries.getNext();
-      entry.QueryInterface( Components.interfaces.nsIFile );
-      if ( !entry.isDirectory() ) {
-        continue;
-      }
-      name = entry.leafName;
-      try {
-        driver = ru.akman.znotes.DriverManager.registerDriver( name );
-      } catch ( e ) {
-        driver = null;
-        log( e );
-      }
-      if ( driver == null ) {
-        log( "Error loading driver: " + entry.path );
-      }
-    }
-  };
-
-  // D O C U M E N T  M A N A G E R
-
-  function loadDocuments() {
-    var documentDirectory = ru.akman.znotes.Utils.getDocumentDirectory();
-    var entries = documentDirectory.directoryEntries;
-    var doc = null;
-    var name = null;
-    var entry = null;
-    while( entries.hasMoreElements() ) {
-      entry = entries.getNext();
-      entry.QueryInterface( Components.interfaces.nsIFile );
-      if ( !entry.isDirectory() ) {
-        continue;
-      }
-      name = entry.leafName;
-      try {
-        doc = ru.akman.znotes.DocumentManager.registerDocument( name );
-      } catch ( e ) {
-        doc = null;
-        log( e );
-      }
-      if ( doc == null ) {
-        log( "Error loading document: " + entry.path );
-      }
-    }
+    );
   };
   
-  function loadBooks() {
-    books = new ru.akman.znotes.core.BookList();
-    books.addStateListener( booksStateListener );
-    books.load();
-    if ( !books.hasBooks() ) {
-      var defaultBook = books.createBook();
-      if ( defaultBook ) {
-        try {
-          defaultBook.createData();
-          if ( defaultBook.open() == 0 ) {
-            welcomeNote = createWelcomeNote( defaultBook );
-            if ( !isStandalone ) {
-              var data = welcomeNote.getData();
-              data.isAddonsVisible = true;
-              welcomeNote.setData();
-            }
-          }
-        } catch ( e ) {
-          log( e );
-        }
-      }
-    }
-  };
-
-  // S E S S I O N  M A N A G E R
-
-  function getNoteByBookIdAndNoteId( bookId, noteId ) {
-    if ( !books ) {
-      return null;
-    }
-    var book = books.getBookById( bookId );
-    if ( !book ) {
-      return null;
-    }
-    var ALREADY_OPENED = 2;
-    var DRIVER_ERROR = 4;
-    var CONNECTION_ERROR = 8;
-    var NOT_EXISTS = 16;
-    var NOT_PERMITS = 32;
-    var result = CONNECTION_ERROR;
-    var message = null;
-    if ( !book.isOpen() ) {
-      try {
-        result = book.open();
-      } catch ( e ) {
-         message = e.message;
-      }
-      if ( result != 0 ) {
-        var message = "";
-        switch ( result ) {
-          case ALREADY_OPENED:
-            message = stringsBundle.getString( "main.book.openerror.already_opened" );
-            break;
-          case DRIVER_ERROR:
-            message = stringsBundle.getString( "main.book.openerror.driver_error" );
-            break;
-          case CONNECTION_ERROR:
-            if ( !message ) {
-              message = stringsBundle.getString( "main.book.openerror.connection_error" );
-            }
-            break;
-          case NOT_EXISTS:
-            message = stringsBundle.getString( "main.book.openerror.not_exists" );
-            break;
-          case NOT_PERMITS:
-            message = stringsBundle.getString( "main.book.openerror.not_permits" );
-            break;
-        }
-        var params = {
-          input: {
-            title: stringsBundle.getString( "main.book.openerror.title" ),
-            message1: stringsBundle.getFormattedString( "main.book.openerror.message", [ book.getName() ] ),
-            message2: message
-          },
-          output: null
-        };
-        window.openDialog(
-          "chrome://znotes/content/messagedialog.xul",
-          "",
-          "chrome,dialog=yes,modal=yes,centerscreen,resizable=yes",
-          params
-        ).focus();
-        return null;
-      }
-    }
-    var notes = book.getContentTree().getNoteById( noteId );
-    return ( notes.length > 0 ) ? notes[0] : null;
-  };
-
-  function getPersistedState() {
-    var persistedState = null;
-    if ( isStandalone ) {
-      persistedState = ru.akman.znotes.SessionManager.getPersistedState();
-    } else {
-      var tab = ru.akman.znotes.Utils.getMainTab();
-      if ( tab && tab.persistedState ) {
-        persistedState = tab.persistedState;
-      }
-    }
-    return persistedState;
-  };
-
-  function loadPersistedSession() {
-    var persistedState = getPersistedState();
-    if ( !persistedState ) {
+  function doneBody() {
+    if ( !body ) {
       return;
     }
-    for ( var i = 0; i < persistedState.tabs.length; i++ ) {
-      var mode = persistedState.tabs[i].mode;
-      if ( mode != "znotesContentTab" ) {
-        continue;
-      }
-      var state = persistedState.tabs[i].state;
-      var note = getNoteByBookIdAndNoteId( state.bookId, state.noteId );
-      var background = state.background;
-      if ( !tabMail ) {
-        background = true;
-      }
-      if ( note ) {
-        showNoteWindow( note, background );
-      }
-    }
+    body.release();
+    body = null;
   };
-
-  // W I N D O W  E V E N T S
-
-  function addEventListeners() {
+  
+  function updateUI() {
+    window.focus();
+    updateNewNoteMenuPopup();
+    updateImportNoteMenuPopup();
+    updateMainMenubarVisibility();
+    updateMainToolbarVisibility();
+    updateCommandsVisibility();
+    updatePlatformCommands();
+  };
+  
+  function load() {
+    // The order of calling is important !
+    initGlobals();
+    loadPrefs();
+    loadDrivers();
+    loadDocuments();
+    initMain();
+    addControllers();
+    addEventListeners();
     connectPrefsObservers();
     connectMutationObservers();
-    // popups
-    popupAppMenu.addEventListener( "popupshowing", pub.onAppMenuShowing, false );
-    mainMenuBar.addEventListener( "popupshowing", pub.onAppMenuShowing, false );
-    // splitters
-    bookSplitter.addEventListener( "dblclick", pub.onSplitterDblClick, false );
-    tagSplitter.addEventListener( "dblclick", pub.onSplitterDblClick, false );
-    folderSplitter.addEventListener( "dblclick", pub.onSplitterDblClick, false );
-    noteTreeSplitter.addEventListener( "dblclick", pub.onSplitterDblClick, false );
-    // books
-    bookTree.addEventListener( "click", pub.onBookClick, true );
-    bookTree.addEventListener( "dblclick", pub.onBookDblClick, true );
-    bookTree.addEventListener( "select", pub.onBookSelect, false );
-    bookTreeChildren.addEventListener( "dragstart", pub.onBookDragDrop, false );
-    bookTreeChildren.addEventListener( "dragenter", pub.onBookDragDrop, false );
-    bookTreeChildren.addEventListener( "dragover", pub.onBookDragDrop, false );
-    bookTreeChildren.addEventListener( "dragleave", pub.onBookDragDrop, false );
-    bookTreeChildren.addEventListener( "drag", pub.onBookDragDrop, false );
-    bookTreeChildren.addEventListener( "drop", pub.onBookDragDrop, false );
-    bookTreeChildren.addEventListener( "dragend", pub.onBookDragDrop, false );
-    bookTreeTextBox.addEventListener( "focus", pub.onBookTreeTextBoxEvent, false );
-    bookTreeTextBox.addEventListener( "keypress", pub.onBookTreeTextBoxEvent, false );
-    bookTreeTextBox.addEventListener( "blur", pub.onBookTreeTextBoxEvent, false );
-    // categories
-    folderTree.addEventListener( "click", pub.onFolderClick, true );
-    folderTree.addEventListener( "dblclick", pub.onFolderDblClick, true );
-    folderTree.addEventListener( "select", pub.onFolderSelect, false );
-    folderTreeChildren.addEventListener( "dragstart", pub.onFolderDragDrop, false );
-    folderTreeChildren.addEventListener( "dragenter", pub.onFolderDragDrop, false );
-    folderTreeChildren.addEventListener( "dragover", pub.onFolderDragDrop, false );
-    folderTreeChildren.addEventListener( "dragleave", pub.onFolderDragDrop, false );
-    folderTreeChildren.addEventListener( "drag", pub.onFolderDragDrop, false );
-    folderTreeChildren.addEventListener( "drop", pub.onFolderDragDrop, false );
-    folderTreeChildren.addEventListener( "dragend", pub.onFolderDragDrop, false );
-    folderTreeTextBox.addEventListener( "focus", pub.onFolderTreeTextBoxEvent, false );
-    folderTreeTextBox.addEventListener( "keypress", pub.onFolderTreeTextBoxEvent, false );
-    folderTreeTextBox.addEventListener( "blur", pub.onFolderTreeTextBoxEvent, false );
-    // notes
-    noteTree.addEventListener( "click", pub.onNoteClick, true );
-    noteTree.addEventListener( "dblclick", pub.onNoteDblClick, true );
-    noteTree.addEventListener( "select", pub.onNoteSelect, false );
-    noteTreeChildren.addEventListener( "dragstart", pub.onNoteDragDrop, false );
-    noteTreeChildren.addEventListener( "dragenter", pub.onNoteDragDrop, false );
-    noteTreeChildren.addEventListener( "dragover", pub.onNoteDragDrop, false );
-    noteTreeChildren.addEventListener( "dragleave", pub.onNoteDragDrop, false );
-    noteTreeChildren.addEventListener( "drag", pub.onNoteDragDrop, false );
-    noteTreeChildren.addEventListener( "drop", pub.onNoteDragDrop, false );
-    noteTreeChildren.addEventListener( "dragend", pub.onNoteDragDrop, false );
-    noteTreeTextBox.addEventListener( "focus", pub.onNoteTreeTextBoxEvent, false );
-    noteTreeTextBox.addEventListener( "keypress", pub.onNoteTreeTextBoxEvent, false );
-    noteTreeTextBox.addEventListener( "blur", pub.onNoteTreeTextBoxEvent, false );
-    // tags
-    tagTree.addEventListener( "click", pub.onTagClick, true );
-    tagTree.addEventListener( "dblclick", pub.onTagDblClick, true );
-    tagTree.addEventListener( "select", pub.onTagSelect, false );
-    tagTreeChildren.addEventListener( "dragstart", pub.onTagDragDrop, false );
-    tagTreeChildren.addEventListener( "dragenter", pub.onTagDragDrop, false );
-    tagTreeChildren.addEventListener( "dragover", pub.onTagDragDrop, false );
-    tagTreeChildren.addEventListener( "dragleave", pub.onTagDragDrop, false );
-    tagTreeChildren.addEventListener( "drag", pub.onTagDragDrop, false );
-    tagTreeChildren.addEventListener( "drop", pub.onTagDragDrop, false );
-    tagTreeChildren.addEventListener( "dragend", pub.onTagDragDrop, false );
-    tagTreeTextBox.addEventListener( "focus", pub.onTagTreeTextBoxEvent, false );
-    tagTreeTextBox.addEventListener( "keypress", pub.onTagTreeTextBoxEvent, false );
-    tagTreeTextBox.addEventListener( "blur", pub.onTagTreeTextBoxEvent, false );
+    initBody();
+    updateUI();
+    //
+    refreshBooksList();
+    restoreBooksTreeSelection();
+    loadPersistedSession();
+    if ( Utils.IS_STANDALONE ) {
+      updateWindowSizeAndPosition();
+    }
+    if ( Utils.IS_DEBUG_ACTIVE ) {
+      doOpenDebugWindow();
+    }
+    if ( Utils.IS_PLAY_SOUND ) {
+      playSound();
+    }
   };
 
-  function removeEventListeners() {
+  function unload() {
+    doneBody();
+    removeControllers();
+    removeEventListeners();
     disconnectMutationObservers();
     disconnectPrefsObservers();
-    // books
-    bookTree.removeEventListener( "click", pub.onBookClick, true );
-    bookTree.removeEventListener( "dblclick", pub.onBookDblClick, true );
-    bookTree.removeEventListener( "select", pub.onBookSelect, false );
-    bookTreeChildren.removeEventListener( "dragstart", pub.onBookDragDrop, false );
-    bookTreeChildren.removeEventListener( "dragenter", pub.onBookDragDrop, false );
-    bookTreeChildren.removeEventListener( "dragover", pub.onBookDragDrop, false );
-    bookTreeChildren.removeEventListener( "dragleave", pub.onBookDragDrop, false );
-    bookTreeChildren.removeEventListener( "drag", pub.onBookDragDrop, false );
-    bookTreeChildren.removeEventListener( "drop", pub.onBookDragDrop, false );
-    bookTreeChildren.removeEventListener( "dragend", pub.onBookDragDrop, false );
-    bookTreeTextBox.removeEventListener( "focus", pub.onBookTreeTextBoxEvent, false );
-    bookTreeTextBox.removeEventListener( "keypress", pub.onBookTreeTextBoxEvent, false );
-    bookTreeTextBox.removeEventListener( "blur", pub.onBookTreeTextBoxEvent, false );
-    // categories
-    folderTree.removeEventListener( "click", pub.onFolderClick, true );
-    folderTree.removeEventListener( "dblclick", pub.onFolderDblClick, true );
-    folderTree.removeEventListener( "select", pub.onFolderSelect, false );
-    folderTreeChildren.removeEventListener( "dragstart", pub.onFolderDragDrop, false );
-    folderTreeChildren.removeEventListener( "dragenter", pub.onFolderDragDrop, false );
-    folderTreeChildren.removeEventListener( "dragover", pub.onFolderDragDrop, false );
-    folderTreeChildren.removeEventListener( "dragleave", pub.onFolderDragDrop, false );
-    folderTreeChildren.removeEventListener( "drag", pub.onFolderDragDrop, false );
-    folderTreeChildren.removeEventListener( "drop", pub.onFolderDragDrop, false );
-    folderTreeChildren.removeEventListener( "dragend", pub.onFolderDragDrop, false );
-    folderTreeTextBox.removeEventListener( "focus", pub.onFolderTreeTextBoxEvent, false );
-    folderTreeTextBox.removeEventListener( "keypress", pub.onFolderTreeTextBoxEvent, false );
-    folderTreeTextBox.removeEventListener( "blur", pub.onFolderTreeTextBoxEvent, false );
-    // notes
-    noteTree.removeEventListener( "click", pub.onNoteClick, true );
-    noteTree.removeEventListener( "dblclick", pub.onNoteDblClick, true );
-    noteTree.removeEventListener( "select", pub.onNoteSelect, false );
-    noteTreeChildren.removeEventListener( "dragstart", pub.onNoteDragDrop, false );
-    noteTreeChildren.removeEventListener( "dragenter", pub.onNoteDragDrop, false );
-    noteTreeChildren.removeEventListener( "dragover", pub.onNoteDragDrop, false );
-    noteTreeChildren.removeEventListener( "dragleave", pub.onNoteDragDrop, false );
-    noteTreeChildren.removeEventListener( "drag", pub.onNoteDragDrop, false );
-    noteTreeChildren.removeEventListener( "drop", pub.onNoteDragDrop, false );
-    noteTreeChildren.removeEventListener( "dragend", pub.onNoteDragDrop, false );
-    noteTreeTextBox.removeEventListener( "focus", pub.onNoteTreeTextBoxEvent, false );
-    noteTreeTextBox.removeEventListener( "keypress", pub.onNoteTreeTextBoxEvent, false );
-    noteTreeTextBox.removeEventListener( "blur", pub.onNoteTreeTextBoxEvent, false );
-    // tags
-    tagTree.removeEventListener( "click", pub.onTagClick, true );
-    tagTree.removeEventListener( "dblclick", pub.onTagDblClick, true );
-    tagTree.removeEventListener( "select", pub.onTagSelect, false );
-    tagTreeChildren.removeEventListener( "dragstart", pub.onTagDragDrop, false );
-    tagTreeChildren.removeEventListener( "dragenter", pub.onTagDragDrop, false );
-    tagTreeChildren.removeEventListener( "dragover", pub.onTagDragDrop, false );
-    tagTreeChildren.removeEventListener( "dragleave", pub.onTagDragDrop, false );
-    tagTreeChildren.removeEventListener( "drag", pub.onTagDragDrop, false );
-    tagTreeChildren.removeEventListener( "drop", pub.onTagDragDrop, false );
-    tagTreeChildren.removeEventListener( "dragend", pub.onTagDragDrop, false );
-    tagTreeTextBox.removeEventListener( "focus", pub.onTagTreeTextBoxEvent, false );
-    tagTreeTextBox.removeEventListener( "keypress", pub.onTagTreeTextBoxEvent, false );
-    tagTreeTextBox.removeEventListener( "blur", pub.onTagTreeTextBoxEvent, false );
-    // splitters
-    bookSplitter.removeEventListener( "dblclick", pub.onSplitterDblClick, false );
-    tagSplitter.removeEventListener( "dblclick", pub.onSplitterDblClick, false );
-    folderSplitter.removeEventListener( "dblclick", pub.onSplitterDblClick, false );
-    noteTreeSplitter.removeEventListener( "dblclick", pub.onSplitterDblClick, false );
-    // popups
-    popupAppMenu.removeEventListener( "popupshowing", pub.onAppMenuShowing, false );
-    mainMenuBar.removeEventListener( "popupshowing", pub.onAppMenuShowing, false );
-  };
-
-  function updateDebugButtonState() {
-    // when button removed from toolbar then getElementById() returns NULL
-    var debugButton = mainWindow.document.getElementById( "znotes_debug_button" );
-    var debugMenuBarItem = mainWindow.document.getElementById( "znotes_mainmenubar_tools_popup_debug" );
-    var debugAppMenuItem = mainWindow.document.getElementById( "znotes_appdebug_menuitem" );
-    var debugMailMenuBarItem = mainWindow.document.getElementById( "znotes_debug_menuitem" );
-    if ( ru.akman.znotes.Utils.IS_STANDALONE ) {
-      debugAppMenuItem = mainWindow.document.getElementById( "znotes_appmenu_debug" );
-      debugMailMenuBarItem = debugAppMenuItem;
-    }
-    if ( ru.akman.znotes.Utils.IS_DEBUG_ENABLED ) {
-      if ( debugButton && debugButton.hasAttribute( "hidden" ) ) {
-        debugButton.removeAttribute( "hidden" );
-      }
-      if ( debugAppMenuItem.hasAttribute( "hidden" ) ) {
-        debugAppMenuItem.removeAttribute( "hidden" );
-      }
-      if ( debugMenuBarItem.hasAttribute( "hidden" ) ) {
-        debugMenuBarItem.removeAttribute( "hidden" );
-      }
-      if ( debugMailMenuBarItem.hasAttribute( "hidden" ) ) {
-        debugMailMenuBarItem.removeAttribute( "hidden" );
-      }
-    } else {
-      if ( debugButton ) {
-        debugButton.setAttribute( "hidden", "true" );
-      }
-      debugAppMenuItem.setAttribute( "hidden", "true" );
-      debugMenuBarItem.setAttribute( "hidden", "true" );
-      debugMailMenuBarItem.setAttribute( "hidden", "true" );
-    }
-  };
-
-  function updateUpdateAndAddonsButtonsState() {
-    // when button removed from toolbar then getElementById() returns NULL
-    var addonsButton = mainWindow.document.getElementById( "znotes_addons_button" );
-    var addonsMenuBarItem = mainWindow.document.getElementById( "znotes_mainmenubar_tools_popup_addons" );
-    var addonsAppMenuItem = mainWindow.document.getElementById( "znotes_appmenu_addons" );
-    var addonsMailMenuBarItem = mainWindow.document.getElementById( "znotes_addons_menuitem" );
-    var updateButton = mainWindow.document.getElementById( "znotes_update_button" );
-    var updateMenuBarItem = mainWindow.document.getElementById( "znotes_mainmenubar_tools_popup_update" );
-    var updateAppMenuItem = mainWindow.document.getElementById( "znotes_appmenu_update" );
-    var updateMailMenuBarItem = mainWindow.document.getElementById( "znotes_update_menuitem" );
-    if ( ru.akman.znotes.Utils.IS_STANDALONE ) {
-      addonsAppMenuItem = mainWindow.document.getElementById( "znotes_appmenu_addons" );
-      addonsMailMenuBarItem = addonsAppMenuItem;
-      updateAppMenuItem = mainWindow.document.getElementById( "znotes_appmenu_update" );
-      updateMailMenuBarItem = updateAppMenuItem;
-      if ( addonsButton && addonsButton.hasAttribute( "hidden" ) ) {
-        addonsButton.removeAttribute( "hidden" );
-      }
-      if ( addonsAppMenuItem.hasAttribute( "hidden" ) ) {
-        addonsAppMenuItem.removeAttribute( "hidden" );
-      }
-      if ( addonsMenuBarItem.hasAttribute( "hidden" ) ) {
-        addonsMenuBarItem.removeAttribute( "hidden" );
-      }
-      if ( addonsMailMenuBarItem.hasAttribute( "hidden" ) ) {
-        addonsMailMenuBarItem.removeAttribute( "hidden" );
-      }
-      if ( updateButton && updateButton.hasAttribute( "hidden" ) ) {
-        updateButton.removeAttribute( "hidden" );
-      }
-      if ( updateAppMenuItem.hasAttribute( "hidden" ) ) {
-        updateAppMenuItem.removeAttribute( "hidden" );
-      }
-      if ( updateMenuBarItem.hasAttribute( "hidden" ) ) {
-        updateMenuBarItem.removeAttribute( "hidden" );
-      }
-      if ( updateMailMenuBarItem.hasAttribute( "hidden" ) ) {
-        updateMailMenuBarItem.removeAttribute( "hidden" );
-      }
-    } else {
-      addonsAppMenuItem = addonsMailMenuBarItem;
-      updateAppMenuItem = updateMailMenuBarItem;
-      if ( addonsButton ) { 
-        addonsButton.setAttribute( "hidden", "true" );
-      }
-      addonsAppMenuItem.setAttribute( "hidden", "true" );
-      addonsMenuBarItem.setAttribute( "hidden", "true" );
-      addonsMailMenuBarItem.setAttribute( "hidden", "true" );
-      if ( updateButton ) { 
-        updateButton.setAttribute( "hidden", "true" );
-      }
-      updateAppMenuItem.setAttribute( "hidden", "true" );
-      updateMenuBarItem.setAttribute( "hidden", "true" );
-      updateMailMenuBarItem.setAttribute( "hidden", "true" );
-    }
   };
   
-  function updateMainMenubarView() {
-    if ( ru.akman.znotes.Utils.IS_MAINMENUBAR_VISIBLE ) {
-      mainMenuBar.removeAttribute( "autohide" );
-    } else {
-      mainMenuBar.setAttribute( "autohide", "true" );
+  function close() {
+    var canClose = true;
+    //
+    var params = {
+      input: {
+        title: getString( "main.confirmQuit.title" ),
+        message1: getString( "main.confirmQuit.message" ),
+        kind: 1 // question
+      },
+      output: null
+    };
+    window.openDialog(
+      "chrome://znotes/content/confirmdialog.xul",
+      "",
+      "chrome,dialog=yes,modal=yes,centerscreen,resizable=yes",
+      params
+    ).focus();
+    canClose = params.output;
+    //
+    if ( !canClose ) {
+      return false;
     }
+    if ( !Utils.IS_STANDALONE ) {
+      return canClose;
+    }
+    windowsMonitor = null;
+    var windowService =
+      Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
+                .getService( Components.interfaces.nsIWindowWatcher );
+    var win = null;
+    // znotes:viewer
+    for ( var i = 0; i < windowsList.length; i++ ) {
+      win = windowService.getWindowByName( windowsList[i], null );
+      if ( win ) {
+        win.close();
+      }
+    }
+    // znotes:debug
+    win = windowService.getWindowByName( "znotes:debug", null );
+    if ( win ) {
+      win.close();
+    }
+    return true;
+  };  
+  
+  // HELPERS
+  
+  function getString( name ) {
+    return Utils.STRINGS_BUNDLE.getString( name );
   };
-
-  function updateMainToolbarView() {
-    if ( ru.akman.znotes.Utils.IS_MAINTOOLBAR_VISIBLE ) {
-      mainToolBar.removeAttribute( "hidden" );
-    } else {
-      mainToolBar.setAttribute( "hidden", "true" );
-    }
+  
+  function getFormattedString( name, values ) {
+    return Utils.STRINGS_BUNDLE.getFormattedString( name, values );
   };
-
-  function updateWindowSize( win ) {
-    if ( !ru.akman.znotes.Utils.IS_STANDALONE ) {
-      return;
-    }
+  
+  function updateSelectedPopupItem( event ) {
+    selectedPopupItem = event.target;
+  };
+  
+  function playSound() {
+    ( new Audio( "chrome://znotes_sounds/skin/notify.wav" ) ).play();
+  };
+  
+  function openErrorDialog( message1, message2 ) {
+    var params = {
+      input: {
+        title: Utils.STRINGS_BUNDLE.getString( "main.errordialog.title" ),
+        message1: message1,
+        message2: message2
+      },
+      output: null
+    };
+    window.openDialog(
+      "chrome://znotes/content/messagedialog.xul",
+      "",
+      "chrome,dialog=yes,modal=yes,centerscreen,resizable=yes",
+      params
+    ).focus();
+  }
+  
+  function getDebugContext() {
+    return {
+      // window
+      win: window,
+      // document
+      doc: document,
+      // objects
+      book: currentBook,
+      category: currentCategory,
+      tag: currentTag,
+      note: currentNote,
+      // functions
+      createWelcomeNote: createWelcomeNote,
+      createNote: createNote
+    };
+  };
+  
+  // XR only
+  function updateWindowSizeAndPosition() {
+    var win = Utils.MAIN_WINDOW;
     var availLeft = win.screen.availLeft;
     var availTop = win.screen.availTop;
     var availWidth = win.screen.availWidth;
     var availHeight = win.screen.availHeight;
-    if ( ru.akman.znotes.Utils.IS_FIRST_RUN ) {
+    if ( Utils.IS_FIRST_RUN ) {
       win.moveTo( availLeft, availTop );
       win.resizeTo( availWidth - availLeft, availHeight - availTop );
       return;
@@ -4935,386 +5295,19 @@ ru.akman.znotes.Main = function() {
     }
   };
   
-  function initGlobals() {
-    ru.akman.znotes.Utils.initGlobals( pub );
-    mainWindow = ru.akman.znotes.Utils.MAIN_WINDOW;
-    stringsBundle = ru.akman.znotes.Utils.STRINGS_BUNDLE;
-    isStandalone = ru.akman.znotes.Utils.IS_STANDALONE;
-    if ( isStandalone ) {
-      tabMail = null;
-      windowsList = [];
-      windowsMonitor = ru.akman.znotes.TabMonitor;
-    } else {
-      tabMail = ru.akman.znotes.Utils.getTabMail();
-    }
-  };
-  
-  function initUI() {
-    document.title = stringsBundle.getString( "main.window.title" );
-    statusBarPanel = mainWindow.document.getElementById( "znotes_statusbarpanel" );
-    /*
-    if ( statusBarPanel.hasAttribute( "hidden" ) ) {
-      statusBarPanel.removeAttribute( "hidden" );
-    }
-    */
-    statusBarLogo = mainWindow.document.getElementById( "znotes_statusbarpanellogo" );
-    statusBarLabel = mainWindow.document.getElementById( "znotes_statusbarpanellabel" );
-    mainMenuBar = mainWindow.document.getElementById( "znotes_mainmenutoolbar" );
-    mainToolBox = mainWindow.document.getElementById( "znotes_maintoolbox" );
-    mainToolBar = mainWindow.document.getElementById( "znotes_maintoolbar" );
-    mainToolBox.customizeDone = function( isChanged ) {
-      pub.customizeMainToolbarDone( isChanged );
-    }
-    qfButton = mainWindow.document.getElementById( "znotes_showfilterbar_button" );
-    newNoteButton = mainWindow.document.getElementById( "znotes_newnote_button" );
-    newNoteButtonMenuPopup = mainWindow.document.getElementById( "znotes_newnote_button_menupopup" );
-    importNoteButton = mainWindow.document.getElementById( "znotes_importnote_button" );
-    importNoteButtonMenuPopup = mainWindow.document.getElementById( "znotes_importnote_button_menupopup" );
-    popupAppMenu = mainWindow.document.getElementById( "znotes_appmenu_popup" );
-    bShowAppMenu = mainWindow.document.getElementById( "znotes_showappmenu_button" );
-    if ( isStandalone ) {
-      if ( !bShowAppMenu.classList.contains( "znotes_showappmenu_button" ) ) {
-        bShowAppMenu.classList.add( "znotes_showappmenu_button" );
-      }
-    } else {
-      if ( !bShowAppMenu.classList.contains( "button-appmenu" ) ) {
-        bShowAppMenu.classList.add( "button-appmenu" );
-      }
-    }
-    //
-    hiddenFrame = document.getElementById( "hiddenFrame" );
-    qfBox = document.getElementById( "filterBox" );
-    folderBox = document.getElementById( "folderBox" );
-      bookTreeView = document.getElementById( "bookTreeView" );
-      bookSplitter = document.getElementById( "bookSplitter" );
-      categoryBox = document.getElementById( "categoryBox" );
-        folderTreeView = document.getElementById( "folderTreeView" );
-        tagSplitter = document.getElementById( "tagSplitter" );
-        tagTreeView = document.getElementById( "tagTreeView" );
-    folderSplitter = document.getElementById( "folderSplitter" );
-    noteBox = document.getElementById( "noteBox" );
-      noteTreeView = document.getElementById( "noteTreeView" );
-      noteTreeSplitter = document.getElementById( "noteTreeSplitter" );
-      noteBodyBox = document.getElementById( "noteBodyBox" );
-        noteBodyView = document.getElementById( "noteBodyView" );
-    //
-    bookTree = document.getElementById( "bookTree" );
-    bookTreeChildren = document.getElementById( "bookTreeChildren" );
-    bookTreeTextBox = bookTree.inputField;
-    bookTreeTextBox.setAttribute( "clickSelectsAll", "true" );
-    bookTreeSeparator = document.createElement( "treeseparator" );
-    bookTreeSeparator.setAttribute( "properties", "booktreeseparator" );
-    bookTreeBoxObject = bookTree.boxObject;
-    bookTreeBoxObject.QueryInterface( Components.interfaces.nsITreeBoxObject );
-    bookTreeMenu = mainWindow.document.getElementById( "bookTreeMenu" );
-    bookTree.setAttribute( "editable", "false" );
-    //
-    folderTree = document.getElementById( "folderTree" );
-    folderTreeChildren = document.getElementById( "folderTreeChildren" );
-    folderTreeTextBox = folderTree.inputField;
-    folderTreeTextBox.setAttribute( "clickSelectsAll", "true" );
-    folderTreeSeparator = document.createElement( "treeseparator" );
-    folderTreeSeparator.setAttribute( "properties", "foldertreeseparator" );
-    folderTreeBoxObject = folderTree.boxObject;
-    folderTreeBoxObject.QueryInterface( Components.interfaces.nsITreeBoxObject );
-    folderTreeMenu = mainWindow.document.getElementById( "folderTreeMenu" );
-    folderTree.setAttribute( "editable", "false" );
-    //
-    noteTree = document.getElementById( "noteTree" );
-    noteTreeChildren = document.getElementById( "noteTreeChildren" );
-    noteTreeTextBox = noteTree.inputField;
-    noteTreeTextBox.setAttribute( "clickSelectsAll", "true" );
-    noteTreeSeparator = document.createElement( "treeseparator" );
-    noteTreeSeparator.setAttribute( "properties", "notetreeseparator" );
-    noteTreeBoxObject = noteTree.boxObject;
-    noteTreeBoxObject.QueryInterface( Components.interfaces.nsITreeBoxObject );
-    noteTreeMenu = mainWindow.document.getElementById( "noteTreeMenu" );
-    noteTree.setAttribute( "editable", "false" );
-    //
-    tagTree = document.getElementById( "tagTree" );
-    tagTreeChildren = document.getElementById( "tagTreeChildren" );
-    tagTreeTextBox = tagTree.inputField;
-    tagTreeTextBox.setAttribute( "clickSelectsAll", "true" );
-    tagTreeSeparator = document.createElement( "treeseparator" );
-    tagTreeSeparator.setAttribute( "properties", "tagtreeseparator" );
-    tagTreeBoxObject = tagTree.boxObject;
-    tagTreeBoxObject.QueryInterface( Components.interfaces.nsITreeBoxObject );
-    tagTreeMenu = mainWindow.document.getElementById( "tagTreeMenu" );
-    tagTree.setAttribute( "editable", "false" );
-    //
-    cmdPrint.removeAttribute( "disabled" );
-    cmdPageSetup.removeAttribute( "disabled" );
-    cmdExit.removeAttribute( "disabled" );
-    cmdShowMainMenubar.removeAttribute( "disabled" );
-    cmdShowMainToolbar.removeAttribute( "disabled" );
-    cmdCustomizeMainToolbar.removeAttribute( "disabled" );
-    cmdOpenOptionsDialog.removeAttribute( "disabled" );
-    if ( ru.akman.znotes.Utils.IS_DEBUG_ENABLED ) {
-      cmdDebug.removeAttribute( "disabled" );
-    }
-    if ( ru.akman.znotes.Utils.IS_STANDALONE ) {
-      cmdAddons.removeAttribute( "disabled" );
-      if ( ru.akman.znotes.UpdateManager.canUpdate() ) {
-        cmdUpdate.removeAttribute( "disabled" );
-      }
-    }
-    cmdOpenHelp.removeAttribute( "disabled" );
-    cmdOpenAbout.removeAttribute( "disabled" );
-    cmdShowAppMenu.removeAttribute( "disabled" );
-    cmdShowFilterBar.removeAttribute( "disabled" );
-  };
-  
-  function initListeners() {
-    booksStateListener = {
-      onBookChanged: onBookChanged,
-      onBookOpened: onBookOpened,
-      onBookClosed: onBookClosed,
-      onBookAppended: onBookAppended,
-      onBookRemoved: onBookRemoved,
-      onBookInserted: onBookInserted
-    };
-    contentTreeStateListener = {
-      onCategoryChanged: onCategoryChanged,
-      onNoteChanged: onNoteChanged,
-      onNoteLoadingChanged: onNoteLoadingChanged,
-      onNoteStatusChanged: onNoteStatusChanged,
-      onNoteTagsChanged: onNoteTagsChanged,
-      onNoteMainTagChanged: onNoteMainTagChanged,
-      onNoteMainContentChanged: onNoteMainContentChanged,
-      onNoteContentLoaded: onNoteContentLoaded,
-      onNoteContentAppended: onNoteContentAppended,
-      onNoteContentRemoved: onNoteContentRemoved,
-      onNoteAttachmentAppended: onNoteAttachmentAppended,
-      onNoteAttachmentRemoved: onNoteAttachmentRemoved,
-      onCategoryAppended: onCategoryAppended,
-      onCategoryInserted: onCategoryInserted,
-      onCategoryRemoved: onCategoryRemoved,
-      onNoteAppended: onNoteAppended,
-      onNoteInserted: onNoteInserted,
-      onNoteRemoved: onNoteRemoved
-    };
-    tagListStateListener = {
-      onTagChanged: onTagChanged,
-      onTagAppended: onTagAppended,
-      onTagRemoved: onTagRemoved,
-      onTagInserted: onTagInserted
-    };
-  };
-  
-  function createInstance() {
-    body = new ru.akman.znotes.Body(
-      {
-        name: "main",
-        window: window,
-        document: document,
-        mode: "viewer",
-        style: {
-          iconsize: mainToolBar.getAttribute( "iconsize" )
-        },
-        commands: {
-          cmdRenameNote: doRenameNote // znotes_renamenote_command
-        }
-      }
-    );
-  };
-  
-  function init() {
-    initGlobals();
-    initCommandManager();
-    initCommands();
-    initListeners();
-    initUI();
-    loadPrefs();
-    loadDrivers();
-    loadDocuments();
-    createInstance();
-    loadBooks();
-    createBooksList();
-    loadPersistedSession();
-    showBooksList();
-    addEventListeners();
-    updateDebugButtonState();
-    updateUpdateAndAddonsButtonsState();
-    updateMainMenubarView();
-    updateMainToolbarView();
-    updateNewNoteMenuPopup();
-    updateImportNoteMenuPopup();
-    restoreBooksTreeSelection();
-    setTimeout(
-      function() {
-        updateWindowSize( mainWindow );
-        initCommandController();
-        if ( ru.akman.znotes.Utils.IS_PLAY_SOUND ) {
-          playSound();
-        }
-        if ( ru.akman.znotes.Utils.IS_DEBUG_ACTIVE ) {
-          doOpenDebugWindow();
-        }
-      },
-      0
-    );
-  };
-
-  function done() {
-    disableCommands();
-    doneCommandManager();
-    doneCommandController();
-    removeEventListeners();
-    saveCurrentBookPreferences();
-    if ( ru.akman.znotes.Utils.IS_STANDALONE ) {
-      var windowService = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
-                                    .getService( Components.interfaces.nsIWindowWatcher );
-      var windowEnumerator = windowService.getWindowEnumerator();
-      while ( windowEnumerator.hasMoreElements() ) {
-        win = windowEnumerator.getNext().QueryInterface( Components.interfaces.nsIDOMWindow );
-        win.close();
-      }
-    }
-  };
-
-  function playSound() {
-    ( new Audio( "chrome://znotes_sounds/skin/notify.wav" ) ).play();
-  };
-
-  // L O A D  &  U N L O A D  &  C L O S E
+  // PUBLIC
 
   pub.onLoad = function() {
-    init();
+    load();
   };
 
   pub.onUnload = function() {
-    done();
-  };
-
-  pub.onClose = function() {
-    windowsMonitor = null;
-    var windowService = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
-                                  .getService( Components.interfaces.nsIWindowWatcher );
-    var win;
-    for ( var i = 0; i < windowsList.length; i++ ) {
-      win = windowService.getWindowByName( windowsList[i], null );
-      if ( win ) {
-        win.close();
-      }
-    }
-    win = windowService.getWindowByName( "znotes:debug", null );
-    if ( win ) {
-      win.close();
-    }
-  };
-
-  function createWelcomeNote( aBook ) {
-    var card = null;
-    var cards = null;
-    var abManager = null;
-    var directories = null;
-    var directory = null;
-    var dir = null;
-    var found = null;
-    if ( !aBook || !aBook.isOpen() ) {
-      return null;
-    }
-    var contentTree = aBook.getContentTree();
-    var aRoot = contentTree.getRoot();
-    var name = stringsBundle.getString( "main.welcome.notename" );
-    var index = 1;
-    var suffix = "";
-    while ( aRoot.noteExists( name + suffix ) ) {
-      index++;
-      suffix = " (" + index + ")";
-    }
-    name = name + suffix;
-    var note = createNote( aBook, aRoot, name, "application/xhtml+xml" );
-    if ( !ru.akman.znotes.Utils.IS_STANDALONE ) {
-      abManager = Components.classes["@mozilla.org/abmanager;1"]
-                            .getService( Components.interfaces.nsIAbManager );
-      directories = abManager.directories;
-      while ( directories.hasMoreElements() ) {
-        dir = directories.getNext().QueryInterface( Components.interfaces.nsIAbDirectory );
-        if ( dir instanceof Components.interfaces.nsIAbDirectory ) {
-          directory = dir;
-          if ( directory.fileName == "abook.mab" && directory.dirType == 2 ) {
-            break;
-          }
-        }
-      }
-      if ( directory != null ) {
-        var creator = ru.akman.znotes.Utils.CREATORS[0];
-        var vendor = ru.akman.znotes.Utils.VENDOR;
-        var firstName = ru.akman.znotes.Utils.decodeUTF8( creator.name.substring( 0, creator.name.indexOf( " " ) ) );
-        var lastName = ru.akman.znotes.Utils.decodeUTF8( creator.name.substr( creator.name.indexOf( " " ) + 1 ) );
-        var primaryEmail = creator.link.substr( creator.link.indexOf( ":" ) + 1 );
-        found = false;
-        cards = directory.childCards;
-        while ( cards.hasMoreElements() ) {
-          card = cards.getNext().QueryInterface( Components.interfaces.nsIAbCard );
-          if ( card instanceof Components.interfaces.nsIAbCard ) {
-            if ( card.firstName == firstName &&
-                 card.lastName == lastName ) {
-              found = true;
-              note.addAttachment( [ card.directoryId + "\t" + card.localId, "contact" ] );
-              break;
-            }
-          }
-        }
-        if ( !found ) {
-          card = Components.classes["@mozilla.org/addressbook/cardproperty;1"]
-                           .createInstance( Components.interfaces.nsIAbCard );
-          card.firstName = firstName;
-          card.lastName = lastName;
-          card.displayName = firstName + " " + lastName;
-          card.primaryEmail = primaryEmail;
-          card.setProperty( "Company", vendor );
-          card.setProperty( "NickName", "Akman" );
-          card.setProperty( "PhotoType", "web" );
-          card.setProperty( "PhotoURI", "http://www.gravatar.com/avatar/bc59d4f48198e2e6c4145c995fe9d339.png" );
-          try {
-            card = directory.addCard( card );
-          } catch( e ) {
-            card = null;
-          }
-          if ( card ) {
-            cards = directory.childCards;
-            while ( cards.hasMoreElements() ) {
-              card = cards.getNext().QueryInterface( Components.interfaces.nsIAbCard );
-              if ( card instanceof Components.interfaces.nsIAbCard ) {
-                if ( card.firstName == firstName &&
-                     card.lastName == lastName ) {
-                  found = true;
-                  note.addAttachment( [ card.directoryId + "\t" + card.localId, "contact" ] );
-                  break;
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-    var url = "chrome://znotes_welcome/content/index_" + ru.akman.znotes.Utils.getSiteLanguage() + ".xhtml";
-    note.load( url );
-    return note;
-  };
-
-  function getDebugContext() {
-    return {
-      // window
-      win: window,
-      doc: document,
-      // objects
-      book: currentBook,
-      category: currentCategory,
-      tag: currentTag,
-      note: currentNote,
-      // functions
-      createWelcomeNote: createWelcomeNote,
-      createNote: createNote
-    };
+    unload();
   };
 
   return pub;
 
 }();
 
-window.addEventListener( "load"  , function() { ru.akman.znotes.Main.onLoad(); }, false );
+window.addEventListener( "load", function() { ru.akman.znotes.Main.onLoad(); }, false );
 window.addEventListener( "unload", function() { ru.akman.znotes.Main.onUnload(); }, false );
-window.addEventListener( "close"  , function() { ru.akman.znotes.Main.onClose(); }, false );

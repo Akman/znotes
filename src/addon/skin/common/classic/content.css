@@ -48,34 +48,3 @@ treechildren::-moz-tree-cell-text( content, selected )
 treechildren::-moz-tree-separator( contenttreeseparator )
 {
 }
-
-#contentTreeMenuNew {
-  list-style-image: url("chrome://znotes_images/skin/content-add-24x24.png");
-}
-#contentTreeMenuNew[disabled="true"] {
-  list-style-image: url("chrome://znotes_images/skin/content-add-disabled-24x24.png");
-}
-#contentTreeMenuOpen {
-  list-style-image: url("chrome://znotes_images/skin/attopen-24x24.png");
-}
-#contentTreeMenuOpen[disabled="true"] {
-  list-style-image: url("chrome://znotes_images/skin/attopen-disabled-24x24.png");
-}
-#contentTreeMenuOpenWith {
-  list-style-image: url("chrome://znotes_images/skin/attopenwith-24x24.png");
-}
-#contentTreeMenuOpenWith[disabled="true"] {
-  list-style-image: url("chrome://znotes_images/skin/attopenwith-disabled-24x24.png");
-}
-#contentTreeMenuSave {
-  list-style-image: url("chrome://znotes_images/skin/save-24x24.png");
-}
-#contentTreeMenuSave[disabled="true"] {
-  list-style-image: url("chrome://znotes_images/skin/save-disabled-24x24.png");
-}
-#contentTreeMenuDelete {
-  list-style-image: url("chrome://znotes_images/skin/delete-24x24.png");
-}
-#contentTreeMenuDelete[disabled="true"] {
-  list-style-image: url("chrome://znotes_images/skin/delete-disabled-24x24.png");
-}

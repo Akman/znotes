@@ -34,27 +34,89 @@ if ( !ru ) var ru = {};
 if ( !ru.akman ) ru.akman = {};
 if ( !ru.akman.znotes ) ru.akman.znotes = {};
 
-Components.utils.import( "resource://znotes/utils.js" , ru.akman.znotes );
-Components.utils.import( "resource://znotes/sessionmanager.js" , ru.akman.znotes );
+Components.utils.import( "resource://znotes/utils.js",
+  ru.akman.znotes
+);
 
 ru.akman.znotes.Viewer = function() {
+
+  var Utils = ru.akman.znotes.Utils;
 
   var currentPage = null;
   var currentNote = null;
   var currentBackground = null;
   var currentStyle = null;
-
-  var title = null;
   var currentStatusbar = null;  
-  var currentTab = null;
   var currentToolbox = null;
-  var currentCommandset = null;
-  var currentBrowserId = null;
+  var currentTab = null;
+
   var body = null;
   var noteStateListener = null;
 
+  //
+  // C O M M A N D S
+  //
+
+  var viewerCommands = {
+  };
+
+  var viewerController = {
+    supportsCommand: function( cmd ) {
+      if ( !( cmd in viewerCommands ) ) {
+        return false;
+      }
+      Utils.log( this.getName() + "::supportsCommand() '" + cmd + "'" );
+      return true;
+    },
+    isCommandEnabled: function( cmd ) {
+      if ( !( cmd in viewerCommands ) ) {
+        return false;
+      }
+      Utils.log( this.getName() + "::isCommandEnabled() '" + cmd + "'" );
+      return true;
+    },
+    doCommand: function( cmd ) {
+      if ( !( cmd in viewerCommands ) ) {
+        return;
+      }
+      Utils.log( this.getName() + "::doCommand() '" + cmd + "'" );
+    },
+    onEvent: function( event ) {
+      Utils.log( this.getName() + "::onEvent() '" + event + "'" );
+    },
+    getName: function() {
+      return "VIEWER";
+    },
+    getCommand: function( cmd ) {
+      if ( cmd in viewerCommands ) {
+        return document.getElementById( cmd );
+      }
+      return null;
+    },
+    register: function() {
+      Utils.appendAccelText( viewerCommands, document );
+      try {
+        top.controllers.insertControllerAt( 0, this );
+      } catch ( e ) {
+        Components.utils.reportError(
+          "An error occurred registering '" + this.getName() + "' controller: " + e
+        );
+      }
+    },
+    unregister: function() {
+      try {
+        top.controllers.removeController( this );
+      } catch ( e ) {
+        Components.utils.reportError(
+          "An error occurred unregistering '" + this.getName() + "' controller: " + e
+        );
+      }
+      Utils.removeAccelText( viewerCommands, document );
+    }
+  };
+  
   function getCurrentTab() {
-    var tabMail = ru.akman.znotes.Utils.getTabMail();
+    var tabMail = Utils.getTabMail();
     if ( !tabMail ) {
       return null;
     }
@@ -62,7 +124,8 @@ ru.akman.znotes.Viewer = function() {
     var tabInfo = tabMail.tabInfo;
     for ( var i = 0; i < tabInfo.length; i++ ) {
       var tab = tabInfo[i];
-      if ( tab.mode.type == "znotesContentTab" && tab.browser.currentURI.spec == location ) {
+      if ( tab.mode.type == "znotesContentTab" &&
+        tab.browser.currentURI.spec == location ) {
         return tab;
       }
     }
@@ -83,37 +146,31 @@ ru.akman.znotes.Viewer = function() {
     var aCategory = e.data.parentCategory;
     var aNote = e.data.deletedNote;
     if ( currentNote == aNote ) {
-      document.defaultView.close();
+      window.close();
     }
   };
 
   var pub = {};
 
   pub.onLoad = function() {
-    currentStatusbar = document.getElementById( "statusbar" );
-    if ( ru.akman.znotes.Utils.IS_STANDALONE ) {
-      if ( currentStatusbar.hasAttribute( "hidden" ) ) {
-        currentStatusbar.removeAttribute( "hidden" );
-      }
-    } else {
-      currentStatusbar.setAttribute( "hidden", "true" );
-      currentStatusbar = ru.akman.znotes.Utils.MAIN_WINDOW.document.getElementById( "status-bar" );
-    }
+    var mainWindow = Utils.MAIN_WINDOW;
+    currentToolbox = document.getElementById( "znotes_viewertoolbox" );
+    currentStatusbar = document.getElementById( "znotes_statusbar" );
     currentNote = null;
     currentTab = getCurrentTab();
     if ( currentTab ) {
-      //
+      currentStatusbar.setAttribute( "hidden", "true" );
+      currentStatusbar = mainWindow.document.getElementById( "status-bar" );
       currentPage = currentTab.contentPage;
       currentNote = currentTab.note;
       currentBackground = currentTab.background;
       currentStyle = currentTab.style;
-      //
-      currentBrowserId = currentTab.browserId;
-      currentToolbox = currentTab.toolbox;
-      currentCommandset = currentTab.commandset;
     }
     if ( !currentNote ) {
       if ( window.arguments.length == 4 ) {
+        if ( currentStatusbar.hasAttribute( "hidden" ) ) {
+          currentStatusbar.removeAttribute( "hidden" );
+        }
         currentPage = window.arguments[0];
         currentNote = window.arguments[1];
         currentBackground = window.arguments[2];
@@ -122,12 +179,9 @@ ru.akman.znotes.Viewer = function() {
       if ( !currentNote ) {
         window.close();
       }
-      currentBrowserId = null;
-      currentToolbox = null;
-      currentCommandset = null;
     }
     if ( !currentNote ) {
-      var tabMail = ru.akman.znotes.Utils.getTabMail();
+      var tabMail = Utils.getTabMail();
       if ( tabMail ) {
         tabMail.closeTab();
         return;
@@ -139,19 +193,14 @@ ru.akman.znotes.Viewer = function() {
       onNoteDeleted: onNoteDeleted
     };
     currentNote.addStateListener( noteStateListener );
-    document.title = currentNote.name;
+    document.title = currentNote.getName();
+    viewerController.register();
     body = new ru.akman.znotes.Body(
       {
         name: "viewer",
-        window: window,
-        document: document,
         mode: "viewer",
         style: currentStyle,
-        commands: {
-        },
-        toolbox: currentToolbox,
-        commandset: currentCommandset,
-        browserid: currentBrowserId
+        toolbox: currentToolbox
       }
     );
     body.show( currentNote );
@@ -162,8 +211,9 @@ ru.akman.znotes.Viewer = function() {
       currentNote.removeStateListener( noteStateListener );
     }
     if ( body ) {
-      body.unload();
+      body.release();
     }
+    viewerController.unregister();
   };
 
   return pub;

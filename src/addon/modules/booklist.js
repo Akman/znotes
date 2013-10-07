@@ -57,6 +57,34 @@ var BookList = function() {
     return entry.clone();
   };
 
+  this.getDefaultPreferences = function() {
+    return {
+      // data
+      currentTree: "Categories",
+      currentCategory: 0,
+      currentTag: 0,
+      rootPosition: -1,
+      // view
+      "folderBoxWidth": "200",
+      "bookTreeViewHeight": "250",
+      "bookSplitterState": "open",
+      "categoryBoxHeight": "700",
+      "folderTreeViewHeight": "500",
+      "tagSplitterState": "open",
+      "tagTreeViewHeight": "300",
+      "folderSplitterState": "open",
+      "noteBoxWidth": "800",
+      "noteTreeViewHeight": "250",
+      "noteTreeSplitterState": "open",
+      "noteBodyBoxHeight": "700",
+      "noteBodyViewHeight": "700",
+      "noteMainBoxHeight": "300",
+      "noteBodySplitterState": "open",
+      "noteAddonsBoxHeight": "100",
+      "qfBoxCollapsed": "true"
+    };
+  };  
+  
   this.updateRegistryObject = function() {
     this.registryObject.splice( 0, this.registryObject.length );
     for ( var i = 0; i < this.books.length; i++ ) {
@@ -145,34 +173,7 @@ var BookList = function() {
       }
     }
     if ( preferences === undefined ) {
-      var preferences = {
-
-        // data
-        currentTree: "Categories",
-        currentCategory: 0,
-        currentTag: 0,
-        rootPosition: -1,
-
-        // view
-        "folderBoxWidth": "200",
-        "bookTreeViewHeight": "250",
-        "bookSplitterState": "open",
-        "categoryBoxHeight": "700",
-        "folderTreeViewHeight": "500",
-        "tagSplitterState": "open",
-        "tagTreeViewHeight": "300",
-        "folderSplitterState": "open",
-        "noteBoxWidth": "800",
-        "noteTreeViewHeight": "250",
-        "noteTreeSplitterState": "open",
-        "noteBodyBoxHeight": "700",
-        "noteBodyViewHeight": "700",
-        "noteMainViewWidth": "700",
-        "noteMainBoxHeight": "300",
-        "noteBodySplitterState": "open",
-        "noteAddonsBoxHeight": "100"
-
-      };
+      var preferences = this.getDefaultPreferences();
     }
     var id = ru.akman.znotes.Utils.createUUID();
     var index = this.books.length;
@@ -280,34 +281,7 @@ var BookList = function() {
           connection = this.registryObject[i].connection;
         }
       }
-      var preferences = {
-
-        // data
-        currentTree: "Categories",
-        currentCategory: 0,
-        currentTag: 0,
-        rootPosition: -1,
-
-        // view
-        "folderBoxWidth": "200",
-        "bookTreeViewHeight": "250",
-        "bookSplitterState": "open",
-        "categoryBoxHeight": "700",
-        "folderTreeViewHeight": "500",
-        "tagSplitterState": "open",
-        "tagTreeViewHeight": "300",
-        "folderSplitterState": "open",
-        "noteBoxWidth": "800",
-        "noteTreeViewHeight": "250",
-        "noteTreeSplitterState": "open",
-        "noteBodyBoxHeight": "700",
-        "noteMainViewWidth": "700",
-        "noteBodyViewHeight": "700",
-        "noteMainBoxHeight": "300",
-        "noteBodySplitterState": "open",
-        "noteAddonsBoxHeight": "100"
-
-      };
+      var preferences = this.getDefaultPreferences();
       if ( "preferences" in this.registryObject[i] ) {
         if ( typeof( this.registryObject[i].preferences ) == "object" ) {
           preferences = this.registryObject[i].preferences;

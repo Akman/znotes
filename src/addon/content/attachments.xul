@@ -35,55 +35,52 @@
 
 <!DOCTYPE overlay SYSTEM "chrome://znotes/locale/attachments.dtd">
 
-<overlay id="attachments" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+<overlay id="attachments"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <script type="application/javascript" src="chrome://znotes/content/attachments.js"/>
+  <script type="application/javascript"
+    src="chrome://znotes/content/attachments.js"/>
 
-  <commandset id="commandSet">
-    <command id="cmdNewContact"/>
-    <command id="cmdNewAttachment"/>
-    <command id="cmdOpenAttachment"/>
-    <command id="cmdOpenAttachmentWith"/>
-    <command id="cmdSaveAttachment"/>
-    <command id="cmdDeleteAttachment"/>
-  </commandset>
-
-  <popupset id="popupSet">
+  <stringbundleset id="znotes_stringbundleset" />
+  <commandset id="znotes_commandset" />
+  <keyset id="znotes_keyset" />
+  <popupset id="znotes_popupset">
     <menupopup id="attachmentTreeMenu">
-      <menuitem id="attachmentTreeMenuOpen"
-        class="menuitem-iconic"
-        label="&attachment_popup_open;"
-        command="cmdOpenAttachment"/>
-      <menuitem id="attachmentTreeMenuOpenWith"
-        class="menuitem-iconic"
-        label="&attachment_popup_open_with;"
-        command="cmdOpenAttachmentWith"/>
-      <menuitem id="attachmentTreeMenuSave"
-        class="menuitem-iconic"
-        label="&attachment_popup_save;"
-        command="cmdSaveAttachment"/>
-      <menuitem id="attachmentTreeMenuDelete"
-        class="menuitem-iconic"
-        label="&attachment_popup_delete;"
-        command="cmdDeleteAttachment"/>
+      <menuitem id="znotes_attachmentsaddcontact_menuitem"
+        class="menuitem-iconic znotes_attachmentsaddcontact_class"
+        key="znotes_attachmentsaddcontact_key"
+        command="znotes_attachmentsaddcontact_command"/>
+      <menuitem id="znotes_attachmentsaddfile_menuitem"
+        class="menuitem-iconic znotes_attachmentsaddfile_class"
+        key="znotes_attachmentsaddfile_key"
+        command="znotes_attachmentsaddfile_command"/>
+      <menuitem id="znotes_attachmentsopen_menuitem"
+        class="menuitem-iconic znotes_attachmentsopen_class"
+        key="znotes_attachmentsopen_key"
+        command="znotes_attachmentsopen_command"/>
+      <menuitem id="znotes_attachmentsopenwith_menuitem"
+        class="menuitem-iconic znotes_attachmentsopenwith_class"
+        key="znotes_attachmentsopenwith_key"
+        command="znotes_attachmentsopenwith_command"/>
+      <menuitem id="znotes_attachmentssave_menuitem"
+        class="menuitem-iconic znotes_attachmentssave_class"
+        key="znotes_attachmentssave_key"
+        command="znotes_attachmentssave_command"/>
+      <menuitem id="znotes_attachmentsdelete_menuitem"
+        class="menuitem-iconic znotes_attachmentsdelete_class"
+        key="znotes_attachmentsdelete_key"
+        command="znotes_attachmentsdelete_command"/>
     </menupopup>
   </popupset>
-
-  <toolbar id="toolBar">
-    <toolbarbutton id="noteButtonAttachment"
-      class="toolbarbutton-1"
-      tooltiptext="&note_button_attachment;"
-      command="cmdNewAttachment"
-      pack="end"
-      insertafter="noteButtonTag"/>
-    <toolbarbutton id="noteButtonContact"
-      class="toolbarbutton-1"
-      hidden="true"
-      tooltiptext="&note_button_contact;"
-      command="cmdNewContact"
-      pack="end"
-      insertafter="noteButtonTag"/>
-  </toolbar>
+    
+  <toolbarpalette id="znotes_bodytoolbarpalette">
+    <toolbarbutton id="znotes_attachmentsaddfile_button"
+      class="toolbarbutton-1 znotes_attachmentsaddfile_class"
+      command="znotes_attachmentsaddfile_command" />
+    <toolbarbutton id="znotes_attachmentsaddcontact_button"
+      class="toolbarbutton-1 znotes_attachmentsaddcontact_class"
+      command="znotes_attachmentsaddcontact_command" />
+  </toolbarpalette>
 
   <tabs id="addonsTabs">
     <tab id="addonsTabAttachments" pack="start" label="&attachment_tab_caption;" selected="true" />

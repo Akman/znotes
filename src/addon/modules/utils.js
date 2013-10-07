@@ -52,7 +52,6 @@ var Utils = function() {
 
   var systemInfo = null;
 
-  var mainModule = null;
   var mainWindow = null;
   var stringsBundle = null;
   var isStandalone = true;
@@ -211,14 +210,6 @@ var Utils = function() {
 
     // C O M M O N  V A L U E S
 
-    get MAIN_MODULE() {
-      return mainModule;
-    },
-
-    set MAIN_MODULE( value ) {
-      mainModule = value;
-    },
-    
     get MAIN_WINDOW() {
       return mainWindow;
     },
@@ -503,7 +494,17 @@ var Utils = function() {
     );
   };
   
-  pub.getPlatformWindow = function() {
+  pub.getPlatformWindow = function( aWindow ) {
+    return ( aWindow ? aWindow : window )
+      .QueryInterface( Components.interfaces.nsIInterfaceRequestor )
+      .getInterface( Components.interfaces.nsIWebNavigation )
+      .QueryInterface( Components.interfaces.nsIDocShellTreeItem )
+      .rootTreeItem
+      .QueryInterface( Components.interfaces.nsIInterfaceRequestor )
+      .getInterface( Components.interfaces.nsIDOMWindow );
+  };
+  
+  pub.getZNotesWindow = function() {
     return Components.classes["@mozilla.org/appshell/window-mediator;1"]
                      .getService( Components.interfaces.nsIWindowMediator )
                      .getMostRecentWindow( "znotes:platform" );
@@ -515,12 +516,11 @@ var Utils = function() {
                      .getMostRecentWindow( "mail:3pane" );
   };
   
-  pub.initGlobals = function( aModule ) {
+  pub.initGlobals = function() {
     // STANDALONE APPLICATION
-    var aWindow = pub.getPlatformWindow();
+    var aWindow = pub.getZNotesWindow();
     if ( aWindow ) {
       pub.MAIN_WINDOW = aWindow;
-      pub.MAIN_MODULE = aModule;
       pub.IS_STANDALONE = true;
       pub.STRINGS_BUNDLE = aWindow.document
                                   .getElementById( "znotes_stringbundle" );
@@ -530,7 +530,6 @@ var Utils = function() {
     aWindow = pub.getMail3PaneWindow();
     if ( aWindow ) {
       pub.MAIN_WINDOW = aWindow;
-      pub.MAIN_MODULE = aModule;
       pub.IS_STANDALONE = false;
       pub.STRINGS_BUNDLE = aWindow.document
                                   .getElementById( "znotes_stringbundle" );
@@ -538,6 +537,12 @@ var Utils = function() {
     }
     // UNKNOWN
     throw Components.results.NS_ERROR_UNEXPECTED;
+  };
+
+  pub.getStatusbarPanel = function() {
+    return pub.MAIN_WINDOW.document.getElementById(
+      "znotes_statusbarpanel"
+    );
   };
 
   pub.clone = function( o ) {
@@ -1558,7 +1563,7 @@ var Utils = function() {
   };
 
   pub.clickHandler = function( event ) {
-    if ( !event.isTrusted || event.getPreventDefault() || event.button ) {
+    if ( !event.isTrusted || event.defaultPrevented || event.button ) {
       return true;
     }
     var href = pub.getHREFForClickEvent( event, true );
@@ -1600,6 +1605,73 @@ var Utils = function() {
     return "" + code;
   };
 
+  pub.appendAccelText = function( commands, doc ) {
+    var command = null;
+    var menuitem = null;
+    var tooltiptext = null;
+    var acceltext = null;
+    var popupset = doc.getElementById( "znotes_popupset" );
+    var menupopup = doc.createElement( "menupopup" );
+    popupset.appendChild( menupopup );
+    for ( var cmd in commands ) {
+      command = doc.getElementById( cmd );
+      if ( !command ) {
+        continue;
+      }
+      menuitem = doc.createElement( "menuitem" );
+      // znotes_xxxxxx_command
+      //        ^^^^^^
+      menuitem.setAttribute(
+        "key",
+        "znotes_" + cmd.substring( 7, cmd.length - 8 ) + "_key"
+      );
+      commands[ cmd ] = {
+        command: command,
+        menuitem: menuitem
+      };
+      menupopup.appendChild( menuitem );
+    }
+    menupopup.openPopup( null, null, 0, 0, true, false, null );
+    menupopup.hidePopup();
+    for ( var cmd in commands ) {
+      if ( !commands[cmd] ) {
+        continue;
+      }
+      command = commands[cmd].command;
+      menuitem = commands[cmd].menuitem;
+      commands[cmd] = null;
+      tooltiptext = command.getAttribute( "tooltiptext" );
+      acceltext = menuitem.getAttribute( "acceltext" );
+      if ( acceltext.length > 0 ) {
+        tooltiptext += "\n" + acceltext;
+        command.setAttribute( "tooltiptext", tooltiptext );
+      }
+    }
+    while ( menupopup.firstChild ) {
+      menupopup.removeChild( menupopup.firstChild );
+    }
+    popupset.removeChild( menupopup );
+  };
+    
+  pub.removeAccelText = function( commands, doc ) {
+    var command = null;
+    var tooltiptext = null;
+    var index = null;
+    for ( var cmd in commands ) {
+      command = doc.getElementById( cmd );
+      if ( !command ) {
+        continue;
+      }
+      tooltiptext = command.getAttribute( "tooltiptext" );
+      index = tooltiptext.indexOf( "\n" );
+      if ( index < 0 ) {
+        continue;
+      }
+      tooltiptext = tooltiptext.substring( 0, index );
+      command.setAttribute( "tooltiptext", tooltiptext );
+    }
+  };
+  
   return pub;
 
 }();

@@ -34,15 +34,17 @@ if ( !ru ) var ru = {};
 if ( !ru.akman ) ru.akman = {};
 if ( !ru.akman.znotes ) ru.akman.znotes = {};
 
-Components.utils.import( "resource://znotes/utils.js" , ru.akman.znotes );
+Components.utils.import( "resource://znotes/utils.js", ru.akman.znotes );
 
 var EXPORTED_SYMBOLS = ["SessionManager"];
 
 var SessionManager = function() {
 
+  var Utils = ru.akman.znotes.Utils;
+
   var getEntry = function() {
-    var entry = ru.akman.znotes.Utils.getPlacesPath();
-    var placeId = ru.akman.znotes.Utils.getPlaceId();
+    var entry = Utils.getPlacesPath();
+    var placeId = Utils.getPlaceId();
     entry.append( placeId );
     if ( !entry.exists() || !entry.isDirectory() ) {
       entry.create( Components.interfaces.nsIFile.DIRECTORY_TYPE, parseInt( "0755", 8 ) );
@@ -60,10 +62,10 @@ var SessionManager = function() {
       return state;
     }
     try {
-      var data = ru.akman.znotes.Utils.readFileContent( entry, "UTF-8" );
+      var data = Utils.readFileContent( entry, "UTF-8" );
       state = JSON.parse( data );
     } catch ( e ) {
-      log( e );
+      Utils.log( e );
       state = {
         tabs: []
       };
@@ -74,7 +76,7 @@ var SessionManager = function() {
   var saveSession = function( state ) {
     var data = JSON.stringify( state );
     var entry = getEntry();
-    ru.akman.znotes.Utils.writeFileContent( entry, "UTF-8", data );
+    Utils.writeFileContent( entry, "UTF-8", data );
   };
 
   var persistedState = loadSession();

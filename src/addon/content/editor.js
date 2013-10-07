@@ -34,16 +34,19 @@ if ( !ru ) var ru = {};
 if ( !ru.akman ) ru.akman = {};
 if ( !ru.akman.znotes ) ru.akman.znotes = {};
 
-Components.utils.import( "resource://znotes/utils.js" , ru.akman.znotes );
-Components.utils.import( "resource://znotes/documentmanager.js" , ru.akman.znotes );
+Components.utils.import( "resource://znotes/utils.js",
+  ru.akman.znotes
+);
+Components.utils.import( "resource://znotes/documentmanager.js",
+  ru.akman.znotes
+);
 
 ru.akman.znotes.Editor = function() {
 
-  return function( aWindow, aDocument, aMode, aStyle ) {
+  return function( aMode, aStyle ) {
 
-    // !!!! %%%% !!!! STRINGS_BUNDLE
-    var stringsBundle = ru.akman.znotes.Utils.STRINGS_BUNDLE;
-    var log = ru.akman.znotes.Utils.log;
+    var Utils = ru.akman.znotes.Utils;
+    var Common = ru.akman.znotes.Common;
 
     var currentMode = "viewer";
     var currentStyle = {
@@ -54,28 +57,134 @@ ru.akman.znotes.Editor = function() {
     var noteStateListener = null;
     
     var currentEditor = null;
-    var editorStateListener = null;
-
+    var isEditorDirty = false;
+    
     var editorView = null;
     
-    var cmdNoteEdit = null;
-    var cmdNoteSave = null;
-    var cmdNotePrint = null;
-
-    var noteButtonEdit = null;
-    var noteButtonSave = null;
+    var editorStateListener = null;
     
-    // N O T E  E V E N T S
+    //
+    // COMMANDS
+    //
+    
+    var editorCommands = {
+      "znotes_editoredit_command": null,
+      "znotes_editorsave_command": null,
+      "znotes_editorprint_command": null
+    };
+    
+    var basicCommands = {
+      "cmd_saveAsFile": null,
+      "cmd_print": null
+    };
+    
+    var editorController = {
+      supportsCommand: function( cmd ) {
+        if ( cmd.indexOf( "cmd_" ) == 0 ) {
+          Utils.log( this.getName() + "::supportsCommand() '" + cmd + "'" );
+        }
+        if ( !( cmd in editorCommands ) && !( cmd in basicCommands ) ) {
+          return false;
+        }
+        return true;
+      },
+      isCommandEnabled: function( cmd ) {
+        if ( cmd.indexOf( "cmd_" ) == 0 ) {
+          Utils.log( this.getName() + "::isCommandEnabled() '" + cmd + "'" );
+        }
+        if ( !( cmd in editorCommands ) && !( cmd in basicCommands ) ) {
+          return false;
+        }
+        if ( !currentNote || !currentNote.isExists() ||
+             !currentEditor || currentNote.isLoading() ) {
+          return false;
+        }
+        switch ( cmd ) {
+          case "znotes_editoredit_command":
+          case "znotes_editorprint_command":
+          case "cmd_print":
+            return true;
+          case "znotes_editorsave_command":
+          case "cmd_saveAsFile":
+            return isEditorDirty;
+        }
+        return false;
+      },
+      doCommand: function( cmd ) {
+        Utils.log( this.getName() + "::doCommand() '" + cmd + "'" );
+        if ( !( cmd in editorCommands ) && !( cmd in basicCommands ) ) {
+          return;
+        }
+        switch ( cmd ) {
+          case "znotes_editoredit_command":
+            currentEditor.edit();
+            break;
+          case "znotes_editorsave_command":
+          case "cmd_saveAsFile":
+            currentEditor.save();
+            break;
+          case "znotes_editorprint_command":
+          case "cmd_print":
+            currentEditor.print();
+            break;
+        }
+      },
+      onEvent: function( event ) {
+        Utils.log( this.getName() + "::onEvent() '" + event + "'" );
+      },
+      getName: function() {
+        return "EDITOR";
+      },
+      getCommand: function( cmd ) {
+        if ( cmd in editorCommands ) {
+          return document.getElementById( cmd );
+        }
+        return null;
+      },
+      register: function() {
+        Utils.appendAccelText( editorCommands, document );
+        try {
+          top.controllers.insertControllerAt( 0, this );
+        } catch ( e ) {
+          Components.utils.reportError(
+            "An error occurred registering '" + this.getName() +
+            "' controller: " + e
+          );
+        }
+      },
+      unregister: function() {
+        try {
+          top.controllers.removeController( this );
+        } catch ( e ) {
+          Components.utils.reportError(
+            "An error occurred unregistering '" + this.getName() +
+            "' controller: " + e
+          );
+        }
+        Utils.removeAccelText( editorCommands, document );
+      }
+    };
+    
+    function updateCommands() {
+      window.focus();
+      Common.goSetCommandHidden( "znotes_editorsave_command", true );
+      Common.goSetCommandHidden( "znotes_editoredit_command", false );
+      Common.goUpdateCommand( "znotes_editorsave_command" );
+      Common.goUpdateCommand( "znotes_editoredit_command" );
+      Common.goUpdateCommand( "znotes_editorprint_command" );
+    };
+    
+    // NOTE EVENTS
 
     function onNoteDeleted( e ) {
       var aCategory = e.data.parentCategory;
       var aNote = e.data.deletedNote;
-      if ( currentNote && currentNote == aNote ) {
-        this.unload();
+      if ( currentNote && currentNote == aNote && currentEditor ) {
+        currentEditor.close();
       }
     };
     
-    // E D I T O R  E V E N T S
+    // EDITOR EVENTS
     
     function onEditorOpened( e ) {
       var aNote = e.data.note;
@@ -95,8 +204,11 @@ ru.akman.znotes.Editor = function() {
     function onEditorModeChanged( e ) {
       var aNote = e.data.note;
       var aMode = e.data.mode;
+      var aFlag = ( aMode == "editor" );
       if ( currentNote && currentNote == aNote && currentEditor ) {
-        switchMode( aMode );
+        window.focus();
+        Common.goSetCommandHidden( "znotes_editoredit_command", aFlag );
+        Common.goSetCommandHidden( "znotes_editorsave_command", !aFlag );
       }
     };
 
@@ -104,217 +216,115 @@ ru.akman.znotes.Editor = function() {
       var aNote = e.data.note;
       var isDirty = e.data.dirty;
       if ( currentNote && currentNote == aNote && currentEditor ) {
-        switchState( isDirty );
+        isEditorDirty = isDirty;
+        window.focus();
+        Common.goUpdateCommand( "znotes_editorsave_command" );
       }
     };
     
-    // E D I T O R  C O M A N D S
+    // VIEW
 
-    function onCmdNoteEdit( source ) {
-      if ( currentNote && currentNote.isExists() && currentEditor ) {
-        currentEditor.edit();
-      }
-    };
-
-    function onCmdNoteSave( source ) {
-      log( "onCmdNoteSave()" );
-      if ( currentNote && currentNote.isExists() && currentEditor ) {
-        currentEditor.save();
-      }
-    };
-
-    function onCmdNotePrint( source ) {
-      log( "onCmdNotePrint()" );
-      if ( currentNote && currentNote.isExists() && currentEditor ) {
-        currentEditor.print();
-      }
-    };
-    
-    // E D I T O R  V I E W
-
-    function enableView() {
-      if ( noteButtonEdit.hasAttribute( "disabled" ) ) {
-        noteButtonEdit.removeAttribute( "disabled" );
-      }
-      if ( cmdNotePrint.hasAttribute( "disabled" ) ) {
-        cmdNotePrint.removeAttribute( "disabled" );
-      }
-    };
-    
-    function showView() {
+    function showCurrentView() {
       if ( editorView.hasAttribute( "hidden" ) ) {
         editorView.removeAttribute( "hidden" );
       }
-      noteButtonSave.setAttribute( "hidden", "true" );
-      enableView();
-    };
-
-    function disableView() {
-      noteButtonEdit.setAttribute( "disabled", "true" );
-      cmdNotePrint.setAttribute( "disabled", "true" );
-    };
-    
-    function hideView() {
-      editorView.setAttribute( "hidden", true );
-      noteButtonSave.setAttribute( "hidden", "true" );
-      disableView();
-    };
-
-    function switchMode( mode ) {
-      if ( mode == "editor" ) {
-        noteButtonEdit.setAttribute( "hidden", "true" );
-        if ( noteButtonSave.hasAttribute( "hidden" ) ) {
-          noteButtonSave.removeAttribute( "hidden" );
-        }
-      } else {
-        noteButtonSave.setAttribute( "hidden", "true" );
-        if ( noteButtonEdit.hasAttribute( "hidden" ) ) {
-          noteButtonEdit.removeAttribute( "hidden" );
-        }
-      }
-    };
-
-    function switchState( dirty ) {
-      if ( dirty && noteButtonSave.hasAttribute( "disabled" ) ) {
-        noteButtonSave.removeAttribute( "disabled" );
-      } else {
-        noteButtonSave.setAttribute( "disabled", "true" );
-      }
-    };
-    
-    // E D I T O R
-
-    function open() {
-      currentEditor = ru.akman.znotes.DocumentManager
-                                     .getDocument( currentNote.getType() )
-                                     .getEditor( aDocument );
-      addEventListeners();
       if ( currentEditor ) {
-        currentEditor.open( aWindow, aDocument, currentNote, currentStyle );
+        currentEditor.open( window, document, currentNote, currentStyle );
       }
     };
-
-    function close() {
+    
+    function hideCurrentView() {
+      editorView.setAttribute( "hidden", true );
+    };
+    
+    function show( aNote, aForced ) {
+      if ( currentNote && currentNote == aNote && !aForced ) {
+        return;
+      }
       if ( currentEditor ) {
         currentEditor.close();
       }
+      removeEditorEventListeners();
       removeEventListeners();
-      currentNote = null;
-      currentEditor = null;
+      currentNote = aNote;
+      if ( currentNote && currentNote.isExists() && !currentNote.isLoading() ) {
+        currentEditor = ru.akman.znotes.DocumentManager
+                                       .getDocument( currentNote.getType() )
+                                       .getEditor();
+        addEventListeners();
+        addEditorEventListeners();
+        showCurrentView();
+      } else {
+        currentEditor = null;
+        hideCurrentView();
+      }
+      updateCommands();
     };
-
-    // E V E N T  L I S T E N E R S
+    
+    // LISTENERS
     
     function addEventListeners() {
-      cmdNoteEdit.addEventListener( "command", onCmdNoteEdit, false );
-      cmdNoteSave.addEventListener( "command", onCmdNoteSave, false );
-      cmdNotePrint.addEventListener( "command", onCmdNotePrint, false );
-      if ( currentNote ) {
-        currentNote.addStateListener( noteStateListener );
+      if ( !currentNote ) {
+        return;
       }
-      if ( currentEditor ) {
-        currentEditor.addStateListener( editorStateListener );
-      }
+      currentNote.addStateListener( noteStateListener );
     };
 
     function removeEventListeners() {
-      cmdNoteEdit.removeEventListener( "command", onCmdNoteEdit, false );
-      cmdNoteSave.removeEventListener( "command", onCmdNoteSave, false );
-      cmdNotePrint.removeEventListener( "command", onCmdNotePrint, false );
-      if ( currentEditor ) {
-        currentEditor.removeStateListener( editorStateListener );
+      if ( !currentNote ) {
+        return;
       }
-      if ( currentNote ) {
-        currentNote.removeStateListener( noteStateListener );
+      currentNote.removeStateListener( noteStateListener );
+    };
+
+    function addEditorEventListeners() {
+      if ( !currentEditor ) {
+        return;
       }
+      currentEditor.addStateListener( editorStateListener );
     };
     
-    // P U B L I C  M E T H O D S
+    function removeEditorEventListeners() {
+      if ( !currentEditor ) {
+        return;
+      }
+      currentEditor.removeStateListener( editorStateListener );
+    };
+    
+    // PUBLIC
 
-    /**
-     * Update style of toolbars
-     * @param style { iconsize: "small" || "normal" }
-     */
-    this.updateStyle = function( style ) {
+    this.onStyleChanged = function( event ) {
+      var style = event.data.style;
+      Utils.copyObject( style, currentStyle );
       if ( currentEditor ) {
         currentEditor.updateStyle( style );
       }
     };
     
-    /**
-     * Print current view
-     */
-    this.print = function() {
-      if ( currentNote && currentNote.isExists() && currentEditor ) {
-        currentEditor.print();
-      }
+    this.onNoteChanged = function( event ) {
+      var note = event.data.note;
+      var forced = event.data.forced;
+      show( note, forced );
     };
     
-    /**
-     * Enable buttons in parent toolbars if they placed there
-     */
-    this.enable = function() {
-      enableView();
+    this.onRelease = function( event ) {
       if ( currentEditor ) {
-        currentEditor.enable();
+        currentEditor.close();
       }
-    };
-
-    /**
-     * Disable buttons in parent toolbars if they placed there
-     */
-    this.disable = function() {
-      disableView();
-      if ( currentEditor ) {
-        currentEditor.disable();
-      }
+      removeEditorEventListeners();
+      removeEventListeners();
+      editorController.unregister();
     };
     
-    /**
-     * Open a note and show it in the editor's view
-     */
-    this.show = function( aNote ) {
-      this.unload();
-      currentNote = aNote;
-      if ( currentNote && currentNote.isExists() ) {
-        showView();
-        open();
-      } else {
-        hideView();
-      }
-    };
-
-    /**
-     * Close the current note and hide the editor's view
-     */
-    this.hide = function() {
-      this.unload();
-      hideView();
-    };
-
-    /**
-     * Close the current note
-     */
-    this.unload = function() {
-      if ( currentNote ) {
-        close();
-      }
-    };
-
-    // C O N S T R U C T O R  ( aWindow, aDocument, aMode, aStyle )
+    // CONSTRUCTOR ( aMode, aStyle )
 
     if ( aMode ) {
       currentMode = aMode;
     }
     if ( aStyle ) {
-      ru.akman.znotes.Utils.copyObject( aStyle, currentStyle );
+      Utils.copyObject( aStyle, currentStyle );
     }
-    editorView = aDocument.getElementById( "editorView" );
-    noteButtonEdit = aDocument.getElementById( "noteButtonEdit" );
-    noteButtonSave = aDocument.getElementById( "noteButtonSave" );
-    cmdNoteEdit = aDocument.getElementById( "cmdNoteEdit" );
-    cmdNoteSave = aDocument.getElementById( "cmdNoteSave" );
-    cmdNotePrint = aDocument.getElementById( "cmdNotePrint" );
+    editorView = document.getElementById( "editorView" );
     noteStateListener = {
       name: "EDITOR",
       onNoteDeleted: onNoteDeleted,
@@ -325,6 +335,7 @@ ru.akman.znotes.Editor = function() {
       onModeChanged: onEditorModeChanged,
       onStateChanged: onEditorStateChanged
     };
+    editorController.register();
   };
 
 }();

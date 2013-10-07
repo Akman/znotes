@@ -1,0 +1,86 @@
+﻿/* ***** BEGIN LICENSE BLOCK *****
+ *
+ * Version: GPL 3.0
+ *
+ * ZNotes
+ * Copyright (C) 2012 Alexander Kapitman
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * The Original Code is ZNotes.
+ *
+ * Initial Developer(s):
+ *   Alexander Kapitman <akman.ru@gmail.com>
+ *
+ * Portions created by the Initial Developer are Copyright (C) 2012
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+/* ***** classic/1.0 winnt **** */
+
+@import url("chrome://znotes_common/skin/menu.css");
+
+#znotes_appmenupopup {
+  -moz-appearance: none;
+  background: white;
+  border: 1px solid ThreeDShadow;
+}
+#znotes_appmenuprimarypane {
+  -moz-border-end: 1px solid ThreeDShadow;
+  background-color: rgba(255, 255, 255, .5);
+  padding: 2px;
+  -moz-border-end: none;
+}
+#znotes_appmenuprimarypane menupopup {
+  -moz-appearance: none;
+  background-image: -moz-linear-gradient(left, white 26px, ThreeDLightShadow 26px,
+                                         ThreeDLightShadow 27px, ThreeDHighlight 27px,
+                                         ThreeDHighlight 28px, white 28px);
+  border: 3px solid;
+  -moz-border-top-colors: ThreeDShadow white;
+  -moz-border-bottom-colors: ThreeDShadow white;
+  -moz-border-left-colors: ThreeDShadow white;
+  -moz-border-right-colors: ThreeDShadow white;
+}
+#znotes_appmenuprimarypane menupopup:-moz-locale-dir(rtl) {
+  background-image: -moz-linear-gradient(right, white 26px, ThreeDLightShadow 26px,
+                                         ThreeDLightShadow 27px, ThreeDHighlight 27px,
+                                         ThreeDHighlight 28px, white 28px);
+}
+#znotes_appmenusecondarypane {
+  background-color: #f1f5fb;
+  box-shadow: 1px 0 2px rgb(204, 214, 234) inset;
+}
+#znotes_appmenusecondarypane:-moz-locale-dir(rtl) {
+  box-shadow: -1px 0 2px rgb(204, 214, 234) inset;
+}
+#znotes_appmenusecondarypane menupopup {
+  -moz-appearance: none;
+  background-image: -moz-linear-gradient(left, #f1f5fb 26px, ThreeDLightShadow 26px,
+                                         ThreeDLightShadow 27px, ThreeDHighlight 27px,
+                                         ThreeDHighlight 28px, #f1f5fb 28px);
+  border: 3px solid;
+  -moz-border-top-colors: ThreeDShadow #f1f5fb;
+  -moz-border-bottom-colors: ThreeDShadow #f1f5fb;
+  -moz-border-left-colors: ThreeDShadow #f1f5fb;
+  -moz-border-right-colors: ThreeDShadow #f1f5fb;
+}
+#znotes_appmenusecondarypane menupopup:-moz-locale-dir(rtl) {
+  background-image: -moz-linear-gradient(right, #f1f5fb 26px, ThreeDLightShadow 26px,
+                                         ThreeDLightShadow 27px, ThreeDHighlight 27px,
+                                         ThreeDHighlight 28px, #f1f5fb 28px);
+}

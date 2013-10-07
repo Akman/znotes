@@ -34,286 +34,250 @@ if ( !ru ) var ru = {};
 if ( !ru.akman ) ru.akman = {};
 if ( !ru.akman.znotes ) ru.akman.znotes = {};
 
-Components.utils.import( "resource://znotes/utils.js"         , ru.akman.znotes );
+Components.utils.import( "resource://znotes/utils.js", ru.akman.znotes );
 
 ru.akman.znotes.Attachments = function() {
 
   // !!!! %%%% !!!! STRINGS_BUNDLE & IS_STANDALONE
-  return function( aWindow, aDocument, aNoteUpdateCallback ) {
+  return function() {
 
-    var stringsBundle = ru.akman.znotes.Utils.STRINGS_BUNDLE;
-    var isStandalone = ru.akman.znotes.Utils.IS_STANDALONE;
-    var log = ru.akman.znotes.Utils.log;
-
-    var noteButtonContact = null;
-    var noteButtonAttachment = null;
+    var Utils = ru.akman.znotes.Utils;
+    var Common = ru.akman.znotes.Common;
 
     var attachmentTree = null;
     var attachmentTreeChildren = null;
-    var attachmentTreeBoxObject = null;
 
-    var attachmentTreeMenu = null;
-
-    var cmdNewContact = null;
-    var cmdNewAttachment = null;
-    var cmdOpenAttachment = null;
-    var cmdOpenAttachmentWith = null;
-    var cmdSaveAttachment = null;
-    var cmdDeleteAttachment = null;
-
-    var currentWindow = null;
-    var currentDocument = null;
     var currentNote = null;
     var currentAttachment = null;
 
     var noteStateListener = null;
 
-    // C O M M A N D S
-
-    function onCmdNewAttachment( source ) {
-      var nsIFilePicker = Components.interfaces.nsIFilePicker;
-      var fp = Components.classes["@mozilla.org/filepicker;1"]
-                         .createInstance( nsIFilePicker );
-      fp.init(
-        currentWindow,
-        stringsBundle.getString( "attachments.addfiledialog.title" ),
-        nsIFilePicker.modeOpen
-      );
-      fp.appendFilters( nsIFilePicker.filterAll );
-      var result = fp.show();
-      if ( result == nsIFilePicker.returnOK ) {
-        createAttachment( fp.file );
-      }
+    //
+    // COMMANDS
+    //
+    
+    var attachmentsCommands = {
+      "znotes_attachmentsaddcontact_command": null,
+      "znotes_attachmentsaddfile_command": null,
+      "znotes_attachmentsopen_command": null,
+      "znotes_attachmentsopenwith_command": null,
+      "znotes_attachmentssave_command": null,
+      "znotes_attachmentsdelete_command": null
     };
-
-    function onCmdNewContact( source ) {
-      var params = {
-        input: {
-        },
-        output: null
-      };
-      currentWindow.openDialog(
-        "chrome://znotes/content/abpicker.xul",
-        "",
-        "chrome,dialog=yes,modal=yes,centerscreen,resizable=yes",
-        params
-      ).focus();
-      if ( params.output ) {
-        if ( params.output.cards.length > 0 ) {
-          createContacts( params.output.cards );
+    
+    var attachmentsController = {
+      supportsCommand: function( cmd ) {
+        if ( !( cmd in attachmentsCommands ) ) {
+          return false;
         }
-      }
-    };
-
-    function onCmdOpenAttachment( source ) {
-      if ( currentAttachment == null || currentAttachment == -1 )
-        return;
-      openAttachment( currentAttachment );
-    };
-
-    function onCmdOpenAttachmentWith( source ) {
-      if ( currentAttachment == null || currentAttachment == -1 )
-        return;
-      openAttachment( currentAttachment, true );
-    };
-
-    function onCmdSaveAttachment( source ) {
-      if ( currentAttachment == null || currentAttachment == -1 )
-        return false;
-      var treeItem = attachmentTree.view.getItemAtIndex( currentAttachment );
-      var parseInfo = treeItem.getAttribute( "value" ).split( "\u0000" );
-      var id = parseInfo[0];
-      var type = parseInfo[1];
-      var nsIFilePicker = Components.interfaces.nsIFilePicker;
-      var fp = Components.classes["@mozilla.org/filepicker;1"]
-                         .createInstance( nsIFilePicker );
-      switch ( type ) {
-        case "file" :
-          fp.defaultString = id;
-          break;
-        case "contact" :
-          var card = getContactCardById( id );
-          if ( card != null )
-            fp.defaultString = getContactName( card.abCard ) + ".json";
-          break;
-        default :
-      }
-      fp.init(
-        currentWindow,
-        stringsBundle.getString( "attachments.saveattachmentdialog.title" ),
-        nsIFilePicker.modeSave
-      );
-      fp.appendFilters( nsIFilePicker.filterAll );
-      var result = fp.show();
-      if ( result == nsIFilePicker.returnOK || result == nsIFilePicker.returnReplace ) {
-        saveAttachment( currentAttachment, fp.file );
-      }
-      return true;
-    };
-
-    function onCmdDeleteAttachment( source ) {
-      var aRow = currentAttachment;
-      var aColumn = attachmentTree.columns.getNamedColumn( "attachmentTreeName" );
-      var currentAttachmentName = attachmentTree.view.getCellText( aRow, aColumn );
-      var params = {
-        input: {
-          title: stringsBundle.getString( "attachments.confirmDelete.title" ),
-          message1: stringsBundle.getFormattedString( "attachments.confirmDelete.message1", [ currentAttachmentName ] ),
-          message2: stringsBundle.getString( "attachments.confirmDelete.message2" )
-        },
-        output: null
-      };
-      currentWindow.openDialog(
-        "chrome://znotes/content/confirmdialog.xul",
-        "",
-        "chrome,dialog=yes,modal=yes,centerscreen,resizable=yes",
-        params
-      ).focus();
-      if ( params.output ) {
-        deleteAttachment( currentAttachment );
-        currentAttachmentChanged();
-      }
-      return true;
-    };
-
-    // E V E N T S
-
-    function onSelect( event ) {
-      if ( attachmentTree.currentIndex == currentAttachment ) {
-        event.stopPropagation();
-        event.preventDefault();
-        return;
-      }
-      currentAttachment = attachmentTree.currentIndex;
-      currentAttachmentChanged();
-    };
-
-    function onClick( event ) {
-      event.preventDefault();
-      event.stopPropagation();
-      if ( event.button != "2" ) {
-        return false;
-      }
-      attachmentTreeMenu.openPopupAtScreen(
-        event.clientX + window.mozInnerScreenX + 2,
-        event.clientY + window.mozInnerScreenY + 2,
-        false
-      );
-      return true;
-    };
-
-    function onDblClick( event ) {
-      event.stopPropagation();
-      event.preventDefault();
-      if ( event.button != "0" ) {
-        return false;
-      }
-      if ( attachmentTree.currentIndex < 0 || currentAttachment == null ) {
-        return false;
-      }
-      openAttachment( currentAttachment );
-      return true;
-    };
-
-    // S T A T E
-
-    function currentAttachmentChanged() {
-      if ( currentAttachment == null || currentAttachment == -1 ) {
-        attachmentTree.view.selection.select( -1 );
-        cmdOpenAttachment.setAttribute( "disabled", "true" );
-        cmdOpenAttachmentWith.setAttribute( "disabled", "true" );
-        cmdSaveAttachment.setAttribute( "disabled", "true" );
-        cmdDeleteAttachment.setAttribute( "disabled", "true" );
-      } else {
-        var currentTreeItem = attachmentTree.view.getItemAtIndex( currentAttachment );
-        var parseInfo = currentTreeItem.getAttribute( "value" ).split( "\u0000" );
-        var id = parseInfo[0];
-        var type = parseInfo[1];
-        switch ( type ) {
-          case "file" :
-            cmdOpenAttachment.removeAttribute( "disabled" );
-            cmdOpenAttachmentWith.removeAttribute( "disabled" );
-            cmdSaveAttachment.removeAttribute( "disabled" );
-            cmdDeleteAttachment.removeAttribute( "disabled" );
-            break;
-          case "contact" :
-            cmdOpenAttachment.setAttribute( "disabled", "true" );
-            cmdOpenAttachmentWith.setAttribute( "disabled", "true" );
-            cmdSaveAttachment.removeAttribute( "disabled" );
-            cmdDeleteAttachment.removeAttribute( "disabled" );
-            break;
-          default :
-            cmdOpenAttachment.setAttribute( "disabled", "true" );
-            cmdOpenAttachmentWith.setAttribute( "disabled", "true" );
-            cmdSaveAttachment.setAttribute( "disabled", "true" );
-            cmdDeleteAttachment.removeAttribute( "disabled" );
+        return true;
+      },
+      isCommandEnabled: function( cmd ) {
+        if ( !( cmd in attachmentsCommands ) ) {
+          return false;
         }
+        if ( !currentNote || currentNote.isLoading() ) {
+          return false;
+        }
+        var type = getCurrentAttachmentType();
+        switch ( cmd ) {
+          case "znotes_attachmentsaddcontact_command":
+          case "znotes_attachmentsaddfile_command":
+            return true;
+          case "znotes_attachmentsopen_command":
+            if ( !isAttachmentSelected() ) {
+              return false;
+            }
+            switch ( type ) {
+              case "file" :
+              case "contact" :
+                return true;
+            }
+            break;
+          case "znotes_attachmentsopenwith_command":
+            if ( !isAttachmentSelected() ) {
+              return false;
+            }
+            switch ( type ) {
+              case "file" :
+                return true;
+            }
+            break;
+          case "znotes_attachmentssave_command":
+            if ( !isAttachmentSelected() ) {
+              return false;
+            }
+            switch ( type ) {
+              case "file" :
+              case "contact" :
+                return true;
+            }
+            break;
+          case "znotes_attachmentsdelete_command":
+            if ( !isAttachmentSelected() ) {
+              return false;
+            }
+            return true;
+        }
+        return false;
+      },
+      doCommand: function( cmd ) {
+        if ( !( cmd in attachmentsCommands ) ) {
+          return;
+        }
+        switch ( cmd ) {
+          case "znotes_attachmentsaddcontact_command":
+            var params = {
+              input: {
+              },
+              output: null
+            };
+            window.openDialog(
+              "chrome://znotes/content/abpicker.xul",
+              "",
+              "chrome,dialog=yes,modal=yes,centerscreen,resizable=yes",
+              params
+            ).focus();
+            if ( params.output ) {
+              if ( params.output.cards.length > 0 ) {
+                createContacts( params.output.cards );
+              }
+            }
+            break;
+          case "znotes_attachmentsaddfile_command":
+            var nsIFilePicker = Components.interfaces.nsIFilePicker;
+            var fp = Components.classes["@mozilla.org/filepicker;1"]
+                               .createInstance( nsIFilePicker );
+            fp.init(
+              window,
+              Utils.STRINGS_BUNDLE.getString(
+                "attachments.addfiledialog.title" ),
+              nsIFilePicker.modeOpen
+            );
+            fp.appendFilters( nsIFilePicker.filterAll );
+            var result = fp.show();
+            if ( result == nsIFilePicker.returnOK ) {
+              createAttachment( fp.file );
+            }
+            break;
+          case "znotes_attachmentsopen_command":
+            openAttachment( currentAttachment );
+            break;
+          case "znotes_attachmentsopenwith_command":
+            openAttachment( currentAttachment, true );
+            break;
+          case "znotes_attachmentssave_command":
+            var treeItem = attachmentTree.view.getItemAtIndex(
+              currentAttachment );
+            var parseInfo = treeItem.getAttribute( "value" )
+                                    .split( "\u0000" );
+            var id = parseInfo[0];
+            var type = parseInfo[1];
+            var nsIFilePicker = Components.interfaces.nsIFilePicker;
+            var fp = Components.classes["@mozilla.org/filepicker;1"]
+                               .createInstance( nsIFilePicker );
+            switch ( type ) {
+              case "file" :
+                fp.defaultString = id;
+                break;
+              case "contact" :
+                var card = getContactCardById( id );
+                if ( card != null )
+                  fp.defaultString = getContactName( card.abCard ) + ".json";
+                break;
+              default :
+            }
+            fp.init(
+              window,
+              Utils.STRINGS_BUNDLE.getString(
+                "attachments.saveattachmentdialog.title" ),
+              nsIFilePicker.modeSave
+            );
+            fp.appendFilters( nsIFilePicker.filterAll );
+            var result = fp.show();
+            if ( result == nsIFilePicker.returnOK ||
+                 result == nsIFilePicker.returnReplace ) {
+              saveAttachment( currentAttachment, fp.file );
+            }
+            break;
+          case "znotes_attachmentsdelete_command":
+            var aRow = currentAttachment;
+            var aColumn =
+              attachmentTree.columns.getNamedColumn( "attachmentTreeName" );
+            var currentAttachmentName =
+              attachmentTree.view.getCellText( aRow, aColumn );
+            var params = {
+              input: {
+                title: Utils.STRINGS_BUNDLE.getString(
+                  "attachments.confirmDelete.title"
+                ),
+                message1: Utils.STRINGS_BUNDLE.getFormattedString(
+                  "attachments.confirmDelete.message1",
+                  [ currentAttachmentName ]
+                ),
+                message2: Utils.STRINGS_BUNDLE.getString(
+                  "attachments.confirmDelete.message2"
+                )
+              },
+              output: null
+            };
+            window.openDialog(
+              "chrome://znotes/content/confirmdialog.xul",
+              "",
+              "chrome,dialog=yes,modal=yes,centerscreen,resizable=yes",
+              params
+            ).focus();
+            if ( params.output ) {
+              deleteAttachment( currentAttachment );
+            }
+            break;
+        }
+      },
+      onEvent: function( event ) {
+      },
+      getName: function() {
+        return "ATTACHMENTS";
+      },
+      getCommand: function( cmd ) {
+        if ( cmd in attachmentsCommands ) {
+          return document.getElementById( cmd );
+        }
+        return null;
+      },
+      register: function() {
+        Utils.appendAccelText( attachmentsCommands, document );
+        try {
+          top.controllers.insertControllerAt( 0, this );
+        } catch ( e ) {
+          Components.utils.reportError(
+            "An error occurred registering '" + this.getName() +
+            "' controller: " + e
+          );
+        }
+      },
+      unregister: function() {
+        try {
+          top.controllers.removeController( this );
+        } catch ( e ) {
+          Components.utils.reportError(
+            "An error occurred unregistering '" + this.getName() +
+            "' controller: " + e
+          );
+        }
+        Utils.removeAccelText( attachmentsCommands, document );
       }
     };
-
-    // V I E W
-
-    function createAttachmentTreeItem( attachmentID, attachmentType, attachmentIcon, attachmentName, attachmentDescription ) {
-      var treeItem = null;
-      var treeRow = null;
-      var treeCell = null;
-      treeRow = currentDocument.createElement( "treerow" );
-      treeCell = currentDocument.createElement( "treecell" );
-      treeCell.setAttribute( "label", attachmentName );
-      treeCell.setAttribute( "src", attachmentIcon );
-      treeCell.setAttribute( "properties", "attachment" );
-      treeRow.appendChild( treeCell );
-      treeCell = currentDocument.createElement( "treecell" );
-      treeCell.setAttribute( "label", attachmentDescription );
-      treeRow.appendChild( treeCell );
-      treeItem = currentDocument.createElement( "treeitem" );
-      treeItem.appendChild( treeRow );
-      treeItem.setAttribute( "value", attachmentID + "\u0000" + attachmentType );
-      return treeItem;
-    };
-
-    function updateAttachmentTreeItem( itemIndex ) {
-      var anItem = attachmentTree.view.getItemAtIndex( itemIndex );
-      var parseInfo = anItem.getAttribute( "value" ).split( "\u0000" );
-      var id = parseInfo[0];
-      var type = parseInfo[1];
-      var attachmentName = null;
-      var attachmentIcon = null;
-      var attachmentDescription = null;
-      switch ( type ) {
-        case "file" :
-          var entry = currentNote.getAttachmentEntry( id );
-          if ( entry != null ) {
-            attachmentName = getFileName( entry );
-            attachmentIcon = getFileIcon( entry, 16 );
-            attachmentDescription = getFileDescription( entry );
-          }
-          break;
-        case "contact" :
-          var card = getContactCardById( id );
-          if ( card != null ) {
-            card = card.abCard;
-            attachmentName = getContactName( card );
-            attachmentIcon = getContactIcon( card, 16 );
-            attachmentDescription = getContactDescription( card );
-          }
-          break;
-        default :
-          attachmentName = stringsBundle.getString( "attachments.unknowntype.name" );
-          attachmentIcon = null;
-          attachmentDescription = stringsBundle.getString( "attachments.unknowntype.description" );
-      }
-      var treeRow = anItem.firstChild;
-      var treeCell = treeRow.childNodes[ attachmentTree.columns.getNamedColumn( "attachmentTreeName" ).index ];
-      treeCell.setAttribute( "label", attachmentName );
-      treeCell.setAttribute( "src", attachmentIcon );
-      treeCell.setAttribute( "properties", "attachment" );
-      var treeCell = treeRow.childNodes[ attachmentTree.columns.getNamedColumn( "attachmentTreeDescription" ).index ];
-      treeCell.setAttribute( "label", attachmentDescription );
-    };
-
-    // A C T I O N S
-
+    
+    function updateCommands() {
+      window.focus();
+      Common.goUpdateCommand( "znotes_attachmentsaddcontact_command" );
+      Common.goUpdateCommand( "znotes_attachmentsaddfile_command" );
+      Common.goUpdateCommand( "znotes_attachmentsopen_command" );
+      Common.goUpdateCommand( "znotes_attachmentsopenwith_command" );
+      Common.goUpdateCommand( "znotes_attachmentssave_command" );
+      Common.goUpdateCommand( "znotes_attachmentsdelete_command" );
+    };    
+    
     function createContacts( cards ) {
       for ( var i = 0; i < cards.length; i++ ) {
         var contact = cards[i]
@@ -325,6 +289,51 @@ ru.akman.znotes.Attachments = function() {
       }
     };
 
+    function createJSON( card ) {
+      var result = '{\n';
+      for ( var name in card ) {
+        if ( name == 'properties' ) {
+          continue;
+        }
+        var value = card[name];
+        var type = typeof( value );
+        switch ( type ) {
+          case 'function':
+          case 'object':
+            continue;
+          case 'boolean':
+          case 'number':
+            result += '  "' + name + '": ' + value + ',\n';
+            break;
+          default:
+            result += '  "' + name + '": "' + value + '",\n';
+            break;
+        }
+      }
+      result += '  "properties": {\n';
+      var properties = card.properties;
+      while ( properties.hasMoreElements() ) {
+        var property = properties.getNext().QueryInterface(
+          Components.interfaces.nsIProperty );
+        var type = typeof( property.value );
+        switch ( type ) {
+          case 'function':
+          case 'object':
+            continue;
+          case 'boolean':
+          case 'number':
+            result += '    "' + property.name + '": ' + property.value +
+              ',\n';
+            break;
+          default:
+            result += '    "' + property.name + '": "' + property.value +
+              '",\n';
+            break;
+        }
+      }
+      return result.substring( 0, result.length - 2 ) + "\n  }\n}";
+    };
+    
     function createAttachment( file ) {
       currentNote.addAttachment( [ file.leafName, "file", file.parent.path ] );
     };
@@ -338,7 +347,8 @@ ru.akman.znotes.Attachments = function() {
 
     function saveAttachment( anAttachmentIndex, entry ) {
       var treeItem = attachmentTree.view.getItemAtIndex( anAttachmentIndex );
-      var parseInfo = treeItem.getAttribute( "value" ).split( "\u0000" );
+      var parseInfo = treeItem.getAttribute( "value" )
+                              .split( "\u0000" );
       var id = parseInfo[0];
       var type = parseInfo[1];
       switch ( type ) {
@@ -352,53 +362,14 @@ ru.akman.znotes.Attachments = function() {
             }
             src.copyTo( parentDir, fileName );
           } catch ( e ) {
-            log( e );
+            Utils.log( e );
           }
           break;
         case "contact" :
           var card = getContactCardById( id );
           if ( card != null ) {
-            card = card.abCard;
-            var json = '{\n';
-            for ( var name in card ) {
-              if ( name == 'properties' ) {
-                continue;
-              }
-              var value = card[name];
-              var type = typeof( value );
-              switch ( type ) {
-                case 'function':
-                case 'object':
-                  continue;
-                case 'boolean':
-                case 'number':
-                  json += '  "' + name + '": ' + value + ',\n';
-                  break;
-                default:
-                  json += '  "' + name + '": "' + value + '",\n';
-                  break;
-              }
-            }
-            json += '  "properties": {\n';
-            var properties = card.properties;
-            while ( properties.hasMoreElements() ) {
-              var property = properties.getNext().QueryInterface( Components.interfaces.nsIProperty );
-              var type = typeof( property.value );
-              switch ( type ) {
-                case 'function':
-                case 'object':
-                  continue;
-                case 'boolean':
-                case 'number':
-                  json += '    "' + property.name + '": ' + property.value + ',\n';
-                  break;
-                default:
-                  json += '    "' + property.name + '": "' + property.value + '",\n';
-                  break;
-              }
-            }
-            json = json.substring( 0, json.length - 2 ) + "\n  }\n}";
-            ru.akman.znotes.Utils.writeFileContent( entry, "UTF-8", json );
+            Utils.writeFileContent(
+              entry, "UTF-8", createJSON( card.abCard ) );
           }
           break;
       }
@@ -413,13 +384,17 @@ ru.akman.znotes.Attachments = function() {
         case "file" :
           var entry = currentNote.getAttachmentEntry( id );
           if ( entry ) {
-            var ioService = Components.classes["@mozilla.org/network/io-service;1"]
-                                      .getService( Components.interfaces.nsIIOService );
-            var fph = ioService.getProtocolHandler( "file" )
-                               .QueryInterface( Components.interfaces.nsIFileProtocolHandler );
+            var ioService =
+              Components.classes["@mozilla.org/network/io-service;1"]
+                        .getService( Components.interfaces.nsIIOService );
+            var fph =
+              ioService.getProtocolHandler( "file" )
+                       .QueryInterface(
+                         Components.interfaces.nsIFileProtocolHandler );
             var url = fph.getURLSpecFromFile( entry );
-            var title = stringsBundle.getString( "utils.openuri.apppicker.title" );
-            ru.akman.znotes.Utils.openURI( url, force, currentWindow, title );
+            var title = Utils.STRINGS_BUNDLE.getString(
+              "utils.openuri.apppicker.title" );
+            Utils.openURI( url, force, window, title );
           }
           break;
         case "contact" :
@@ -427,7 +402,7 @@ ru.akman.znotes.Attachments = function() {
           if ( card ) {
             var abURI = card.abURI;
             var card = card.abCard;
-            currentWindow.openDialog(
+            window.openDialog(
               "chrome://messenger/content/addressbook/abEditCardDialog.xul",
               "",
               "chrome,resizable=no,modal,titlebar,centerscreen",
@@ -438,11 +413,38 @@ ru.akman.znotes.Attachments = function() {
       }
       updateAttachmentTreeItem( anAttachmentIndex );
     };
+    
+    // EVENTS
 
-    // U T I L S
+    function onSelect( event ) {
+      if ( attachmentTree.currentIndex == currentAttachment ) {
+        event.stopPropagation();
+        event.preventDefault();
+        return false;
+      }
+      currentAttachment = attachmentTree.currentIndex;
+      updateCommands();
+      return true;
+    };
+
+    function onDblClick( event ) {
+      if ( event.button != "0" ) {
+        event.stopPropagation();
+        event.preventDefault();
+        return false;
+      }
+      if ( attachmentTree.currentIndex < 0 || currentAttachment == null ) {
+        return true;
+      }
+      openAttachment( currentAttachment );
+      return true;
+    };
+
+    // HELPERS
 
     function getFileName( entry ) {
-      var result = stringsBundle.getString( "attachments.filenotfound" );
+      var result = Utils.STRINGS_BUNDLE.getString(
+        "attachments.filenotfound" );
       if ( entry.exists() && !entry.isDirectory() ) {
         result = entry.leafName;
       }
@@ -450,11 +452,12 @@ ru.akman.znotes.Attachments = function() {
     };
 
     function getFileDescription( entry ) {
-      var result = stringsBundle.getString( "attachments.filenotfound" );
+      var result = Utils.STRINGS_BUNDLE.getString(
+        "attachments.filenotfound" );
       if ( entry.exists() && !entry.isDirectory() ) {
-        result = stringsBundle.getString( "attachments.filesize" ) + ": " +
-                 Math.round( entry.fileSize / 1000 ) + " " +
-                 stringsBundle.getString( "attachments.kib" );
+        result = Utils.STRINGS_BUNDLE.getString( "attachments.filesize" ) +
+          ": " + Math.round( entry.fileSize / 1000 ) + " " +
+          Utils.STRINGS_BUNDLE.getString( "attachments.kib" );
       }
       return result;
     };
@@ -462,7 +465,7 @@ ru.akman.znotes.Attachments = function() {
     function getFileIcon( entry, size ) {
       var result = null;
       if ( entry.exists() && !entry.isDirectory() ) {
-        result = ru.akman.znotes.Utils.getEntryIcon( entry, size );
+        result = Utils.getEntryIcon( entry, size );
       }
       return result;
     };
@@ -472,14 +475,15 @@ ru.akman.znotes.Attachments = function() {
     };
 
     function getContactDescription( card ) {
-      if ( isStandalone )
+      if ( Utils.IS_STANDALONE )
         return null;
       var directoryId = card.directoryId;
       var abManager = Components.classes["@mozilla.org/abmanager;1"]
                             .getService( Components.interfaces.nsIAbManager );
       var directories = abManager.directories;
       while ( directories.hasMoreElements() ) {
-        var directory = directories.getNext().QueryInterface( Components.interfaces.nsIAbDirectory );
+        var directory = directories.getNext().QueryInterface(
+          Components.interfaces.nsIAbDirectory );
         if ( directory instanceof Components.interfaces.nsIAbDirectory ) {
           var id = directory.dirPrefId + "&" + directory.dirName;
           if ( id == directoryId ) {
@@ -491,11 +495,12 @@ ru.akman.znotes.Attachments = function() {
     };
 
     function getContactIcon( card, size ) {
-      return card.getProperty( "PhotoURI", "chrome://znotes/skin/contact-16x16.png" );
+      return card.getProperty( "PhotoURI",
+        "chrome://znotes/skin/contact-16x16.png" );
     };
 
     function getContactCardById( id ) {
-      if ( isStandalone ) {
+      if ( Utils.IS_STANDALONE ) {
         return null;
       }
       var parseInfo = id.split( "\t" );
@@ -507,11 +512,13 @@ ru.akman.znotes.Attachments = function() {
       var localId = parseInfo[1];
       var directory = null;
       var isFound = false;
-      var abManager = Components.classes["@mozilla.org/abmanager;1"]
-                                .getService( Components.interfaces.nsIAbManager );
+      var abManager =
+        Components.classes["@mozilla.org/abmanager;1"]
+                  .getService( Components.interfaces.nsIAbManager );
       var directories = abManager.directories;
       while ( directories.hasMoreElements() ) {
-        directory = directories.getNext().QueryInterface( Components.interfaces.nsIAbDirectory );
+        directory = directories.getNext().QueryInterface(
+          Components.interfaces.nsIAbDirectory );
         if ( directory instanceof Components.interfaces.nsIAbDirectory ) {
           if ( directory.dirPrefId == pabName ) {
             isFound = true;
@@ -525,7 +532,8 @@ ru.akman.znotes.Attachments = function() {
       //
       var cards = directory.childCards;
       while ( cards.hasMoreElements() ) {
-        var card = cards.getNext().QueryInterface( Components.interfaces.nsIAbCard );
+        var card = cards.getNext().QueryInterface(
+          Components.interfaces.nsIAbCard );
         if ( card instanceof Components.interfaces.nsIAbCard ) {
           if ( card.localId == localId ) {
             return { abCard: card, abURI: directory.URI };
@@ -535,6 +543,72 @@ ru.akman.znotes.Attachments = function() {
       return null;
     };
 
+    function getAttachmentInfo( attachment ) {
+      var result = {
+        id: attachment[0],
+        type: attachment[1],
+        visible: true
+      };
+      switch ( result.type ) {
+        case "file" :
+          var entry = currentNote.getAttachmentEntry( result.id );
+          if ( entry != null ) {
+            result.name = getFileName( entry );
+            result.icon = getFileIcon( entry, 16 );
+            result.description = getFileDescription( entry );
+          }
+          break;
+        case "contact" :
+          var card = getContactCardById( result.id );
+          if ( card != null ) {
+            card = card.abCard;
+            result.name = getContactName( card );
+            result.icon = getContactIcon( card, 16 );
+            result.description = getContactDescription( card );
+          } else {
+            result.name = Utils.STRINGS_BUNDLE.getString(
+              "attachments.unknowncontact.name" );
+            result.icon = null;
+            result.description = null;
+          }
+          result.visible = !Utils.IS_STANDALONE;
+          break;
+        default :
+          result.name = Utils.STRINGS_BUNDLE.getString(
+            "attachments.unknowntype.name" );
+          result.icon = null;
+          result.description = Utils.STRINGS_BUNDLE.getString(
+            "attachments.unknowntype.description" );
+      }
+      return result;
+    };
+    
+    function getCurrentAttachmentType() {
+      if ( !isAttachmentSelected() ) {
+        return null;
+      }
+      var currentTreeItem = attachmentTree.view.getItemAtIndex(
+        currentAttachment );
+      var parseInfo = currentTreeItem.getAttribute( "value" )
+                                     .split( "\u0000" );
+      return parseInfo[1];
+    };
+
+    function getCurrentAttachmentId() {
+      if ( !isAttachmentSelected() ) {
+        return null;
+      }
+      var currentTreeItem = attachmentTree.view.getItemAtIndex(
+        currentAttachment );
+      var parseInfo = currentTreeItem.getAttribute( "value" )
+                                     .split( "\u0000" );
+      return parseInfo[0];
+    };
+    
+    function isAttachmentSelected() {
+      return ( currentAttachment != null && currentAttachment != -1 );
+    };
+    
     // NOTE EVENTS
 
     function onNoteDeleted( aCategory, aNote ) {
@@ -543,106 +617,50 @@ ru.akman.znotes.Attachments = function() {
       }
     };
 
-    /*
-    function onNoteChanged( e ) {
-      var aCategory = e.data.parentCategory;
-      var aChangedNote = e.data.changedNote;
-    }
-    */
-
-    /*
-    function onNoteTagsChanged( e ) {
-      var aCategory = e.data.parentCategory;
-      var aChangedNote = e.data.changedNote;
-      var oldTags = e.data.oldValue;
-      var newTags = e.data.newValue;
-    }
-    */
-
-    /*
-    function onNoteMainTagChanged( e ) {
-      var aCategory = e.data.parentCategory;
-      var aNote = e.data.changedNote;
-      var oldTag = e.data.oldValue;
-      var newTag = e.data.newValue;
-    }
-    */
-
-    /*
-    function onNoteContentChanged( e ) {
-      var aCategory = e.data.parentCategory;
-      var aNote = e.data.changedNote;
-      var oldContent = e.data.oldValue;
-      var newContent = e.data.newValue;
-    }
-    */
-
-    /*
-    function onNoteContentLoaded( e ) {
-      var aCategory = e.data.parentCategory;
-      var aNote = e.data.changedNote;
-    }
-    */
-
-    /*
-    function onNoteContentAppended( e ) {
-      var aCategory = e.data.parentCategory;
-      var aNote = e.data.changedNote;
-      var anInfo = e.data.contentInfo;
-    }
-    */
-
-    /*
-    function onNoteContentRemoved( e ) {
-      var aCategory = e.data.parentCategory;
-      var aNote = e.data.changedNote;
-      var anInfo = e.data.contentInfo;
-    }
-    */
-
     function onNoteAttachmentAppended( e ) {
       var aCategory = e.data.parentCategory;
       var aNote = e.data.changedNote;
       var anInfo = e.data.attachmentInfo;
-      var attachmentID = anInfo[0];
-      var attachmentType = anInfo[1];
-      var attachmentName = null;
-      var attachmentIcon = null;
-      var attachmentDescription = null;
+      var id = anInfo[0];
+      var type = anInfo[1];
+      var name = null;
+      var icon = null;
+      var description = null;
       var treeItem = null;
       var parseInfo = null;
-      var id = null;
       var aRow = -1;
       for ( var i = 0; i < attachmentTree.view.rowCount; i++ ) {
         treeItem = attachmentTree.view.getItemAtIndex( i );
         parseInfo = treeItem.getAttribute( "value" ).split( "\u0000" );
-        id = parseInfo[0];
-        if ( attachmentID == id ) {
+        if ( id == parseInfo[0] ) {
           aRow = i;
           break;
         }
       }
       if ( aRow == -1 ) {
-        switch ( attachmentType ) {
+        switch ( type ) {
           case "file" :
-            var entry = aNote.getAttachmentEntry( attachmentID );
-            attachmentName = getFileName( entry );
-            attachmentIcon = getFileIcon( entry, 16 );
-            attachmentDescription = getFileDescription( entry );
+            var entry = aNote.getAttachmentEntry( id );
+            name = getFileName( entry );
+            icon = getFileIcon( entry, 16 );
+            description = getFileDescription( entry );
             break;
           case "contact" :
-            var card = getContactCardById( attachmentID ).abCard;
-            attachmentName = getContactName( card );
-            attachmentIcon = getContactIcon( card, 16 );
-            attachmentDescription = getContactDescription( card );
+            var card = getContactCardById( id ).abCard;
+            name = getContactName( card );
+            icon = getContactIcon( card, 16 );
+            description = getContactDescription( card );
             break;
           default :
-            attachmentName = stringsBundle.getString( "attachments.unknowntype.name" );
-            attachmentIcon = null;
-            attachmentDescription = stringsBundle.getString( "attachments.unknowntype.description" );
+            name = Utils.STRINGS_BUNDLE.getString(
+              "attachments.unknowntype.name" );
+            icon = null;
+            description = Utils.STRINGS_BUNDLE.getString(
+              "attachments.unknowntype.description" );
             break;
         }
-        var treeItem = createAttachmentTreeItem(  attachmentID, attachmentType, attachmentIcon, attachmentName, attachmentDescription );
+        var treeItem =
+          createAttachmentTreeItem( id, type, icon, name, description );
         attachmentTreeChildren.appendChild( treeItem );
         aRow = attachmentTree.view.rowCount - 1;
       }
@@ -682,184 +700,186 @@ ru.akman.znotes.Attachments = function() {
       }
     };
 
-    // L I S T E N E R S
+    // VIEW
 
-    function addEventListeners() {
-      attachmentTree.addEventListener( "click", onClick, true );
-      attachmentTree.addEventListener( "dblclick", onDblClick, true );
-      attachmentTree.addEventListener( "select", onSelect, false );
-      cmdNewContact.addEventListener( "command", onCmdNewContact, false );
-      cmdNewAttachment.addEventListener( "command", onCmdNewAttachment, false );
-      cmdOpenAttachment.addEventListener( "command", onCmdOpenAttachment, false );
-      cmdOpenAttachmentWith.addEventListener( "command", onCmdOpenAttachmentWith, false );
-      cmdSaveAttachment.addEventListener( "command", onCmdSaveAttachment, false );
-      cmdDeleteAttachment.addEventListener( "command", onCmdDeleteAttachment, false );
-      if ( currentNote ) {
-        currentNote.addStateListener( noteStateListener );
-      }
-    };
-
-    function removeEventListeners() {
-      attachmentTree.removeEventListener( "select", onSelect, false );
-      attachmentTree.removeEventListener( "click", onClick, true );
-      attachmentTree.removeEventListener( "dblclick", onDblClick, true );
-      cmdNewContact.removeEventListener( "command", onCmdNewContact, false );
-      cmdNewAttachment.removeEventListener( "command", onCmdNewAttachment, false );
-      cmdOpenAttachment.removeEventListener( "command", onCmdOpenAttachment, false );
-      cmdOpenAttachmentWith.removeEventListener( "command", onCmdOpenAttachmentWith, false );
-      cmdSaveAttachment.removeEventListener( "command", onCmdSaveAttachment, false );
-      cmdDeleteAttachment.removeEventListener( "command", onCmdDeleteAttachment, false );
-      if ( currentNote ) {
-        currentNote.removeStateListener( noteStateListener );
-      }
-    };
-
-    // V I E W
-
-    this.enable = function() {
-      attachmentTree.removeAttribute( "disabled" );
-      cmdNewContact.removeAttribute( "disabled" );
-      cmdNewAttachment.removeAttribute( "disabled" );
-    };
-
-    this.disable = function() {
-      attachmentTree.setAttribute( "disabled", "true" );
-      cmdNewContact.setAttribute( "disabled", "true" );
-      cmdNewAttachment.setAttribute( "disabled", "true" );
-    };
-
-    this.hide = function() {
-      while ( attachmentTreeChildren.firstChild ) {
-        attachmentTreeChildren.removeChild( attachmentTreeChildren.firstChild );
-      }
-      attachmentTree.setAttribute( "disabled", "true" );
-      cmdNewContact.setAttribute( "disabled", "true" );
-      cmdNewAttachment.setAttribute( "disabled", "true" );
-      removeEventListeners();
-    }
-
-    this.show = function( aNote ) {
-      var attachments = null;
-      var treeItem = null;
-      var attachment = null;
-      var entry = null;
-      var card = null;
-      var attachmentID = null;
-      var attachmentName = null;
-      var attachmentType = null;
-      var attachmentIcon = null;
-      var attachmentDescription = null;
-      var isVisible = null;
-      var count = 0;
-      //
-      if ( currentNote ) {
-        this.hide();
-      }
-      currentNote = aNote;
-      if ( currentNote == null || !currentNote.isExists() ) {
-        this.hide();
-        return;
-      }
-      addEventListeners();
-      attachmentTree.removeAttribute( "disabled" );
-      cmdNewContact.removeAttribute( "disabled" );
-      cmdNewAttachment.removeAttribute( "disabled" );
-      //
-      attachments = currentNote.getAttachments();
-      currentAttachment = null;
-      while ( attachmentTreeChildren.firstChild )
-        attachmentTreeChildren.removeChild( attachmentTreeChildren.firstChild );
-      if ( currentNote != null ) {
-        if ( attachments.length > 0 ) {
-          for ( var i = 0; i < attachments.length; i++ ) {
-            attachment = attachments[i];
-            // ***
-            isVisible = true;
-            attachmentID = attachment[0];
-            attachmentType = attachment[1];
-            switch ( attachmentType ) {
-              case "file" :
-                entry = currentNote.getAttachmentEntry( attachmentID );
-                if ( entry != null ) {
-                  attachmentName = getFileName( entry );
-                  attachmentIcon = getFileIcon( entry, 16 );
-                  attachmentDescription = getFileDescription( entry );
-                }
-                break;
-              case "contact" :
-                card = getContactCardById( attachmentID );
-                if ( card != null ) {
-                  card = card.abCard;
-                  attachmentName = getContactName( card );
-                  attachmentIcon = getContactIcon( card, 16 );
-                  attachmentDescription = getContactDescription( card );
-                } else {
-                  attachmentName = stringsBundle.getString( "attachments.unknowncontact.name" );
-                  attachmentIcon = null;
-                  attachmentDescription = null;
-                }
-                if ( isStandalone ) {
-                  isVisible = false;
-                }
-                break;
-              default :
-                attachmentName = stringsBundle.getString( "attachments.unknowntype.name" );
-                attachmentIcon = null;
-                attachmentDescription = stringsBundle.getString( "attachments.unknowntype.description" );;
-            }
-            // ***
-            if ( isVisible ) {
-              count += 1;
-              treeItem = createAttachmentTreeItem( attachmentID, attachmentType, attachmentIcon, attachmentName, attachmentDescription );
-              attachmentTreeChildren.appendChild( treeItem );
-            }
+    function getAttachmentInfoFromItem( anItem ) {
+      var parseInfo = anItem.getAttribute( "value" )
+                            .split( "\u0000" );
+      var result = {
+        id: parseInfo[0],
+        type: parseInfo[1],
+        name: null,
+        icon: null,
+        description: null
+      };
+      switch ( result.type ) {
+        case "file" :
+          var entry = currentNote.getAttachmentEntry( result.id );
+          if ( entry != null ) {
+            result.name = getFileName( entry );
+            result.icon = getFileIcon( entry, 16 );
+            result.description = getFileDescription( entry );
           }
+          break;
+        case "contact" :
+          var card = getContactCardById( result.id );
+          if ( card != null ) {
+            card = card.abCard;
+            result.name = getContactName( card );
+            result.icon = getContactIcon( card, 16 );
+            result.description = getContactDescription( card );
+          }
+          break;
+        default :
+          result.name = Utils.STRINGS_BUNDLE.getString(
+            "attachments.unknowntype.name" );
+          result.icon = null;
+          result.description = Utils.STRINGS_BUNDLE.getString(
+            "attachments.unknowntype.description" );
+      }
+      return result;
+    };
+    
+    function createAttachmentTreeItem( id, type, icon, name, description ) {
+      var treeItem = null;
+      var treeRow = null;
+      var treeCell = null;
+      treeRow = document.createElement( "treerow" );
+      treeCell = document.createElement( "treecell" );
+      treeCell.setAttribute( "label", name );
+      treeCell.setAttribute( "src", icon );
+      treeCell.setAttribute( "properties", "attachment" );
+      treeRow.appendChild( treeCell );
+      treeCell = document.createElement( "treecell" );
+      treeCell.setAttribute( "label", description );
+      treeRow.appendChild( treeCell );
+      treeItem = document.createElement( "treeitem" );
+      treeItem.appendChild( treeRow );
+      treeItem.setAttribute( "value", id + "\u0000" + type );
+      return treeItem;
+    };
+
+    function updateAttachmentTreeItem( itemIndex ) {
+      var anItem = attachmentTree.view.getItemAtIndex( itemIndex );
+      var anInfo = getAttachmentInfoFromItem( anItem );
+      var treeRow = anItem.firstChild;
+      var treeCell = treeRow.childNodes[
+        attachmentTree.columns
+                      .getNamedColumn( "attachmentTreeName" ).index
+      ];
+      treeCell.setAttribute( "label", anInfo.name );
+      treeCell.setAttribute( "src", anInfo.icon );
+      treeCell.setAttribute( "properties", "attachment" );
+      var treeCell = treeRow.childNodes[
+        attachmentTree.columns
+                      .getNamedColumn( "attachmentTreeDescription" ).index
+      ];
+      treeCell.setAttribute( "label", anInfo.description );
+    };
+    
+    function clearAttachmentsTree() {
+      while ( attachmentTreeChildren.firstChild ) {
+        attachmentTreeChildren.removeChild(
+          attachmentTreeChildren.firstChild );
+      }
+    };
+    
+    function showCurrentView() {
+      attachmentTree.removeAttribute( "disabled" );
+      var count = 0;
+      var info = null;
+      var attachments = currentNote.getAttachments();
+      for ( var i = 0; i < attachments.length; i++ ) {
+        info = getAttachmentInfo( attachments[i] );
+        if ( info.visible ) {
+          count += 1;
+          attachmentTreeChildren.appendChild(
+            createAttachmentTreeItem(
+              info.id,
+              info.type,
+              info.icon,
+              info.name,
+              info.description
+            )
+          );
         }
       }
       attachmentTree.view.selection.select( count > 0 ? 0 : -1 );
-      currentAttachmentChanged();
     };
-
-    this.unload = function() {
+    
+    function hideCurrentView() {
+      attachmentTree.setAttribute( "disabled", "true" );
+    };
+    
+    function show( aNote, aForced ) {
+      if ( currentNote && currentNote == aNote && !aForced ) {
+        return;
+      }
       removeEventListeners();
+      clearAttachmentsTree();
+      currentNote = aNote;
+      if ( currentNote && currentNote.isExists() ) {
+        addEventListeners();
+        showCurrentView();
+      } else {
+        hideCurrentView();
+      }
+      updateCommands();
+    };
+      
+    // LISTENERS
+
+    function addEventListeners() {
+      if ( !currentNote ) {
+        return;
+      }
+      attachmentTree.addEventListener( "dblclick", onDblClick, true );
+      attachmentTree.addEventListener( "select", onSelect, false );
+      currentNote.addStateListener( noteStateListener );
     };
 
-    // C O N S T R U C T O R
+    function removeEventListeners() {
+      if ( !currentNote ) {
+        return;
+      }
+      currentNote.removeStateListener( noteStateListener );
+      attachmentTree.removeEventListener( "select", onSelect, false );
+      attachmentTree.removeEventListener( "dblclick", onDblClick, true );
+    };
 
-    currentWindow = aWindow;
-    currentDocument = aDocument;
-    attachmentTree = currentDocument.getElementById( "attachmentTree" );
-    attachmentTreeBoxObject = attachmentTree.boxObject;
-    attachmentTreeBoxObject.QueryInterface( Components.interfaces.nsITreeBoxObject );
-    attachmentTreeChildren = currentDocument.getElementById( "attachmentTreeChildren" );
-    attachmentTreeMenu = document.getElementById( "attachmentTreeMenu" );
-    noteButtonContact = currentDocument.getElementById( "noteButtonContact" );
-    if ( !isStandalone ) {
-      noteButtonContact.removeAttribute( "hidden" );
-    } else {
-      noteButtonContact.setAttribute( "hidden", "true" );
-    }
-    noteButtonAttachment = currentDocument.getElementById( "noteButtonAttachment" );
-    cmdNewContact = currentDocument.getElementById( "cmdNewContact" );
-    cmdNewAttachment = currentDocument.getElementById( "cmdNewAttachment" );
-    cmdOpenAttachment = currentDocument.getElementById( "cmdOpenAttachment" );
-    cmdOpenAttachmentWith = currentDocument.getElementById( "cmdOpenAttachmentWith" );
-    cmdSaveAttachment = currentDocument.getElementById( "cmdSaveAttachment" );
-    cmdDeleteAttachment = currentDocument.getElementById( "cmdDeleteAttachment" );
+    // PUBLIC
+
+    this.onStyleChanged = function( event ) {
+    };
+    
+    this.onNoteChanged = function( event ) {
+      var aNote = event.data.note;
+      var aForced = event.data.forced;
+      show( aNote, aForced );
+    };
+    
+    this.onRelease = function( event ) {
+      removeEventListeners();
+      attachmentsController.unregister();
+    };
+
+    // CONSTRUCTOR
+
+    attachmentTree = document.getElementById( "attachmentTree" );
+    attachmentTreeChildren =
+      document.getElementById( "attachmentTreeChildren" );
     noteStateListener = {
       name: "ATTACHMENTS",
-      // onNoteChanged: onNoteChanged,
       onNoteDeleted: onNoteDeleted,
-      // onNoteTagsChanged: onNoteTagsChanged,
-      // onNoteMainTagChanged: onNoteMainTagChanged,
-      // onNoteContentChanged: onNoteContentChanged,
-      // onNoteContentLoaded: onNoteContentLoaded,
-      // onNoteContentAppended: onNoteContentAppended,
-      // onNoteContentRemoved: onNoteContentRemoved,
       onNoteAttachmentAppended: onNoteAttachmentAppended,
       onNoteAttachmentRemoved: onNoteAttachmentRemoved
     };
-    currentAttachmentChanged();
+    window.focus();
+    Common.goSetCommandHidden(
+      "znotes_attachmentsaddcontact_command",
+      Utils.IS_STANDALONE
+    );
+    attachmentsController.register();
   };
 
 }();

@@ -45,7 +45,6 @@
 
 <window id="znotes"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-  xmlns:svg="http://www.w3.org/2000/svg"
   windowtype="znotes:platform"
   title="&brandShortName;"
   titlemodifier="&titlemodifier.label;"
@@ -58,14 +57,9 @@
   lightweightthemesfooter="znotes_statusbar">
   
   <script type="application/javascript"
-    src="chrome://global/content/globalOverlay.js" />
-  <script type="application/javascript"
     src="chrome://znotes/content/znotes.js" />
 
   <tabbox id="znotes_tabbox" flex="1">
-    <tabs id="znotes_tabs">
-      <tab id="znotes_maintab" label="&brandShortName;" class="znotes_tab" />
-    </tabs>
     <tabpanels id="znotes_tabpanels" flex="1">
       <vbox id="znotes_maintabpanel" />
     </tabpanels>
@@ -73,14 +67,8 @@
 
   <vbox id="znotes_tabpanelcontainer" collapsed="true" />
   
-  <statusbar id="znotes_statusbar" />
-
-  <!--
-  <svg:svg height="0">
-    <svg:clipPath id="tab-curve-clip-path" clipPathUnits="userSpaceOnUse">
-      <svg:path d="m 0,28 5,0 4,-3 3,-4 1,-5 1,-5 3,-5 4,-4 4,-2 5,0 0,31 -30,0 z"/>
-    </svg:clipPath>
-  </svg:svg>
-  -->
+  <statusbar id="znotes_statusbar">
+    <spacer id="znotes_statusbar_spacer" flex="1"/>
+  </statusbar>
   
 </window>

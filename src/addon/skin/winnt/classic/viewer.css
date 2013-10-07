@@ -33,12 +33,3 @@
 /* ***** classic/1.0 winnt **** */
 
 @import url("chrome://znotes_common/skin/viewer.css");
-
-#noteBodyView {
-  padding-top: 2px;
-}
-#statusbar {
-  /*
-  background-color: hsl(210, 75%, 92%);
-  */
-}

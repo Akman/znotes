@@ -35,9 +35,9 @@ if ( !ru.akman ) ru.akman = {};
 if ( !ru.akman.znotes ) ru.akman.znotes = {};
 if ( !ru.akman.znotes.core ) ru.akman.znotes.core = {};
 
-Components.utils.import( "resource://znotes/event.js"     , ru.akman.znotes.core );
-Components.utils.import( "resource://znotes/note.js"      , ru.akman.znotes.core );
-Components.utils.import( "resource://znotes/utils.js"          , ru.akman.znotes );
+Components.utils.import( "resource://znotes/event.js", ru.akman.znotes.core );
+Components.utils.import( "resource://znotes/note.js", ru.akman.znotes.core );
+Components.utils.import( "resource://znotes/utils.js", ru.akman.znotes );
 
 var EXPORTED_SYMBOLS = ["Category"];
 

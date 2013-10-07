@@ -32,9 +32,28 @@
 
 /* ***** classic/1.0 common **** */
 
-#statusbar {
-  -moz-appearance: none;
-  margin-bottom: -1px;
-  border: none;
-  border-top: 1px solid ThreeDShadow;
+/* main toolbox, menubar, toolbar */
+
+.znotes_viewertoolbox:not(:-moz-lwtheme) {
+  color: black;
+  text-shadow: 0 0 .7em white, 0 0 .7em white, 0 1px 0 rgba(255, 255, 255, .4);
+  border-bottom-color: #AABCCF;
+}
+.znotes_viewermenutoolbar {
+  padding-bottom: 1px;
+  padding-top: 2px;
+}
+.znotes_viewertoolbar {
+  overflow-x: hidden;
+  padding: 1px 0;
+}
+
+/* body view */
+
+.noteBodyView {
+}
+
+/* statusbar */
+.znotes_statusbar {
+  background-color: hsl(210, 75%, 92%);
 }

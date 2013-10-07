@@ -30,29 +30,21 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+@media (-moz-windows-compositor) {
+  #znotes {
+    -moz-appearance: -moz-win-borderless-glass;
+    background: transparent;
+  }
+}
+ 
 #znotes_tabbox {
-}
-#znotes_tabs {
-}
-.znotes_tab {
-  -moz-appearance: none;
-  background-color: #F5F6F7;
-  padding-top: 2px;
-  padding-bottom: 2px;
-  min-width: 200px;
-  min-height: 24px;
-  margin-left: 24px;
-  border-top-left-radius: 32px;
-  border-top-right-radius: 32px;
 }
 #znotes_tabpanels {
   -moz-appearance: none;
   border: none;
   padding: 0px;
 }
+
 #znotes_statusbar {
-  -moz-appearance: none;
-  margin-bottom: -1px;
-  border: none;
-  border-top: 1px solid ThreeDShadow;
+  background-color: hsl( 210, 75%, 92% );
 }

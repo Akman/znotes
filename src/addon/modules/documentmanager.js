@@ -59,7 +59,7 @@ var DocumentManager = function() {
       ru.akman.znotes.doc[ name ].Editor.prototype.getDocument = function() {
         return doc;
       };
-      doc.getEditor = function( dom ) {
+      doc.getEditor = function() {
         return new ru.akman.znotes.doc[ name ].Editor();
       };
       docs[ name ] = doc;

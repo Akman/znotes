@@ -31,12 +31,5 @@
   - ***** END LICENSE BLOCK ***** -->
 
 <!ENTITY content_tab_caption " Content">
-
 <!ENTITY content_tree_name "File">
 <!ENTITY content_tree_description "Description">
-
-<!ENTITY content_popup_new " Add file">
-<!ENTITY content_popup_open " Open">
-<!ENTITY content_popup_open_with " Open with">
-<!ENTITY content_popup_save " Save">
-<!ENTITY content_popup_delete " Delete">

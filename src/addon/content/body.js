@@ -33,89 +33,261 @@
 if ( !ru ) var ru = {};
 if ( !ru.akman ) ru.akman = {};
 if ( !ru.akman.znotes ) ru.akman.znotes = {};
+if ( !ru.akman.znotes.core ) ru.akman.znotes.core = {};
 
-Components.utils.import( "resource://znotes/utils.js" , ru.akman.znotes );
-Components.utils.import( "resource://znotes/documentmanager.js" , ru.akman.znotes );
+Components.utils.import( "resource://znotes/utils.js",
+  ru.akman.znotes
+);
+Components.utils.import( "resource://znotes/documentmanager.js",
+  ru.akman.znotes
+);
+Components.utils.import( "resource://znotes/prefsmanager.js",
+  ru.akman.znotes
+);
+Components.utils.import( "resource://znotes/event.js",
+  ru.akman.znotes.core
+);
 
 ru.akman.znotes.Body = function() {
 
   // !!!! %%%% !!!! STRINGS_BUNDLE & IS_STANDALONE
   return function( anArguments ) {
 
-    var stringsBundle = ru.akman.znotes.Utils.STRINGS_BUNDLE;
-    var isStandalone = ru.akman.znotes.Utils.IS_STANDALONE;
-    var log = ru.akman.znotes.Utils.log;
-    
-    var tagList = null;
+    var Utils = ru.akman.znotes.Utils;
+    var Common = ru.akman.znotes.Common;
 
-    var currentBodyName = "*unnamed*";
-    var currentWindow = null;
-    var currentDocument = null;
-    var currentCommands = null;
+    var prefsBundle = ru.akman.znotes.PrefsManager.getInstance();
+    
+    var observers = [];
+
+    var self = this;
+    
+    var currentName = "*unnamed*";
+    var currentMode = null;
     var currentStyle = null;
     var currentToolbox = null;
-    var currentCommandset = null;
-    var currentBrowserId = "";
 
-    var noteViewDeck = null;
-    
     var currentNote = null;
-    var currentMode = null;
-
-    var cmdNoteTag = null;
-    var cmdNoteRename = null;
-    var cmdNoteDelete = null;
-    var cmdNoteAddons = null;
-
-    var noteButtonTag = null;
-    var noteButtonAddons = null;
-
-    var tagMenu = null;
-    var toolBar = null;
-    var toolBox = null;
-    var toolBarSpacer = null;
+    var tagList = null;
 
     var noteBodyView = null;
-
+    var noteViewDeck = null;
     var noteMainBox = null;
     var noteBodySplitter = null;
     var noteAddonsBox = null;
+    
+    var bodyAddonsButton = null;
+    var bodyTagsMenu = null;
+    var bodyTagsMenuButton = null;
+    var bodyTagsMenuButtonMenuPopup = null;
+    var bodyToolbar = null;
+    var bodyToolbox = null;
+    var bodyToolbarSpacer = null;
+    var bodyToolboxPalette = null;
 
     var noteStateListener = null;
     var tagListStateListener = null;
-    
     var mutationObservers = null;
     
-    var editor = null;
-    var content = null;
-    var attachments = null;
-    var loader = null;
-    var adviewer = null;
-
-    // H E L P E R S
-
-    function processStyleSheet( sheet, processor ) {
-      var rulesCount = sheet.cssRules.length;
-      for ( var i = 0; i < rulesCount; i++ ) {
-        var rule = sheet.cssRules[i];
-        switch ( rule.type ) {
-          case 3: // IMPORT_RULE
-            if ( rule.styleSheet ) {
-              processStyleSheet( rule.styleSheet, processor );
-            }
-            break;
-          case 1: // STYLE_RULE
-            processor( rule );
+    var prefObserver = {
+      onPrefChanged: function( event ) {
+        switch( event.data.name ) {
+          case "bodyToolbarCurrentSet":
+            restoreToolbarCurrentSet();
             break;
         }
       }
     };
     
+    //
+    // COMMANDS
+    //
+    
+    var bodyCommands = {
+      "znotes_bodycustomizetoolbar_command": null,
+      "znotes_bodydeletenote_command": null,
+      "znotes_bodyrenamenote_command": null,
+      "znotes_bodytagsmenu_command": null,
+      "znotes_bodyaddonspanel_command": null
+    };
+    
+    var bodyController = {
+      supportsCommand: function( cmd ) {
+        if ( !( cmd in bodyCommands ) ) {
+          return false;
+        }
+        //Utils.log( this.getName() + "::supportsCommand() '" + cmd + "'" );
+        return true;
+      },
+      isCommandEnabled: function( cmd ) {
+        if ( !( cmd in bodyCommands ) ) {
+          return false;
+        }
+        //Utils.log( this.getName() + "::isCommandEnabled() '" + cmd + "'" );
+        return ( currentNote && currentNote.isExists() && !currentNote.isLoading() );
+      },
+      doCommand: function( cmd ) {
+        if ( !( cmd in bodyCommands ) ) {
+          return;
+        }
+        Utils.log( this.getName() + "::doCommand() '" + cmd + "'" );
+        switch ( cmd ) {
+          case "znotes_bodydeletenote_command":
+            var params = {
+              input: {
+                title: Utils.STRINGS_BUNDLE.getString( "main.note.confirmDelete.title" ),
+                message1: Utils.STRINGS_BUNDLE.getFormattedString( "main.note.confirmDelete.message1", [ currentNote.name ] ),
+                message2: Utils.STRINGS_BUNDLE.getString( "main.note.confirmDelete.message2" )
+              },
+              output: null
+            };
+            window.openDialog(
+              "chrome://znotes/content/confirmdialog.xul",
+              "",
+              "chrome,dialog=yes,modal=yes,centerscreen,resizable=yes",
+              params
+            ).focus();
+            if ( params.output ) {
+              currentNote.remove();
+            }
+            break;
+          case "znotes_bodyrenamenote_command":
+            if ( currentName == "main" ) {
+              Common.goDoCommand( null, "znotes_renamenote_command" );
+              return;
+            }
+            var params = {
+              input: {
+                title: Utils.STRINGS_BUNDLE.getString( "main.note.confirmRename.title" ),
+                caption: " " + Utils.STRINGS_BUNDLE.getString( "main.note.confirmRename.caption" ) + " ",
+                value: currentNote.name
+              },
+              output: null
+            };
+            window.openDialog(
+              "chrome://znotes/content/inputdialog.xul",
+              "",
+              "chrome,dialog=yes,modal=yes,centerscreen,resizable=yes",
+              params
+            ).focus();
+            if ( params.output ) {
+              var name = params.output.result;
+              name = name.replace(/(^\s+)|(\s+$)/g, "");
+              if ( name.length > 0 ) {
+                currentNote.rename( name );
+              }
+            }
+            break;
+          case "znotes_bodycustomizetoolbar_command":
+            window.openDialog(
+              "chrome://global/content/customizeToolbar.xul",
+              "",
+              "chrome,all,dependent",
+              currentToolbox
+            ).focus();
+            break;
+          case "znotes_bodytagsmenu_command":
+            // if bodyTagsMenuButton is not in toolbar
+            // then bodyTagsMenuButton == null
+            if ( !bodyTagsMenuButton ) {
+              return;
+            }
+            if ( bodyTagsMenu.state == "open" ) {
+              bodyTagsMenu.hidePopup();
+            } else {
+              bodyTagsMenu.openPopup(
+                bodyTagsMenuButton,
+                "after_start",
+                0,
+                0,
+                false,
+                false,
+                null
+              );
+            }
+            break;
+          case "znotes_bodyaddonspanel_command":
+            if ( bodyAddonsButton.checked ) {
+              noteBodySplitter.removeAttribute( "collapsed" );
+              noteBodySplitter.setAttribute( "state", "open" );
+            } else {
+              noteBodySplitter.setAttribute( "state", "collapsed" );
+              noteBodySplitter.setAttribute( "collapsed", "true" );
+            }
+            break;
+        }
+      },
+      onEvent: function( event ) {
+      },
+      getName: function() {
+        return "BODY";
+      },
+      getCommand: function( cmd ) {
+        if ( cmd in bodyCommands ) {
+          return document.getElementById( cmd );
+        }
+        return null;
+      },
+      register: function() {
+        Utils.appendAccelText( bodyCommands, document );
+        try {
+          top.controllers.insertControllerAt( 0, this );
+        } catch ( e ) {
+          Components.utils.reportError(
+            "An error occurred registering '" + this.getName() + "' controller: " + e
+          );
+        }
+      },
+      unregister: function() {
+        try {
+          top.controllers.removeController( this );
+        } catch ( e ) {
+          Components.utils.reportError(
+            "An error occurred unregistering '" + this.getName() + "' controller: " + e
+          );
+        }
+        Utils.removeAccelText( bodyCommands, document );
+      }
+    };
+    
+    function updateCommands() {
+      window.focus();
+      Common.goUpdateCommand( "znotes_bodycustomizetoolbar_command" );
+      Common.goUpdateCommand( "znotes_bodytagsmenu_command" );
+      Common.goUpdateCommand( "znotes_bodyaddonspanel_command" );
+      Common.goUpdateCommand( "znotes_bodyrenamenote_command" );
+      Common.goUpdateCommand( "znotes_bodydeletenote_command" );
+      if ( currentNote && !currentNote.isLoading() ) {
+        enableTagButtons();
+      } else {
+        disableTagButtons();
+      }
+    };
+    
+    // HELPERS
+
+    function updateStyle( node, style ) {
+      for ( var attr in style ) {
+        node.setAttribute( attr, style[attr] );
+      }
+      var len = node.children.length;
+      var child = null;
+      for ( var i = 0; i < len; i++ ) {
+        child = node.children[i];
+        updateStyle( child, style );
+      }
+    };
+    
+    // PREFERENCES
+    
     function connectMutationObservers() {
       mutationObservers = [];
-      mutationObservers.push( connectMutationObserver(   noteMainBox, "height", "noteMainBoxHeight" ) );
-      mutationObservers.push( connectMutationObserver(   noteBodySplitter, "state", "noteBodySplitterState" ) );
-      mutationObservers.push( connectMutationObserver(   noteAddonsBox, "height", "noteAddonsBoxHeight" ) );
+      mutationObservers.push( connectMutationObserver(
+        noteMainBox, "height", "noteMainBoxHeight" ) );
+      mutationObservers.push( connectMutationObserver(
+        noteBodySplitter, "state", "noteBodySplitterState" ) );
+      mutationObservers.push( connectMutationObserver(
+        noteAddonsBox, "height", "noteAddonsBoxHeight" ) );
     };
     
     function connectMutationObserver( target, attrName, prefName ) {
@@ -127,13 +299,15 @@ ru.akman.znotes.Body = function() {
                 var attrValue = mutation.target.getAttribute( attrName );
                 if ( prefName == "noteBodySplitterState" ) {
                   if ( attrValue == "collapsed" ) {
-                    noteButtonAddons.checked = false;
+                    bodyAddonsButton.checked = false;
                     noteBodySplitter.setAttribute( "collapsed", "true" );
-                    currentNote.savePreference( "noteBodySplitterState", "collapsed" );
+                    currentNote.savePreference( "noteBodySplitterState",
+                      "collapsed" );
                   } else {
-                    noteButtonAddons.checked = true;
+                    bodyAddonsButton.checked = true;
                     noteBodySplitter.removeAttribute( "collapsed" );
-                    currentNote.savePreference( "noteBodySplitterState", "open" );
+                    currentNote.savePreference( "noteBodySplitterState",
+                      "open" );
                   }
                 } else {
                   currentNote.savePreference( prefName, attrValue );
@@ -162,30 +336,21 @@ ru.akman.znotes.Body = function() {
       }
     };
     
-    function saveCurrentNotePreferences() {
-      if ( !currentNote ) {
-        return;
-      }
-      currentNote.savePreference( "noteMainBoxHeight", noteMainBox.getAttribute( "height" ) );
-      currentNote.savePreference( "noteAddonsBoxHeight", noteAddonsBox.getAttribute( "height" ) );
-    };
-
     function restoreCurrentNotePreferences() {
-      if ( !currentNote ) {
-        return;
-      }
-      noteMainBox.setAttribute( "height", currentNote.loadPreference( "noteMainBoxHeight", "300" ) );
-      noteAddonsBox.setAttribute( "height", currentNote.loadPreference( "noteAddonsBoxHeight", "100" ) );
+      noteMainBox.setAttribute( "height",
+        currentNote.loadPreference( "noteMainBoxHeight", "300" ) );
+      noteAddonsBox.setAttribute( "height",
+        currentNote.loadPreference( "noteAddonsBoxHeight", "100" ) );
       var noteBodySplitterState = currentNote.loadPreference(
         "noteBodySplitterState",
         currentNote.hasAttachments() ? "open" : "collapsed"
       );
       if ( noteBodySplitterState == "collapsed" ) {
-        noteButtonAddons.checked = false;
+        bodyAddonsButton.checked = false;
         noteBodySplitter.setAttribute( "state", "collapsed" );
         noteBodySplitter.setAttribute( "collapsed", "true" );
       } else {
-        noteButtonAddons.checked = true;
+        bodyAddonsButton.checked = true;
         noteBodySplitter.removeAttribute( "collapsed" );
         noteBodySplitter.setAttribute( "state", "open" );
       }
@@ -197,12 +362,13 @@ ru.akman.znotes.Body = function() {
       while ( aMenu.firstChild ) {
         aMenu.removeChild( aMenu.firstChild );
       }
-      var menuItem = currentDocument.createElement( "menuitem" );
+      var menuItem = document.createElement( "menuitem" );
       menuItem.className = "menuitem-iconic";
-      menuItem.setAttribute( "label", " " + stringsBundle.getString( "body.tagmenu.clearalltags" ) );
+      menuItem.setAttribute( "label",
+        Utils.STRINGS_BUNDLE.getString( "body.tagmenu.clearalltags" ) );
       menuItem.addEventListener( "command", aCmdTagMenuClear, false );
       aMenu.appendChild( menuItem );
-      aMenu.appendChild( currentDocument.createElement( "menuseparator" ) );
+      aMenu.appendChild( document.createElement( "menuseparator" ) );
       //
       var tags = tagList.getTagsAsArray();
       for ( var i = 0; i < tags.length; i++ ) {
@@ -213,11 +379,11 @@ ru.akman.znotes.Body = function() {
         var id = tag.getId();
         var name = tag.getName();
         var color = tag.getColor();
-        var menuItem = currentDocument.createElement( "menuitem" );
+        var menuItem = document.createElement( "menuitem" );
         var image = ru.akman.znotes.Utils.makeTagImage( color, false, 16 );
         menuItem.setAttribute( "class", "menuitem-iconic" );
         menuItem.setAttribute( "image", image );
-        menuItem.setAttribute( "label", " " + name );
+        menuItem.setAttribute( "label", name );
         menuItem.setAttribute( "value", "0;" + id + ";" + color );
         menuItem.setAttribute( "id", id );
         menuItem.addEventListener( "command", aCmdTagMenuClick, false );
@@ -240,30 +406,34 @@ ru.akman.znotes.Body = function() {
           tags.push( tagList.getNoTag() );
         }
       }
-      var toolBarLength = toolBar.children.length;
+      var len = bodyToolbar.children.length;
       var deletedButtons = [];
-      for ( var i = 0; i < toolBarLength; i++ ) {
-        var toolBarButton = toolBar.children[i];
-        if ( toolBarButton.hasAttribute( "istag" ) && toolBarButton.getAttribute( "istag" ) == "true" ) {
+      for ( var i = 0; i < len; i++ ) {
+        var toolBarButton = bodyToolbar.children[i];
+        if ( toolBarButton.hasAttribute( "istag" ) &&
+          toolBarButton.getAttribute( "istag" ) == "true" ) {
           deletedButtons.push( toolBarButton );
         }
       }
       for ( var i = 0; i < deletedButtons.length; i++ ) {
-        toolBar.removeChild( deletedButtons[i] );
+        bodyToolbar.removeChild( deletedButtons[i] );
       }
       if ( aNote != null ) {
         for ( var i = 0; i < tags.length; i++ ) {
           var tag = tags[i];
           if ( tag ) {
-            var toolBarButton = currentDocument.createElement( "toolbarbutton" );
+            var toolBarButton = document.createElement( "toolbarbutton" );
             toolBarButton.setAttribute( "istag", "true" );
             toolBarButton.setAttribute( "id", tag.getId() );
             toolBarButton.setAttribute( "class", "toolbarbutton-1" );
             toolBarButton.setAttribute( "pack", "start" );
             toolBarButton.setAttribute( "tooltiptext", tag.getName() );
-            toolBarButton.setAttribute( "image", ru.akman.znotes.Utils.makeTagImage( tag.getColor(), true, ( currentStyle.iconsize == "small" ) ? 16 : 24 ) );
-            toolBarButton.addEventListener( "command", aCmdTagButtonClick, false );
-            toolBar.insertBefore( toolBarButton, toolBarSpacer );
+            toolBarButton.setAttribute( "image",
+              ru.akman.znotes.Utils.makeTagImage( tag.getColor(), true,
+                ( currentStyle.iconsize == "small" ) ? 16 : 24 ) );
+            toolBarButton.addEventListener( "command", aCmdTagButtonClick,
+              false );
+            bodyToolbar.insertBefore( toolBarButton, bodyToolbarSpacer );
           }
         }
       }
@@ -283,11 +453,13 @@ ru.akman.znotes.Body = function() {
         if ( tags.indexOf( id ) >= 0 ) {
           arr[0] = "1";
           aMenuItem.setAttribute( "value", arr.join(";") );
-          aMenuItem.setAttribute( "image", ru.akman.znotes.Utils.makeTagImage( color, true, 16 ) );
+          aMenuItem.setAttribute( "image",
+            ru.akman.znotes.Utils.makeTagImage( color, true, 16 ) );
         } else {
           arr[0] = "0";
           aMenuItem.setAttribute( "value", arr.join(";") );
-          aMenuItem.setAttribute( "image", ru.akman.znotes.Utils.makeTagImage( color, false, 16 ) );
+          aMenuItem.setAttribute( "image",
+            ru.akman.znotes.Utils.makeTagImage( color, false, 16 ) );
         }
       }
     };
@@ -312,7 +484,58 @@ ru.akman.znotes.Body = function() {
       aNote.setTags( tags );
     };
 
-    // A D D O N S  B O X  S P L I T T E R  S T A T E
+    function onCmdTagButtonClick( event ) {
+      var id = "" + event.target.id;
+      currentNote.setMainTag( id );
+    };
+
+    function onCmdTagMenuClick( event ) {
+      var id = "" + event.target.id;
+      for ( var i = 2; i < bodyTagsMenu.children.length; i++ ) {
+        var aMenuItem = bodyTagsMenu.children[i];
+        var arr = aMenuItem.getAttribute("value").split(";");
+        if ( arr[1] == id ) {
+          arr[0] = ( arr[0] == "0" ) ? "1" : "0";
+          aMenuItem.setAttribute( "value", arr.join(";") );
+          aMenuItem.setAttribute( "image",
+            ru.akman.znotes.Utils.makeTagImage( arr[2], arr[0] == "1", 16 ) );
+          break;
+        }
+      }
+      updateNoteTags( currentNote, bodyTagsMenu );
+      return true;
+    };
+
+    function onCmdTagMenuClear() {
+      currentNote.setTags( [] );
+      return true;
+    };
+    
+    function onBodyTagsMenuButtonMenuPopupShowing( event ) {
+      Common.goDoCommand( event, "znotes_bodytagsmenu_command" );
+      return false;
+    };
+    
+    function disableTagButtons() {
+      var buttons = bodyToolbar.childNodes;
+      for ( var i = 0; i < buttons.length; i++ ) {
+        if ( buttons[i].hasAttribute( "istag" ) &&
+             buttons[i].getAttribute( "istag" ) == "true" ) {
+          buttons[i].setAttribute( "disabled", "true" );
+          buttons[i].setAttribute( "image",
+            ru.akman.znotes.Utils.makeTagImage( "#C0C0C0", true,
+              ( currentStyle.iconsize == "small" ) ? 16 : 24 ) );
+        }
+      }
+    };
+    
+    function enableTagButtons() {
+      if ( currentNote ) {
+        updateTagsButtons( currentNote, onCmdTagButtonClick );
+      }
+    };
+    
+    // SPLITTER
 
     function onSplitterDblClick( event ) {
       var source = event.target;
@@ -328,97 +551,6 @@ ru.akman.znotes.Body = function() {
       return true;
     };
     
-    // C O M M A N D S
-
-    function onCmdNoteAddons( source ) {
-      if ( noteButtonAddons.checked ) {
-        noteBodySplitter.removeAttribute( "collapsed" );
-        noteBodySplitter.setAttribute( "state", "open" );
-      } else {
-        noteBodySplitter.setAttribute( "state", "collapsed" );
-        noteBodySplitter.setAttribute( "collapsed", "true" );
-      }
-    };
-    
-    function onCmdNoteDelete( source ) {
-      var params = {
-        input: {
-          title: stringsBundle.getString( "main.note.confirmDelete.title" ),
-          message1: stringsBundle.getFormattedString( "main.note.confirmDelete.message1", [ currentNote.name ] ),
-          message2: stringsBundle.getString( "main.note.confirmDelete.message2" )
-        },
-        output: null
-      };
-      currentWindow.openDialog(
-        "chrome://znotes/content/confirmdialog.xul",
-        "",
-        "chrome,dialog=yes,modal=yes,centerscreen,resizable=yes",
-        params
-      ).focus();
-      if ( params.output ) {
-        currentNote.remove();
-      }
-    };
-
-    function onCmdNoteRename( source ) {
-      if ( currentCommands && currentCommands.cmdRenameNote ) {
-        currentCommands.cmdRenameNote();
-        return true;
-      }
-      var params = {
-        input: {
-          title: stringsBundle.getString( "main.note.confirmRename.title" ),
-          caption: " " + stringsBundle.getString( "main.note.confirmRename.caption" ) + " ",
-          value: currentNote.name
-        },
-        output: null
-      };
-      currentWindow.openDialog(
-        "chrome://znotes/content/inputdialog.xul",
-        "",
-        "chrome,dialog=yes,modal=yes,centerscreen,resizable=yes",
-        params
-      ).focus();
-      if ( params.output ) {
-        var name = params.output.result;
-        name = name.replace(/(^\s+)|(\s+$)/g, "");
-        if ( name.length > 0 ) {
-          currentNote.rename( name );
-        }
-      }
-      return true;
-    };
-
-    function onCmdNoteTag( source ) {
-      tagMenu.openPopup( noteButtonTag, "after_start", null, null, false, false, null );
-    };
-
-    function onCmdTagButtonClick( event ) {
-      var id = "" + event.target.id;
-      currentNote.setMainTag( id );
-    };
-
-    function onCmdTagMenuClick( event ) {
-      var id = "" + event.target.id;
-      for ( var i = 2; i < tagMenu.children.length; i++ ) {
-        var aMenuItem = tagMenu.children[i];
-        var arr = aMenuItem.getAttribute("value").split(";");
-        if ( arr[1] == id ) {
-          arr[0] = ( arr[0] == "0" ) ? "1" : "0";
-          aMenuItem.setAttribute( "value", arr.join(";") );
-          aMenuItem.setAttribute( "image", ru.akman.znotes.Utils.makeTagImage( arr[2], arr[0] == "1", 16 ) );
-          break;
-        }
-      }
-      updateNoteTags( currentNote, tagMenu );
-      return true;
-    };
-
-    function onCmdTagMenuClear() {
-      currentNote.setTags( [] );
-      return true;
-    };
-
     // NOTE EVENTS
     
     function onNoteDeleted( e ) {
@@ -429,6 +561,7 @@ ru.akman.znotes.Body = function() {
       }
     };
 
+    /*
     function onNoteContentLoaded( e ) {
       var aNote = e.data.changedNote;
       if ( currentNote == aNote ) {
@@ -439,31 +572,8 @@ ru.akman.znotes.Body = function() {
         }
       }
     };
-
-    function onNoteContentAppended( e ) {
-      var aNote = e.data.changedNote;
-      if ( currentNote == aNote ) {
-      }
-    };
-
-    function onNoteContentRemoved( e ) {
-      var aNote = e.data.changedNote;
-      if ( currentNote == aNote ) {
-      }
-    };
-
-    function onNoteAttachmentAppended( e ) {
-      var aNote = e.data.changedNote;
-      if ( currentNote == aNote ) {
-      }
-    };
-
-    function onNoteAttachmentRemoved( e ) {
-      var aNote = e.data.changedNote;
-      if ( currentNote == aNote ) {
-      }
-    };
-
+    */
+    
     function onNoteTagsChanged( e ) {
       var aCategory = e.data.parentCategory;
       var aNote = e.data.changedNote;
@@ -473,8 +583,8 @@ ru.akman.znotes.Body = function() {
         aNote,
         onCmdTagButtonClick
       );
-      refreshTagMenu( tagMenu, onCmdTagMenuClear, onCmdTagMenuClick );
-      updateTagMenu( aNote, tagMenu );
+      refreshTagMenu( bodyTagsMenu, onCmdTagMenuClear, onCmdTagMenuClick );
+      updateTagMenu( aNote, bodyTagsMenu );
     };
 
     function onNoteMainTagChanged( e ) {
@@ -500,11 +610,11 @@ ru.akman.znotes.Body = function() {
       switch ( aPrefName ) {
         case "noteBodySplitterState":
           if ( newValue == "collapsed" ) {
-            noteButtonAddons.checked = false;
+            bodyAddonsButton.checked = false;
             noteBodySplitter.setAttribute( "state", "collapsed" );
             noteBodySplitter.setAttribute( "collapsed", "true" );
           } else {
-            noteButtonAddons.checked = true;
+            bodyAddonsButton.checked = true;
             noteBodySplitter.removeAttribute( "collapsed" );
             noteBodySplitter.setAttribute( "state", "open" );
           }
@@ -516,156 +626,156 @@ ru.akman.znotes.Body = function() {
 
     function onTagChanged( e ) {
       var aTag = e.data.changedTag;
-      refreshTagMenu( tagMenu, onCmdTagMenuClear, onCmdTagMenuClick );
+      refreshTagMenu( bodyTagsMenu, onCmdTagMenuClear, onCmdTagMenuClick );
       if ( currentNote ) {
         updateTagsButtons( currentNote, onCmdTagButtonClick );
-        updateTagMenu( currentNote, tagMenu );
+        updateTagMenu( currentNote, bodyTagsMenu );
       }
     };
 
     function onTagDeleted( e ) {
       var aTag = e.data.deletedTag;
-      refreshTagMenu( tagMenu, onCmdTagMenuClear, onCmdTagMenuClick );
+      refreshTagMenu( bodyTagsMenu, onCmdTagMenuClear, onCmdTagMenuClick );
       if ( currentNote ) {
         updateTagsButtons( currentNote, onCmdTagButtonClick );
-        updateTagMenu( currentNote, tagMenu );
+        updateTagMenu( currentNote, bodyTagsMenu );
       }
     };
 
     function onTagCreated( e ) {
       var aTag = e.data.createdTag;
-      refreshTagMenu( tagMenu, onCmdTagMenuClear, onCmdTagMenuClick );
+      refreshTagMenu( bodyTagsMenu, onCmdTagMenuClear, onCmdTagMenuClick );
     };
-
+    
     // V I E W
-
-    function enableLoadingView() {
-      loader.enable();
-      noteViewDeck.selectedIndex = 1;
-    };
     
-    function disableLoadingView() {
-      loader.disable();
-      noteViewDeck.selectedIndex = 0;
-    };
-    
-    function disableCurrentView() {
-      var buttons = toolBar.childNodes;
-      for ( var i = 0; i < buttons.length; i++ ) {
-        if ( buttons[i].hasAttribute( "istag" ) && buttons[i].getAttribute( "istag" ) == "true" ) {
-          buttons[i].setAttribute( "disabled", "true" );
-          buttons[i].setAttribute( "image", ru.akman.znotes.Utils.makeTagImage( "#C0C0C0", true, ( currentStyle.iconsize == "small" ) ? 16 : 24 ) );
-        }
-      }
-      cmdNoteTag.setAttribute( "disabled", "true" );
-      cmdNoteDelete.setAttribute( "disabled", "true" );
-      cmdNoteRename.setAttribute( "disabled", "true" );
-      cmdNoteAddons.setAttribute( "disabled", "true" );
-      attachments.disable();
-      content.disable();
-      editor.disable();
-      adviewer.disable();
-    };
-    
-    function enableCurrentView() {
-      updateTagsButtons( currentNote, onCmdTagButtonClick );
-      cmdNoteTag.removeAttribute( "disabled" );
-      cmdNoteDelete.removeAttribute( "disabled" );
-      cmdNoteRename.removeAttribute( "disabled" );
-      cmdNoteAddons.removeAttribute( "disabled" );
-      noteBodySplitter.removeAttribute( "disabled" );
-      noteBodyView.removeAttribute( "disabled" );
-      attachments.enable();
-      content.enable();
-      editor.enable();
-      adviewer.enable();
-    };
-
-    function hideCurrentView() {
-      updateTagsButtons( currentNote, onCmdTagButtonClick );
-      cmdNoteTag.setAttribute( "disabled", "true" );
-      cmdNoteDelete.setAttribute( "disabled", "true" );
-      cmdNoteRename.setAttribute( "disabled", "true" );
-      cmdNoteAddons.setAttribute( "disabled", "true" );
-      noteBodySplitter.setAttribute( "state", "collapsed" );
-      noteBodySplitter.setAttribute( "collapsed", "true" );
-      noteBodySplitter.setAttribute( "disabled", "true" );
-      noteBodyView.setAttribute( "disabled", "true" );
-      disableLoadingView();
-      loader.hide();
-      attachments.hide();
-      content.hide();
-      editor.hide();
-      adviewer.hide();
-    };
-
     function showCurrentView() {
       if ( currentNote.isLoading() ) {
-        disableCurrentView();
-        enableLoadingView();
-        loader.show( currentNote );
+        noteViewDeck.selectedIndex = 1;
       } else {
-        refreshTagMenu( tagMenu, onCmdTagMenuClear, onCmdTagMenuClick );
-        updateTagMenu( currentNote, tagMenu );
-        disableLoadingView();
-        loader.hide();
-        enableCurrentView();
-        editor.show( currentNote );
-        content.show( currentNote );
-        attachments.show( currentNote );
-        adviewer.show( currentNote );
+        noteViewDeck.selectedIndex = 0;
+        refreshTagMenu( bodyTagsMenu, onCmdTagMenuClear, onCmdTagMenuClick );
+        updateTagMenu( currentNote, bodyTagsMenu );
+        updateTagsButtons( currentNote, onCmdTagButtonClick );
+        noteBodySplitter.removeAttribute( "disabled" );
+        noteBodyView.removeAttribute( "disabled" );
       }
       restoreCurrentNotePreferences();
     };
 
+    function hideCurrentView() {
+      noteViewDeck.selectedIndex = 0;
+      noteBodySplitter.setAttribute( "state", "collapsed" );
+      noteBodySplitter.setAttribute( "collapsed", "true" );
+      noteBodySplitter.setAttribute( "disabled", "true" );
+      noteBodyView.setAttribute( "disabled", "true" );
+    };
+    
     // L I S T E N E R S
 
     function addEventListeners() {
-      cmdNoteTag.addEventListener( "command", onCmdNoteTag, false );
-      cmdNoteRename.addEventListener( "command", onCmdNoteRename, false );
-      cmdNoteDelete.addEventListener( "command", onCmdNoteDelete, false );
-      cmdNoteAddons.addEventListener( "command", onCmdNoteAddons, false );
-      noteBodySplitter.addEventListener( "dblclick", onSplitterDblClick, false );
-      if ( currentNote ) {
-        currentNote.addStateListener( noteStateListener );
-        tagList.addStateListener( tagListStateListener );
+      if ( !currentNote ) {
+        return;
       }
+      currentNote.addStateListener( noteStateListener );
+      tagList = currentNote.getBook().getTagList();
+      tagList.addStateListener( tagListStateListener );
+      noteBodySplitter.addEventListener( "dblclick",
+        onSplitterDblClick, false );
       connectMutationObservers();
     };
     
     function removeEventListeners() {
-      disconnectMutationObservers();
-      cmdNoteTag.removeEventListener( "command", onCmdNoteTag, false );
-      cmdNoteRename.removeEventListener( "command", onCmdNoteRename, false );
-      cmdNoteDelete.removeEventListener( "command", onCmdNoteDelete, false );
-      cmdNoteAddons.removeEventListener( "command", onCmdNoteAddons, false );
-      noteBodySplitter.removeEventListener( "dblclick", onSplitterDblClick, false );
-      if ( currentNote ) {
-        currentNote.removeStateListener( noteStateListener );
-        tagList.removeStateListener( tagListStateListener );
-      }
-    };
-
-    // P U B L I C  M E T H O D S
-
-    this.updateStyle = function( style ) {
-      if ( !ru.akman.znotes.Utils.copyObject( style, currentStyle ) ) {
+      if ( !currentNote ) {
         return;
       }
-      toolBox.setAttribute( "iconsize", currentStyle.iconsize );
-      toolBar.setAttribute( "iconsize", currentStyle.iconsize );
-      if ( currentNote ) {
-        updateTagsButtons( currentNote, onCmdTagButtonClick );
-      }
-      editor.updateStyle( style );
-      loader.updateStyle( style );
-      adviewer.updateStyle( style );
+      disconnectMutationObservers();
+      noteBodySplitter.removeEventListener( "dblclick",
+        onSplitterDblClick, false );
+      tagList.removeStateListener( tagListStateListener );
+      currentNote.removeStateListener( noteStateListener );
     };
     
-    this.print = function() {
-      editor.print();
+    // T O O L B A R
+    
+    function restoreToolbarCurrentSet() {
+      var toolbar = currentToolbox.querySelector( "#znotes_bodytoolbar" );
+      var currentset = toolbar.getAttribute( "defaultset" );
+      if ( prefsBundle.hasPref( "bodyToolbarCurrentSet" ) ) {
+        currentset = prefsBundle.getCharPref( "bodyToolbarCurrentSet" );
+      }
+      toolbar.setAttribute( "currentset", currentset );
+      toolbar.currentSet = currentset;
+      // if bodyTagsMenuButton is not in toolbar
+      // then bodyTagsMenuButton == null
+      // and bodyTagsMenuButtonMenuPopup == null
+      bodyTagsMenuButton =
+        document.getElementById( "znotes_bodytagsmenu_button" );
+      bodyTagsMenuButtonMenuPopup =
+        document.getElementById( "znotes_bodytagsmenu_menupopup" );
+      if ( bodyTagsMenuButtonMenuPopup ) {
+        bodyTagsMenuButtonMenuPopup.addEventListener(
+          "popupshowing",
+          onBodyTagsMenuButtonMenuPopupShowing,
+          false
+        );
+      }
+      enableTagButtons();
+    };
+    
+    function saveToolbarCurrentSet() {
+      var toolbar = currentToolbox.querySelector( "#znotes_bodytoolbar" );
+      var currentset = toolbar.currentSet;
+      if ( currentset != "__empty" ) {
+        currentset = currentset.substring(
+          currentset.indexOf( "znotes_bodytoolbar_spacer" )
+        );
+        prefsBundle.setCharPref( "bodyToolbarCurrentSet", currentset );
+      }
     };
 
+    // OBSERVERS
+    
+    function notifyObservers( event ) {
+      for ( var i = 0; i < observers.length; i++ ) {
+        if ( observers[i][ "on" + event.type ] ) {
+          observers[i][ "on" + event.type ]( event );
+        }
+      }
+    };
+
+    function addObserver( aObserver ) {
+      if ( observers.indexOf( aObserver ) < 0 ) {
+        observers.push( aObserver );
+      }
+    };
+    
+    function removeObserver( aObserver ) {
+      var index = observers.indexOf( aObserver );
+      if ( index < 0 ) {
+        return;
+      }
+      observers.splice( index, 1 );
+    };
+    
+    // PUBLIC
+    
+    this.updateStyle = function( style ) {
+      if ( !Utils.copyObject( style, currentStyle ) ) {
+        return;
+      }
+      updateStyle( currentToolbox, style );
+      enableTagButtons();
+      notifyObservers(
+        new ru.akman.znotes.core.Event(
+          "StyleChanged",
+          {
+            style: style,
+          }
+        )
+      );
+    };
+    
     this.show = function( aNote, aForced ) {
       if ( currentNote && currentNote == aNote && !aForced ) {
         return;
@@ -673,32 +783,39 @@ ru.akman.znotes.Body = function() {
       removeEventListeners();
       currentNote = aNote;
       if ( currentNote && currentNote.isExists() ) {
-        tagList = currentNote.getBook().getTagList();
         addEventListeners();
         showCurrentView();
       } else {
         hideCurrentView();
       }
+      updateCommands();
+      notifyObservers(
+        new ru.akman.znotes.core.Event(
+          "NoteChanged",
+          {
+            note: aNote,
+            forced: aForced,
+          }
+        )
+      );
     };
 
-    this.unload = function() {
-      editor.unload();
-      content.unload();
-      attachments.unload();
-      loader.unload();
-      adviewer.unload();
+    this.release = function() {
+      notifyObservers(
+        new ru.akman.znotes.core.Event(
+          "Release",
+          {}
+        )
+      );
       removeEventListeners();
+      prefsBundle.removeObserver( prefObserver );
+      bodyController.unregister();
     };
     
-    // C O N S T R U C T O R
+    // CONSTRUCTOR
 
     if ( anArguments.name ) {
-      currentBodyName = anArguments.name;
-    }
-    currentWindow = anArguments.window;
-    currentDocument = anArguments.document;
-    if ( anArguments.commands ) {
-      currentCommands = anArguments.commands;
+      currentName = anArguments.name;
     }
     currentMode = "viewer";
     if ( anArguments.mode && anArguments.mode == "editor" ) {
@@ -708,130 +825,71 @@ ru.akman.znotes.Body = function() {
       iconsize: "small"
     }
     if ( anArguments.style ) {
-      currentStyle = anArguments.style;
-    }
-    if ( anArguments.browserid != null ) {
-      currentBrowserId = anArguments.browserid;
+      Utils.copyObject( anArguments.style, currentStyle );
     }
     if ( anArguments.toolbox ) {
       currentToolbox = anArguments.toolbox;
     }
-    if ( anArguments.commandset ) {
-      currentCommandset = anArguments.commandset;
-    }
+    noteBodyView = document.getElementById( "noteBodyView" );
+    noteMainBox = document.getElementById( "noteMainBox" );
+    noteViewDeck = document.getElementById( "noteViewDeck" );
+    noteBodySplitter = document.getElementById( "noteBodySplitter" );
+    noteAddonsBox = document.getElementById( "noteAddonsBox" );
     //
-    content = new ru.akman.znotes.Content( currentWindow, currentDocument );
-    attachments = new ru.akman.znotes.Attachments( currentWindow, currentDocument );
-    editor = new ru.akman.znotes.Editor( currentWindow, currentDocument, currentMode, currentStyle );
-    loader = new ru.akman.znotes.Loader( currentWindow, currentDocument, currentStyle );
-    adviewer = new ru.akman.znotes.AdViewer( currentWindow, currentDocument, currentStyle );
-    //
-    noteBodyView = currentDocument.getElementById( "noteBodyView" );
-    noteMainBox = currentDocument.getElementById( "noteMainBox" );
-    noteViewDeck = currentDocument.getElementById( "noteViewDeck" );
-    noteBodySplitter = currentDocument.getElementById( "noteBodySplitter" );
-    noteAddonsBox = currentDocument.getElementById( "noteAddonsBox" );
-    //
-    noteButtonTag = currentDocument.getElementById( "noteButtonTag" );
-    noteButtonAddons = currentDocument.getElementById( "noteButtonAddons" );
-    //
-    cmdNoteTag = currentDocument.getElementById( "cmdNoteTag" );
-    cmdNoteRename = currentDocument.getElementById( "cmdNoteRename" );
-    cmdNoteDelete = currentDocument.getElementById( "cmdNoteDelete" );
-    cmdNoteAddons = currentDocument.getElementById( "cmdNoteAddons" );
-    //
-    tagMenu = currentDocument.getElementById( "tagMenu" );
-    //
-    toolBox = currentDocument.getElementById( "toolBox" );
-    toolBox.setAttribute( "iconsize", currentStyle.iconsize );
-    toolBar = currentDocument.getElementById( "toolBar" );
-    toolBar.setAttribute( "iconsize", currentStyle.iconsize );
-    toolBarSpacer = currentDocument.getElementById( "toolBarSpacer" );
-    if ( currentBodyName != "main" ) {
-      if ( ru.akman.znotes.Utils.IS_STANDALONE ) {
-        noteBodyView.classList.add( "noteBodyViewStandalone" );
-      } else {
-        noteBodyView.classList.add( "noteBodyViewAddon" );
-      }
-    }
-    // only the separate tab has currentToolbox
+    bodyAddonsButton = document.getElementById( "znotes_bodyaddonspanel_button" );
+    bodyTagsMenu = document.getElementById( "znotes_bodytags_menupopup" );
+    bodyToolbox = document.getElementById( "znotes_bodytoolbox" );
+    bodyToolboxPalette = bodyToolbox.palette;
+    bodyToolbar = document.getElementById( "znotes_bodytoolbar" );
+    bodyToolbarSpacer = document.getElementById( "znotes_bodytoolbar_spacer" );
     if ( currentToolbox ) {
-      noteBodyView.classList.add( "znotes_contentbodyview" );
+      bodyToolbar.classList.remove( "znotes_bodytoolbar" );
+      bodyToolbar.classList.add( "znotes_viewertoolbar" );
       while ( currentToolbox.firstChild ) {
         currentToolbox.removeChild( currentToolbox.firstChild );
       }
-      while ( currentCommandset.firstChild ) {
-        currentCommandset.removeChild( currentCommandset.firstChild );
+      while ( bodyToolbox.firstChild ) {
+        currentToolbox.appendChild( bodyToolbox.firstChild )
       }
-      var cssRules = [];
-      for ( var i = 0; i < currentDocument.styleSheets.length; i++ ) {
-        processStyleSheet(
-          currentDocument.styleSheets[i],
-          function( rule ) {
-            selectorText = rule.selectorText;
-            declarationText = rule.cssText.substring( selectorText.length );
-            for ( var k = 1; k < toolBar.children.length; k++ ) {
-              selectorEnabled = '#' + toolBar.children[k].getAttribute( 'id' );
-              selectorDisabled = selectorEnabled + '[disabled="true"]';
-              selectorSmallEnabled = 'toolbar[iconsize="small"] ' + selectorEnabled;
-              selectorSmallDisabled = 'toolbar[iconsize="small"] ' + selectorDisabled;
-              if ( selectorText == selectorEnabled ) {
-                cssRules.push( selectorText + currentBrowserId + declarationText );
-              } else if ( selectorText == selectorDisabled ) {
-                cssRules.push( selectorText.substring( 0, selectorText.length - 17 ) + currentBrowserId + '[disabled="true"]' + declarationText );
-              } else if ( selectorText == selectorSmallEnabled ) {
-                cssRules.push( selectorText + currentBrowserId + declarationText );
-              } else if ( selectorText == selectorSmallDisabled ) {
-                cssRules.push( selectorText.substring( 0, selectorText.length - 17 ) + currentBrowserId + '[disabled="true"]' + declarationText );
-              }
-            }
-          }
-        );
-      }
-      while ( toolBox.firstChild ) {
-        currentToolbox.appendChild( toolBox.firstChild );
-      }
-      toolBar.setAttribute( "id", toolBar.getAttribute( "id" ) + currentBrowserId );
-      for ( var i = 1; i < toolBar.children.length; i++ ) {
-        var button = toolBar.children[i];
-        var buttonId = button.getAttribute( "id" );
-        if ( button.nodeName == "toolbarbutton" ) {
-          var buttonCommand = button.getAttribute( "command" );
-          var command = currentDocument.getElementById( buttonCommand );
-          command.setAttribute( "id", buttonCommand + currentBrowserId );
-          currentCommandset.appendChild( command );
-          button.setAttribute( "command", buttonCommand + currentBrowserId );
-        }
-        button.setAttribute( "id", buttonId + currentBrowserId );
-      }
-      var styleSheet = toolBar.ownerDocument.styleSheets[0];
-      for ( var i = 0; i < cssRules.length; i++ ) {
-        styleSheet.insertRule( cssRules[i], styleSheet.cssRules.length - 1 );
-      }
-      while ( toolBox.firstChild ) {
-        toolBox.removeChild( toolBox.firstChild );
-      }
-      toolBox.setAttribute( "collapsed", "true" );
+      currentToolbox.palette = bodyToolboxPalette;
+      bodyToolbox.setAttribute( "collapsed", "true" );
+    } else {
+      currentToolbox = bodyToolbox;
     }
+    currentToolbox.customizeDone = function( isChanged ) {
+      window.focus();
+      self.updateStyle(
+        {
+          iconsize: currentToolbox.querySelector( "#znotes_bodytoolbar" )
+                                  .getAttribute( "iconsize" )
+        }
+      );
+      saveToolbarCurrentSet();
+    };
+    restoreToolbarCurrentSet();
+    updateStyle( currentToolbox, currentStyle );
+    //
+    prefsBundle.addObserver( prefObserver );
+    bodyController.register();
     noteStateListener = {
       name: "BODY",
-      onNoteDeleted: onNoteDeleted,
+      onNoteDeleted: onNoteDeleted, // ?
       onNoteTagsChanged: onNoteTagsChanged,
       onNoteMainTagChanged: onNoteMainTagChanged,
-      onNoteContentLoaded: onNoteContentLoaded,
-      onNoteContentAppended: onNoteContentAppended,
-      onNoteContentRemoved: onNoteContentRemoved,
-      onNoteAttachmentAppended: onNoteAttachmentAppended,
-      onNoteAttachmentRemoved: onNoteAttachmentRemoved,
+      //onNoteContentLoaded: onNoteContentLoaded,
       onNotePrefChanged: onNotePrefChanged
     };
-    //
     tagListStateListener = {
       onTagCreated: onTagCreated,
       onTagChanged: onTagChanged,
       onTagDeleted: onTagDeleted,
     };
-    
+    //
+    addObserver( new ru.akman.znotes.Attachments( currentStyle ) );
+    addObserver( new ru.akman.znotes.Content( currentStyle ) );
+    addObserver( new ru.akman.znotes.Relator( currentStyle ) );
+    addObserver( new ru.akman.znotes.Loader( currentStyle ) );
+    addObserver( new ru.akman.znotes.Editor( currentMode, currentStyle ) );
   };
 
 }();

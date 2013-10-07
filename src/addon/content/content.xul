@@ -35,43 +35,40 @@
 
 <!DOCTYPE overlay SYSTEM "chrome://znotes/locale/content.dtd">
 
-<overlay id="content" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+<overlay id="content"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <script type="application/javascript" src="chrome://znotes/content/content.js"/>
+  <script type="application/javascript"
+    src="chrome://znotes/content/content.js"/>
 
-  <commandset id="commandSet">
-    <command id="cmdNewContent"/>
-    <command id="cmdOpenContent"/>
-    <command id="cmdOpenWithContent"/>
-    <command id="cmdSaveContent"/>
-    <command id="cmdDeleteContent"/>
-  </commandset>
-
-  <popupset id="popupSet">
+  <stringbundleset id="znotes_stringbundleset" />
+  <commandset id="znotes_commandset" />
+  <keyset id="znotes_keyset" />
+  <popupset id="znotes_popupset">
     <menupopup id="contentTreeMenu">
-      <menuitem id="contentTreeMenuNew"
-        class="menuitem-iconic"
-        label="&content_popup_new;"
-        command="cmdNewContent"/>
-      <menuitem id="contentTreeMenuOpen"
-        class="menuitem-iconic"
-        label="&content_popup_open;"
-        command="cmdOpenContent"/>
-      <menuitem id="contentTreeMenuOpenWith"
-        class="menuitem-iconic"
-        label="&content_popup_open_with;"
-        command="cmdOpenWithContent"/>
-      <menuitem id="contentTreeMenuSave"
-        class="menuitem-iconic"
-        label="&content_popup_save;"
-        command="cmdSaveContent"/>
-      <menuitem id="contentTreeMenuDelete"
-        class="menuitem-iconic"
-        label="&content_popup_delete;"
-        command="cmdDeleteContent"/>
+      <menuitem id="znotes_contentaddfile_menuitem"
+        class="menuitem-iconic znotes_contentaddfile_class"
+        key="znotes_contentaddfile_key"
+        command="znotes_contentaddfile_command"/>
+      <menuitem id="znotes_contentopen_menuitem"
+        class="menuitem-iconic znotes_contentopen_class"
+        key="znotes_contentopen_key"
+        command="znotes_contentopen_command"/>
+      <menuitem id="znotes_contentopenwith_menuitem"
+        class="menuitem-iconic znotes_contentopenwith_class"
+        key="znotes_contentopenwith_key"
+        command="znotes_contentopenwith_command"/>
+      <menuitem id="znotes_contentsave_menuitem"
+        class="menuitem-iconic znotes_contentsave_class"
+        key="znotes_contentsave_key"
+        command="znotes_contentsave_command"/>
+      <menuitem id="znotes_contentdelete_menuitem"
+        class="menuitem-iconic znotes_contentdelete_class"
+        key="znotes_contentdelete_key"
+        command="znotes_contentdelete_command"/>
     </menupopup>
   </popupset>
-
+  
   <tabs id="addonsTabs">
     <tab id="addonsTabContent" pack="start" label="&content_tab_caption;" />
   </tabs>

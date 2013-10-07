@@ -34,9 +34,6 @@
 
 @import url("chrome://znotes_common/skin/documents/default/editor.css");
 
-#editorPanels {
-  margin-top: 1px;
-}
 #sourceToolBar toolbarbutton,
 #editorToolBar1 toolbarbutton,
 #editorToolBar2 toolbarbutton {

@@ -35,9 +35,15 @@ if ( !ru.akman ) ru.akman = {};
 if ( !ru.akman.znotes ) ru.akman.znotes = {};
 if ( !ru.akman.znotes.core ) ru.akman.znotes.core = {};
 
-Components.utils.import( "resource://znotes/utils.js"  , ru.akman.znotes );
-Components.utils.import( "resource://znotes/event.js"  , ru.akman.znotes.core );
-Components.utils.import( "resource://znotes/documentmanager.js" , ru.akman.znotes );
+Components.utils.import( "resource://znotes/utils.js",
+  ru.akman.znotes
+);
+Components.utils.import( "resource://znotes/event.js",
+  ru.akman.znotes.core
+);
+Components.utils.import( "resource://znotes/documentmanager.js",
+  ru.akman.znotes
+);
 
 var EXPORTED_SYMBOLS = ["Editor"];
 
@@ -46,9 +52,9 @@ var Editor = function() {
   return function() {
 
     // !!!! %%%% !!!! STRINGS_BUNDLE
-    var stringsBundle = ru.akman.znotes.Utils.STRINGS_BUNDLE;
+    var Utils = ru.akman.znotes.Utils;
+    var stringsBundle = Utils.STRINGS_BUNDLE;
     var editorStringsBundle = null;
-    var log = ru.akman.znotes.Utils.log;
     
     var EditorException = function( message ) {
       this.name = "EditorException";
@@ -64,10 +70,9 @@ var Editor = function() {
     var currentDocument = null;
     var currentNote = null;
     var currentMode = null;
-    var currentState = null;
     var currentStyle = null;
-    
-    //
+
+    var currentState = null; // isDirty
     
     var currentNoteMainTagColor = null;
     var tagList = null;
@@ -129,11 +134,11 @@ var Editor = function() {
     var srcBeautify = null;
     
     var fontArray = [];
-    var fontMapping = ru.akman.znotes.Utils.getDefaultFontMapping();
+    var fontMapping = Utils.getDefaultFontMapping();
     
     var formatBlockObject = {};
 
-    // C O N T R O L L E R S
+    // CONTROLLERS
     
     var designViewerController = {
       supportsCommand: function ( cmd ) {
@@ -174,10 +179,10 @@ var Editor = function() {
       }
     };
     
-    // U T I L S
+    // HELPERS
     
     function createFontNameMenuList() {
-      var fontNameArray = ru.akman.znotes.Utils.getFontNameArray();
+      var fontNameArray = Utils.getFontNameArray();
       if ( fontArray.length > 0 ) {
         fontArray.splice( 0, fontArray.length );
       }
@@ -188,7 +193,8 @@ var Editor = function() {
         var menuItem = currentDocument.createElement( "menuitem" );
         menuItem.setAttribute( "label", fontName );
         menuItem.setAttribute( "value", fontName );
-        var style = "font-style: normal;font-variant: normal;font-weight: normal;font-family: '"+fontName+"';";
+        var style = "font-style: normal;font-variant: normal;" +
+                    "font-weight: normal;font-family: '"+fontName+"';";
         menuItem.setAttribute( "style", style );
         menuItem.addEventListener( "command", onEdtFontName, false );
         fontNameMenuPopup.appendChild( menuItem );
@@ -214,11 +220,12 @@ var Editor = function() {
       var iconSize = ( currentStyle.iconsize == "small" ) ? 16 : 24;
       foreColorEditorButton.setAttribute(
         "image",
-        ru.akman.znotes.Utils.makeForeColorImage( "#000000", iconSize, "#000000" )
+        Utils.makeForeColorImage(
+          "#000000", iconSize, "#000000" )
       );
       backColorEditorButton.setAttribute(
         "image",
-        ru.akman.znotes.Utils.makeBackColorImage( "#000000", iconSize )
+        Utils.makeBackColorImage( "#000000", iconSize )
       );
     };
     
@@ -242,7 +249,7 @@ var Editor = function() {
         color = style.getPropertyValue( "color" ); 
       }
       } catch ( e ) {
-        log( e );
+        Utils.log( e );
       }
       return color;
     };
@@ -264,14 +271,15 @@ var Editor = function() {
           if ( display == "block" ) {
             flag = true;
           }
-          if ( color != "transparent" && ( !flag || ( flag && display == "block" ) ) ) {
+          if ( color != "transparent" &&
+               ( !flag || ( flag && display == "block" ) ) ) {
             break;
           }
           el = el.parentNode;
         }
       }
       } catch ( e ) {
-        log( e );
+        Utils.log( e );
       }
       return color;
     };
@@ -290,7 +298,8 @@ var Editor = function() {
 
     function hasSelection() {
       var selection = designFrame.contentWindow.getSelection();
-      return ( selection && !selection.isCollapsed && selection.rangeCount != 0 );
+      return ( selection && !selection.isCollapsed &&
+               selection.rangeCount != 0 );
     };
     
     function cloneSelection() {
@@ -362,7 +371,8 @@ var Editor = function() {
       }
     };
     
-    function cloneNode( target, root, startContainer, startOffset, endContainer, endOffset, state ) {
+    function cloneNode( target, root, startContainer, startOffset,
+      endContainer, endOffset, state ) {
       var textNode;
       var targetNode;
       var span;
@@ -375,7 +385,8 @@ var Editor = function() {
         case 3: // TEXT_NODE
           if ( root == startContainer && root == endContainer ) {
             textNode = root.cloneNode( false );
-            textNode.nodeValue = textNode.nodeValue.substring( startOffset, endOffset );
+            textNode.nodeValue =
+              textNode.nodeValue.substring( startOffset, endOffset );
             span = designFrame.contentDocument.createElement( "span" );
             cloneComputedStyle( root.parentNode, span );
             span.appendChild( textNode );
@@ -465,12 +476,15 @@ var Editor = function() {
       var endOffset;
       for ( var i = 0; i < selection.rangeCount; i++ ) {
         var r = selection.getRangeAt( i );
-        if ( r.startContainer != endContainer && r.endContainer != endContainer ) {
+        if ( r.startContainer != endContainer &&
+             r.endContainer != endContainer ) {
           offsets.push( null );
         } else {
           offsets.push( {
-            startOffset: r.startContainer == endContainer ? r.startOffset - endOffset : -1,
-            endOffset: r.endContainer == endContainer ? r.endOffset - endOffset : -1
+            startOffset: r.startContainer == endContainer ?
+              r.startOffset - endOffset : -1,
+            endOffset: r.endContainer == endContainer ?
+              r.endOffset - endOffset : -1
           } );
         }
         endContainer = r.endContainer;
@@ -533,7 +547,8 @@ var Editor = function() {
       return rng;
     };
     
-    function processNode( root, startContainer, startOffset, endContainer, endOffset, state, processor, range, singleFlag ) {
+    function processNode( root, startContainer, startOffset, endContainer,
+      endOffset, state, processor, range, singleFlag ) {
       switch ( root.nodeType ) {
         case 3: // TEXT_NODE
           var parentNode = root.parentNode;
@@ -542,7 +557,8 @@ var Editor = function() {
           var spanElement;
           var textNode;
           if ( root == startContainer && root == endContainer ) {
-            if ( singleFlag && startOffset == 0 && endOffset == rootLength ) {
+            if ( singleFlag && startOffset == 0 &&
+                 endOffset == rootLength ) {
               processor( parentNode );
               range.setStart( startContainer, startOffset );
               range.setEnd( endContainer, endOffset );
@@ -555,7 +571,8 @@ var Editor = function() {
                   root
                 );
               }
-              spanElement = designFrame.contentDocument.createElement( "span" );
+              spanElement =
+                designFrame.contentDocument.createElement( "span" );
               textNode = designFrame.contentDocument.createTextNode(
                 rootValue.substring( startOffset, endOffset )
               );
@@ -588,7 +605,8 @@ var Editor = function() {
                 ),
                 root
               );
-              spanElement = designFrame.contentDocument.createElement( "span" );
+              spanElement =
+                designFrame.contentDocument.createElement( "span" );
               textNode = designFrame.contentDocument.createTextNode(
                 rootValue.substring( startOffset )
               );
@@ -606,7 +624,8 @@ var Editor = function() {
               processor( parentNode );
               range.setEnd( endContainer, endOffset );
             } else {
-              spanElement = designFrame.contentDocument.createElement( "span" );
+              spanElement =
+                designFrame.contentDocument.createElement( "span" );
               textNode = designFrame.contentDocument.createTextNode(
                 rootValue.substring( 0, endOffset )
               );
@@ -630,7 +649,8 @@ var Editor = function() {
             if ( singleFlag ) {
               processor( parentNode );
             } else {
-              spanElement = designFrame.contentDocument.createElement( "span" );
+              spanElement =
+                designFrame.contentDocument.createElement( "span" );
               textNode = designFrame.contentDocument.createTextNode(
                 rootValue
               );
@@ -676,14 +696,14 @@ var Editor = function() {
 
     /*
     function onEdtTest( event ) {
-      log( "onEdtTest()" );
+      Utils.log( "onEdtTest()" );
       var selection = designFrame.contentWindow.getSelection();
       var r = selection.getRangeAt( 0 );
-      log( r.commonAncestorContainer );
-      log( r.startContainer );
-      log( r.startOffset );
-      log( r.endContainer );
-      log( r.endOffset );
+      Utils.log( r.commonAncestorContainer );
+      Utils.log( r.startContainer );
+      Utils.log( r.startOffset );
+      Utils.log( r.endContainer );
+      Utils.log( r.endOffset );
       // -> designEditor.beginTransaction()
       // -> designEditor.endTransaction()
       // parent.insertBefore( node, root ) -> 
@@ -707,7 +727,7 @@ var Editor = function() {
       // void designEditor.markNodeDirty(in nsIDOMNode node);      
       try {
       } catch ( e ) {
-        log( e );
+        Utils.log( e );
       }
       onSelectionChanged();
       return true;
@@ -720,17 +740,19 @@ var Editor = function() {
       var backgroundColor = getElementBackgroundColor( containerElement );
       backColorEditorButton.setAttribute(
         "image",
-        ru.akman.znotes.Utils.makeBackColorImage( backgroundColor, iconSize )
+        Utils.makeBackColorImage( backgroundColor, iconSize )
       );
       foreColorEditorButton.setAttribute(
         "image",
-        ru.akman.znotes.Utils.makeForeColorImage( foregroundColor, iconSize, backgroundColor )
+        Utils.makeForeColorImage(
+          foregroundColor, iconSize, backgroundColor )
       );
     };
     
     function updateControls( containerElement ) {
       var iconSize = ( currentStyle.iconsize == "small" ) ? 16 : 24;
-      var computedStyle = currentWindow.getComputedStyle( containerElement, null );
+      var computedStyle =
+        currentWindow.getComputedStyle( containerElement, null );
       var fontFamily = null;
       var fontSize = null;
       var fontStyle = null;
@@ -747,7 +769,8 @@ var Editor = function() {
         var fontList = fontFamily.split( "," );
         for ( var i = 0; i < fontList.length; i++ ) {
           fontFamily = fontList[i];
-          if ( fontFamily.charAt( 0 ) == "'" || fontFamily.charAt( 0 ) == '"' ) {
+          if ( fontFamily.charAt( 0 ) == "'" ||
+               fontFamily.charAt( 0 ) == '"' ) {
             fontFamily = fontFamily.substring( 1, fontFamily.length - 1 );
           }
           if ( fontFamily in fontMapping.generics ) {
@@ -766,7 +789,9 @@ var Editor = function() {
       if ( fontSize == null ) {
         fontSizeTextBox.value = "";
       } else {
-        fontSizeTextBox.value = parseInt( fontSize.substring( 0, fontSize.indexOf( "px" ) ) );
+        fontSizeTextBox.value = parseInt(
+          fontSize.substring( 0, fontSize.indexOf( "px" ) )
+        );
       }
       // text-align
       // left || right || center || justify
@@ -821,7 +846,8 @@ var Editor = function() {
       strikeThroughEditorButton.checked = false;
       while ( element ) {
         style = element.style;
-        textDecoration = style ? style.getPropertyValue( "text-decoration" ) : null;
+        textDecoration = style ?
+          style.getPropertyValue( "text-decoration" ) : null;
         if ( textDecoration ) {
           if ( textDecoration == "underline" ) {
             underlineEditorButton.checked = true;
@@ -858,37 +884,55 @@ var Editor = function() {
     // C O P Y  &  C U T  &  P A S T E  C O M M A N D S
     
     function onCmdCopy( event ) {
-      var transferable = Components.Constructor( "@mozilla.org/widget/transferable;1", "nsITransferable" )();
+      var transferable = Components.Constructor(
+        "@mozilla.org/widget/transferable;1",
+        "nsITransferable"
+      )();
       transferable.init(
-        currentWindow.QueryInterface( Components.interfaces.nsIInterfaceRequestor )
-                     .getInterface( Components.interfaces.nsIWebNavigation )
+        currentWindow.QueryInterface(
+          Components.interfaces.nsIInterfaceRequestor
+        ).getInterface( Components.interfaces.nsIWebNavigation )
       );
       if ( isSourceEditingActive ) {
         // text/unicode
         transferable.addDataFlavor( "text/unicode" );
         var textData = sourceEditor.getSelection();
-        var textSupportsString = Components.Constructor("@mozilla.org/supports-string;1", "nsISupportsString")();
+        var textSupportsString = Components.Constructor(
+          "@mozilla.org/supports-string;1",
+          "nsISupportsString"
+        )();
         textSupportsString.data = textData;
-        transferable.setTransferData( "text/unicode", textSupportsString, textData.length * 2 );
+        transferable.setTransferData(
+          "text/unicode", textSupportsString, textData.length * 2 );
       } else {
         var fragment = cloneSelection();
         // text/html
         transferable.addDataFlavor( "text/html" );
-        var xmlSerializer = Components.classes["@mozilla.org/xmlextras/xmlserializer;1"]
-                                      .createInstance( Components.interfaces.nsIDOMSerializer );
+        var xmlSerializer =
+          Components.classes["@mozilla.org/xmlextras/xmlserializer;1"]
+                    .createInstance( Components.interfaces.nsIDOMSerializer );
         var xmlData = xmlSerializer.serializeToString( fragment );
-        var xmlSupportsString = Components.Constructor("@mozilla.org/supports-string;1", "nsISupportsString")();
+        var xmlSupportsString = Components.Constructor(
+          "@mozilla.org/supports-string;1",
+          "nsISupportsString"
+        )();
         xmlSupportsString.data = xmlData;
-        transferable.setTransferData( "text/html", xmlSupportsString, xmlData.length * 2 );
+        transferable.setTransferData(
+          "text/html", xmlSupportsString, xmlData.length * 2 );
         // text/unicode
         transferable.addDataFlavor( "text/unicode" );
         var textData = fragment.textContent;
-        var textSupportsString = Components.Constructor("@mozilla.org/supports-string;1", "nsISupportsString")();
+        var textSupportsString = Components.Constructor(
+          "@mozilla.org/supports-string;1",
+          "nsISupportsString"
+        )();
         textSupportsString.data = textData;
-        transferable.setTransferData( "text/unicode", textSupportsString, textData.length * 2 );
+        transferable.setTransferData(
+          "text/unicode", textSupportsString, textData.length * 2 );
       }
-      var clipboard = Components.classes['@mozilla.org/widget/clipboard;1']
-                                .createInstance( Components.interfaces.nsIClipboard );
+      var clipboard =
+        Components.classes['@mozilla.org/widget/clipboard;1']
+                  .createInstance( Components.interfaces.nsIClipboard );
       clipboard.setData( transferable, null, clipboard.kGlobalClipboard );
       return true;
     };
@@ -906,18 +950,24 @@ var Editor = function() {
         return false;
       }
       if ( isSourceEditingActive ) {
-        var transferable = Components.Constructor( "@mozilla.org/widget/transferable;1", "nsITransferable" )();
+        var transferable = Components.Constructor(
+          "@mozilla.org/widget/transferable;1",
+          "nsITransferable"
+        )();
         transferable.init(
-          currentWindow.QueryInterface( Components.interfaces.nsIInterfaceRequestor )
-                       .getInterface( Components.interfaces.nsIWebNavigation )
+          currentWindow.QueryInterface(
+            Components.interfaces.nsIInterfaceRequestor
+          ).getInterface( Components.interfaces.nsIWebNavigation )
         );
         transferable.addDataFlavor( "text/unicode" );
-        var clipboard = Components.classes['@mozilla.org/widget/clipboard;1']
-                                  .createInstance( Components.interfaces.nsIClipboard );
+        var clipboard =
+          Components.classes['@mozilla.org/widget/clipboard;1']
+                    .createInstance( Components.interfaces.nsIClipboard );
         clipboard.getData( transferable, clipboard.kGlobalClipboard );
         var textData = {};
         var textDataLength = {};
-        transferable.getTransferData( "text/unicode", textData, textDataLength );
+        transferable.getTransferData(
+          "text/unicode", textData, textDataLength );
         if ( textData ) {
           sourceEditor.replaceSelection(
             textData.value
@@ -958,7 +1008,7 @@ var Editor = function() {
       return true;
     };
     
-    // U N D O  &  R E D O  C O M M A N D S
+    // UNDO & REDO
 
     function onCmdUndo( event ) {
       if ( !isSourceEditingActive && !isDesignEditingActive ) {
@@ -1008,7 +1058,7 @@ var Editor = function() {
     
     function onEdtBold( source ) {
       // boldEditorButton.checked = !boldEditorButton.checked;
-      log( "onEdtBold()" );
+      Utils.log( "onEdtBold()" );
       designFrame.contentDocument.execCommand( 'bold', false, null );
       /*
       processSelection( function( element ) {
@@ -1027,7 +1077,8 @@ var Editor = function() {
     };
     
     function onEdtItalic( source ) {
-      //designFrame.contentDocument.execCommand( 'italic', false, null );
+      //designFrame.contentDocument.execCommand(
+      //  'italic', false, null );
       processSelection( function( element ) {
         if ( italicEditorButton.checked ) {
           element.style.setProperty( "font-style", "italic" );
@@ -1043,7 +1094,8 @@ var Editor = function() {
     };
     
     function onEdtUnderline( source ) {
-      //designFrame.contentDocument.execCommand( 'underline', false, null );
+      //designFrame.contentDocument.execCommand(
+      //  'underline', false, null );
       processSelection( function( element ) {
         if ( underlineEditorButton.checked ) {
           element.style.setProperty( "text-decoration", "underline" );
@@ -1059,7 +1111,8 @@ var Editor = function() {
     };
     
     function onEdtStrikeThrough( source ) {
-      //designFrame.contentDocument.execCommand( 'strikeThrough', false, null );
+      //designFrame.contentDocument.execCommand(
+      //  'strikeThrough', false, null );
       processSelection( function( element ) {
         if ( strikeThroughEditorButton.checked ) {
           element.style.setProperty( "text-decoration", "line-through" );
@@ -1075,7 +1128,8 @@ var Editor = function() {
     };
     
     function onEdtJustifyCenter( source ) {
-      //designFrame.contentDocument.execCommand( 'justifyCenter', false, null );
+      //designFrame.contentDocument.execCommand(
+      //  'justifyCenter', false, null );
       processSelection( function( element ) {
         if ( justifyCenterEditorButton.checked ) {
           element.style.setProperty( "text-align", "center" );
@@ -1094,7 +1148,8 @@ var Editor = function() {
     };
     
     function onEdtJustifyLeft( source ) {
-      //designFrame.contentDocument.execCommand( 'justifyLeft', false, null );
+      //designFrame.contentDocument.execCommand(
+      //  'justifyLeft', false, null );
       processSelection( function( element ) {
         if ( justifyLeftEditorButton.checked ) {
           element.style.setProperty( "text-align", "left" );
@@ -1113,7 +1168,8 @@ var Editor = function() {
     };
     
     function onEdtJustifyRight( source ) {
-      //designFrame.contentDocument.execCommand( 'justifyRight', false, null );
+      //designFrame.contentDocument.execCommand(
+      //  'justifyRight', false, null );
       processSelection( function( element ) {
         if ( justifyRightEditorButton.checked ) {
           element.style.setProperty( "text-align", "right" );
@@ -1132,7 +1188,8 @@ var Editor = function() {
     };
     
     function onEdtJustifyFull( source ) {
-      //designFrame.contentDocument.execCommand( 'justifyFull', false, null );
+      //designFrame.contentDocument.execCommand(
+      //  'justifyFull', false, null );
       processSelection( function( element ) {
         if ( justifyFullEditorButton.checked ) {
           element.style.setProperty( "text-align", "justify" );
@@ -1151,7 +1208,8 @@ var Editor = function() {
     };
 
     function onEdtRemoveFormat( source ) {
-      //designFrame.contentDocument.execCommand( 'removeFormat', false, null );
+      //designFrame.contentDocument.execCommand(
+      //  'removeFormat', false, null );
       processSelection( function( element ) {
         if ( element.hasAttribute( "style" ) ) {
           element.removeAttribute( "style" );
@@ -1163,7 +1221,8 @@ var Editor = function() {
     
     function onEdtFontName( source ) {
       var fontName = fontNameMenuList.selectedItem.value;
-      //designFrame.contentDocument.execCommand( 'fontName', false, fontName );
+      //designFrame.contentDocument.execCommand(
+      //  'fontName', false, fontName );
       processSelection( function( element ) {
         element.style.setProperty( "font-family", fontName );
       } );
@@ -1184,8 +1243,12 @@ var Editor = function() {
     function onEdtForeColor( source ) {
       var params = {
         input: {
-          title: stringsBundle.getString( "body.colorselectdialog.title" ),
-          message: stringsBundle.getString( "body.forecolorselectdialog.message" ),
+          title: stringsBundle.getString(
+            "body.colorselectdialog.title"
+          ),
+          message: stringsBundle.getString(
+            "body.forecolorselectdialog.message"
+          ),
           color: "#000000"
         },
         output: null
@@ -1212,8 +1275,12 @@ var Editor = function() {
     function onEdtBackColor( source ) {
       var params = {
         input: {
-          title: stringsBundle.getString( "body.colorselectdialog.title" ),
-          message: stringsBundle.getString( "body.backcolorselectdialog.message" ),
+          title: stringsBundle.getString(
+            "body.colorselectdialog.title"
+          ),
+          message: stringsBundle.getString(
+            "body.backcolorselectdialog.message"
+          ),
           color: "#000000"
         },
         output: null
@@ -1261,10 +1328,12 @@ var Editor = function() {
     };
 
     function onEdtBackColorDelete( source ) {
-      var bodyBackgroundColor = getElementBackgroundColor( designFrame.contentDocument.body );
+      var bodyBackgroundColor =
+        getElementBackgroundColor( designFrame.contentDocument.body );
       processSelection( function( element ) {
         var style = element.style;
-        var color = style ? style.getPropertyValue( "background-color" ) : null;
+        var color = style ?
+          style.getPropertyValue( "background-color" ) : null;
         if ( color && element.nodeName.toLowerCase() != "body" ) {
           style.removeProperty( "background-color" );
           if ( style.length == 0 ) {
@@ -1284,42 +1353,50 @@ var Editor = function() {
     };
     
     function onEdtSuperscript( source ) {
-      designFrame.contentDocument.execCommand( 'superscript', false, null );
+      designFrame.contentDocument.execCommand(
+        'superscript', false, null );
       return true;
     };
     
     function onEdtSubscript( source ) {
-      designFrame.contentDocument.execCommand( 'subscript', false, null );
+      designFrame.contentDocument.execCommand(
+        'subscript', false, null );
       return true;
     };
     
     function onEdtIndent( source ) {
-      designFrame.contentDocument.execCommand( 'indent', false, null );
+      designFrame.contentDocument.execCommand(
+        'indent', false, null );
       return true;
     };
     
     function onEdtOutdent( source ) {
-      designFrame.contentDocument.execCommand( 'outdent', false, null );
+      designFrame.contentDocument.execCommand(
+        'outdent', false, null );
       return true;
     };
     
     function onEdtInsertOrderedList( source ) {
-      designFrame.contentDocument.execCommand( 'insertOrderedList', false, null );
+      designFrame.contentDocument.execCommand(
+        'insertOrderedList', false, null );
       return true;
     };
     
     function onEdtInsertUnorderedList( source ) {
-      designFrame.contentDocument.execCommand( 'insertUnorderedList', false, null );
+      designFrame.contentDocument.execCommand(
+        'insertUnorderedList', false, null );
       return true;
     };
     
     function onEdtInsertHorizontalRule( source ) {
-      designFrame.contentDocument.execCommand( 'insertHorizontalRule', false, null );
+      designFrame.contentDocument.execCommand(
+        'insertHorizontalRule', false, null );
       return true;
     };
     
     function onEdtInsertParagraph( source ) {
-      designFrame.contentDocument.execCommand( 'insertParagraph', false, null );
+      designFrame.contentDocument.execCommand(
+        'insertParagraph', false, null );
       return true;
     };
 
@@ -1339,7 +1416,8 @@ var Editor = function() {
       var params = {
         input: {
           title: stringsBundle.getString( "editor.addLink.title" ),
-          caption: " " + stringsBundle.getString( "editor.addLink.caption" ) + " ",
+          caption: " " + stringsBundle.getString( "editor.addLink.caption" ) +
+                   " ",
           value: "http://"
         },
         output: null
@@ -1388,7 +1466,8 @@ var Editor = function() {
       }
       var anImage = designHTMLEditor.createElementWithDefaults( "img" );
       anImage.setAttribute( "src", encodeURI( url ) );
-      designHTMLEditor.insertElementAtSelection( anImage, true /* aDeleteSelection */ );
+      designHTMLEditor.insertElementAtSelection(
+        anImage, true /* aDeleteSelection */ );
       designHTMLEditor.selectElement( anImage );
       return true;
     };
@@ -1405,7 +1484,8 @@ var Editor = function() {
         }
         aTable.appendChild( aRow );
       }
-      designHTMLEditor.insertElementAtSelection( aTable, true /* aDeleteSelection */ );
+      designHTMLEditor.insertElementAtSelection(
+        aTable, true /* aDeleteSelection */ );
       designHTMLEditor.selectElement( aTable );
       return true;
     };
@@ -1511,7 +1591,8 @@ var Editor = function() {
         edtDelete.setAttribute( "disabled", "true" );
         edtPaste.setAttribute( "disabled", "true" );
         var selection = designFrame.contentWindow.getSelection();
-        if ( !selection || selection.rangeCount == 0 || selection.isCollapsed ) {
+        if ( !selection || selection.rangeCount == 0 ||
+             selection.isCollapsed ) {
           if ( isDesignEditingActive ) {
             edtPaste.removeAttribute( "disabled" );
           }
@@ -1567,14 +1648,20 @@ var Editor = function() {
     function onSourceWindowResize( event ) {
       var sourceWindowInnerHeight = sourceWindow.innerHeight;
       if ( !sourceEditorHScrollbarHeight ) {
-        var frameDocumentOffsetHeight = sourceWindow.document.documentElement.offsetHeight;
-        var sourceEditorWrapperElementHeight = sourceEditor.getWrapperElement().style.height;
+        var frameDocumentOffsetHeight =
+          sourceWindow.document.documentElement.offsetHeight;
+        var sourceEditorWrapperElementHeight =
+          sourceEditor.getWrapperElement().style.height;
         var pxIndex = sourceEditorWrapperElementHeight.indexOf( "px" );
-        pxIndex = pxIndex < 0 ? sourceEditorWrapperElementHeight.length : pxIndex;
-        sourceEditorWrapperElementHeight = parseInt( sourceEditorWrapperElementHeight.substring( 0, pxIndex ) );
-        sourceEditorHScrollbarHeight = frameDocumentOffsetHeight - sourceEditorWrapperElementHeight;
+        pxIndex = pxIndex < 0 ?
+          sourceEditorWrapperElementHeight.length : pxIndex;
+        sourceEditorWrapperElementHeight =
+          parseInt( sourceEditorWrapperElementHeight.substring( 0, pxIndex ) );
+        sourceEditorHScrollbarHeight =
+          frameDocumentOffsetHeight - sourceEditorWrapperElementHeight;
       }
-      var updatedSourceEditorHeight = sourceWindowInnerHeight - sourceEditorHScrollbarHeight;
+      var updatedSourceEditorHeight =
+        sourceWindowInnerHeight - sourceEditorHScrollbarHeight;
       if ( sourceEditorHeight != updatedSourceEditorHeight ) {
         sourceEditorHeight = updatedSourceEditorHeight;
         sourceEditor.setSize( null, sourceEditorHeight );
@@ -1696,8 +1783,15 @@ var Editor = function() {
     // P R I V A T E  M E T H O D S
     
     function loadDesign( data, status ) {
-      var doc = ru.akman.znotes.DocumentManager.getDocument( currentNote.getType() );
-      var obj = doc.parseFromString( data, currentNote.getURI(), currentNote.getBaseURI(), currentNote.getName() );
+      var doc = ru.akman.znotes.DocumentManager.getDocument(
+        currentNote.getType()
+      );
+      var obj = doc.parseFromString(
+        data,
+        currentNote.getURI(),
+        currentNote.getBaseURI(),
+        currentNote.getName()
+      );
       var dom = obj.dom;
       if ( status ) {
         status.value = obj.changed;
@@ -1734,7 +1828,8 @@ var Editor = function() {
     };
     
     function loadSource( dom ) {
-      var doc = ru.akman.znotes.DocumentManager.getDocument( currentNote.getType() );
+      var doc = ru.akman.znotes.DocumentManager.getDocument(
+        currentNote.getType() );
       sourceEditor.setValue( doc.serializeToString( dom ) );
     };
     
@@ -1783,18 +1878,28 @@ var Editor = function() {
         designToolBox.removeAttribute( "collapsed" );
       }
       designFrame.contentDocument.designMode = "on";
-      designFrame.contentDocument.execCommand( 'styleWithCSS', false, null );
-      designFrame.contentDocument.execCommand( 'enableInlineTableEditing', false, null );
-      designFrame.contentDocument.execCommand( 'enableObjectResizing', false, null );
-      designFrame.contentDocument.execCommand( 'insertBrOnReturn', false, null );
-      designFrame.contentDocument.addEventListener( "mouseup", onSelectionChanged, false );
-      designFrame.contentDocument.addEventListener( "keyup", onSelectionChanged, false );
-      designHTMLEditor = designFrame.getHTMLEditor( designFrame.contentWindow );
+      designFrame.contentDocument.execCommand( 'styleWithCSS',
+        false, null );
+      designFrame.contentDocument.execCommand( 'enableInlineTableEditing',
+        false, null );
+      designFrame.contentDocument.execCommand( 'enableObjectResizing',
+        false, null );
+      designFrame.contentDocument.execCommand( 'insertBrOnReturn',
+        false, null );
+      designFrame.contentDocument.addEventListener( "mouseup",
+        onSelectionChanged, false );
+      designFrame.contentDocument.addEventListener( "keyup",
+        onSelectionChanged, false );
+      designHTMLEditor =
+        designFrame.getHTMLEditor( designFrame.contentWindow );
       designEditor = designFrame.getEditor( designFrame.contentWindow );
       designEditor.addDocumentStateListener( documentStateListener );
       //designEditorController.defaultController =
-      //  designFrame.contentWindow.controllers.getControllerForCommand( "cmd_copy" );
-      //designFrame.contentWindow.controllers.insertControllerAt( 0, designEditorController );
+      //  designFrame.contentWindow.controllers
+      //                           .getControllerForCommand( "cmd_copy" );
+      //designFrame.contentWindow.controllers
+      //                         .insertControllerAt( 0,
+      //                           designEditorController );
       // Restore last position of a cursor ...
       // Where is my focus ?!
       // We need to use setTimeout method :( !?
@@ -1815,9 +1920,12 @@ var Editor = function() {
       }
       designEditor = null;
       designHTMLEditor = null;
-      designFrame.contentDocument.removeEventListener( "mouseup", onSelectionChanged, false );
-      designFrame.contentDocument.removeEventListener( "keyup", onSelectionChanged, false );
-      //designFrame.contentWindow.controllers.removeController( designEditorController );
+      designFrame.contentDocument.removeEventListener( "mouseup",
+        onSelectionChanged, false );
+      designFrame.contentDocument.removeEventListener( "keyup",
+        onSelectionChanged, false );
+      //designFrame.contentWindow.controllers
+      //                         .removeController( designEditorController );
       designFrame.contentDocument.designMode = "off";
       designFrame.blur();
     };
@@ -1830,9 +1938,12 @@ var Editor = function() {
       if ( sourceToolBox.hasAttribute( "collapsed" ) ) {
         sourceToolBox.removeAttribute( "collapsed" );
       }
-      sourceWindow.addEventListener( "resize", onSourceWindowResize, false );
-      sourceFrame.contentDocument.addEventListener( "mouseup", onSelectionChanged, false );
-      sourceFrame.contentDocument.addEventListener( "keyup", onSelectionChanged, false );
+      sourceWindow.addEventListener( "resize",
+        onSourceWindowResize, false );
+      sourceFrame.contentDocument.addEventListener( "mouseup",
+        onSelectionChanged, false );
+      sourceFrame.contentDocument.addEventListener( "keyup",
+        onSelectionChanged, false );
       sourceEditor.on( "change", onSourceEditorChange );
       onSourceWindowResize();
       sourceEditor.clearHistory();
@@ -1852,9 +1963,12 @@ var Editor = function() {
       isSourceEditingActive = false;
       sourceToolBox.setAttribute( "collapsed", "true" );
       sourceEditor.off( "change", onSourceEditorChange );
-      sourceFrame.contentDocument.removeEventListener( "mouseup", onSelectionChanged, false );
-      sourceFrame.contentDocument.removeEventListener( "keyup", onSelectionChanged, false );
-      sourceWindow.removeEventListener( "resize", onSourceWindowResize, false );
+      sourceFrame.contentDocument.removeEventListener( "mouseup",
+        onSelectionChanged, false );
+      sourceFrame.contentDocument.removeEventListener( "keyup",
+        onSelectionChanged, false );
+      sourceWindow.removeEventListener( "resize",
+        onSourceWindowResize, false );
     };
     
     function switchToDesignTab() {
@@ -1877,7 +1991,7 @@ var Editor = function() {
       if ( editorTabs.hasAttribute( "hidden" ) ) {
         editorTabs.removeAttribute( "hidden" );
       }
-      if ( ru.akman.znotes.Utils.IS_EDIT_SOURCE_ENABLED ) {
+      if ( Utils.IS_EDIT_SOURCE_ENABLED ) {
         if ( editorTabSource.hasAttribute( "hidden" ) ) {
           editorTabSource.removeAttribute( "hidden" );
         }
@@ -1903,43 +2017,59 @@ var Editor = function() {
     };
     
     function addDefaultHandlers() {
-      designFrame.contentDocument.addEventListener( "click", ru.akman.znotes.Utils.clickHandler, false );
-      sourceFrame.contentDocument.addEventListener( "contextmenu", contextMenuHandler, true );
-      designFrame.contentDocument.addEventListener( "contextmenu", contextMenuHandler, true );
+      designFrame.contentDocument.addEventListener( "click",
+        Utils.clickHandler, false );
+      sourceFrame.contentDocument.addEventListener( "contextmenu",
+        contextMenuHandler, true );
+      designFrame.contentDocument.addEventListener( "contextmenu",
+        contextMenuHandler, true );
       //designViewerController.defaultController =
-      //  designFrame.contentWindow.controllers.getControllerForCommand( "cmd_copy" );
-      //designFrame.contentWindow.controllers.insertControllerAt( 0, designViewerController );
+      //  designFrame.contentWindow.controllers
+      //                           .getControllerForCommand( "cmd_copy" );
+      //designFrame.contentWindow.controllers
+      //                         .insertControllerAt( 0,
+      //                           designViewerController );
       //sourceEditorController.defaultController =
-      //  sourceFrame.contentWindow.controllers.getControllerForCommand( "cmd_copy" );
-      //sourceFrame.contentWindow.controllers.insertControllerAt( 0, sourceEditorController );
+      //  sourceFrame.contentWindow.controllers
+      //                           .getControllerForCommand( "cmd_copy" );
+      //sourceFrame.contentWindow.controllers
+      //                         .insertControllerAt( 0,
+      //                           sourceEditorController );
     };
     
     function removeDefaultHandlers() {
       if ( designFrame ) {
-        designFrame.contentDocument.removeEventListener( "click", ru.akman.znotes.Utils.clickHandler, false );
+        designFrame.contentDocument.removeEventListener( "click",
+          Utils.clickHandler, false );
         try {
-          //designFrame.contentWindow.controllers.removeController( designViewerController );
+          //designFrame.contentWindow.controllers.removeController(
+          //  designViewerController );
         } catch ( e ) {
-          log( e );
+          Utils.log( e );
         }
-        designFrame.contentDocument.removeEventListener( "contextmenu", contextMenuHandler, true );
+        designFrame.contentDocument.removeEventListener( "contextmenu",
+          contextMenuHandler, true );
       }
       if ( sourceFrame ) {
         try {
-          //sourceFrame.contentWindow.controllers.removeController( sourceEditorController );
+          //sourceFrame.contentWindow.controllers.removeController(
+          //  sourceEditorController );
         } catch ( e ) {
-          log( e );
+          Utils.log( e );
         }
-        sourceFrame.contentDocument.removeEventListener( "contextmenu", contextMenuHandler, true );
+        sourceFrame.contentDocument.removeEventListener( "contextmenu",
+          contextMenuHandler, true );
       }
     };
 
     function addEventListeners() {
       editorTabs.addEventListener( "select", onEditorTabSelect, false );
       editorTabClose.addEventListener( "command", onEditorTabClose, false );
-      editMenuPopup.addEventListener( "popupshowing", onEditMenuPopupShowing, false );
+      editMenuPopup.addEventListener( "popupshowing",
+        onEditMenuPopupShowing, false );
       fontSizeTextBox.addEventListener( "change", onEdtFontSize, false );
-      fontSizeTextBox.addEventListener( "focus", onFontSizeTextBoxFocus, false );
+      fontSizeTextBox.addEventListener( "focus",
+        onFontSizeTextBoxFocus, false );
       currentNote.addStateListener( noteStateListener );
       tagList.addStateListener( tagListStateListener );
     };
@@ -1947,9 +2077,11 @@ var Editor = function() {
     function removeEventListeners() {
       editorTabs.removeEventListener( "select", onEditorTabSelect, false );
       editorTabClose.removeEventListener( "command", onEditorTabClose, false );
-      editMenuPopup.removeEventListener( "popupshowing", onEditMenuPopupShowing, false );
+      editMenuPopup.removeEventListener( "popupshowing",
+        onEditMenuPopupShowing, false );
       fontSizeTextBox.removeEventListener( "change", onEdtFontSize, false );
-      fontSizeTextBox.removeEventListener( "focus", onFontSizeTextBoxFocus, false );
+      fontSizeTextBox.removeEventListener( "focus",
+        onFontSizeTextBoxFocus, false );
       currentNote.removeStateListener( noteStateListener );
       tagList.removeStateListener( tagListStateListener );
     };
@@ -2004,19 +2136,42 @@ var Editor = function() {
       isSourceMustBeUpdated = true;
       isDesignMustBeUpdated = true;
       //
-      editorStringsBundle = currentDocument.getElementById( "default.editor.stringbundle" );
+      editorStringsBundle =
+        currentDocument.getElementById( "default.editor.stringbundle" );
       //
-      formatBlockObject[ editorStringsBundle.getString( "editor.formatblock.text" ) ] = "";
-      formatBlockObject[ editorStringsBundle.getString( "editor.formatblock.paragraph" ) ] = "p";
-      formatBlockObject[ editorStringsBundle.getString( "editor.formatblock.heading1" ) ] = "h1";
-      formatBlockObject[ editorStringsBundle.getString( "editor.formatblock.heading2" ) ] = "h2";
-      formatBlockObject[ editorStringsBundle.getString( "editor.formatblock.heading3" ) ] = "h3";
-      formatBlockObject[ editorStringsBundle.getString( "editor.formatblock.heading4" ) ] = "h4";
-      formatBlockObject[ editorStringsBundle.getString( "editor.formatblock.heading5" ) ] = "h5";
-      formatBlockObject[ editorStringsBundle.getString( "editor.formatblock.heading6" ) ] = "h6";
-      formatBlockObject[ editorStringsBundle.getString( "editor.formatblock.address" ) ] = "address";
-      formatBlockObject[ editorStringsBundle.getString( "editor.formatblock.formatted" ) ] = "pre";
-      formatBlockObject[ editorStringsBundle.getString( "editor.formatblock.blockquote" ) ] = "blockquote";
+      formatBlockObject[
+        editorStringsBundle.getString( "editor.formatblock.text" )
+      ] = "";
+      formatBlockObject[
+        editorStringsBundle.getString( "editor.formatblock.paragraph" )
+      ] = "p";
+      formatBlockObject[
+        editorStringsBundle.getString( "editor.formatblock.heading1" )
+      ] = "h1";
+      formatBlockObject[
+        editorStringsBundle.getString( "editor.formatblock.heading2" )
+      ] = "h2";
+      formatBlockObject[
+        editorStringsBundle.getString( "editor.formatblock.heading3" )
+      ] = "h3";
+      formatBlockObject[
+        editorStringsBundle.getString( "editor.formatblock.heading4" )
+      ] = "h4";
+      formatBlockObject[
+        editorStringsBundle.getString( "editor.formatblock.heading5" )
+      ] = "h5";
+      formatBlockObject[
+        editorStringsBundle.getString( "editor.formatblock.heading6" )
+      ] = "h6";
+      formatBlockObject[
+        editorStringsBundle.getString( "editor.formatblock.address" )
+      ] = "address";
+      formatBlockObject[
+        editorStringsBundle.getString( "editor.formatblock.formatted" )
+      ] = "pre";
+      formatBlockObject[
+        editorStringsBundle.getString( "editor.formatblock.blockquote" )
+      ] = "blockquote";
       //
       editorTabs = currentDocument.getElementById( "editorTabs" );
       editorTabSource = currentDocument.getElementById( "editorTabSource" );
@@ -2028,29 +2183,46 @@ var Editor = function() {
       sourceToolBox = currentDocument.getElementById( "sourceToolBox" );
       sourceToolBar = currentDocument.getElementById( "sourceToolBar" );
       //
-      fontNameMenuPopup = currentDocument.getElementById( "fontNameMenuPopup" );
-      fontNameMenuList = currentDocument.getElementById( "fontNameMenuList" );
-      fontSizeTextBox = currentDocument.getElementById( "fontSizeTextBox" );
-      formatBlockMenuPopup = currentDocument.getElementById( "formatBlockMenuPopup" );
-      formatBlockMenuList = currentDocument.getElementById( "formatBlockMenuList" );
-      foreColorEditorButton = currentDocument.getElementById( "foreColorEditorButton" );
-      foreColorDeleteEditorButton = currentDocument.getElementById( "foreColorDeleteEditorButton" );
-      backColorEditorButton = currentDocument.getElementById( "backColorEditorButton" );
-      backColorDeleteEditorButton = currentDocument.getElementById( "backColorDeleteEditorButton" );
-      italicEditorButton = currentDocument.getElementById( "italicEditorButton" );
-      underlineEditorButton = currentDocument.getElementById( "underlineEditorButton" );
-      strikeThroughEditorButton = currentDocument.getElementById( "strikeThroughEditorButton" );
-      boldEditorButton = currentDocument.getElementById( "boldEditorButton" );
-      justifyCenterEditorButton = currentDocument.getElementById( "justifyCenterEditorButton" );
-      justifyLeftEditorButton = currentDocument.getElementById( "justifyLeftEditorButton" );
-      justifyRightEditorButton = currentDocument.getElementById( "justifyRightEditorButton" );
-      justifyFullEditorButton = currentDocument.getElementById( "justifyFullEditorButton" );
+      fontNameMenuPopup =
+        currentDocument.getElementById( "fontNameMenuPopup" );
+      fontNameMenuList =
+        currentDocument.getElementById( "fontNameMenuList" );
+      fontSizeTextBox =
+        currentDocument.getElementById( "fontSizeTextBox" );
+      formatBlockMenuPopup =
+        currentDocument.getElementById( "formatBlockMenuPopup" );
+      formatBlockMenuList =
+        currentDocument.getElementById( "formatBlockMenuList" );
+      foreColorEditorButton =
+        currentDocument.getElementById( "foreColorEditorButton" );
+      foreColorDeleteEditorButton =
+        currentDocument.getElementById( "foreColorDeleteEditorButton" );
+      backColorEditorButton =
+        currentDocument.getElementById( "backColorEditorButton" );
+      backColorDeleteEditorButton =
+        currentDocument.getElementById( "backColorDeleteEditorButton" );
+      italicEditorButton =
+        currentDocument.getElementById( "italicEditorButton" );
+      underlineEditorButton =
+        currentDocument.getElementById( "underlineEditorButton" );
+      strikeThroughEditorButton =
+        currentDocument.getElementById( "strikeThroughEditorButton" );
+      boldEditorButton =
+        currentDocument.getElementById( "boldEditorButton" );
+      justifyCenterEditorButton =
+        currentDocument.getElementById( "justifyCenterEditorButton" );
+      justifyLeftEditorButton =
+        currentDocument.getElementById( "justifyLeftEditorButton" );
+      justifyRightEditorButton =
+        currentDocument.getElementById( "justifyRightEditorButton" );
+      justifyFullEditorButton =
+        currentDocument.getElementById( "justifyFullEditorButton" );
       //
       designFrame = currentDocument.getElementById( "designEditor" );
       sourceFrame = currentDocument.getElementById( "sourceEditor" );
       sourcePrintFrame = currentDocument.getElementById( "sourcePrintFrame" );
       //
-      editMenuPopup = ru.akman.znotes.Utils.MAIN_WINDOW.document.getElementById( "znotes_edit_menupopup" );
+      editMenuPopup = currentDocument.getElementById( "znotes_edit_menupopup" );
       // we have to start to open and hide editMenuPopup
       // to correctly determine the size of it's boxObject,
       // that are necessary in contextMenuHandler() later
@@ -2076,7 +2248,8 @@ var Editor = function() {
           }, 0 );
         };
         var onPrintFrameLoad = function() {
-          sourcePrintFrame.removeEventListener( "load", onPrintFrameLoad, true );
+          sourcePrintFrame.removeEventListener( "load",
+            onPrintFrameLoad, true );
           initProgress += 3;
           onCallback();
         };
@@ -2138,7 +2311,8 @@ var Editor = function() {
     
     function save() {
       var status = {};
-      var position = isSourceEditingActive ? sourceEditor.getCursor() : null;
+      var position = isSourceEditingActive ?
+        sourceEditor.getCursor() : null;
       if ( isSourceMustBeUpdated ) {
         isSourceMustBeUpdated = false;
         doneDesignEditing();
@@ -2179,9 +2353,16 @@ var Editor = function() {
     function confirm() {
       var params = {
         input: {
-          title: stringsBundle.getString( "body.confirmSave.title" ),
-          message1: stringsBundle.getFormattedString( "body.confirmSave.message1", [ currentNote.getName() ] ),
-          message2: stringsBundle.getString( "body.confirmSave.message2" )
+          title: stringsBundle.getString(
+            "body.confirmSave.title"
+          ),
+          message1: stringsBundle.getFormattedString(
+            "body.confirmSave.message1",
+            [ currentNote.getName() ]
+          ),
+          message2: stringsBundle.getString(
+            "body.confirmSave.message2"
+          )
         },
         output: null
       };
@@ -2216,28 +2397,37 @@ var Editor = function() {
           pos = sourceText.indexOf( "\n", pos + 1 );
         }
         var lineFieldWidth = ( "" + lineCount ).length;
-        var node = sourcePrintFrame.contentWindow.document.getElementById( "printView" );
+        var node = sourcePrintFrame.contentWindow
+                                   .document.getElementById( "printView" );
         while ( node.firstChild ) {
           node.removeChild( node.firstChild );
         }
         var row = rowBegin;
-        var sp = node.appendChild( node.ownerDocument.createElement( "span" ) );
+        var sp = node.appendChild(
+          node.ownerDocument.createElement( "span" )
+        );
         var lineField = "" + row;
         while ( lineField.length < lineFieldWidth ) {
           lineField = " " + lineField;
         }
-        sp.appendChild( node.ownerDocument.createTextNode( lineField + " " ) );
+        sp.appendChild(
+          node.ownerDocument.createTextNode( lineField + " " )
+        );
         var col = 0;
         var callback = function ( text, style ) {
           if ( text == "\n" ) {
             row++;
             node.appendChild( node.ownerDocument.createElement( "br" ) );
-            var sp = node.appendChild( node.ownerDocument.createElement( "span" ) );
+            var sp = node.appendChild(
+              node.ownerDocument.createElement( "span" )
+            );
             var lineField = "" + row;
             while ( lineField.length < lineFieldWidth ) {
               lineField = " " + lineField;
             }
-            sp.appendChild( node.ownerDocument.createTextNode( lineField + " " ) );
+            sp.appendChild(
+              node.ownerDocument.createTextNode( lineField + " " )
+            );
             col = 0;
             return;
           }
@@ -2261,7 +2451,9 @@ var Editor = function() {
             }
           }
           if ( style ) {
-            var sp = node.appendChild( node.ownerDocument.createElement( "span" ) );
+            var sp = node.appendChild(
+              node.ownerDocument.createElement( "span" )
+            );
             sp.className = "cm-" + style.replace( / +/g, " cm-" );
             sp.appendChild( node.ownerDocument.createTextNode( content ) );
           } else {
@@ -2300,7 +2492,7 @@ var Editor = function() {
       currentMode = null;
       currentState = null;
       currentStyle = {};
-      ru.akman.znotes.Utils.copyObject( style, currentStyle );
+      Utils.copyObject( style, currentStyle );
       init(
         function() {
           notifyStateListener(
@@ -2316,6 +2508,8 @@ var Editor = function() {
       );
     };
     
+    // LISTENERS
+    
     function notifyStateListener( event ) {
       for ( var i = 0; i < listeners.length; i++ ) {
         if ( listeners[i][ "on" + event.type ] ) {
@@ -2324,10 +2518,10 @@ var Editor = function() {
       }
     };
     
-    // P U B L I C  M E T H O D S
+    // PUBLIC
     
     /**
-     * Open a note and show it in the editor's view
+     * Open editor for a note
      * @param win Window in which Document live
      * @param doc Document in which will be loaded the editor
      * @param note Note that will be opened in the editor
@@ -2336,7 +2530,8 @@ var Editor = function() {
     this.open = function( win, doc, note, style ) {
       var editorView = doc.getElementById( "editorView" );
       var noteType = note.getType();
-      var editorType = editorView.hasAttribute( "type" ) ? editorView.getAttribute( "type" ) : "";
+      var editorType = editorView.hasAttribute( "type" ) ?
+        editorView.getAttribute( "type" ) : "";
       if ( editorType == noteType ) {
         editorInit( win, doc, note, style );
       } else {
@@ -2358,7 +2553,7 @@ var Editor = function() {
     };
     
     /**
-     * Close the current note and hide the editor's view
+     * Close editor for current note
      */
     this.close = function() {
       if ( !currentDocument ) {
@@ -2417,24 +2612,6 @@ var Editor = function() {
     };
     
     /**
-     * Enable buttons in parent toolbars if they placed there
-     */
-    this.enable = function() {
-      if ( !currentDocument ) {
-        throw new EditorException( "Editor was not loaded." );
-      }
-    };
-    
-    /**
-     * Disable buttons in parent toolbars if they placed there
-     */
-    this.disable = function() {
-      if ( !currentDocument ) {
-        throw new EditorException( "Editor was not loaded." );
-      }
-    };
-    
-    /**
      * Update style of toolbars
      * @param style { iconsize: "small" || "normal" }
      */
@@ -2442,14 +2619,14 @@ var Editor = function() {
       if ( !currentDocument ) {
         throw new EditorException( "Editor was not loaded." );
       }
-      if ( !ru.akman.znotes.Utils.copyObject( style, currentStyle ) ) {
+      if ( !Utils.copyObject( style, currentStyle ) ) {
         return;
       }
       updateStyle();
     };
     
     /**
-     * Add listener
+     * Add state listener
      * @param stateListener Listener
      */
     this.addStateListener = function( stateListener ) {
@@ -2459,7 +2636,7 @@ var Editor = function() {
     };
     
     /**
-     * Remove listener
+     * Remove state listener
      * @param stateListener Listener
      */
     this.removeStateListener = function( stateListener ) {

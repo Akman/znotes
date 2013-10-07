@@ -31,14 +31,5 @@
   - ***** END LICENSE BLOCK ***** -->
 
 <!ENTITY attachment_tab_caption " Attachments">
-
-<!ENTITY note_button_contact "Attach contact">
-<!ENTITY note_button_attachment "Attach file">
-
 <!ENTITY attachment_tree_name "Attachment">
 <!ENTITY attachment_tree_description "Description">
-
-<!ENTITY attachment_popup_open " Open">
-<!ENTITY attachment_popup_open_with " Open with">
-<!ENTITY attachment_popup_save " Save">
-<!ENTITY attachment_popup_delete " Delete">

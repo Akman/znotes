@@ -33,12 +33,3 @@
 /* ***** classic/1.0 winnt **** */
 
 @import url("chrome://znotes_common/skin/overlay-tb.css");
-
-/*
-  BUG: TOOLBOX IS TOO HIGH WITHOUT THIS CODE
-*/
-.mail-toolbox:not([mode="full"]) > toolbar:only-of-type,
-.mail-toolbox[mode="full"][labelalign="end"] > toolbar:only-of-type {
-  margin-top: 0px !important;
-  margin-bottom: 0px !important;
-}

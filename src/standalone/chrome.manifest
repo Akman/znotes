@@ -41,7 +41,11 @@ skin      znotes            classic/1.0 jar:chrome/znotes.jar!/skin/linux/classi
 skin      znotes_images     classic/1.0 jar:chrome/znotes.jar!/skin/images/classic/
 skin      znotes_sounds     classic/1.0 jar:chrome/znotes.jar!/skin/sounds/classic/
 skin      znotes_common     classic/1.0 jar:chrome/znotes.jar!/skin/common/classic/
-style     chrome://global/content/customizeToolbar.xul chrome://znotes/skin/main.css
+style     chrome://global/content/customizeToolbar.xul chrome://znotes/skin/overlay-xr.css
 manifest  platform/locale/localized.manifest
 manifest  branding/locale/localized.manifest
 manifest  locale/localized.manifest
+#
+skin messenger classic/1.0 jar:chrome/platform.jar!/skin/messenger/classic/ os=WINNT osversion<6
+skin messenger classic/1.0 jar:chrome/platform.jar!/skin/messenger/classic/ os!=WINNT
+skin messenger classic/1.0 jar:chrome/platform.jar!/skin/messenger/aero/    os=WINNT osversion>=6

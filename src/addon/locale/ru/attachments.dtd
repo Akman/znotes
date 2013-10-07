@@ -31,14 +31,5 @@
   - ***** END LICENSE BLOCK ***** -->
 
 <!ENTITY attachment_tab_caption " Вложения">
-
-<!ENTITY note_button_contact "Присоединить контакт">
-<!ENTITY note_button_attachment "Присоединить файл">
-
 <!ENTITY attachment_tree_name "Вложение">
 <!ENTITY attachment_tree_description "Описание">
-
-<!ENTITY attachment_popup_open " Открыть">
-<!ENTITY attachment_popup_open_with " Открыть с помощью">
-<!ENTITY attachment_popup_save " Сохранить">
-<!ENTITY attachment_popup_delete " Удалить">

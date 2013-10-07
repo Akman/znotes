@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- ***** BEGIN LICENSE BLOCK *****
+  -
+  - Version: GPL 3.0
+  -
+  - ZNotes
+  - Copyright (C) 2012 Alexander Kapitman
+  -
+  - This program is free software: you can redistribute it and/or modify
+  - it under the terms of the GNU General Public License as published by
+  - the Free Software Foundation, either version 3 of the License, or
+  - (at your option) any later version.
+  -
+  - This program is distributed in the hope that it will be useful,
+  - but WITHOUT ANY WARRANTY; without even the implied warranty of
+  - MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  - GNU General Public License for more details.
+  -
+  - You should have received a copy of the GNU General Public License
+  - along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -
+  - The Original Code is ZNotes.
+  -
+  - Initial Developer(s):
+  -   Alexander Kapitman <akman.ru@gmail.com>
+  -
+  - Portions created by the Initial Developer are Copyright (C) 2012
+  - the Initial Developer. All Rights Reserved.
+  -
+  - Contributor(s):
+  -
+  - ***** END LICENSE BLOCK ***** -->
+
+<?xml-stylesheet type="text/css" href="chrome://znotes/skin/relator.css" ?>
+
+<!DOCTYPE window SYSTEM "chrome://znotes/locale/relator.dtd">
+
+<overlay id="relator"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script type="application/x-javascript"
+    src="chrome://znotes/content/relator.js" />
+
+  <stringbundleset id="znotes_stringbundleset" />
+  <commandset id="znotes_commandset" />
+  <keyset id="znotes_keyset" />
+  <popupset id="znotes_popupset" />
+    
+  <tabs id="addonsTabs">
+    <tab id="addonsTabAd" label="&ad_tab_caption;" hidden="true" />
+  </tabs>
+
+  <tabpanels id="addonsPanels">
+    <tabpanel id="noteAdViewPanel" flex="1" hidden="true">
+      <browser id="adBrowser" 
+        type="content"
+        flex="1" />
+    </tabpanel>
+  </tabpanels>
+
+</overlay>

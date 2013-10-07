@@ -37,12 +37,11 @@
 
 <overlay id="documents.default.editor" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <stringbundleset id="stringBundleset">
+  <stringbundleset id="znotes_stringbundleset">
     <stringbundle id="default.editor.stringbundle" 
       src="chrome://znotes/locale/documents/default/editor.properties" />
   </stringbundleset>
-
-  <commandset id="commandSet">
+  <commandset id="znotes_commandset">
     <!-- design -->
     <command id="edtBold"/>
     <command id="edtItalic"/>
@@ -72,8 +71,8 @@
     <!-- source -->
     <command id="srcBeautify"/>
   </commandset>
-
-  <popupset id="popupSet" />
+  <keyset id="znotes_keyset" />
+  <popupset id="znotes_popupset" />
   
   <toolbar id="toolBar" />
   

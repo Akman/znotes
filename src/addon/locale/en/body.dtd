@@ -30,7 +30,4 @@
   -
   - ***** END LICENSE BLOCK ***** -->
 
-<!ENTITY note_button_tag " Tags">
-<!ENTITY note_button_rename " Rename">
-<!ENTITY note_button_delete " Delete">
-<!ENTITY note_button_addons " Addons">
+<!ENTITY znotes_bodytoolbar_name "Note">

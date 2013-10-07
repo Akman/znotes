@@ -35,45 +35,34 @@
 
 <!DOCTYPE overlay SYSTEM "chrome://znotes/locale/editor.dtd">
 
-<overlay id="editor" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+<overlay id="editor"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <script type="application/x-javascript" src="chrome://znotes/content/editor.js" />
+  <script type="application/x-javascript"
+    src="chrome://znotes/content/editor.js" />
 
-  <stringbundleset id="stringBundleset" />
-  <commandset id="commandSet">
-    <command id="cmdNoteEdit"/>
-    <command id="cmdNoteSave"/>
-    <command id="cmdNotePrint"/>
-  </commandset>
-  <keyset id="keySet">
-  </keyset>
-  <popupset id="popupSet" />
+  <stringbundleset id="znotes_stringbundleset" />
+  <commandset id="znotes_commandset" />
+  <keyset id="znotes_keyset" />
+  <popupset id="znotes_popupset" />
 
-  <toolbar id="toolBar">
-    <toolbarbutton id="noteButtonEdit"
-      class="menuitem-iconic toolbarbutton-1"
-      tooltiptext="&note_button_edit;"
-      command="cmdNoteEdit"
-      pack="end"
-      insertbefore="noteButtonTag"/>
-    <toolbarbutton id="noteButtonSave"
-      class="menuitem-iconic toolbarbutton-1"
-      tooltiptext="&note_button_save;"
-      command="cmdNoteSave"
-      pack="end"
-      insertbefore="noteButtonTag"/>
-    <toolbarbutton id="noteButtonPrint"
-      class="menuitem-iconic toolbarbutton-1"
-      tooltiptext="&note_button_print;"
-      command="cmdNotePrint"
-      pack="end"
-      insertafter="noteButtonTag"/>
-  </toolbar>
+  <toolbarpalette id="znotes_bodytoolbarpalette">
+    <toolbarbutton id="znotes_editoredit_button"
+      class="menuitem-iconic toolbarbutton-1 znotes_editoredit_class"
+      key="znotes_editoredit_key"
+      command="znotes_editoredit_command"/>
+    <toolbarbutton id="znotes_editorsave_button"
+      class="menuitem-iconic toolbarbutton-1 znotes_editorsave_class"
+      key="znotes_editorsave_key"
+      command="znotes_editorsave_command" />
+    <toolbarbutton id="znotes_editorprint_button"
+      class="menuitem-iconic toolbarbutton-1 znotes_editorprint_class"
+      key="znotes_editorprint_key"
+      command="znotes_editorprint_command" />
+  </toolbarpalette>
 
   <vbox id="noteView" flex="1">
-  
-    <vbox id="editorView" flex="1"/>
-  
+    <vbox id="editorView" flex="1" />
   </vbox>
 
 </overlay>

@@ -33,30 +33,3 @@
 /* ***** classic/1.0 linux **** */
 
 @import url("chrome://znotes_common/skin/body.css");
-
-.noteBodyViewStandalone {
-  margin-bottom: -1px;
-}
-/* horizontal */
-#noteBodySplitter {
-  -moz-appearance: none;
-  border-bottom: 1px solid ThreeDShadow;
-  /* splitter grip area */
-  height: 5px;
-  /* make only the splitter border visible */
-  margin-top: -5px;
-  /* because of the negative margin needed to make the splitter visible */
-  position: relative;
-  z-index: 10;
-  -moz-transition: border-width .3s ease-in;
-}
-#toolBox {
-  padding-right: 1px !important;
-  padding-bottom: 0px !important;
-}
-#addonsTabs {
-  padding-top: 5px;
-}
-#addonsPanels {
-  margin-top: 1px;
-}

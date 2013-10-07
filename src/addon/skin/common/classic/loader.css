@@ -35,8 +35,6 @@
 #loaderPanels {
   -moz-appearance: none; 
   border: none;
-  border-top: 1px solid ThreeDShadow;
-  border-bottom: 1px solid ThreeDShadow;
   padding: 0px;
 }
 #loaderBox {
@@ -49,11 +47,6 @@
 }
 #indicator {
   height: 30px;
-}
-#loaderAbortButton {
-  width: 24px;
-  height: 24px;
-  list-style-image: url( "chrome://znotes_images/skin/cancel-24x24.png" );
 }
 #log {
   font-family: courier;

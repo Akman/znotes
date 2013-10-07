@@ -34,12 +34,16 @@
 <?xml-stylesheet type="text/css" href="chrome://znotes/skin/overlay-xr.css" ?>
 
 <?xul-overlay href="chrome://znotes/content/common.xul" ?>
+<?xul-overlay href="chrome://znotes/content/maintab.xul" ?>
+<?xul-overlay href="chrome://znotes/content/contenttab.xul" ?>
 
 <!DOCTYPE overlay SYSTEM "chrome://znotes/locale/overlay-xr.dtd">
 
 <overlay id="znotes-overlay-xr"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
+  <script type="application/javascript"
+    src="chrome://znotes/content/common.js" />
   <script type="application/javascript"
     src="chrome://znotes/content/overlay-xr.js" />
 
@@ -57,8 +61,7 @@
   </vbox>
   
   <statusbar id="znotes_statusbar">
-    <spacer id="znotes_statusbar_spacer" flex="1"/>
-    <statusbarpanel id="znotes_statusbarpanel" hidden="true"/>
+    <statusbarpanel id="znotes_statusbarpanel" />
   </statusbar>
     
 </overlay>

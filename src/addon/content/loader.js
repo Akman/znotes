@@ -34,21 +34,15 @@ if ( !ru ) var ru = {};
 if ( !ru.akman ) ru.akman = {};
 if ( !ru.akman.znotes ) ru.akman.znotes = {};
 
-Components.utils.import( "resource://znotes/utils.js" , ru.akman.znotes );
+Components.utils.import( "resource://znotes/utils.js", ru.akman.znotes );
 
 ru.akman.znotes.Loader = function() {
 
-  // !!!! %%%% !!!! STRINGS_BUNDLE
-  return function( aWindow, aDocument, aStyle ) {
+  return function() {
 
-    var stringsBundle = ru.akman.znotes.Utils.STRINGS_BUNDLE;
+    var Utils = ru.akman.znotes.Utils;
+    var Common = ru.akman.znotes.Common;
 
-    var currentWindow = null;
-    var currentDocument = null;
-    var currentStyle = {
-      iconsize: "small"
-    };
-    
     var currentNote = null;
     var noteStateListener = null;
 
@@ -57,17 +51,86 @@ ru.akman.znotes.Loader = function() {
     var indicator = null;
     var log = null;
     var error = null;
-    var cmdNoteImportAbort = null;
     
-    function changeProgress( percent ) {
-      indicator.value = percent;
-    }
+    //
+    // COMMANDS
+    //
     
-    // E V E N T S
-    
-    function onCmdNoteImportAbort( e ) {
-      currentNote.loadAbort();
+    var loaderCommands = {
+      "znotes_loaderabort_command": null
     };
+    
+    var loaderController = {
+      supportsCommand: function( cmd ) {
+        if ( !( cmd in loaderCommands ) ) {
+          return false;
+        }
+        return true;
+      },
+      isCommandEnabled: function( cmd ) {
+        if ( !( cmd in loaderCommands ) ) {
+          return false;
+        }
+        if ( !currentNote || !currentNote.isLoading() ) {
+          return false;
+        }
+        switch ( cmd ) {
+          case "znotes_loaderabort_command":
+            return true;
+        }
+        return false;
+      },
+      doCommand: function( cmd ) {
+        if ( !( cmd in loaderCommands ) ) {
+          return;
+        }
+        switch ( cmd ) {
+          case "znotes_loaderabort_command":
+            currentNote.loadAbort();
+            break;
+        }
+      },
+      onEvent: function( event ) {
+      },
+      getName: function() {
+        return "LOADER";
+      },
+      getCommand: function( cmd ) {
+        if ( cmd in loaderCommands ) {
+          return document.getElementById( cmd );
+        }
+        return null;
+      },
+      register: function() {
+        Utils.appendAccelText( loaderCommands, document );
+        try {
+          top.controllers.insertControllerAt( 0, this );
+        } catch ( e ) {
+          Components.utils.reportError(
+            "An error occurred registering '" + this.getName() +
+            "' controller: " + e
+          );
+        }
+      },
+      unregister: function() {
+        try {
+          top.controllers.removeController( this );
+        } catch ( e ) {
+          Components.utils.reportError(
+            "An error occurred unregistering '" + this.getName() +
+            "' controller: " + e
+          );
+        }
+        Utils.removeAccelText( loaderCommands, document );
+      }
+    };
+    
+    function updateCommands() {
+      window.focus();
+      Common.goUpdateCommand( "znotes_loaderabort_command" );
+    };
+    
+    // EVENTS
     
     function onNoteStatusChanged( e ) {
       var aCategory = e.data.parentCategory;
@@ -129,12 +192,14 @@ ru.akman.znotes.Loader = function() {
       return percent;
     };
     
-    // V I E W
+    function changeProgress( percent ) {
+      indicator.value = percent;
+    }
     
-    function enableView() {
-    };
+    // VIEW
     
-    function showView() {
+    function showCurrentView() {
+      loaderBox.removeAttribute( "disabled" );
       url.value = currentNote.getOrigin();
       error.value = "";
       error.setAttribute( "collapsed", "true" );
@@ -147,114 +212,72 @@ ru.akman.znotes.Loader = function() {
         percent = processStatus( history[i], percent );
       }
       changeProgress( percent );
-      enableView();
-    };
-
-    function disableView() {
     };
     
-    function hideView() {
-      disableView();
+    function hideCurrentView() {
+      loaderBox.setAttribute( "disabled", "true" );
     };
     
-    // L O A D E R
-    
-    function open() {
-      addEventListeners();
-    };
-
-    function close() {
-      removeEventListeners();
-      currentNote = null;
-    };
-    
-    // E V E N T  L I S T E N E R S
-    
-    function addEventListeners() {
-      cmdNoteImportAbort.addEventListener( "command", onCmdNoteImportAbort, false );
-      if ( currentNote ) {
-        currentNote.addStateListener( noteStateListener );
+    function show( aNote, aForced ) {
+      if ( currentNote && currentNote == aNote && !aForced ) {
+        return;
       }
+      removeEventListeners();
+      currentNote = aNote;
+      if ( currentNote && currentNote.isExists() &&
+           currentNote.isLoading() ) {
+        addEventListeners();
+        showCurrentView();
+      } else {
+        hideCurrentView();
+      }
+      updateCommands();
+    };
+    
+    // LISTENERS
+
+    function addEventListeners() {
+      if ( !currentNote ) {
+        return;
+      }
+      currentNote.addStateListener( noteStateListener );
     };
 
     function removeEventListeners() {
-      cmdNoteImportAbort.removeEventListener( "command", onCmdNoteImportAbort, false );
-      if ( currentNote ) {
-        currentNote.removeStateListener( noteStateListener );
+      if ( !currentNote ) {
+        return;
       }
+      currentNote.removeStateListener( noteStateListener );
     };
     
-    // P U B L I C  M E T H O D S
+    // PUBLIC
 
-    /**
-     * Update style of toolbars
-     * @param style { iconsize: "small" || "normal" }
-     */
-    this.updateStyle = function( style ) {
-    };
-
-    /**
-     * Enable buttons in parent toolbars if they placed there
-     */
-    this.enable = function() {
-      enableView();
-    };
-
-    /**
-     * Disable buttons in parent toolbars if they placed there
-     */
-    this.disable = function() {
-      disableView();
+    this.onStyleChanged = function( event ) {
     };
     
-    /**
-     * Open a note and show it in the loader's view
-     */
-    this.show = function( aNote ) {
-      this.unload();
-      currentNote = aNote;
-      if ( currentNote && currentNote.isExists() && currentNote.isLoading() ) {
-        showView();
-        open();
-      } else {
-        hideView();
-      }
+    this.onNoteChanged = function( event ) {
+      var aNote = event.data.note;
+      var aForced = event.data.forced;
+      show( aNote, aForced );
     };
-
-    /**
-     * Close the current note and hide the loader's view
-     */
-    this.hide = function() {
-      this.unload();
-      hideView();
-    }
     
-    /**
-     * Close the current note
-     */
-    this.unload = function() {
-      if ( currentNote ) {
-        close();
-      }
+    this.onRelease = function( event ) {
+      removeEventListeners();
+      loaderController.unregister();
     };
+        
+    // CONSTRUCTOR
 
-    // C O N S T R U C T O R
-
-    currentWindow = aWindow;
-    currentDocument = aDocument;
-    if ( aStyle ) {
-      ru.akman.znotes.Utils.copyObject( aStyle, currentStyle );
-    }
     noteStateListener = {
       name: "LOADER",
       onNoteStatusChanged: onNoteStatusChanged
     };
-    loaderBox = currentDocument.getElementById( "loaderBox" );
-    url = currentDocument.getElementById( "url" );
-    indicator = currentDocument.getElementById( "indicator" );
-    log = currentDocument.getElementById( "log" );
-    error = currentDocument.getElementById( "error" );
-    cmdNoteImportAbort = currentDocument.getElementById( "cmdNoteImportAbort" );
+    loaderBox = document.getElementById( "loaderBox" );
+    url = document.getElementById( "url" );
+    indicator = document.getElementById( "indicator" );
+    log = document.getElementById( "log" );
+    error = document.getElementById( "error" );
+    loaderController.register();
     
   };
 

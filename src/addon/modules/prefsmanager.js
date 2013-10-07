@@ -52,13 +52,14 @@ var PrefsManager = function() {
     var placeId = ru.akman.znotes.Utils.getPlaceId();
     entry.append( placeId );
     if ( !entry.exists() || !entry.isDirectory() ) {
-      entry.create( Components.interfaces.nsIFile.DIRECTORY_TYPE, parseInt( "0755", 8 ) );
+      entry.create( Components.interfaces.nsIFile.DIRECTORY_TYPE,
+        parseInt( "0755", 8 ) );
     }
     entry.append( "prefs.json" );
     return entry.clone();
   };
 
-  var loadPrefs = function() {
+  var init = function() {
     var entry = getEntry();
     if ( !entry.exists() ) {
       prefs = {};
@@ -211,7 +212,7 @@ var PrefsManager = function() {
 
   // C O N S T R U C T O R
 
-  loadPrefs();
+  init();
 
   return pub;
 

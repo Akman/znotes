@@ -30,6 +30,9 @@
   -
   - ***** END LICENSE BLOCK ***** -->
 
+<!ENTITY znotes_mainmenutoolbar_name "Меню">
+<!ENTITY znotes_maintoolbar_name "Заметки">
+  
 <!ENTITY book_tree_name "Блокнот">
 
 <!ENTITY folder_tree_name "Категория">

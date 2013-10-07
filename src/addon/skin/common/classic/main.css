@@ -32,23 +32,164 @@
 
 /* ***** classic/1.0 common **** */
 
-@import url("chrome://znotes/skin/common.css");
+/* main toolbox, menubar, toolbar */
 
-#folderTree {
-  margin-top: -2px !important;
+.znotes_maintoolbox:not(:-moz-lwtheme) {
+  color: black;
+  text-shadow: 0 0 .7em white, 0 0 .7em white, 0 1px 0 rgba(255, 255, 255, .4);
+  border-bottom-color: #AABCCF;
 }
-#tagTree {
-  margin-top: -2px !important;
+.znotes_mainmenutoolbar {
+  padding-bottom: 2px;
+  padding-top: 2px;
+  border-bottom: 1px solid #AABCCF !important;
 }
+.znotes_maintoolbar {
+  overflow-x: hidden;
+  padding: 1px 0;
+}
+
+/* 3+:pane layout */
+
+.folderBox {
+}
+.noteBox {
+  border-left: 1px solid #AABCCF;
+}
+
+.bookTreeView {
+}
+.bookTree {
+}
+.folderTreeView {
+  border-top: 1px solid #AABCCF;
+}
+.folderTree {
+}
+.tagTreeView {
+  border-top: 1px solid #AABCCF;
+}
+.tagTree {
+}
+.noteTreeView {
+}
+.noteTree {
+}
+
+.noteBodyBox {
+  border-top: 1px solid #AABCCF;
+}
+
+/* splitters */
+
+#folderSplitter:not([state]),
+#folderSplitter[state=""],
+#folderSplitter[state="dragging"],
+#folderSplitter[state="open"] {
+  -moz-appearance: none !important;
+  border: none !important;
+  margin-right: -5px;
+}
+#folderSplitter[state="collapsed"] {
+  -moz-appearance: none !important;
+  background-color: white !important;
+  border: none !important;
+  margin-right: 0px;
+}
+
+#tagSplitter:not([state]),
+#tagSplitter[state=""],
+#tagSplitter[state="dragging"],
+#tagSplitter[state="open"] {
+  -moz-appearance: none !important;
+  background-color: white !important;
+  border: none !important;
+}
+#tagSplitter[state="collapsed"] {
+  -moz-appearance: none !important;
+  background-color: white !important;
+  border: none !important;
+  border-top: 1px solid #AABCCF !important;
+}
+
+#bookSplitter {
+  -moz-appearance: none;
+  border: none;
+}
+
+#noteTreeSplitter {
+  -moz-appearance: none;
+  border: none;
+  background-color: white;
+}
+
+splitter[state="collapsed"] .folderGrippy, 
+splitter:not([state="open"]) .folderGrippy,
+splitter[state="collapsed"] .bookGrippy, 
+splitter:not([state="open"]) .bookGrippy,
+splitter[state="collapsed"] .tagGrippy, 
+splitter:not([state="open"]) .tagGrippy,
+splitter[state="collapsed"] .noteGrippy, 
+splitter:not([state="open"]) .noteGrippy {
+  visibility: visible;
+}
+splitter:not([state]) .folderGrippy,
+splitter[state="open"] .folderGrippy,
+splitter:not([state="collapsed"]) .folderGrippy,
+splitter:not([state]) .bookGrippy,
+splitter[state="open"] .bookGrippy,
+splitter:not([state="collapsed"]) .bookGrippy,
+splitter:not([state]) .tagGrippy,
+splitter[state="open"] .tagGrippy,
+splitter:not([state="collapsed"]) .tagGrippy,
+splitter:not([state]) .noteGrippy,
+splitter[state="open"] .noteGrippy,
+splitter:not([state="collapsed"]) .noteGrippy {
+  visibility: hidden;
+}
+
+/* quick filter */
+
 #qfBox {
   padding: 0px;
 }
-#noteBodyView {
-  margin-bottom: -1px;
+
+/* left pane background color and image */
+
+#bookSplitter, #tagSplitter,
+#bookTree, #folderTree, #tagTree {
+  background-color: white;
+  background-image: url("chrome://znotes_images/skin/grain.png");  
 }
-#noteBodyView[disabled="true"] {
-  border-bottom: 1px solid ThreeDShadow;
+
+/* background color and image for treecol element */
+/*
+#bookTree treecol, #folderTree  treecol, #tagTree  treecol {
+  -moz-appearance: none;
+  background-color: yellow;
+  background-image: url("chrome://znotes_images/skin/grain.png");  
 }
+*/
+
+/* books tree */
+
+treechildren::-moz-tree-image( book ) {
+  list-style-image: url("chrome://znotes_images/skin/book-16x16.png");
+}
+treechildren::-moz-tree-image( book, opened ) {
+  list-style-image: url("chrome://znotes_images/skin/open-book-16x16.png");
+}
+treechildren::-moz-tree-cell-text( book ) {
+  padding-left: 3px;
+}
+treechildren::-moz-tree-cell-text( book, selected ) {
+  font-weight: bold;
+}
+treechildren::-moz-tree-separator( booktreeseparator ) {
+}
+
+/* categories tree */
+
 treechildren::-moz-tree-image( folder, leaf ) {
   list-style-image: url("chrome://znotes_images/skin/folder-16x16.png");
 }
@@ -69,23 +210,31 @@ treechildren::-moz-tree-row( folderdroprow ) {
 }
 treechildren::-moz-tree-separator( foldertreeseparator ) {
 }
-treechildren::-moz-tree-image( book ) {
-  list-style-image: url("chrome://znotes_images/skin/book-16x16.png");
+
+/* tags tree */
+
+treechildren::-moz-tree-image( tag ) {
+  list-style-image: url("chrome://znotes_images/skin/tag-16x16.png");
 }
-treechildren::-moz-tree-image( book, opened ) {
-  list-style-image: url("chrome://znotes_images/skin/open-book-16x16.png");
-}
-treechildren::-moz-tree-cell-text( book ) {
+treechildren::-moz-tree-cell-text( tag ) {
   padding-left: 3px;
 }
-treechildren::-moz-tree-cell-text( book, selected ) {
+treechildren::-moz-tree-cell-text( tag, selected ) {
   font-weight: bold;
 }
-treechildren::-moz-tree-separator( booktreeseparator ) {
+treechildren::-moz-tree-separator( tagtreeseparator ) {
 }
-treechildren#noteTreeChildren::-moz-tree-image( attachment ) {
-  list-style-image: url("chrome://znotes_images/skin/attachment-16x16.png");
+treechildren::-moz-tree-cell( tag_color ) {
+  margin-top: 1px;
+  margin-bottom: 1px;
+  margin-left: 11px;
+  margin-right: 11px;
+  border: 1px solid;
+  border-radius: 20px;
 }
+
+/* notes tree */
+
 treechildren::-moz-tree-image( note ) {
   list-style-image: url("chrome://znotes_images/skin/note-16x16.png");
 }
@@ -103,17 +252,10 @@ treechildren::-moz-tree-row( notedroprow ) {
 }
 treechildren::-moz-tree-separator( notetreeseparator ) {
 }
+treechildren#noteTreeChildren::-moz-tree-image( attachment ) {
+  list-style-image: url("chrome://znotes_images/skin/attachment-16x16.png");
+  margin-left: -12px;
+}
 #noteTreeAttachments {
   list-style-image: url("chrome://znotes_images/skin/attachment-16x16.png");
-}
-treechildren::-moz-tree-image( tag ) {
-  list-style-image: url("chrome://znotes_images/skin/tag-16x16.png");
-}
-treechildren::-moz-tree-cell-text( tag ) {
-  padding-left: 3px;
-}
-treechildren::-moz-tree-cell-text( tag, selected ) {
-  font-weight: bold;
-}
-treechildren::-moz-tree-separator( tagtreeseparator ) {
 }

@@ -33,17 +33,16 @@
 /* ***** classic/1.0 common **** */
 
 #editorTabBox {
+  -moz-appearance: none;
+  border: 0px;
 }
 #editorTabs {
   margin-left: 5px;
   -moz-appearance: none; 
-  border: none;
 }
 #editorPanels {
   -moz-appearance: none;
   border: none;
-  border-top: 1px solid ThreeDShadow;
-  border-bottom: 1px solid ThreeDShadow;
   padding: 0px;
 }
 #designPanel {

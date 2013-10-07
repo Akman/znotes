@@ -51,16 +51,91 @@ ru.akman.znotes.ZNotes = function() {
 
   var pub = {};
 
-  var log = ru.akman.znotes.Utils.log;
+  var Utils = ru.akman.znotes.Utils;
+
+  //
+  // C O M M A N D S
+  //
+
+  var platformCommands = {
+    "znotes_openmaintab_command": null
+  };
+
+  var platformController = {
+    supportsCommand: function( cmd ) {
+      //Utils.log( this.getName() + "::supportsCommand() '" + cmd + "'" );
+      if ( !( cmd in platformCommands ) ) {
+        return false;
+      }
+      return true;
+    },
+    isCommandEnabled: function( cmd ) {
+      //Utils.log( this.getName() + "::isCommandEnabled() '" + cmd + "'" );
+      if ( !( cmd in platformCommands ) ) {
+        return false;
+      }
+      return true;
+    },
+    doCommand: function( cmd ) {
+      Utils.log( this.getName() + "::doCommand() '" + cmd + "'" );
+      if ( !( cmd in platformCommands ) ) {
+        return;
+      }
+      switch ( cmd ) {
+        case "znotes_openmaintab_command":
+          openMainTab( true );
+          break;
+      }
+    },
+    onEvent: function( event ) {
+      Utils.log( this.getName() + "::onEvent() '" + event + "'" );
+    },
+    getName: function() {
+      return "PLATFORM";
+    },
+    getCommand: function( cmd ) {
+      if ( cmd in platformCommands ) {
+        return document.getElementById( cmd );
+      }
+      return null;
+    },
+    register: function() {
+      Utils.appendAccelText( platformCommands, document );
+      try {
+        top.controllers.insertControllerAt( 0, this );
+      } catch ( e ) {
+        Components.utils.reportError(
+          "An error occurred registering '" + this.getName() + "' controller: " + e
+        );
+      }
+    },
+    unregister: function() {
+      try {
+        top.controllers.removeController( this );
+      } catch ( e ) {
+        Components.utils.reportError(
+          "An error occurred unregistering '" + this.getName() + "' controller: " + e
+        );
+      }
+      Utils.removeAccelText( platformCommands, document );
+    }
+  };
   
-  var setupTabs = function() {
+  // T A B S
+  
+  function setupTabs() {
     var tabMail = ru.akman.znotes.Utils.getTabMail();
+    if ( !tabMail ) {
+      return;
+    }
     tabMail.registerTabType( ru.akman.znotes.MainTabType );
     tabMail.registerTabType( ru.akman.znotes.ContentTabType );
     tabMail.registerTabMonitor( ru.akman.znotes.TabMonitor );
   };
 
-  var getState = function() {
+  // P E R S I S T I N G  S T A T E
+  
+  function getState() {
     var state = {
       open: false,
       active: false
@@ -79,44 +154,7 @@ ru.akman.znotes.ZNotes = function() {
     return state;
   };
 
-  var updateTooltipText = function() {
-    setTimeout( function() {
-      var command = document.getElementById( "znotes_openmaintab_command" );
-      var tooltiptext = command.getAttribute( "tooltiptext" );
-      var popupset = document.getElementById( "znotes_popupset" );
-      var items = document.createElement( "menupopup" );
-      popupset.appendChild( items );
-      var item = document.createElement( "menuitem" );
-      item.setAttribute( "key", "znotes_openmaintab_key" );
-      items.appendChild( item );
-      items.openPopup( null, null, 0, 0, true, false, null );
-      items.hidePopup();
-      var acceltext = item.getAttribute( "acceltext" );
-      tooltiptext += "\n" + acceltext;
-      command.setAttribute( "tooltiptext", tooltiptext );
-      while ( items.firstChild ) {
-        items.removeChild( items.firstChild );
-      }
-      popupset.removeChild( items );
-    }, 0 );
-  };
-  
-  pub.load = function() {
-    removeEventListener( "load", ru.akman.znotes.ZNotes.load, false );
-    updateTooltipText();
-    setupTabs();
-    var state = getState();
-    var persistedState = ru.akman.znotes.SessionManager.getPersistedState();
-    if ( persistedState.tabs.length > 0 ) {
-      pub.openMainTab( state.active, persistedState );
-    } else {
-      if ( state.open ) {
-        pub.openMainTab( state.active, null );
-      }
-    }
-  };
-
-  pub.openMainTab = function( isActive, persistedState ) {
+  function openMainTab( isActive, persistedState ) {
     var mail3PaneWindow = ru.akman.znotes.Utils.getMail3PaneWindow();
     var tabMail = ru.akman.znotes.Utils.getTabMail();
     if ( tabMail ) {
@@ -167,6 +205,21 @@ ru.akman.znotes.ZNotes = function() {
     }
   };
 
+  pub.load = function() {
+    window.removeEventListener( "load", ru.akman.znotes.ZNotes.load, false );
+    setupTabs();
+    platformController.register();
+    var state = getState();
+    var persistedState = ru.akman.znotes.SessionManager.getPersistedState();
+    if ( persistedState.tabs.length > 0 ) {
+      openMainTab( state.active, persistedState );
+    } else {
+      if ( state.open ) {
+        openMainTab( state.active, null );
+      }
+    }
+  };
+  
   return pub;
 
 }();

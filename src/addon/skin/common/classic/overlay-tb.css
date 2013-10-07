@@ -34,43 +34,13 @@
 
 @import url("chrome://znotes/skin/common.css");
 
-#znotes_maintoolbox {
-  padding-top: 1px;
-  padding-bottom: 1px;
-}
-.znotes_contenttoolbox {
-  padding-top: 1px;
-  padding-bottom: 1px;
-  border: none !important;
-}
-
-.tabmail-tab[type="znotesMainTab"] {
-  list-style-image: url("chrome://znotes_images/skin/znotes-16x16.png");
-}
-.tabmail-tab[type="znotesContentTab"] {
-  list-style-image: url("chrome://znotes_images/skin/znotes-16x16.png");
-}
-#znotes_openmaintab_button {
-  list-style-image: url("chrome://znotes_images/skin/znotes-24x24.png");
-}
-toolbar[iconsize="small"] #znotes_openmaintab_button {
-  list-style-image: url("chrome://znotes_images/skin/znotes-16x16.png");
-}
-#znotes_openmaintab_tabbar_button {
-  list-style-image: url("chrome://znotes_images/skin/znotes-24x24.png");
-}
-toolbar[iconsize="small"] #znotes_openmaintab_tabbar_button {
-  list-style-image: url("chrome://znotes_images/skin/znotes-16x16.png");
-}
 #tabbar-toolbar #znotes_openmaintab_tabbar_button {
   list-style-image: url("chrome://znotes_images/skin/znotes-24x24.png");
 }
-#tabbar-toolbar[iconsize="small"] #znotes_openmaintab_tabbar_button {
+#znotes_openmaintab_button,
+#tabbar-toolbar[iconsize="small"] #znotes_openmaintab_tabbar_button,
+.tabmail-tab[type="znotesMainTab"],
+.tabmail-tab[type="znotesContentTab"],
+.tabmail-tab[type="znotesDebugTab"] {
   list-style-image: url("chrome://znotes_images/skin/znotes-16x16.png");
-}
-#newMsgButton-znotes-menuitem {
-  list-style-image: url("chrome://znotes_images/skin/new-note-16x16.png");
-}
-#newMsgButton-znotes-menuitem[disabled="true"] {
-  list-style-image: url("chrome://znotes_images/skin/new-note-disabled-16x16.png");
 }

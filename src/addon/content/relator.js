@@ -1,0 +1,314 @@
+/* ***** BEGIN LICENSE BLOCK *****
+ *
+ * Version: GPL 3.0
+ *
+ * ZNotes
+ * Copyright (C) 2012 Alexander Kapitman
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * The Original Code is ZNotes.
+ *
+ * Initial Developer(s):
+ *   Alexander Kapitman <akman.ru@gmail.com>
+ *
+ * Portions created by the Initial Developer are Copyright (C) 2012
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+if ( !ru ) var ru = {};
+if ( !ru.akman ) ru.akman = {};
+if ( !ru.akman.znotes ) ru.akman.znotes = {};
+
+Components.utils.import( "resource://znotes/utils.js" , ru.akman.znotes );
+
+ru.akman.znotes.Relator = function() {
+
+  // !!!! %%%% !!!! IS_AD_ENABLED
+  return function() {
+
+    var Utils = ru.akman.znotes.Utils;
+    var Common = ru.akman.znotes.Common;
+
+    var currentNote = null;
+
+    var noteStateListener = null;
+
+    var adBrowser = null;
+    var noteAdViewPanel = null;
+    var addonsTabAd = null;
+    
+    //
+    // COMMANDS
+    //
+    
+    var relatorCommands = {
+    };
+    
+    var relatorController = {
+      supportsCommand: function( cmd ) {
+        if ( !( cmd in relatorCommands ) ) {
+          return false;
+        }
+        return true;
+      },
+      isCommandEnabled: function( cmd ) {
+        if ( !( cmd in relatorCommands ) ) {
+          return false;
+        }
+        if ( !currentNote || currentNote.isLoading() ) {
+          return false;
+        }
+        return false;
+      },
+      doCommand: function( cmd ) {
+        if ( !( cmd in relatorCommands ) ) {
+          return;
+        }
+      },
+      onEvent: function( event ) {
+      },
+      getName: function() {
+        return "RELATOR";
+      },
+      getCommand: function( cmd ) {
+        if ( cmd in relatorCommands ) {
+          return document.getElementById( cmd );
+        }
+        return null;
+      },
+      register: function() {
+        Utils.appendAccelText( relatorCommands, document );
+        try {
+          top.controllers.insertControllerAt( 0, this );
+        } catch ( e ) {
+          Components.utils.reportError(
+            "An error occurred registering '" + this.getName() +
+            "' controller: " + e
+          );
+        }
+      },
+      unregister: function() {
+        try {
+          top.controllers.removeController( this );
+        } catch ( e ) {
+          Components.utils.reportError(
+            "An error occurred unregistering '" + this.getName() +
+            "' controller: " + e
+          );
+        }
+        Utils.removeAccelText( relatorCommands, document );
+      }
+    };
+    
+    function updateCommands() {
+      window.focus();
+    };
+    
+    // NOTE EVENTS
+
+    function onNoteDeleted( e ) {
+      var aCategory = e.data.parentCategory;
+      var aNote = e.data.deletedNote;
+      if ( currentNote && currentNote == aNote ) {
+      }
+    };
+    
+    function onNoteChanged( e ) {
+      var aCategory = e.data.parentCategory;
+      var aNote = e.data.changedNote;
+      if ( currentNote && currentNote == aNote ) {
+        load();
+      }
+    };
+    
+    function onNoteTagsChanged( e ) {
+      var aCategory = e.data.parentCategory;
+      var aNote = e.data.changedNote;
+      var oldTags = e.data.oldValue;
+      var newTags = e.data.newValue;
+      if ( currentNote && currentNote == aNote ) {
+        load();
+      }
+    };
+    
+    function onNoteMainContentChanged( e ) {
+      var aCategory = e.data.parentCategory;
+      var aNote = e.data.changedNote;
+      var oldContent = e.data.oldValue;
+      var newContent = e.data.newValue;
+      if ( currentNote && currentNote == aNote ) {
+        load();
+      }
+    };
+    
+    // BROWSER EVENTS
+
+    function onClick( event ) {
+      if ( !event.isTrusted ) {
+        event.stopPropagation();
+        event.preventDefault();
+        return false;
+      }
+      var href = Utils.getHREFForClickEvent( event );
+      if ( !href ) {
+        return true;
+      }
+      event.stopPropagation();
+      event.preventDefault();
+      var svc =
+        Components.classes["@mozilla.org/uriloader/external-protocol-service;1"]
+                  .getService(
+                    Components.interfaces.nsIExternalProtocolService );
+      var ioService =
+        Components.classes["@mozilla.org/network/io-service;1"]
+                  .getService( Components.interfaces.nsIIOService );
+      var uri = ioService.newURI( href, null, null );
+      if ( uri.schemeIs( "znotes" ) || uri.schemeIs( "chrome" ) ) {
+        return false;
+      }
+      Utils.openLinkExternally( href );
+      return false;
+    };
+    
+    function onLoad( event ) {
+      adBrowser.removeEventListener( "load", onLoad, false );
+      if ( adBrowser.contentDocument.body ) {
+        adBrowser.contentDocument.body.style.setProperty(
+          'background-color',
+          'white'
+        );
+      }
+    };
+    
+    // DATA
+    
+    function createPostData( keywords ) {
+      var stringStream =
+        Components.classes["@mozilla.org/io/string-input-stream;1"]
+                  .createInstance( Components.interfaces.nsIStringInputStream );
+      stringStream.data =
+        "keywords=" + encodeURIComponent( keywords.join( " " ) );
+      var result =
+        Components.classes["@mozilla.org/network/mime-input-stream;1"]
+                  .createInstance( Components.interfaces.nsIMIMEInputStream );
+      result.addHeader( "Content-Type", "application/x-www-form-urlencoded" );
+      result.addContentLength = true;
+      result.setData( stringStream );
+      return result;
+    };
+    
+    // VIEW
+
+    function load() {
+      var ciWN = Components.interfaces.nsIWebNavigation;
+      var language = encodeURIComponent( Utils.getLanguage() );
+      var keywords = currentNote.getKeyWords();
+      var url = Utils.SITE + "adv/?language=" + language;
+      adBrowser.webNavigation.loadURI(
+        url,
+        ciWN.LOAD_FLAGS_BYPASS_CACHE,
+        null,
+        createPostData( keywords ),
+        null
+      );
+      adBrowser.addEventListener( "load", onLoad, false );
+    };
+    
+    function showCurrentView() {
+      if ( Utils.IS_AD_ENABLED ) {
+        load();
+      }
+      adBrowser.removeAttribute( "disabled" );
+    };
+    
+    function hideCurrentView() {
+      adBrowser.setAttribute( "disabled", "true" );
+    };
+    
+    function show( aNote, aForced ) {
+      if ( currentNote && currentNote == aNote && !aForced ) {
+        return;
+      }
+      removeEventListeners();
+      currentNote = aNote;
+      if ( currentNote && currentNote.isExists() ) {
+        addEventListeners();
+        showCurrentView();
+      } else {
+        hideCurrentView();
+      }
+      updateCommands();
+    };
+    
+    // EVENT LISTENERS
+    
+    function addEventListeners() {
+      if ( !currentNote ) {
+        return;
+      }
+      adBrowser.addEventListener( "click", onClick, true );
+      currentNote.addStateListener( noteStateListener );
+    };
+
+    function removeEventListeners() {
+      if ( !currentNote ) {
+        return;
+      }
+      adBrowser.removeEventListener( "click", onClick, true );
+      currentNote.removeStateListener( noteStateListener );
+    };
+    
+    // PUBLIC
+
+    this.onStyleChanged = function( event ) {
+    };
+    
+    this.onNoteChanged = function( event ) {
+      var aNote = event.data.note;
+      var aForced = event.data.forced;
+      show( aNote, aForced );
+    };
+    
+    this.onRelease = function( event ) {
+      removeEventListeners();
+      relatorController.unregister();
+    };
+
+    // CONSTRUCTOR
+
+    addonsTabAd = document.getElementById( "addonsTabAd" );
+    noteAdViewPanel = document.getElementById( "noteAdViewPanel" );
+    adBrowser = document.getElementById( "adBrowser" );
+    noteStateListener = {
+      name: "RELATOR",
+      onNoteDeleted: onNoteDeleted,
+      onNoteChanged: onNoteChanged,
+      onNoteTagsChanged: onNoteTagsChanged,
+      onNoteMainContentChanged: onNoteMainContentChanged
+    };
+    if ( Utils.IS_AD_ENABLED ) {
+      addonsTabAd.removeAttribute( "hidden" );
+      noteAdViewPanel.removeAttribute( "hidden" );
+    } else {
+      addonsTabAd.setAttribute( "hidden", "true" );
+      noteAdViewPanel.setAttribute( "hidden", "true" );
+    }
+    relatorController.register();
+  };
+
+}();
