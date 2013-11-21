@@ -34,3 +34,14 @@
 <!ENTITY znotes_menu_accesskey "З">
 <!ENTITY znotes_menupopup_view_label "Вид">
 <!ENTITY znotes_menupopup_view_accesskey "В">
+
+<!ENTITY znotes_tbnewnote_buttonmenuitem.label "Заметка">
+<!ENTITY znotes_tbnewnote_buttonmenuitem.accesskey "З">
+<!ENTITY znotes_tbnewnote_newmenuitem.label "Заметку">
+<!ENTITY znotes_tbnewnote_newmenuitem.accesskey "З">
+<!ENTITY znotes_tbnewnote_menuitem.label "Новая заметка">
+<!ENTITY znotes_tbnewnote_menuitem.accesskey "Н">
+<!ENTITY znotes_tbnewnote_appnewmenuitem.label "Заметку">
+<!ENTITY znotes_tbnewnote_appnewmenuitem.accesskey "З">
+<!ENTITY znotes_tbnewnote_appmenuitem.label "Новая заметка">
+<!ENTITY znotes_tbnewnote_appmenuitem.accesskey "Н">

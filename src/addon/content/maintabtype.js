@@ -38,6 +38,8 @@ Components.utils.import( "resource://znotes/utils.js", ru.akman.znotes );
 
 ru.akman.znotes.MainTabType = function() {
 
+  var Utils = ru.akman.znotes.Utils;
+
   var pub = {
 
     __proto__: contentTabBaseType,
@@ -61,12 +63,6 @@ ru.akman.znotes.MainTabType = function() {
 
   };
 
-  /*
-  pub.shouldSwitchTo = function( { chromePage: x } ) {
-    contentTabBaseType.shouldSwitchTo( { contentPage: x } );
-  };
-  */
-  
   pub.openTab = function( aTab, aArgs ) {
     if ( !( "contentPage" in aArgs ) ) {
       return;
@@ -89,13 +85,6 @@ ru.akman.znotes.MainTabType = function() {
       "znotes_maintabbrowser" + this.lastBrowserId );
     aTab.browser.setAttribute( "type",
       aTab.background ? "content-targetable" : "content-primary" );
-    /*
-    aTab.clickHandler = "clickHandler" in aArgs && aArgs.clickHandler ?
-                          aArgs.clickHandler :
-                          "specialTabs.defaultClickHandler( event );";
-    aTab.browser.setAttribute( "onclick", aTab.clickHandler );
-    aTab.tabNode.setAttribute( "onerror", "this.removeAttribute( 'image' );" );
-    */
     aTab.browser.addEventListener( "DOMLinkAdded", DOMLinkHandler, false );
     gPluginHandler.addEventListeners( aTab.browser );
     aTab.reloadEnabled = false;
@@ -125,10 +114,6 @@ ru.akman.znotes.MainTabType = function() {
     if ( "onListener" in aArgs && aArgs.onListener ) {
       aArgs.onListener( aTab.browser, aTab.progressListener );
     }
-    /*
-    aTab.pageLoading = false;
-    aTab.pageLoaded = false;
-    */
     aTab.title = this.loadingTabString;
     aTab.browser.loadURI( aArgs.contentPage );
     this.lastBrowserId++;
@@ -141,8 +126,7 @@ ru.akman.znotes.MainTabType = function() {
       !docShell.contentViewer.permitUnload()
     );
     if ( canClose ) {
-    /*
-    */
+      canClose = aTab.browser.contentWindow.ru.akman.znotes.Main.onClose();
     }
     return canClose;
   };
@@ -151,99 +135,6 @@ ru.akman.znotes.MainTabType = function() {
     aTab.title = document.getElementById( "znotes_stringbundle" )
                          .getString( "main.window.title" );
   };
-  
-  /*
-  pub.persistTab = function( aTab ) {
-    if ( aTab.browser.currentURI.spec == "about:blank" ) {
-      return null;
-    }
-    var onClick = aTab.clickHandler;
-    return {
-      tabURI: aTab.browser.currentURI.spec,
-      clickHandler: onClick ? onClick : null
-    };
-  };
-  */
-  
-  /*
-  pub.restoreTab = function( aTabmail, aPersistedState ) {
-    aTabmail.openTab(
-      "znotesMainTab",
-      {
-        contentPage: aPersistedState.tabURI,
-        clickHandler: aPersistedState.clickHandler,
-        background: true
-      }
-    );
-  };
-  */
-
-  /*
-  pub.supportsCommand = function( aCommand, aTab ) {
-    switch ( aCommand ) {
-      case "cmd_fullZoomReduce":
-      case "cmd_fullZoomEnlarge":
-      case "cmd_fullZoomReset":
-      case "cmd_fullZoomToggle":
-      case "cmd_printSetup":
-      case "cmd_print":
-      case "button_print":
-      // XXX print preview not currently supported - bug 497994 to implement.
-      // case "cmd_printpreview":
-        return true;
-      default:
-        return false;
-    }
-  };
-  */
-  
-  /*
-  isCommandEnabled = function( aCommand, aTab ) {
-    switch ( aCommand ) {
-      case "cmd_fullZoomReduce":
-      case "cmd_fullZoomEnlarge":
-      case "cmd_fullZoomReset":
-      case "cmd_fullZoomToggle":
-      case "cmd_printSetup":
-      case "cmd_print":
-      case "button_print":
-      // XXX print preview not currently supported - bug 497994 to implement.
-      // case "cmd_printpreview":
-        return true;
-      default:
-        return false;
-    }
-  };
-  */
-  
-  /*
-  doCommand = function( aCommand, aTab ) {
-    switch ( aCommand ) {
-      case "cmd_fullZoomReduce":
-        ZoomManager.reduce();
-        break;
-      case "cmd_fullZoomEnlarge":
-        ZoomManager.enlarge();
-        break;
-      case "cmd_fullZoomReset":
-        ZoomManager.reset();
-        break;
-      case "cmd_fullZoomToggle":
-        ZoomManager.toggleZoom();
-        break;
-      case "cmd_printSetup":
-        PrintUtils.showPageSetup();
-        break;
-      case "cmd_print":
-        PrintUtils.print();
-        break;
-      // XXX print preview not currently supported - bug 497994 to implement.
-      //case "cmd_printpreview":
-      //  PrintUtils.printPreview();
-      //  break;
-    }
-  };
-  */  
     
   return pub;
 

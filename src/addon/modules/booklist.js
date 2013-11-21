@@ -44,7 +44,7 @@ var EXPORTED_SYMBOLS = ["BookList"];
 
 var BookList = function() {
 
-  var log = ru.akman.znotes.Utils.log;
+  var Utils = ru.akman.znotes.Utils;
 
   var getEntry = function() {
     var entry = ru.akman.znotes.Utils.getPlacesPath();
@@ -65,7 +65,7 @@ var BookList = function() {
       currentTag: 0,
       rootPosition: -1,
       // view
-      "folderBoxWidth": "200",
+      "folderBoxWidth": "50",
       "bookTreeViewHeight": "250",
       "bookSplitterState": "open",
       "categoryBoxHeight": "700",
@@ -73,12 +73,12 @@ var BookList = function() {
       "tagSplitterState": "open",
       "tagTreeViewHeight": "300",
       "folderSplitterState": "open",
-      "noteBoxWidth": "800",
-      "noteTreeViewHeight": "250",
+      "noteBoxWidth": "900",
+      "noteTreeViewHeight": "150",
       "noteTreeSplitterState": "open",
-      "noteBodyBoxHeight": "700",
-      "noteBodyViewHeight": "700",
-      "noteMainBoxHeight": "300",
+      "noteBodyBoxHeight": "900",
+      "noteBodyViewHeight": "900",
+      "noteMainBoxHeight": "700",
       "noteBodySplitterState": "open",
       "noteAddonsBoxHeight": "100",
       "qfBoxCollapsed": "true"
@@ -113,7 +113,7 @@ var BookList = function() {
     try {
       this.registryObject = JSON.parse( ru.akman.znotes.Utils.readFileContent( this.registryPath, "UTF-8" ) );
     } catch ( e ) {
-      log( e );
+      Utils.log( e );
       this.registryObject = [];
     }
   };
@@ -148,7 +148,7 @@ var BookList = function() {
   };
 
   this.createBook = function( name, description, driver, connection, preferences ) {
-    var defaultDriver = ru.akman.znotes.DriverManager.getDefaultDriver();
+    var defaultDriver = ru.akman.znotes.DriverManager.getInstance().getDefaultDriver();
     if ( name === undefined ) {
       name = ru.akman.znotes.Utils.STRINGS_BUNDLE.getString( "booklist.default.book.name" );
     }
@@ -164,7 +164,7 @@ var BookList = function() {
       }
     } else {
       if ( connection === undefined ) {
-        defaultDriver = ru.akman.znotes.DriverManager.getDriver( driver );
+        defaultDriver = ru.akman.znotes.DriverManager.getInstance().getDriver( driver );
         if ( defaultDriver ) {
           connection = defaultDriver.getParameters();
         } else {

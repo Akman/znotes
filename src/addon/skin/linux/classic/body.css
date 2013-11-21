@@ -33,3 +33,7 @@
 /* ***** classic/1.0 linux **** */
 
 @import url("chrome://znotes_common/skin/body.css");
+
+#addonsTabs {
+  padding-top: 5px;
+}

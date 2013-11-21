@@ -41,57 +41,104 @@ Components.utils.import( "resource://znotes/utils.js",
 Components.utils.import( "resource://znotes/event.js",
   ru.akman.znotes.core
 );
+Components.utils.import( "resource://znotes/prefsmanager.js",
+  ru.akman.znotes
+);
+Components.utils.import( "resource://znotes/keyset.js",
+  ru.akman.znotes
+);
 
 ru.akman.znotes.ZNotes = function() {
 
   var pub = {};
 
+  var observerService =
+    Components.classes["@mozilla.org/observer-service;1"]
+              .getService( Components.interfaces.nsIObserverService );
+  
   var Utils = ru.akman.znotes.Utils;
+  var Common = ru.akman.znotes.Common;
 
-  //
-  // OBSERVERS
-  //
+  var prefsBundle = ru.akman.znotes.PrefsManager.getInstance();
+
+  var mainWindow = null;
+  var isMainLoaded = false;
+  var keySet = null;
   
-  var observers = [];
-  
-  function notifyObservers( event ) {
-    for ( var i = 0; i < observers.length; i++ ) {
-      if ( observers[i][ "on" + event.type ] ) {
-        observers[i][ "on" + event.type ]( event );
-      }
+  // PLATFORM
+
+  var mainStartupObserver = {
+    observe: function( aSubject, aTopic, aData ) {
+      mainWindow = aSubject;
+      isMainLoaded = true;
+      updateCommands();
+    },
+    register: function() {
+      observerService.addObserver( this, "znotes-main-startup", false );
+    },
+    unregister: function() {
+      observerService.removeObserver( this, "znotes-main-startup" );
+    }
+  };
+
+  var mainShutdownObserver = {
+    observe: function( aSubject, aTopic, aData ) {
+      isMainLoaded = false;
+      mainWindow = null;
+      updateCommands();
+    },
+    register: function() {
+      observerService.addObserver( this, "znotes-main-shutdown", false );
+    },
+    unregister: function() {
+      observerService.removeObserver( this, "znotes-main-shutdown" );
     }
   };
   
-  //
+  // PREFERENCES
+  
+  var prefsBundleObserver = {
+    onPrefChanged: function( event ) {
+      switch( event.data.name ) {
+        case "platform_shortcuts":
+          Utils.PLATFORM_SHORTCUTS = event.data.newValue;
+          updateKeyset();
+          break;
+      }
+    },
+    register: function() {
+      prefsBundle.addObserver( this );
+    },
+    unregister: function() {
+      prefsBundle.removeObserver( this );
+    }
+  };
+  
   // COMMANDS
-  //
-
+  
   var platformCommands = {
   };
 
   var platformController = {
     supportsCommand: function( cmd ) {
-      Utils.log( this.getName() + "::supportsCommand() '" + cmd + "' = true" );
       if ( !( cmd in platformCommands ) ) {
         return false;
       }
       return true;
     },
     isCommandEnabled: function( cmd ) {
-      Utils.log( this.getName() + "::isCommandEnabled() '" + cmd + "' = true" );
       if ( !( cmd in platformCommands ) ) {
         return false;
       }
+      var mainWindow = Utils.getZNotesMainWindow();
       return true;
     },
     doCommand: function( cmd ) {
-      Utils.log( this.getName() + "::doCommand() '" + cmd + "'" );
       if ( !( cmd in platformCommands ) ) {
         return;
       }
     },
     onEvent: function( event ) {
-      Utils.log( this.getName() + "::onEvent() '" + event + "'" );
     },
     getName: function() {
       return "PLATFORM";
@@ -102,26 +149,63 @@ ru.akman.znotes.ZNotes = function() {
       }
       return null;
     },
+    updateCommands: function() {
+      for ( var cmd in platformCommands ) {
+        Common.goUpdateCommand( cmd, this.getId(), window );
+      }
+    },
     register: function() {
-      Utils.appendAccelText( platformCommands, document );
       try {
-        top.controllers.insertControllerAt( 0, this );
+        window.controllers.insertControllerAt( 0, this );
+        this.getId = function() {
+          return window.controllers.getControllerId( this );
+        };
       } catch ( e ) {
         Components.utils.reportError(
-          "An error occurred registering '" + this.getName() + "' controller: " + e
+          "An error occurred registering '" + this.getName() +
+          "' controller: " + e
         );
       }
     },
     unregister: function() {
+      for ( var cmd in platformCommands ) {
+        Common.goSetCommandEnabled( cmd, false, window );
+      }
       try {
-        top.controllers.removeController( this );
+        window.controllers.removeController( this );
       } catch ( e ) {
         Components.utils.reportError(
-          "An error occurred unregistering '" + this.getName() + "' controller: " + e
+          "An error occurred unregistering '" + this.getName() +
+          "' controller: " + e
         );
       }
-      Utils.removeAccelText( platformCommands, document );
     }
+  };
+  
+  function updateCommands() {
+    platformController.updateCommands();
+  };
+  
+  // SHORTCUTS
+
+  function setupKeyset() {
+    keySet = new ru.akman.znotes.Keyset(
+      document.getElementById( "znotes_platform_keyset" )
+    );
+  };
+
+  function updateKeyset() {
+    var shortcuts = {};
+    try {
+      shortcuts = JSON.parse( Utils.PLATFORM_SHORTCUTS );
+      if ( typeof( shortcuts ) !== "object" ) {
+        shortcuts = {};
+      }
+    } catch ( e ) {
+      Utils.log( e );
+      shortcuts = {};
+    }
+    keySet.update( shortcuts );
   };
   
   // HELPERS
@@ -137,60 +221,35 @@ ru.akman.znotes.ZNotes = function() {
       win.close();
     }
   };
-  
-  // PUBLIC  
 
-  pub.addObserver = function( aObserver ) {
-    if ( observers.indexOf( aObserver ) < 0 ) {
-      observers.push( aObserver );
-    }
-  };
+  // PUBLIC
 
-  pub.removeObserver = function( aObserver ) {
-    var index = observers.indexOf( aObserver );
-    if ( index < 0 ) {
-      return;
-    }
-    observers.splice( index, 1 );
-  };
-  
-  pub.load = function() {
+  pub.load = function( event ) {
     window.removeEventListener( "load", ru.akman.znotes.ZNotes.load, false );
+    Utils.initGlobals();
+    prefsBundle.loadPrefs();
+    setupKeyset();
+    updateKeyset();
     platformController.register();
+    prefsBundleObserver.register();
+    mainStartupObserver.register();
+    mainShutdownObserver.register();
     document.getElementById( "znotes_maintabbrowser" )
             .setAttribute( "src", "chrome://znotes/content/main.xul" );
-    notifyObservers(
-      new ru.akman.znotes.core.Event(
-        "PlatformLoad",
-        {}
-      )
-    );
   };
 
-  pub.unload = function() {
+  pub.unload = function( event ) {
     platformController.unregister();
-    notifyObservers(
-      new ru.akman.znotes.core.Event(
-        "PlatformUnload",
-        {}
-      )
-    );
     closeAllWindows();
+    return true;
   };
-  
+
   pub.close = function( event ) {
-    var data = {
-      canClose: true
-    };
-    notifyObservers(
-      new ru.akman.znotes.core.Event(
-        "PlatformClose",
-        data
-      )
-    );
-    if ( !data.canClose ) {
-      event.preventDefault();
+    Utils.IS_QUIT_ENABLED = true;
+    observerService.notifyObservers( null, "znotes-quit", null );
+    if ( !Utils.IS_QUIT_ENABLED ) {
       event.stopPropagation();
+      event.preventDefault();
       return false;
     }
     return true;
@@ -200,6 +259,6 @@ ru.akman.znotes.ZNotes = function() {
 
 }();
 
-window.addEventListener( "load"  , ru.akman.znotes.ZNotes.load, false );
+window.addEventListener( "load", ru.akman.znotes.ZNotes.load, false );
 window.addEventListener( "close", ru.akman.znotes.ZNotes.close, false );
-window.addEventListener( "unload"  , ru.akman.znotes.ZNotes.unload, false );
+window.addEventListener( "unload", ru.akman.znotes.ZNotes.unload, false );

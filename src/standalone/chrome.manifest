@@ -36,16 +36,20 @@ content   znotes_documents  modules/documents/
 content   znotes_welcome    welcome/
 content   branding          branding/
 resource  znotes            modules/
+skin      platform          classic/1.0 jar:chrome/platform.jar!/skin/winnt/classic/ os=WINNT osversion<6
+skin      platform          classic/1.0 jar:chrome/platform.jar!/skin/linux/classic/ os!=WINNT
+skin      platform          classic/1.0 jar:chrome/platform.jar!/skin/winnt/aero/    os=WINNT osversion>=6
 skin      znotes            classic/1.0 jar:chrome/znotes.jar!/skin/winnt/classic/ os=WINNT
-skin      znotes            classic/1.0 jar:chrome/znotes.jar!/skin/linux/classic/ os=Linux
+#skin      znotes            classic/1.0 jar:chrome/znotes.jar!/skin/winnt/aero/ os=WINNT osversion>=6
+skin      znotes            classic/1.0 jar:chrome/znotes.jar!/skin/linux/classic/ os!=WINNT
 skin      znotes_images     classic/1.0 jar:chrome/znotes.jar!/skin/images/classic/
 skin      znotes_sounds     classic/1.0 jar:chrome/znotes.jar!/skin/sounds/classic/
 skin      znotes_common     classic/1.0 jar:chrome/znotes.jar!/skin/common/classic/
-style     chrome://global/content/customizeToolbar.xul chrome://znotes/skin/overlay-xr.css
+style     chrome://global/content/customizeToolbar.xul    chrome://znotes/skin/overlay-xr.css
+style     chrome://global/content/customizeToolbar.xul    chrome://znotes/skin/common-xr.css
+style     chrome://global/content/customizeToolbar.xul    chrome://znotes/skin/common.css
+style     chrome://global/content/customizeToolbar.xul    chrome://znotes/skin/documents/text/editor.css
+style     chrome://global/content/customizeToolbar.xul    chrome://znotes/skin/documents/xhtml/editor.css
 manifest  platform/locale/localized.manifest
 manifest  branding/locale/localized.manifest
 manifest  locale/localized.manifest
-#
-skin messenger classic/1.0 jar:chrome/platform.jar!/skin/messenger/classic/ os=WINNT osversion<6
-skin messenger classic/1.0 jar:chrome/platform.jar!/skin/messenger/classic/ os!=WINNT
-skin messenger classic/1.0 jar:chrome/platform.jar!/skin/messenger/aero/    os=WINNT osversion>=6

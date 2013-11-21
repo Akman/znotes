@@ -34,8 +34,12 @@ if ( !ru ) var ru = {};
 if ( !ru.akman ) ru.akman = {};
 if ( !ru.akman.znotes ) ru.akman.znotes = {};
 
-Components.utils.import( "resource://znotes/product.js" , ru.akman.znotes );
-Components.utils.import( "resource://znotes/pnglib.js" , ru.akman.znotes );
+Components.utils.import( "resource://znotes/product.js",
+  ru.akman.znotes
+);
+Components.utils.import( "resource://znotes/pnglib.js",
+  ru.akman.znotes
+);
 
 var EXPORTED_SYMBOLS = ["Utils"];
 
@@ -56,6 +60,7 @@ var Utils = function() {
   var stringsBundle = null;
   var isStandalone = true;
 
+  var isQuitEnabled = true;
   var debugTextBox = null;
 
   var isSavePosition = true;
@@ -63,7 +68,13 @@ var Utils = function() {
   var isPlaySound = true;
   var isMainMenubarVisible = false;
   var isMainToolbarVisible = true;
+  var isConfirmExit = true;
+  var isReplaceBackground = true;
+  var isHighlightRow = false;
   var defaultDocumentType = "application/xhtml+xml";
+  var placeName = "";
+  var mainShortCuts = "{}";
+  var platformShortCuts = "{}";
 
   function getVersion( addonID, callback ) {
     var aScope = {};
@@ -130,7 +141,7 @@ var Utils = function() {
     set IS_FIRST_RUN( value ) {
       isFirstRun = value;
     },
-    
+
     get NAME() {
       return ru.akman.znotes.Product.Name;
     },
@@ -161,11 +172,11 @@ var Utils = function() {
     },
 
     get LANGUAGES() {
-      return ru.akman.znotes.Product.ApplicationLanguages.split( "," );
+      return ru.akman.znotes.Product.ApplicationLanguages.split( /\s*,\s*|\s+/ );
     },
 
     get SITE_LANGUAGES() {
-      return ru.akman.znotes.Product.SiteLanguages.split( "," );
+      return ru.akman.znotes.Product.SiteLanguages.split( /\s*,\s*|\s+/ );
     },
 
     get LICENSES() {
@@ -177,7 +188,7 @@ var Utils = function() {
     },
 
     get URLS() {
-      return ru.akman.znotes.Product.Urls[ pub.getLanguage() ];
+      return ru.akman.znotes.Product.Urls[ pub.getSiteLanguage() ];
     },
 
     get CREATORS() {
@@ -241,7 +252,31 @@ var Utils = function() {
     set DEFAULT_DOCUMENT_TYPE( value ) {
       defaultDocumentType = value;
     },
+
+    get PLACE_NAME() {
+      return placeName;
+    },
+
+    set PLACE_NAME( value ) {
+      placeName = value;
+    },
+
+    get MAIN_SHORTCUTS() {
+      return mainShortCuts;
+    },
     
+    set MAIN_SHORTCUTS( value ) {
+      mainShortCuts = value;
+    },
+    
+    get PLATFORM_SHORTCUTS() {
+      return platformShortCuts;
+    },
+    
+    set PLATFORM_SHORTCUTS( value ) {
+      platformShortCuts = value;
+    },
+
     get DEBUG_TEXTBOX() {
       return debugTextBox;
     },
@@ -250,6 +285,14 @@ var Utils = function() {
       debugTextBox = value;
     },
 
+    get IS_QUIT_ENABLED() {
+      return isQuitEnabled;
+    },
+
+    set IS_QUIT_ENABLED( value ) {
+      isQuitEnabled = value;
+    },
+    
     // C O M M O N  P R E F E R E N S E S
 
     get IS_SAVE_POSITION() {
@@ -276,6 +319,22 @@ var Utils = function() {
       isPlaySound = value;
     },
 
+    get IS_REPLACE_BACKGROUND() {
+      return isReplaceBackground;
+    },
+
+    set IS_REPLACE_BACKGROUND( value ) {
+      isReplaceBackground = value;
+    },
+
+    get IS_HIGHLIGHT_ROW() {
+      return isHighlightRow;
+    },
+
+    set IS_HIGHLIGHT_ROW( value ) {
+      isHighlightRow = value;
+    },
+
     get IS_MAINMENUBAR_VISIBLE() {
       return isMainMenubarVisible;
     },
@@ -290,6 +349,14 @@ var Utils = function() {
 
     set IS_MAINTOOLBAR_VISIBLE( value ) {
       isMainToolbarVisible = value;
+    },
+    
+    get IS_CONFIRM_EXIT() {
+      return isConfirmExit;
+    },
+    
+    set IS_CONFIRM_EXIT( value ) {
+      isConfirmExit = value;
     }
 
   };
@@ -312,22 +379,7 @@ var Utils = function() {
     }
   };
   
-  pub.dump = function( obj ) {
-    if ( obj == null ) {
-      pub.log( "NULL" );
-    }
-    if( obj === undefined ) {
-      pub.log( "UNDEFINED" );
-    }
-    var msg = obj.toString() + "\n{\n";
-    for ( var name in obj ) {
-      msg += "  " + name + " = '" + obj[name] + "',\n";
-    }
-    msg += "}\n";
-    pub.log( msg );
-  };
-
-  pub.getStackDump = function() {
+  pub.dumpStack = function() {
     var lines = [];
     for ( var frame = Components.stack; frame; frame = frame.caller ) {
       lines.push( frame.name + " :: " + frame.filename + " (" + frame.lineNumber + ")" );
@@ -424,7 +476,7 @@ var Utils = function() {
   pub.getLanguage = function() {
     var lang = pub.getLocale().substr( 0, 2 );
     if ( pub.LANGUAGES.indexOf( lang ) < 0 ) {
-      return "en";
+      lang = pub.LANGUAGES[0];
     }
     return lang;
   };
@@ -432,7 +484,7 @@ var Utils = function() {
   pub.getSiteLanguage = function() {
     var lang = pub.getLanguage();
     if ( pub.SITE_LANGUAGES.indexOf( lang ) < 0 ) {
-      return "en";
+      lang = pub.SITE_LANGUAGES[0];
     }
     return lang;
   };
@@ -471,6 +523,64 @@ var Utils = function() {
     return null;
   };
 
+  pub.switchToMainTab = function() {
+    if ( pub.IS_STANDALONE ) {
+      return;
+    }
+    pub.openMainTab( true );
+  };
+  
+  pub.openMainTab = function( isActive, persistedState ) {
+    var mail3PaneWindow = pub.getMail3PaneWindow();
+    var tabMail = pub.getTabMail();
+    if ( tabMail ) {
+      mail3PaneWindow.setTimeout(
+        function() { 
+          tabMail.openTab(
+            "znotesMainTab",
+            {
+              contentPage: "chrome://znotes/content/main.xul",
+              background: !isActive,
+              persistedState: persistedState
+            }
+          );
+        },
+        0
+      );
+    } else if ( mail3PaneWindow ) {
+      mail3PaneWindow.setTimeout(
+        function() { 
+          mail3PaneWindow.openDialog(
+            "chrome://messenger/content/",
+            "_blank",
+            "chrome,dialog=no,all,centerscreen",
+            null,
+            {
+              tabType: "znotesMainTab",
+              tabParams: {
+                contentPage: "chrome://znotes/content/main.xul",
+                background: !isActive,
+                persistedState: persistedState
+              }
+            }
+          );
+        },
+        0
+      );
+    } else {
+      window.openDialog(
+        "chrome://znotes/content/main.xul",
+        "_blank",
+        "chrome,dialog=no,all,centerscreen",
+        {
+          contentPage: "chrome://znotes/content/main.xul",
+          background: !isActive,
+          persistedState: persistedState
+        }
+      );
+    }
+  };
+  
   pub.getSelectedTab = function() {
     var tabMail = pub.getTabMail();
     if ( !tabMail ) {
@@ -483,7 +593,7 @@ var Utils = function() {
     return tabMail.tabInfo[ tabContainer.selectedIndex ];
   };
 
-  pub.isTabActive = function() {
+  pub.hasActiveTabs = function() {
     var selectedTab = pub.getSelectedTab()
     if ( !selectedTab ) {
       return false;
@@ -492,6 +602,15 @@ var Utils = function() {
       selectedTab.mode.type == "znotesContentTab" ||
       selectedTab.mode.type == "znotesMainTab"
     );
+  };
+
+  pub.getParentChromeWindow = function( aWindow ) {
+    return aWindow.QueryInterface( Components.interfaces.nsIInterfaceRequestor )
+                  .getInterface( Components.interfaces.nsIWebNavigation )
+                  .QueryInterface( Components.interfaces.nsIDocShell )
+                  .chromeEventHandler
+                  .ownerDocument
+                  .defaultView;
   };
   
   pub.getPlatformWindow = function( aWindow ) {
@@ -504,7 +623,7 @@ var Utils = function() {
       .getInterface( Components.interfaces.nsIDOMWindow );
   };
   
-  pub.getZNotesWindow = function() {
+  pub.getZNotesPlatformWindow = function() {
     return Components.classes["@mozilla.org/appshell/window-mediator;1"]
                      .getService( Components.interfaces.nsIWindowMediator )
                      .getMostRecentWindow( "znotes:platform" );
@@ -515,10 +634,16 @@ var Utils = function() {
                      .getService( Components.interfaces.nsIWindowMediator )
                      .getMostRecentWindow( "mail:3pane" );
   };
+
+  pub.getZNotesMainWindow = function() {
+    return Components.classes["@mozilla.org/appshell/window-mediator;1"]
+                     .getService( Components.interfaces.nsIWindowMediator )
+                     .getMostRecentWindow( "znotes:main" );
+  };
   
   pub.initGlobals = function() {
     // STANDALONE APPLICATION
-    var aWindow = pub.getZNotesWindow();
+    var aWindow = pub.getZNotesPlatformWindow();
     if ( aWindow ) {
       pub.MAIN_WINDOW = aWindow;
       pub.IS_STANDALONE = true;
@@ -545,24 +670,58 @@ var Utils = function() {
     );
   };
 
-  pub.clone = function( o ) {
-	  if( !o || "object" !== typeof o )  {
-	  	return o;
-	  }
-	  var c = "function" === typeof o.pop ? [] : {};
-	  for( var p in o ) {
-	  	if( o.hasOwnProperty( p ) ) {
-	  		var v = o[p];
-	  		if( v && "object" === typeof v ) {
-	  			c[p] = pub.clone( v );
-	  		} else {
-          c[p] = v;
+  pub.dumpObject = function( obj, chr, cnt ) {
+    if ( obj === undefined ) {
+      pub.log( "undefined" );
+    }
+    if ( obj === null ) {
+      return "null";
+    }
+    var chr = ( chr === undefined ) ? " " : chr;
+    var cnt = ( cnt === undefined ) ? 2 : cnt;
+    //
+    var replicate = function( character, count ) {
+      return ( new Array( count + 1 ) ).join( character );
+    };
+    //
+    var dumpObj = function( o, depth ) {
+      var result = "";
+      var indent = replicate( chr, depth * cnt );
+      var value;
+	    for ( var p in o ) {
+        switch ( typeof o[p] ) {
+          case "string":
+            result += indent + p + " : '" + o[p] + "',\n";
+            break;
+          case "boolean":
+            result += indent + p + " : " + o[p] + ",\n";
+            break;
+          case "number":
+            result += indent + p + " : " + o[p] + ",\n";
+            break;
+          case "object":
+            value = "" + o[p];
+            if ( o[p] && value === "[object Object]" ) {
+              result += indent + p + " : {\n";
+              result += dumpObj( o[p], depth + 1 );
+              result += indent + "},\n";
+            } else {
+              result += indent + p + " : " + value + ",\n";
+            }
+            break;
+          case "function":
+            value = o[p].toString();
+            result += indent + p + " : " +
+                      value.substring( 0, value.indexOf( "{" ) ) + ",\n";
+            break;
         }
-	  	}
-	  }
-	  return c;
+	    }
+      return result.substring( 0, result.length - 2 ) + "\n";
+    };
+    //
+    return "\n{\n" + dumpObj( obj, 1 ) + "}";
   };
-
+  
   pub.cloneObject = function( from, to ) {
     var modified = false;
 	  for ( var p in from ) {
@@ -604,53 +763,51 @@ var Utils = function() {
     }
 	  return modified;
   };
+
+  pub.isObjectsEqual = function( from, to ) {
+	  for ( var p in from ) {
+	  	if ( from.hasOwnProperty( p ) ) {
+        if ( to.hasOwnProperty( p ) ) {
+  	  	  if( from[p] && "object" === typeof from[p] ) {
+            if ( !to[p] || "object" !== typeof to[p] ) {
+              return false;
+            }
+            if ( !pub.isObjectsEqual( from[p], to[p] ) ) {
+              return false;
+            }
+          } else {
+            if ( to[p] != from[p] ) {
+              return false;
+            }
+          }
+        } else {
+          return false;
+        }
+	  	}
+	  }
+    for ( var p in to ) {
+	  	if ( to.hasOwnProperty( p ) ) {
+        if ( from.hasOwnProperty( p ) ) {
+  	  	  if( to[p] && "object" === typeof to[p] ) {
+            if ( !from[p] || "object" !== typeof from[p] ) {
+              return false;
+            }
+            if ( !pub.isObjectsEqual( to[p], from[p] ) ) {
+              return false;
+            }
+          } else {
+            if ( from[p] != to[p] ) {
+              return false;
+            }
+          }
+        } else {
+          return false;
+        }
+      }
+    }
+	  return true;
+  };
   
-  pub.copyObject = function( from, to ) {
-    var modified = false;
-    for ( var name in from ) {
-      if ( name in to ) {
-        if ( to[name] != from[name] ) {
-          to[name] = from[name];
-          modified = true;
-        }
-      } else {
-        to[name] = from[name];
-        modified = true;
-      }
-    }
-    for ( var name in to ) {
-      if ( name in from ) {
-      } else {
-        delete to[name];
-        modified = true;
-      }
-    }
-    return modified;
-  };
-
-  pub.compareObjects = function( from, to ) {
-    var modified = false;
-    for ( var name in from ) {
-      if ( name in to ) {
-        if ( to[name] != from[name] ) {
-          modified = true;
-          break;
-        }
-      } else {
-        modified = true;
-        break;
-      }
-    }
-    for ( var name in to ) {
-      if ( name in from ) {
-      } else {
-        modified = true;
-        break;
-      }
-    }
-    return modified;
-  };
-
   pub.log = function( aText ) {
     var consoleService = Components.classes["@mozilla.org/consoleservice;1"]
                                    .getService( Components.interfaces.nsIConsoleService );
@@ -662,6 +819,10 @@ var Utils = function() {
 
   };
 
+  pub.isURI = function( str ) {
+    return str && /^http:\/\/|^https:\/\/|^file:\/\/|^ftp:\/\/|^about:|^mailto:|^news:|^snews:|^telnet:|^ldap:|^ldaps:|^gopher:|^finger:|^javascript:/i.test( str );
+  };
+  
   pub.encodeUTF8 = function( s ) {
     return unescape( encodeURIComponent( s ) );
   };
@@ -762,6 +923,46 @@ var Utils = function() {
     }
   };
 
+  pub.saveToFile = function( fileEntry, fileMode, filePermitions, bufferSize, url, contentType, urlListener ) {
+    var ioService =
+      Components.classes["@mozilla.org/network/io-service;1"]
+                .getService( Components.interfaces.nsIIOService );
+    var inputStream =
+      Components.classes["@mozilla.org/scriptableinputstream;1"]
+                .createInstance(
+                  Components.interfaces.nsIScriptableInputStream );
+    var safeFileOutputStream =
+      Components.classes["@mozilla.org/network/safe-file-output-stream;1"]
+                .createInstance( Components.interfaces.nsIFileOutputStream );
+    safeFileOutputStream.init( fileEntry, fileMode, filePermitions,
+      safeFileOutputStream.DEFER_OPEN );
+    var outputStream =
+        Components.classes["@mozilla.org/network/buffered-output-stream;1"]
+                  .createInstance(
+                    Components.interfaces.nsIBufferedOutputStream );
+    outputStream.init( safeFileOutputStream, bufferSize );
+    var uri = ioService.newURI( url, null, null );
+    var channel = ioService.newChannelFromURI( uri );
+    channel.contentType = contentType;
+    channel.asyncOpen(
+      {
+        onStartRequest: function ( aRequest, aContext ) {
+          urlListener.OnStartRunningUrl( uri );
+        },
+        onStopRequest: function ( aRequest,  aContext,  aStatusCode ) {
+          outputStream.flush();
+          urlListener.OnStopRunningUrl( uri, aStatusCode );
+        },
+        onDataAvailable: function ( aRequest, aContext, aStream,
+                                    aOffset, aCount ) {
+          outputStream.writeFrom( aStream, aCount );
+          urlListener.OnProgressUrl( uri, aCount );
+        }
+      },
+      null
+    );
+  };
+  
   pub.createUUID = function() {
     var s = [];
     var hexDigits = "0123456789ABCDEF";
@@ -771,8 +972,8 @@ var Utils = function() {
     s[16] = hexDigits.substr( ( s[16] & parseInt( "0x3", 16 ) ) | parseInt( "0x8", 16 ), 1 );
     return s.join("");
   };
-
-  pub.rgbToHex = function( r, g, b ) {
+  
+  pub.RGB2HEX = function( r, g, b ) {
     var red = r.toString( 16 );
     while ( red.length < 2 ) red = "0" + red;
     var green = g.toString( 16 );
@@ -780,6 +981,53 @@ var Utils = function() {
     var blue = b.toString( 16 );
     while ( blue.length < 2 ) blue = "0" + blue;
     return "#"+red+green+blue;
+  };
+
+  pub.HEX2RGB = function( hex ) {
+    return [
+      parseInt( hex.substr( 1, 2 ), 16 ),
+      parseInt( hex.substr( 3, 2 ), 16 ),
+      parseInt( hex.substr( 5, 2 ), 16 )
+    ];
+  };
+  
+  pub.HEX2HSL = function( hex ) {
+	  var r = parseInt( hex.substr( 1, 2 ), 16 ) / 255;
+	  var g = parseInt( hex.substr( 3, 2 ), 16 ) / 255;
+	  var b = parseInt( hex.substr( 5, 2 ), 16 ) / 255;
+    var max = Math.max( r, g, b );
+    var min = Math.min( r, g, b );
+	  var h, s, l;
+    l = ( max + min ) / 2;
+    if ( max == min ) {
+      h = s = 0;
+    } else {
+      var d = max - min;
+      s = l > 0.5 ? d / ( 2 - max - min ) : d / ( max + min );
+      switch ( max ) {
+      	case r:
+          h = ( g - b ) / d + ( g < b ? 6 : 0 );
+          break;
+      	case g:
+          h = ( b - r ) / d + 2;
+          break;
+      	case b:
+          h = ( r - g ) / d + 4;
+          break;
+      }
+      h /= 6;
+    }
+    return [ Math.floor(h * 360), Math.floor(s * 100), Math.floor(l * 100) ];
+  };
+
+  pub.getHighlightColors = function( foreColor, backColor ) {
+    var hsl = pub.HEX2HSL( foreColor );
+    return {
+      fgColor: foreColor,
+      bgColor: "transparent",
+      fgColorSelected: backColor,
+      bgColorSelected: "hsl(" + hsl[0] + "," + hsl[1] + "%," + hsl[2] + "%)"
+    };
   };
 
   pub.makeTagImage = function( color, checked, size ) {
@@ -818,17 +1066,9 @@ var Utils = function() {
   };
 
   pub.makeForeColorImage = function( color, size, bcolor ) {
-    if ( color == null ) {
-      return null;
-    }
-    var transparent = ( color.toLowerCase() == "transparent" );
-    var red, green, blue;
-    if ( transparent ) {
-      red = 0;
-      green = 0;
-      blue = 0;
-    } else {
-      var rgb = /\s*rgb\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)\s*/i.exec( color );
+    var red = 0, green = 0, blue = 0, rgb;
+    if ( color ) {
+      rgb = /\s*rgb\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)\s*/i.exec( color );
       if ( rgb ) {
         red = parseInt( rgb[1] );
         green = parseInt( rgb[2] );
@@ -843,11 +1083,10 @@ var Utils = function() {
     var sizeY = size;
     var p = new ru.akman.znotes.PNGLib.PNG( sizeX, sizeY, 256 );
     var foreground = p.color( red, green, blue );
-    var bred = 0;
-    var bgreen = 0;
-    var bblue = 0;
-    if ( bcolor ) {
-      var brgb = /\s*rgb\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)\s*/i.exec( bcolor );
+    var bred = 255, bgreen = 255, bblue = 255, brgb;
+    var transparent = !( bcolor && bcolor.toLowerCase() != "transparent" );
+    if ( bcolor && !transparent ) {
+      brgb = /\s*rgb\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)\s*/i.exec( bcolor );
       if ( brgb ) {
         bred = parseInt( brgb[1] );
         bgreen = parseInt( brgb[2] );
@@ -859,18 +1098,16 @@ var Utils = function() {
       }
     }
     var background = p.color( bred, bgreen, bblue );
-    var foretransp = p.color( 105, 105, 105 );
+    var foretransp = p.color( 0, 0, 0 );
     for ( var x = 0; x < sizeX; x++ ) {
       for ( var y = 0; y < sizeY; y++ ) {
         p.buffer[ p.index( x, y ) ] = background;
-        if ( x > 3 && x < sizeX - 4 && y > 3 && y < sizeY - 4 )
-          if ( transparent ) {
-            if ( x % 2 == 0 || y % 2 == 0 ) {
-              p.buffer[ p.index( x, y ) ] = foretransp;
-            }
-          } else {
-            p.buffer[ p.index( x, y ) ] = foreground;
-          }
+        if ( transparent && ( x % 3 == 0 || y % 3 == 0 ) ) {
+          p.buffer[ p.index( x, y ) ] = foretransp;
+        }
+        if ( x > 3 && x < sizeX - 4 && y > 3 && y < sizeY - 4 ) {
+          p.buffer[ p.index( x, y ) ] = foreground;
+        }
       }
     }
     var result = 'data:image/png;base64,'+p.getBase64();
@@ -878,17 +1115,10 @@ var Utils = function() {
   };
 
   pub.makeBackColorImage = function( color, size ) {
-    if ( color == null ) {
-      return null;
-    }
-    var transparent = ( color.toLowerCase() == "transparent" );
-    var red, green, blue;
-    if ( transparent ) {
-      red = 255;
-      green = 255;
-      blue = 255;
-    } else {
-      var rgb = /\s*rgb\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)\s*/i.exec( color );
+    var transparent = !( color && color.toLowerCase() != "transparent" );
+    var red = 255, green = 255, blue = 255, rgb;
+    if ( !transparent ) {
+      rgb = /\s*rgb\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)\s*/i.exec( color );
       if ( rgb ) {
         red = parseInt( rgb[1] );
         green = parseInt( rgb[2] );
@@ -903,11 +1133,11 @@ var Utils = function() {
     var sizeY = size;
     var p = new ru.akman.znotes.PNGLib.PNG( sizeX, sizeY, 256 );
     var background = p.color( red, green, blue );
-    var foreground = p.color( 105, 105, 105 );
+    var foreground = p.color( 0, 0, 0 );
     for ( var x = 0; x < sizeX; x++ ) {
       for ( var y = 0; y < sizeY; y++ ) {
         p.buffer[ p.index( x, y ) ] = background;
-        if ( transparent && ( x % 2 == 0 || y % 2 == 0 ) ) {
+        if ( transparent && ( x % 3 == 0 || y % 3 == 0 ) ) {
           p.buffer[ p.index( x, y ) ] = foreground;
         }
       }
@@ -915,7 +1145,29 @@ var Utils = function() {
     var result = 'data:image/png;base64,'+p.getBase64();
     return result;
   };
+  
+  pub.addProperty = function( node, value ) {
+    var properties = node.hasAttribute( "properties" ) ?
+      node.getAttribute( "properties" ).trim() : "";
+    properties = properties.length ? properties.split( /\s+/ ) : [];
+    if ( properties.indexOf( value ) < 0 ) {
+      properties.push( value );
+    }
+    node.setAttribute( "properties", properties.join( " " ) );
+  };
 
+  pub.removeProperty = function( node, value ) {
+    var properties = node.hasAttribute( "properties" ) ?
+      node.getAttribute( "properties" ).trim() : "";
+    properties = properties.length ? properties.split( /\s+/ ) : [];
+    var index = properties.indexOf( value );
+    if ( index < 0 ) {
+      return;
+    }
+    properties.splice( index, 1 );
+    node.setAttribute( "properties", properties.join( " " ) );
+  };
+  
   pub.addCSSRule = function( doc, selector, declaration ) {
     var styleSheet = doc.styleSheets[0];
     var rule = selector + " { " + declaration + " }";
@@ -931,25 +1183,17 @@ var Utils = function() {
   };
 
   pub.findCSSRule = function( doc, selector ) {
-    var index = -1;
-    var s = selector;
-    s = s.toLowerCase();
-    // before: treechildren::-moz-tree-cell(TAG_C43735473EA642839B4BAE41783063E8)
-    // after: treechildren::-moz-tree-cellTAG_C43735473EA642839B4BAE41783063E8
-    s = s.replace( /\(|\)/g, "" );
     var styleSheet = doc.styleSheets[0];
+    var ruleSelector;
     var rules = styleSheet.cssRules;
     for ( var i = 0; i < rules.length; i++ ) {
-      var ruleSelector = rules[i].selectorText;
-      if ( ruleSelector ) {
-        ruleSelector = ruleSelector.toLowerCase();
-        if ( ruleSelector == s ) {
-          index = i;
-          break;
-        }
+      ruleSelector = rules[i].selectorText;
+      if ( ruleSelector &&
+           ruleSelector.toLowerCase() == selector.toLowerCase() ) {
+        return i;
       }
     }
-    return index;
+    return -1;
   };
 
   pub.changeCSSRule = function( doc, selector, declaration ) {
@@ -1019,7 +1263,8 @@ var Utils = function() {
         "sans-serif" : sansserif,
         "cursive"    : cursive,
         "fantasy"    : fantasy,
-        "monospace"  : monospace
+        "monospace"  : monospace,
+        "tt"         : monospace
       },
       "defaultName"  : defaultFontName,
       "defaultValue" : defaultFontValue,
@@ -1605,73 +1850,145 @@ var Utils = function() {
     return "" + code;
   };
 
-  pub.appendAccelText = function( commands, doc ) {
-    var command = null;
-    var menuitem = null;
-    var tooltiptext = null;
-    var acceltext = null;
-    var popupset = doc.getElementById( "znotes_popupset" );
-    var menupopup = doc.createElement( "menupopup" );
-    popupset.appendChild( menupopup );
-    for ( var cmd in commands ) {
-      command = doc.getElementById( cmd );
-      if ( !command ) {
-        continue;
-      }
-      menuitem = doc.createElement( "menuitem" );
-      // znotes_xxxxxx_command
-      //        ^^^^^^
-      menuitem.setAttribute(
-        "key",
-        "znotes_" + cmd.substring( 7, cmd.length - 8 ) + "_key"
-      );
-      commands[ cmd ] = {
-        command: command,
-        menuitem: menuitem
-      };
-      menupopup.appendChild( menuitem );
+  pub.updateKeyAttribute = function( node ) {
+    if ( node.hasAttribute( "key" ) ) {
+      var id = node.getAttribute( "key" );
+      node.removeAttribute( "key" );
+      node.setAttribute( "key", id );
     }
-    menupopup.openPopup( null, null, 0, 0, true, false, null );
-    menupopup.hidePopup();
-    for ( var cmd in commands ) {
-      if ( !commands[cmd] ) {
-        continue;
-      }
-      command = commands[cmd].command;
-      menuitem = commands[cmd].menuitem;
-      commands[cmd] = null;
-      tooltiptext = command.getAttribute( "tooltiptext" );
-      acceltext = menuitem.getAttribute( "acceltext" );
-      if ( acceltext.length > 0 ) {
-        tooltiptext += "\n" + acceltext;
-        command.setAttribute( "tooltiptext", tooltiptext );
-      }
+    if ( !node.hasChildNodes() ) {
+      return;
     }
-    while ( menupopup.firstChild ) {
-      menupopup.removeChild( menupopup.firstChild );
-    }
-    popupset.removeChild( menupopup );
-  };
-    
-  pub.removeAccelText = function( commands, doc ) {
-    var command = null;
-    var tooltiptext = null;
-    var index = null;
-    for ( var cmd in commands ) {
-      command = doc.getElementById( cmd );
-      if ( !command ) {
-        continue;
-      }
-      tooltiptext = command.getAttribute( "tooltiptext" );
-      index = tooltiptext.indexOf( "\n" );
-      if ( index < 0 ) {
-        continue;
-      }
-      tooltiptext = tooltiptext.substring( 0, index );
-      command.setAttribute( "tooltiptext", tooltiptext );
+    var child = node.firstChild;
+    while ( child ) {
+      pub.updateKeyAttribute( child );
+      child = child.nextSibling;
     }
   };
   
+  /*
+  alt     The user must press the Alt key.
+          On the Macintosh, this is the Option key.
+  control The user must press the Control key.
+  meta    The user must press the Meta key.
+          This is the Command key on the Macintosh.
+  shift   The user must press the Shift key.
+  accel   The user must press the special accelerator key.
+          The key used for keyboard shortcuts on the user's platform.
+          Usually, this would be the value you would use.
+  =================================================================
+  os      The user must press the Win key.
+          This is the Super key or the Hyper key on Linux.
+          If this value is used, typically the key combination conflicts
+          with system wide shortcut keys. So, you shouldn't use this
+          value as far as possible. Requires Gecko 17.0
+  access  The user must press the special access key.
+          The key used for access keys on the user's platform.
+  any     Indicates that all modifiers preceding it are optional.              
+  */
+
+  pub.getShortcutFromAttributes = function( key, keycode, modifiers ) {
+    key = ( key == null ) ? "" : key.toUpperCase();
+    keycode = ( keycode == null ) ? "" : keycode;
+    keycode = ( keycode.indexOf( "VK_" ) == 0 ) ?
+      keycode.substr( 3 ).toUpperCase() : "";
+    var m = ( modifiers == null ) ? [] : modifiers.split( /\s*,\s*|\s+/ );
+    modifiers = [];
+    for ( var i = 0; i < m.length; i++ ) {
+      if ( m[i].trim().length ) {
+        modifiers.push( m[i] );
+      }
+    }
+    var accel = ( pub.getSystemInfo().OS == 'Darwin' ) ? "Meta" : "Ctrl";
+    var modifier;
+    for ( var i = 0; i < modifiers.length; i++ ) {
+      modifier = modifiers[i].toLowerCase();
+      switch ( modifier ) {
+        case "control":
+          modifier = "Ctrl";
+          break;
+        case "accel":
+          modifier = accel;
+          break;
+      }
+      modifiers[i] = modifier.substr( 0, 1 ).toUpperCase() +
+                     modifier.substr( 1 );
+    }
+    // reject all before "any" and "any" itself in modifiers attribute
+    var anyIndex = modifiers.indexOf( "Any" );
+    if ( anyIndex >= 0 ) {
+      modifiers = modifiers.slice( anyIndex + 1 )
+    }
+    modifiers = modifiers.sort().join( "+" );
+    return modifiers + ( modifiers.length ? "+" : "" ) +
+           ( key.length ? key : keycode );
+  };
+  
+  pub.getShortcutFromEvent = function( event ) {
+    var keycode = ( "keyCode" in event ) ? event.keyCode : 0;
+    var key = ( "charCode" in event ) ? event.charCode : 0;
+    if ( keycode ) {
+      for ( var name in event ) {
+        if ( name.indexOf( "DOM_VK_" ) == 0 && event[name] == keycode ) {
+          keycode = name.substr( 7 );
+          break;
+        }
+      }
+      key = "";
+    } else {
+      keycode = "";
+      key = String.fromCharCode( key ).toUpperCase();
+    }
+    var modifiers = [];
+    if ( ( "shiftKey" in event ) && event.shiftKey ) {
+      modifiers.push( "Shift" );
+    }
+    if ( ( "altKey" in event ) && event.altKey ) {
+      modifiers.push( "Alt" );
+    }
+    if ( ( "ctrlKey" in event ) && event.ctrlKey ) {
+      modifiers.push( "Ctrl" );
+    }
+    if ( ( "metaKey" in event ) && event.metaKey ) {
+      modifiers.push( "Meta" );
+    }
+    modifiers = modifiers.sort().join( "+" );
+    return modifiers + ( modifiers.length ? "+" : "" ) +
+           ( key.length ? key : keycode );
+  };
+  
+  pub.getNameFromId = function( id ) {
+    var beginIndex = id.indexOf( "_" );
+    var endIndex = id.lastIndexOf( "_" );
+    if ( ( beginIndex < 0 ) || ( endIndex < 0 ) || beginIndex == endIndex ) {
+      return null;
+    }
+    return id.substring( beginIndex + 1, endIndex );
+  };
+  
+  pub.getPermutations = function( arr ) {
+    var result = [];
+    function process( key ) {
+      var tmp = [];
+      tmp.push( [ key ] );
+      for ( var i = 0; i < result.length; i++ ) {
+        tmp.push( [ result[i], key ] );
+      }
+      result = result.concat( tmp );
+    };
+    for ( var i = 0; i < arr.length; i++ ) {
+      process( arr[i] );
+    }
+    result.push( [] );
+    return result;
+  };
+  
+  pub.beep = function() {
+    var sound = Components.classes["@mozilla.org/sound;1"]
+                          .createInstance( Components.interfaces.nsISound );
+    sound.beep();
+  };
+
   return pub;
 
 }();

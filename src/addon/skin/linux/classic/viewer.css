@@ -33,3 +33,11 @@
 /* ***** classic/1.0 linux **** */
 
 @import url("chrome://znotes_common/skin/viewer.css");
+
+.noteBodyView {
+  border-bottom: 1px solid #AABCCF;
+}
+
+.noteBodyViewXR {
+  border-top: 1px solid #AABCCF;
+}

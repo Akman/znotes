@@ -32,9 +32,7 @@
   - ***** END LICENSE BLOCK ***** -->
 
 <?xml-stylesheet type="text/css" href="chrome://global/skin/" ?>
-<?xml-stylesheet type="text/css" href="chrome://messenger/skin/primaryToolbar.css" ?>
-<?xml-stylesheet type="text/css" href="chrome://messenger/skin/messenger.css" ?>
-<?xml-stylesheet type="text/css" href="chrome://messenger/skin/messageHeader.css" ?>
+<?xml-stylesheet type="text/css" href="chrome://platform/skin/platform.css" ?>
 <?xml-stylesheet type="text/css" href="chrome://znotes/skin/viewer.css" ?>
 
 <?xul-overlay href="chrome://znotes/content/common.xul" ?>
@@ -54,6 +52,7 @@
   <script type="application/javascript"
     src="chrome://znotes/content/viewer.js" />
 
+  <commandupdater id="znotes_editupdater" />
   <stringbundleset id="znotes_stringbundleset" />
   <commandset id="znotes_commandset" />
   <keyset id="znotes_keyset" />

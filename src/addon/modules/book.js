@@ -126,7 +126,7 @@ var Book = function( aList, anId, aName, aDescription, aDriver, aConnection, aPr
 
   this.getConnection = function() {
     var result = {};
-    ru.akman.znotes.Utils.copyObject( this.connection, result );
+    ru.akman.znotes.Utils.cloneObject( this.connection, result );
     return result;
   };
 
@@ -134,7 +134,7 @@ var Book = function( aList, anId, aName, aDescription, aDriver, aConnection, aPr
     if ( this.isOpen() ) {
       return;
     }
-    if ( !ru.akman.znotes.Utils.copyObject( connection, this.connection ) ) {
+    if ( !ru.akman.znotes.Utils.cloneObject( connection, this.connection ) ) {
       return;
     }
     this.updateRegistryObject();
@@ -148,12 +148,12 @@ var Book = function( aList, anId, aName, aDescription, aDriver, aConnection, aPr
 
   this.getPreferences = function() {
     var result = {};
-    ru.akman.znotes.Utils.copyObject( this.preferences, result );
+    ru.akman.znotes.Utils.cloneObject( this.preferences, result );
     return result;
   };
 
   this.setPreferences = function( preferences ) {
-    if ( !ru.akman.znotes.Utils.copyObject( preferences, this.preferences ) ) {
+    if ( !ru.akman.znotes.Utils.cloneObject( preferences, this.preferences ) ) {
       return;
     }
     this.updateRegistryObject();
@@ -238,7 +238,7 @@ var Book = function( aList, anId, aName, aDescription, aDriver, aConnection, aPr
   };
 
   this.removeWithAllData = function() {
-    var driver = ru.akman.znotes.DriverManager.getDriver( this.getDriver() );
+    var driver = ru.akman.znotes.DriverManager.getInstance().getDriver( this.getDriver() );
     if ( !driver ) {
       return;
     }
@@ -254,7 +254,7 @@ var Book = function( aList, anId, aName, aDescription, aDriver, aConnection, aPr
   };
 
   this.createData = function() {
-    var driver = ru.akman.znotes.DriverManager.getDriver( this.getDriver() );
+    var driver = ru.akman.znotes.DriverManager.getInstance().getDriver( this.getDriver() );
     if ( !driver ) {
       return false;
     }
@@ -291,7 +291,7 @@ var Book = function( aList, anId, aName, aDescription, aDriver, aConnection, aPr
     if ( this.isOpen() ) {
       return ALREADY_OPENED;
     }
-    var driver = ru.akman.znotes.DriverManager.getDriver( this.getDriver() );
+    var driver = ru.akman.znotes.DriverManager.getInstance().getDriver( this.getDriver() );
     if ( !driver ) {
       return DRIVER_ERROR;
     }

@@ -33,3 +33,29 @@
 /* ***** classic/1.0 linux **** */
 
 @import url("chrome://znotes_common/skin/main.css");
+
+.znotes_mainmenutoolbar, .znotes_mainmenubar, .znotes_mainmenubar > menu {
+  -moz-appearance: none !important;
+  color: menutext;
+}
+
+#mainPanel {
+  border-bottom: 1px solid #AABCCF;
+}
+/* only for xr */
+.mainPanelXR {
+  border-top: 1px solid #AABCCF;
+}
+
+#folderSplitter:not([state]),
+#folderSplitter[state=""],
+#folderSplitter[state="dragging"],
+#folderSplitter[state="open"] {
+  -moz-appearance: none !important;
+  border: none !important;
+  margin-right: -3px;
+}
+
+treechildren#noteTreeChildren::-moz-tree-image( attachment ) {
+  margin-left: -9px;
+}

@@ -36,13 +36,16 @@ if ( !ru.akman.znotes ) ru.akman.znotes = {};
 
 Components.utils.import( "resource://znotes/utils.js", ru.akman.znotes );
 
-ru.akman.znotes.Loader = function() {
+ru.akman.znotes.Loader = function( aWindow, aStyle ) {
 
   return function() {
 
     var Utils = ru.akman.znotes.Utils;
     var Common = ru.akman.znotes.Common;
 
+    var currentWindow = null;
+    var currentStyle = null;
+    
     var currentNote = null;
     var noteStateListener = null;
 
@@ -66,6 +69,10 @@ ru.akman.znotes.Loader = function() {
           return false;
         }
         return true;
+        /*
+        var focusedWindow = currentWindow.top.document.commandDispatcher.focusedWindow;
+        return ( focusedWindow == currentWindow );
+        */
       },
       isCommandEnabled: function( cmd ) {
         if ( !( cmd in loaderCommands ) ) {
@@ -97,14 +104,16 @@ ru.akman.znotes.Loader = function() {
       },
       getCommand: function( cmd ) {
         if ( cmd in loaderCommands ) {
-          return document.getElementById( cmd );
+          return currentWindow.document.getElementById( cmd );
         }
         return null;
       },
       register: function() {
-        Utils.appendAccelText( loaderCommands, document );
         try {
-          top.controllers.insertControllerAt( 0, this );
+          currentWindow.controllers.insertControllerAt( 0, this );
+          this.getId = function() {
+            return currentWindow.controllers.getControllerId( this );
+          };
         } catch ( e ) {
           Components.utils.reportError(
             "An error occurred registering '" + this.getName() +
@@ -113,21 +122,23 @@ ru.akman.znotes.Loader = function() {
         }
       },
       unregister: function() {
+        for ( var cmd in loaderCommands ) {
+          Common.goSetCommandEnabled( cmd, false, currentWindow );
+        }
         try {
-          top.controllers.removeController( this );
+          currentWindow.controllers.removeController( this );
         } catch ( e ) {
           Components.utils.reportError(
             "An error occurred unregistering '" + this.getName() +
             "' controller: " + e
           );
         }
-        Utils.removeAccelText( loaderCommands, document );
       }
     };
     
     function updateCommands() {
-      window.focus();
-      Common.goUpdateCommand( "znotes_loaderabort_command" );
+      var id = loaderController.getId();
+      Common.goUpdateCommand( "znotes_loaderabort_command", id, currentWindow );
     };
     
     // EVENTS
@@ -266,17 +277,21 @@ ru.akman.znotes.Loader = function() {
       loaderController.unregister();
     };
         
-    // CONSTRUCTOR
+    // CONSTRUCTOR ( aWindow, aStyle )
 
+    currentWindow = aWindow ? aWindow : window;
+    if ( aStyle ) {
+      currentStyle = aStyle;
+    }
     noteStateListener = {
       name: "LOADER",
       onNoteStatusChanged: onNoteStatusChanged
     };
-    loaderBox = document.getElementById( "loaderBox" );
-    url = document.getElementById( "url" );
-    indicator = document.getElementById( "indicator" );
-    log = document.getElementById( "log" );
-    error = document.getElementById( "error" );
+    loaderBox = currentWindow.document.getElementById( "loaderBox" );
+    url = currentWindow.document.getElementById( "url" );
+    indicator = currentWindow.document.getElementById( "indicator" );
+    log = currentWindow.document.getElementById( "log" );
+    error = currentWindow.document.getElementById( "error" );
     loaderController.register();
     
   };

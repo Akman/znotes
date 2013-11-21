@@ -43,11 +43,12 @@ Components.utils.import( "resource://znotes/documentmanager.js",
 
 ru.akman.znotes.Editor = function() {
 
-  return function( aMode, aStyle ) {
+  return function( aWindow, aMode, aStyle ) {
 
     var Utils = ru.akman.znotes.Utils;
     var Common = ru.akman.znotes.Common;
 
+    var currentWindow = null;
     var currentMode = "viewer";
     var currentStyle = {
       iconsize: "small"
@@ -73,26 +74,15 @@ ru.akman.znotes.Editor = function() {
       "znotes_editorprint_command": null
     };
     
-    var basicCommands = {
-      "cmd_saveAsFile": null,
-      "cmd_print": null
-    };
-    
     var editorController = {
       supportsCommand: function( cmd ) {
-        if ( cmd.indexOf( "cmd_" ) == 0 ) {
-          Utils.log( this.getName() + "::supportsCommand() '" + cmd + "'" );
-        }
-        if ( !( cmd in editorCommands ) && !( cmd in basicCommands ) ) {
+        if ( !( cmd in editorCommands ) ) {
           return false;
         }
         return true;
       },
       isCommandEnabled: function( cmd ) {
-        if ( cmd.indexOf( "cmd_" ) == 0 ) {
-          Utils.log( this.getName() + "::isCommandEnabled() '" + cmd + "'" );
-        }
-        if ( !( cmd in editorCommands ) && !( cmd in basicCommands ) ) {
+        if ( !( cmd in editorCommands ) ) {
           return false;
         }
         if ( !currentNote || !currentNote.isExists() ||
@@ -102,17 +92,14 @@ ru.akman.znotes.Editor = function() {
         switch ( cmd ) {
           case "znotes_editoredit_command":
           case "znotes_editorprint_command":
-          case "cmd_print":
             return true;
           case "znotes_editorsave_command":
-          case "cmd_saveAsFile":
             return isEditorDirty;
         }
         return false;
       },
       doCommand: function( cmd ) {
-        Utils.log( this.getName() + "::doCommand() '" + cmd + "'" );
-        if ( !( cmd in editorCommands ) && !( cmd in basicCommands ) ) {
+        if ( !( cmd in editorCommands ) ) {
           return;
         }
         switch ( cmd ) {
@@ -120,31 +107,30 @@ ru.akman.znotes.Editor = function() {
             currentEditor.edit();
             break;
           case "znotes_editorsave_command":
-          case "cmd_saveAsFile":
             currentEditor.save();
             break;
           case "znotes_editorprint_command":
-          case "cmd_print":
             currentEditor.print();
             break;
         }
       },
       onEvent: function( event ) {
-        Utils.log( this.getName() + "::onEvent() '" + event + "'" );
       },
       getName: function() {
         return "EDITOR";
       },
       getCommand: function( cmd ) {
         if ( cmd in editorCommands ) {
-          return document.getElementById( cmd );
+          return currentWindow.document.getElementById( cmd );
         }
         return null;
       },
       register: function() {
-        Utils.appendAccelText( editorCommands, document );
         try {
-          top.controllers.insertControllerAt( 0, this );
+          currentWindow.controllers.insertControllerAt( 0, this );
+          this.getId = function() {
+            return currentWindow.controllers.getControllerId( this );
+          };
         } catch ( e ) {
           Components.utils.reportError(
             "An error occurred registering '" + this.getName() +
@@ -153,25 +139,27 @@ ru.akman.znotes.Editor = function() {
         }
       },
       unregister: function() {
+        for ( var cmd in editorCommands ) {
+          Common.goSetCommandEnabled( cmd, false, currentWindow );
+        }
         try {
-          top.controllers.removeController( this );
+          currentWindow.controllers.removeController( this );
         } catch ( e ) {
           Components.utils.reportError(
             "An error occurred unregistering '" + this.getName() +
             "' controller: " + e
           );
         }
-        Utils.removeAccelText( editorCommands, document );
       }
     };
     
     function updateCommands() {
-      window.focus();
-      Common.goSetCommandHidden( "znotes_editorsave_command", true );
-      Common.goSetCommandHidden( "znotes_editoredit_command", false );
-      Common.goUpdateCommand( "znotes_editorsave_command" );
-      Common.goUpdateCommand( "znotes_editoredit_command" );
-      Common.goUpdateCommand( "znotes_editorprint_command" );
+      var id = editorController.getId();
+      Common.goSetCommandHidden( "znotes_editorsave_command", true, currentWindow );
+      Common.goSetCommandHidden( "znotes_editoredit_command", false, currentWindow );
+      Common.goUpdateCommand( "znotes_editorsave_command", id, currentWindow );
+      Common.goUpdateCommand( "znotes_editoredit_command", id, currentWindow );
+      Common.goUpdateCommand( "znotes_editorprint_command", id, currentWindow );
     };
     
     // NOTE EVENTS
@@ -206,9 +194,8 @@ ru.akman.znotes.Editor = function() {
       var aMode = e.data.mode;
       var aFlag = ( aMode == "editor" );
       if ( currentNote && currentNote == aNote && currentEditor ) {
-        window.focus();
-        Common.goSetCommandHidden( "znotes_editoredit_command", aFlag );
-        Common.goSetCommandHidden( "znotes_editorsave_command", !aFlag );
+        Common.goSetCommandHidden( "znotes_editoredit_command", aFlag, currentWindow );
+        Common.goSetCommandHidden( "znotes_editorsave_command", !aFlag, currentWindow );
       }
     };
 
@@ -217,8 +204,7 @@ ru.akman.znotes.Editor = function() {
       var isDirty = e.data.dirty;
       if ( currentNote && currentNote == aNote && currentEditor ) {
         isEditorDirty = isDirty;
-        window.focus();
-        Common.goUpdateCommand( "znotes_editorsave_command" );
+        Common.goUpdateCommand( "znotes_editorsave_command", editorController.getId(), currentWindow );
       }
     };
     
@@ -229,7 +215,7 @@ ru.akman.znotes.Editor = function() {
         editorView.removeAttribute( "hidden" );
       }
       if ( currentEditor ) {
-        currentEditor.open( window, document, currentNote, currentStyle );
+        currentEditor.open( currentWindow, currentWindow.document, currentNote, currentStyle );
       }
     };
     
@@ -249,6 +235,7 @@ ru.akman.znotes.Editor = function() {
       currentNote = aNote;
       if ( currentNote && currentNote.isExists() && !currentNote.isLoading() ) {
         currentEditor = ru.akman.znotes.DocumentManager
+                                       .getInstance()
                                        .getDocument( currentNote.getType() )
                                        .getEditor();
         addEventListeners();
@@ -295,7 +282,7 @@ ru.akman.znotes.Editor = function() {
 
     this.onStyleChanged = function( event ) {
       var style = event.data.style;
-      Utils.copyObject( style, currentStyle );
+      Utils.cloneObject( style, currentStyle );
       if ( currentEditor ) {
         currentEditor.updateStyle( style );
       }
@@ -316,15 +303,16 @@ ru.akman.znotes.Editor = function() {
       editorController.unregister();
     };
     
-    // CONSTRUCTOR ( aMode, aStyle )
+    // CONSTRUCTOR ( aWindow, aMode, aStyle )
 
+    currentWindow = aWindow ? aWindow : window;
     if ( aMode ) {
       currentMode = aMode;
     }
     if ( aStyle ) {
-      Utils.copyObject( aStyle, currentStyle );
+      Utils.cloneObject( aStyle, currentStyle );
     }
-    editorView = document.getElementById( "editorView" );
+    editorView = currentWindow.document.getElementById( "editorView" );
     noteStateListener = {
       name: "EDITOR",
       onNoteDeleted: onNoteDeleted,

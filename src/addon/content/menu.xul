@@ -48,10 +48,10 @@
           observes="znotes_pagesetup_command"
           key="znotes_pagesetup_key"/>
         <menuitem id="znotes_appmenu_print"
-          class="menuitem-iconic znotes_print_class"
-          command="znotes_print_command"
-          observes="znotes_print_command"
-          key="znotes_print_key"/>
+          class="menuitem-iconic znotes_editorprint_class"
+          command="znotes_editorprint_command"
+          observes="znotes_editorprint_command"
+          key="znotes_editorprint_key"/>
         <menuseparator id="znotes_appmenu_view_separator"
           class="znotes_appmenu_separator" />
         <menu id="znotes_appmenu_view"
@@ -118,34 +118,42 @@
             <menuitem id="znotes_appmenu_book_popup_openbook"
               class="menuitem-iconic znotes_openbook_class"
               command="znotes_openbook_command"
+              observes="znotes_openbook_command"
               key="znotes_openbook_key"/>
             <menuitem id="znotes_appmenu_book_popup_closebook"
               class="menuitem-iconic znotes_closebook_class"
               command="znotes_closebook_command"
+              observes="znotes_closebook_command"
               key="znotes_closebook_key"/>
             <menuitem id="znotes_appmenu_book_popup_appendbook"
               class="menuitem-iconic znotes_appendbook_class"
               command="znotes_appendbook_command"
+              observes="znotes_appendbook_command"
               key="znotes_appendbook_key"/>
             <menuitem id="znotes_appmenu_book_popup_deletebook"
               class="menuitem-iconic znotes_deletebook_class"
               command="znotes_deletebook_command"
+              observes="znotes_deletebook_command"
               key="znotes_deletebook_key"/>
             <menuitem id="znotes_appmenu_book_popup_deletebookdata"
               class="menuitem-iconic znotes_deletebookdata_class"
               command="znotes_deletebookdata_command"
+              observes="znotes_deletebookdata_command"
               key="znotes_deletebookdata_key"/>
             <menuitem id="znotes_appmenu_book_popup_editbook"
               class="menuitem-iconic znotes_editbook_class"
               command="znotes_editbook_command"
+              observes="znotes_editbook_command"
               key="znotes_editbook_key"/>
             <menuitem id="znotes_appmenu_book_popup_renamebook"
               class="menuitem-iconic znotes_renamebook_class"
               command="znotes_renamebook_command"
+              observes="znotes_renamebook_command"
               key="znotes_renamebook_key"/>
             <menuitem id="znotes_appmenu_book_popup_refreshbooktree"
               class="menuitem-iconic znotes_refreshbooktree_class"
               command="znotes_refreshbooktree_command"
+              observes="znotes_refreshbooktree_command"
               key="znotes_refreshbooktree_key"/>
           </menupopup>
         </menu>
@@ -157,18 +165,22 @@
             <menuitem id="znotes_appmenu_category_popup_newcategory"
               class="menuitem-iconic znotes_newcategory_class"
               command="znotes_newcategory_command"
+              observes="znotes_newcategory_command"
               key="znotes_newcategory_key"/>
             <menuitem id="znotes_appmenu_category_popup_deletecategory"
               class="menuitem-iconic znotes_deletecategory_class"
               command="znotes_deletecategory_command"
+              observes="znotes_deletecategory_command"
               key="znotes_deletecategory_key"/>
             <menuitem id="znotes_appmenu_category_popup_renamecategory"
               class="menuitem-iconic znotes_renamecategory_class"
               command="znotes_renamecategory_command"
+              observes="znotes_renamecategory_command"
               key="znotes_renamecategory_key"/>
             <menuitem id="znotes_appmenu_category_popup_refreshfoldertree"
               class="menuitem-iconic znotes_refreshfoldertree_class"
               command="znotes_refreshfoldertree_command"
+              observes="znotes_refreshfoldertree_command"
               key="znotes_refreshfoldertree_key"/>
           </menupopup>
         </menu>
@@ -178,22 +190,27 @@
             <menuitem id="znotes_appmenu_tag_popup_newtag"
               class="menuitem-iconic znotes_newtag_class"
               command="znotes_newtag_command"
+              observes="znotes_newtag_command"
               key="znotes_newtag_key"/>
             <menuitem id="znotes_appmenu_tag_popup_deletetag"
               class="menuitem-iconic znotes_deletetag_class"
               command="znotes_deletetag_command"
+              observes="znotes_deletetag_command"
               key="znotes_deletetag_key"/>
             <menuitem id="znotes_appmenu_tag_popup_renametag"
               class="menuitem-iconic znotes_renametag_class"
               command="znotes_renametag_command"
+              observes="znotes_renametag_command"
               key="znotes_renametag_key"/>
             <menuitem id="znotes_appmenu_tag_popup_colortag"
               class="menuitem-iconic znotes_colortag_class"
               command="znotes_colortag_command"
+              observes="znotes_colortag_command"
               key="znotes_colortag_key"/>
             <menuitem id="znotes_appmenu_tag_popup_refreshtagtree"
               class="menuitem-iconic znotes_refreshtagtree_class"
               command="znotes_refreshtagtree_command"
+              observes="znotes_refreshtagtree_command"
               key="znotes_refreshtagtree_key"/>
           </menupopup>
         </menu>
@@ -203,30 +220,37 @@
             <menuitem id="znotes_appmenu_note_popup_newnote"
               class="menuitem-iconic znotes_newnote_class"
               command="znotes_newnote_command"
+              observes="znotes_newnote_command"
               key="znotes_newnote_key"/>
             <menuitem id="znotes_appmenu_note_popup_importnote"
               class="menuitem-iconic znotes_importnote_class"
               command="znotes_importnote_command"
+              observes="znotes_importnote_command"
               key="znotes_importnote_key"/>
             <menuitem id="znotes_appmenu_note_popup_deletenote"
               class="menuitem-iconic znotes_deletenote_class"
               command="znotes_deletenote_command"
+              observes="znotes_deletenote_command"
               key="znotes_deletenote_key"/>
             <menuitem id="znotes_appmenu_note_popup_renamenote"
               class="menuitem-iconic znotes_renamenote_class"
               command="znotes_renamenote_command"
+              observes="znotes_renamenote_command"
               key="znotes_renamenote_key"/>
             <menuitem id="znotes_appmenu_note_popup_processnote"
               class="menuitem-iconic znotes_processnote_class"
               command="znotes_processnote_command"
+              observes="znotes_processnote_command"
               key="znotes_processnote_key"/>
             <menuitem id="znotes_appmenu_note_popup_refreshnotetree"
               class="menuitem-iconic znotes_refreshnotetree_class"
               command="znotes_refreshnotetree_command"
+              observes="znotes_refreshnotetree_command"
               key="znotes_refreshnotetree_key"/>
             <menuitem id="znotes_appmenu_note_popup_updatenote"
               class="menuitem-iconic znotes_updatenote_class"
               command="znotes_updatenote_command"
+              observes="znotes_updatenote_command"
               key="znotes_updatenote_key"/>
           </menupopup>
         </menu>
@@ -243,17 +267,20 @@
         <menuitem id="znotes_mainmenubar_file_popup_pagesetup"
           class="menuitem-iconic znotes_pagesetup_class"
           key="znotes_pagesetup_key"
-          command="znotes_pagesetup_command"/>
+          command="znotes_pagesetup_command"
+          observes="znotes_pagesetup_command"/>
         <menuitem id="znotes_mainmenubar_file_popup_print"
-          class="menuitem-iconic znotes_print_class"
-          key="znotes_print_key"
-          command="znotes_print_command"/>
+          class="menuitem-iconic znotes_editorprint_class"
+          key="znotes_editorprint_key"
+          command="znotes_editorprint_command"
+          observes="znotes_editorprint_command"/>
         <menuseparator
           id="znotes_mainmenubar_file_popup_exit_separator" />
         <menuitem id="znotes_mainmenubar_file_popup_exit"
           class="menuitem-iconic znotes_exit_class"
           key="znotes_exit_key"
-          command="znotes_exit_command"/>
+          command="znotes_exit_command"
+          observes="znotes_exit_command"/>
       </menupopup>
     </menu>
     <menu id="znotes_mainmenubar_edit"
@@ -263,35 +290,42 @@
         <menuitem id="znotes_mainmenubar_edit_popup_undo"
           class="menuitem-iconic znotes_undo_class"
           key="znotes_undo_key"
-          command="znotes_undo_command"/>
+          command="znotes_undo_command"
+          observes="znotes_undo_command"/>
         <menuitem id="znotes_mainmenubar_edit_popup_redo"
           class="menuitem-iconic znotes_redo_class"
           key="znotes_redo_key"
-          command="znotes_redo_command"/>
+          command="znotes_redo_command"
+          observes="znotes_redo_command"/>
         <menuseparator
           id="znotes_mainmenubar_edit_popup_cut_separator" />
         <menuitem id="znotes_mainmenubar_edit_popup_cut"
           class="menuitem-iconic znotes_cut_class"
           key="znotes_cut_key"
-          command="znotes_cut_command"/>
+          command="znotes_cut_command"
+          observes="znotes_cut_command"/>
         <menuitem id="znotes_mainmenubar_edit_popup_copy"
           class="menuitem-iconic znotes_copy_class"
           key="znotes_copy_key"
-          command="znotes_copy_command"/>
+          command="znotes_copy_command"
+          observes="znotes_copy_command"/>
         <menuitem id="znotes_mainmenubar_edit_popup_paste"
           class="menuitem-iconic znotes_paste_class"
           key="znotes_paste_key"
-          command="znotes_paste_command"/>
+          command="znotes_paste_command"
+          observes="znotes_paste_command"/>
         <menuitem id="znotes_mainmenubar_edit_popup_delete"
           class="menuitem-iconic znotes_delete_class"
           key="znotes_delete_key"
-          command="znotes_delete_command"/>
+          command="znotes_delete_command"
+          observes="znotes_delete_command"/>
         <menuseparator
           id="znotes_mainmenubar_edit_popup_selectall_separator" />
         <menuitem id="znotes_mainmenubar_edit_popup_selectall"
           class="menuitem-iconic znotes_selectall_class"
           key="znotes_selectall_key"
-          command="znotes_selectall_command"/>
+          command="znotes_selectall_command"
+          observes="znotes_selectall_command"/>
       </menupopup>
     </menu>
     <menu id="znotes_mainmenubar_book"
@@ -301,34 +335,42 @@
         <menuitem id="znotes_mainmenubar_book_popup_openbook"
           class="menuitem-iconic znotes_openbook_class"
           command="znotes_openbook_command"
+          observes="znotes_openbook_command"
           key="znotes_openbook_key"/>
         <menuitem id="znotes_mainmenubar_book_popup_closebook"
           class="menuitem-iconic znotes_closebook_class"
           command="znotes_closebook_command"
+          observes="znotes_closebook_command"
           key="znotes_closebook_key"/>
         <menuitem id="znotes_mainmenubar_book_popup_appendbook"
           class="menuitem-iconic znotes_appendbook_class"
           command="znotes_appendbook_command"
+          observes="znotes_appendbook_command"
           key="znotes_appendbook_key"/>
         <menuitem id="znotes_mainmenubar_book_popup_deletebook"
           class="menuitem-iconic znotes_deletebook_class"
           command="znotes_deletebook_command"
+          observes="znotes_deletebook_command"
           key="znotes_deletebook_key"/>
         <menuitem id="znotes_mainmenubar_book_popup_deletebookdata"
           class="menuitem-iconic znotes_deletebookdata_class"
           command="znotes_deletebookdata_command"
+          observes="znotes_deletebookdata_command"
           key="znotes_deletebookdata_key"/>
         <menuitem id="znotes_mainmenubar_book_popup_editbook"
           class="menuitem-iconic znotes_editbook_class"
           command="znotes_editbook_command"
+          observes="znotes_editbook_command"
           key="znotes_editbook_key"/>
         <menuitem id="znotes_mainmenubar_book_popup_renamebook"
           class="menuitem-iconic znotes_renamebook_class"
           command="znotes_renamebook_command"
+          observes="znotes_renamebook_command"
           key="znotes_renamebook_key"/>
         <menuitem id="znotes_mainmenubar_book_popup_refreshbooktree"
           class="menuitem-iconic znotes_refreshbooktree_class"
           command="znotes_refreshbooktree_command"
+          observes="znotes_refreshbooktree_command"
           key="znotes_refreshbooktree_key"/>
       </menupopup>
     </menu>
@@ -339,18 +381,22 @@
         <menuitem id="znotes_mainmenubar_category_popup_newcategory"
           class="menuitem-iconic znotes_newcategory_class"
           command="znotes_newcategory_command"
+          observes="znotes_newcategory_command"
           key="znotes_newcategory_key"/>
         <menuitem id="znotes_mainmenubar_category_popup_deletecategory"
           class="menuitem-iconic znotes_deletecategory_class"
           command="znotes_deletecategory_command"
+          observes="znotes_deletecategory_command"
           key="znotes_deletecategory_key"/>
         <menuitem id="znotes_mainmenubar_category_popup_renamecategory"
           class="menuitem-iconic znotes_renamecategory_class"
           command="znotes_renamecategory_command"
+          observes="znotes_renamecategory_command"
           key="znotes_renamecategory_key"/>
         <menuitem id="znotes_mainmenubar_category_popup_refreshfoldertree"
           class="menuitem-iconic znotes_refreshfoldertree_class"
           command="znotes_refreshfoldertree_command"
+          observes="znotes_refreshfoldertree_command"
           key="znotes_refreshfoldertree_key"/>
       </menupopup>
     </menu>
@@ -361,22 +407,27 @@
         <menuitem id="znotes_mainmenubar_tag_popup_newtag"
           class="menuitem-iconic znotes_newtag_class"
           command="znotes_newtag_command"
+          observes="znotes_newtag_command"
           key="znotes_newtag_key"/>
         <menuitem id="znotes_mainmenubar_tag_popup_deletetag"
           class="menuitem-iconic znotes_deletetag_class"
           command="znotes_deletetag_command"
+          observes="znotes_deletetag_command"
           key="znotes_deletetag_key"/>
         <menuitem id="znotes_mainmenubar_tag_popup_renametag"
           class="menuitem-iconic znotes_renametag_class"
           command="znotes_renametag_command"
+          observes="znotes_renametag_command"
           key="znotes_renametag_key"/>
         <menuitem id="znotes_mainmenubar_tag_popup_colortag"
           class="menuitem-iconic znotes_colortag_class"
           command="znotes_colortag_command"
+          observes="znotes_colortag_command"
           key="znotes_colortag_key"/>
         <menuitem id="znotes_mainmenubar_tag_popup_refreshtagtree"
           class="menuitem-iconic znotes_refreshtagtree_class"
           command="znotes_refreshtagtree_command"
+          observes="znotes_refreshtagtree_command"
           key="znotes_refreshtagtree_key"/>
       </menupopup>
     </menu>
@@ -387,30 +438,37 @@
         <menuitem id="znotes_mainmenubar_note_popup_newnote"
           class="menuitem-iconic znotes_newnote_class"
           command="znotes_newnote_command"
+          observes="znotes_newnote_command"
           key="znotes_newnote_key"/>
         <menuitem id="znotes_mainmenubar_note_popup_importnote"
           class="menuitem-iconic znotes_importnote_class"
           command="znotes_importnote_command"
+          observes="znotes_importnote_command"
           key="znotes_importnote_key"/>
         <menuitem id="znotes_mainmenubar_note_popup_deletenote"
           class="menuitem-iconic znotes_deletenote_class"
           command="znotes_deletenote_command"
+          observes="znotes_deletenote_command"
           key="znotes_deletenote_key"/>
         <menuitem id="znotes_mainmenubar_note_popup_renamenote"
           class="menuitem-iconic znotes_renamenote_class"
           command="znotes_renamenote_command"
+          observes="znotes_renamenote_command"
           key="znotes_renamenote_key"/>
         <menuitem id="znotes_mainmenubar_note_popup_processnote"
           class="menuitem-iconic znotes_processnote_class"
           command="znotes_processnote_command"
+          observes="znotes_processnote_command"
           key="znotes_processnote_key"/>
         <menuitem id="znotes_mainmenubar_note_popup_refreshnotetree"
           class="menuitem-iconic znotes_refreshnotetree_class"
           command="znotes_refreshnotetree_command"
+          observes="znotes_refreshnotetree_command"
           key="znotes_refreshnotetree_key"/>
         <menuitem id="znotes_mainmenubar_note_popup_updatenote"
           class="menuitem-iconic znotes_updatenote_class"
           command="znotes_updatenote_command"
+          observes="znotes_updatenote_command"
           key="znotes_updatenote_key"/>
       </menupopup>
     </menu>
@@ -426,29 +484,35 @@
               id="znotes_mainmenubar_tools_view_popup_showmainmenubar_menuitem"
               type="checkbox" checked="false"
               command="znotes_showmainmenubar_command"
+              observes="znotes_showmainmenubar_command"
               key="znotes_showmainmenubar_key"/>
             <menuitem
               id="znotes_mainmenubar_tools_view_popup_showmaintoolbar_menuitem"
               type="checkbox" checked="true"
               command="znotes_showmaintoolbar_command"
+              observes="znotes_showmaintoolbar_command"
               key="znotes_showmaintoolbar_key"/>
           </menupopup>
         </menu>
         <menuitem id="znotes_mainmenubar_tools_popup_openoptionsdialog"
           class="menuitem-iconic znotes_openoptionsdialog_class"
           command="znotes_openoptionsdialog_command"
+          observes="znotes_openoptionsdialog_command"
           key="znotes_openoptionsdialog_key"/>
         <menuitem id="znotes_mainmenubar_tools_popup_addons"
           class="menuitem-iconic znotes_addons_class"
           command="znotes_addons_command"
+          observes="znotes_addons_command"
           key="znotes_addons_key"/>
         <menuitem id="znotes_mainmenubar_tools_popup_update"
           class="menuitem-iconic znotes_update_class"
           command="znotes_update_command"
+          observes="znotes_update_command"
           key="znotes_update_key"/>
         <menuitem id="znotes_mainmenubar_tools_popup_debug"
           class="menuitem-iconic znotes_debug_class"
           command="znotes_debug_command"
+          observes="znotes_debug_command"
           key="znotes_debug_key"/>
       </menupopup>
     </menu>
@@ -459,10 +523,12 @@
         <menuitem id="znotes_mainmenubar_help_popup_openhelp"
           class="menuitem-iconic znotes_openhelp_class"
           command="znotes_openhelp_command"
+          observes="znotes_openhelp_command"
           key="znotes_openhelp_key"/>
         <menuitem id="znotes_mainmenubar_help_popup_openabout"
           class="menuitem-iconic znotes_openabout_class"
           command="znotes_openabout_command"
+          observes="znotes_openabout_command"
           key="znotes_openabout_key"/>
       </menupopup>
     </menu>

@@ -33,7 +33,7 @@
 
 <?xml-stylesheet type="text/css" href="chrome://znotes/skin/overlay-xr.css" ?>
 
-<?xul-overlay href="chrome://znotes/content/common.xul" ?>
+<?xul-overlay href="chrome://znotes/content/common-xr.xul" ?>
 <?xul-overlay href="chrome://znotes/content/maintab.xul" ?>
 <?xul-overlay href="chrome://znotes/content/contenttab.xul" ?>
 
@@ -48,10 +48,13 @@
     src="chrome://znotes/content/overlay-xr.js" />
 
   <window id="znotes">
-    <stringbundleset id="znotes_stringbundleset" />
-    <commandset id="znotes_commandset" />
-    <keyset id="znotes_keyset" />
-    <popupset id="znotes_popupset" />
+    <stringbundleset id="znotes_platform_stringbundleset">
+      <stringbundle id="znotes_stringbundle"
+        src="chrome://znotes/locale/znotes.properties" />
+    </stringbundleset>
+    <commandset id="znotes_platform_commandset" />
+    <keyset id="znotes_platform_keyset" />
+    <popupset id="znotes_platform_popupset" />
   </window>
     
   <vbox id="znotes_maintabpanel" />
@@ -61,7 +64,11 @@
   </vbox>
   
   <statusbar id="znotes_statusbar">
-    <statusbarpanel id="znotes_statusbarpanel" />
+    <statusbarpanel id="znotes_statusbarpanel" hidden="true">
+      <image id="znotes_statusbarpanellogo" />
+      <label id="znotes_statusbarpanellabel" />
+  </statusbarpanel>
+    
   </statusbar>
     
 </overlay>

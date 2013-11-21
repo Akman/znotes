@@ -37,10 +37,25 @@ if ( !ru.akman.znotes ) ru.akman.znotes = {};
 Components.utils.import( "resource://znotes/utils.js",
   ru.akman.znotes
 );
+Components.utils.import( "resource://znotes/prefsmanager.js",
+  ru.akman.znotes
+);
+Components.utils.import( "resource://znotes/keyset.js",
+  ru.akman.znotes
+);
 
 ru.akman.znotes.Viewer = function() {
 
   var Utils = ru.akman.znotes.Utils;
+  var Common = ru.akman.znotes.Common;
+
+  var observerService =
+    Components.classes["@mozilla.org/observer-service;1"]
+              .getService( Components.interfaces.nsIObserverService );
+
+  var prefsBundle = ru.akman.znotes.PrefsManager.getInstance();
+  
+  var keySet = null;
 
   var currentPage = null;
   var currentNote = null;
@@ -49,12 +64,13 @@ ru.akman.znotes.Viewer = function() {
   var currentStatusbar = null;  
   var currentToolbox = null;
   var currentTab = null;
+  var noteBodyView = null;
 
   var body = null;
   var noteStateListener = null;
 
   //
-  // C O M M A N D S
+  // COMMANDS
   //
 
   var viewerCommands = {
@@ -93,10 +109,17 @@ ru.akman.znotes.Viewer = function() {
       }
       return null;
     },
+    updateCommands: function() {
+      for ( var cmd in viewerCommands ) {
+        Common.goUpdateCommand( cmd, this.getId(), window );
+      }
+    },
     register: function() {
-      Utils.appendAccelText( viewerCommands, document );
       try {
-        top.controllers.insertControllerAt( 0, this );
+        window.controllers.insertControllerAt( 0, this );
+        this.getId = function() {
+          return window.controllers.getControllerId( this );
+        };
       } catch ( e ) {
         Components.utils.reportError(
           "An error occurred registering '" + this.getName() + "' controller: " + e
@@ -104,16 +127,99 @@ ru.akman.znotes.Viewer = function() {
       }
     },
     unregister: function() {
+      for ( var cmd in viewerCommands ) {
+        Common.goSetCommandEnabled( cmd, false, window );
+      }
       try {
-        top.controllers.removeController( this );
+        window.controllers.removeController( this );
       } catch ( e ) {
         Components.utils.reportError(
           "An error occurred unregistering '" + this.getName() + "' controller: " + e
         );
       }
-      Utils.removeAccelText( viewerCommands, document );
     }
   };
+  
+  var mainBundleObserver = {
+    observe: function( aSubject, aTopic, aData ) {
+      var tabMail = Utils.getTabMail();
+      if ( tabMail ) {
+        var tabInfo = tabMail.tabInfo;
+        var tabIndex = -1;
+        for ( var i = 0; i < tabInfo.length; i++ ) {
+          var tab = tabInfo[i];
+          if ( tab == currentTab ) {
+            tabIndex = i;
+            break;
+          }
+        }
+        var tabContainer = Utils.getTabContainer();
+        tabContainer.selectedIndex = tabIndex;
+      } else {
+        var windowService =
+          Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
+                    .getService( Components.interfaces.nsIWindowWatcher );
+        windowService.activeWindow = window;
+        window.focus();
+      }
+      pub.onClose();
+    },
+    register: function() {
+      observerService.addObserver( this, "znotes-main-shutdown", false );
+    },
+    unregister: function() {
+      observerService.removeObserver( this, "znotes-main-shutdown" );
+    }
+  };
+  
+  var prefsBundleObserver = {
+    onPrefChanged: function( event ) {
+      switch( event.data.name ) {
+        case "shortcuts":
+          Utils.MAIN_SHORTCUTS = event.data.newValue;
+          updateKeyset();
+          break;
+      }
+    },
+    register: function() {
+      prefsBundle.addObserver( this );
+    },
+    unregister: function() {
+      prefsBundle.removeObserver( this );
+    }
+  };
+  
+  // SHORTCUTS
+  
+  function setupKeyset() {
+    keySet = new ru.akman.znotes.Keyset(
+      document.getElementById( "znotes_keyset" )
+    );
+  };
+  
+  function activateKeyset() {
+    keySet.activate();
+  };
+
+  function deactivateKeyset() {
+    keySet.deactivate();
+  };
+  
+  function updateKeyset() {
+    var shortcuts = {};
+    try {
+      shortcuts = JSON.parse( Utils.MAIN_SHORTCUTS );
+      if ( typeof( shortcuts ) !== "object" ) {
+        shortcuts = {};
+      }
+    } catch ( e ) {
+      Utils.log( e );
+      shortcuts = {};
+    }
+    keySet.update( shortcuts );
+  };
+
+  // TABS
   
   function getCurrentTab() {
     var tabMail = Utils.getTabMail();
@@ -146,14 +252,27 @@ ru.akman.znotes.Viewer = function() {
     var aCategory = e.data.parentCategory;
     var aNote = e.data.deletedNote;
     if ( currentNote == aNote ) {
-      window.close();
+      if ( currentTab ) {
+        // pub.onClose called indirectly by tab
+        Utils.getTabMail().closeTab( currentTab );
+      } else {
+        pub.onClose();
+        window.close();
+      }
     }
   };
 
+  // KEYBOARD EVENT
+  
   var pub = {};
 
   pub.onLoad = function() {
     var mainWindow = Utils.MAIN_WINDOW;
+    setupKeyset();
+    noteBodyView = document.getElementById( "noteBodyView" );
+    if ( Utils.IS_STANDALONE ) {
+      noteBodyView.classList.add( "noteBodyViewXR" );
+    }
     currentToolbox = document.getElementById( "znotes_viewertoolbox" );
     currentStatusbar = document.getElementById( "znotes_statusbar" );
     currentNote = null;
@@ -183,7 +302,7 @@ ru.akman.znotes.Viewer = function() {
     if ( !currentNote ) {
       var tabMail = Utils.getTabMail();
       if ( tabMail ) {
-        tabMail.closeTab();
+        tabMail.closeTab( currentTab );
         return;
       }
     }
@@ -195,30 +314,39 @@ ru.akman.znotes.Viewer = function() {
     currentNote.addStateListener( noteStateListener );
     document.title = currentNote.getName();
     viewerController.register();
+    prefsBundleObserver.register();
+    mainBundleObserver.register();
     body = new ru.akman.znotes.Body(
       {
+        window: window,
         name: "viewer",
         mode: "viewer",
         style: currentStyle,
         toolbox: currentToolbox
       }
     );
+    updateKeyset();
+    activateKeyset();
     body.show( currentNote );
   };
 
-  pub.onUnLoad = function() {
-    if ( currentNote ) {
-      currentNote.removeStateListener( noteStateListener );
-    }
-    if ( body ) {
-      body.release();
-    }
+  pub.onClose = function() {
+    mainBundleObserver.unregister();
+    prefsBundleObserver.unregister();
     viewerController.unregister();
+    deactivateKeyset();
+    if ( currentNote && currentNote.isExists() ) {
+      currentNote.removeStateListener( noteStateListener );
+      if ( body ) {
+        body.release();
+      }
+    }
+    return true;
   };
-
+  
   return pub;
 
 }();
 
-window.addEventListener( "load"  , function() { ru.akman.znotes.Viewer.onLoad(); }, false );
-window.addEventListener( "unload"  , function() { ru.akman.znotes.Viewer.onUnLoad(); }, false );
+window.addEventListener( "load", ru.akman.znotes.Viewer.onLoad, false );
+window.addEventListener( "close", ru.akman.znotes.Viewer.onClose, false );

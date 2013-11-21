@@ -130,7 +130,12 @@ ru.akman.znotes.Book = function() {
     menuBookDriver.removeAllItems();
     for ( var driverName in drivers ) {
       var info = drivers[driverName].getInfo();
-      menuBookDriver.appendItem( " " + info.name + " " + info.version, driverName, info.description );
+      menuBookDriver.appendItem(
+        " " + info.name +
+        " " + info.version,
+        driverName,
+        " " + info.description
+      );
     }
     menuBookDriver.addEventListener( "select", onMenuBookDriverSelect, false );
   };
@@ -153,7 +158,7 @@ ru.akman.znotes.Book = function() {
     paramDescription = window.arguments[0].input.description;
     paramDriver = window.arguments[0].input.driver;
     paramConnection = window.arguments[0].input.connection;
-    drivers = ru.akman.znotes.DriverManager.getDrivers();
+    drivers = ru.akman.znotes.DriverManager.getInstance().getDrivers();
     bookBox = document.getElementById( "bookBox" );
     textBookName = document.getElementById( "textBookName" );
     textBookName.setAttribute( "value", paramName );

@@ -83,7 +83,7 @@ ru.akman.znotes.ABPicker = function() {
         var richListItem = document.createElement( "richlistitem" );
         // ***
           var displayName = card.getProperty( "DisplayName", "" );
-          var photoURI = card.getProperty( "PhotoURI", "chrome://znotes/skin/contact-32x32.png" );
+          var photoURI = card.getProperty( "PhotoURI", "chrome://znotes_images/skin/contact-32x32.png" );
           //
           var description = document.createElement( "description" );
           var image = document.createElement( "image" );

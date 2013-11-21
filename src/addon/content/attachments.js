@@ -39,14 +39,17 @@ Components.utils.import( "resource://znotes/utils.js", ru.akman.znotes );
 ru.akman.znotes.Attachments = function() {
 
   // !!!! %%%% !!!! STRINGS_BUNDLE & IS_STANDALONE
-  return function() {
+  return function( aWindow, aStyle ) {
 
     var Utils = ru.akman.znotes.Utils;
     var Common = ru.akman.znotes.Common;
 
+    var currentWindow = null;
+    var currentStyle = null;
+
     var attachmentTree = null;
     var attachmentTreeChildren = null;
-
+    
     var currentNote = null;
     var currentAttachment = null;
 
@@ -71,6 +74,10 @@ ru.akman.znotes.Attachments = function() {
           return false;
         }
         return true;
+        /*
+        var focusedWindow = currentWindow.top.document.commandDispatcher.focusedWindow;
+        return ( focusedWindow == currentWindow );
+        */
       },
       isCommandEnabled: function( cmd ) {
         if ( !( cmd in attachmentsCommands ) ) {
@@ -132,7 +139,7 @@ ru.akman.znotes.Attachments = function() {
               },
               output: null
             };
-            window.openDialog(
+            currentWindow.openDialog(
               "chrome://znotes/content/abpicker.xul",
               "",
               "chrome,dialog=yes,modal=yes,centerscreen,resizable=yes",
@@ -149,7 +156,7 @@ ru.akman.znotes.Attachments = function() {
             var fp = Components.classes["@mozilla.org/filepicker;1"]
                                .createInstance( nsIFilePicker );
             fp.init(
-              window,
+              currentWindow,
               Utils.STRINGS_BUNDLE.getString(
                 "attachments.addfiledialog.title" ),
               nsIFilePicker.modeOpen
@@ -188,7 +195,7 @@ ru.akman.znotes.Attachments = function() {
               default :
             }
             fp.init(
-              window,
+              currentWindow,
               Utils.STRINGS_BUNDLE.getString(
                 "attachments.saveattachmentdialog.title" ),
               nsIFilePicker.modeSave
@@ -221,7 +228,7 @@ ru.akman.znotes.Attachments = function() {
               },
               output: null
             };
-            window.openDialog(
+            currentWindow.openDialog(
               "chrome://znotes/content/confirmdialog.xul",
               "",
               "chrome,dialog=yes,modal=yes,centerscreen,resizable=yes",
@@ -240,14 +247,16 @@ ru.akman.znotes.Attachments = function() {
       },
       getCommand: function( cmd ) {
         if ( cmd in attachmentsCommands ) {
-          return document.getElementById( cmd );
+          return currentWindow.document.getElementById( cmd );
         }
         return null;
       },
       register: function() {
-        Utils.appendAccelText( attachmentsCommands, document );
         try {
-          top.controllers.insertControllerAt( 0, this );
+          currentWindow.controllers.insertControllerAt( 0, this );
+          this.getId = function() {
+            return currentWindow.controllers.getControllerId( this );
+          };
         } catch ( e ) {
           Components.utils.reportError(
             "An error occurred registering '" + this.getName() +
@@ -256,26 +265,28 @@ ru.akman.znotes.Attachments = function() {
         }
       },
       unregister: function() {
+        for ( var cmd in attachmentsCommands ) {
+          Common.goSetCommandEnabled( cmd, false, currentWindow );
+        }
         try {
-          top.controllers.removeController( this );
+          currentWindow.controllers.removeController( this );
         } catch ( e ) {
           Components.utils.reportError(
             "An error occurred unregistering '" + this.getName() +
             "' controller: " + e
           );
         }
-        Utils.removeAccelText( attachmentsCommands, document );
       }
     };
     
     function updateCommands() {
-      window.focus();
-      Common.goUpdateCommand( "znotes_attachmentsaddcontact_command" );
-      Common.goUpdateCommand( "znotes_attachmentsaddfile_command" );
-      Common.goUpdateCommand( "znotes_attachmentsopen_command" );
-      Common.goUpdateCommand( "znotes_attachmentsopenwith_command" );
-      Common.goUpdateCommand( "znotes_attachmentssave_command" );
-      Common.goUpdateCommand( "znotes_attachmentsdelete_command" );
+      var id = attachmentsController.getId();
+      Common.goUpdateCommand( "znotes_attachmentsaddcontact_command", id, currentWindow );
+      Common.goUpdateCommand( "znotes_attachmentsaddfile_command", id, currentWindow );
+      Common.goUpdateCommand( "znotes_attachmentsopen_command", id, currentWindow );
+      Common.goUpdateCommand( "znotes_attachmentsopenwith_command", id, currentWindow );
+      Common.goUpdateCommand( "znotes_attachmentssave_command", id, currentWindow );
+      Common.goUpdateCommand( "znotes_attachmentsdelete_command", id, currentWindow );
     };    
     
     function createContacts( cards ) {
@@ -394,7 +405,7 @@ ru.akman.znotes.Attachments = function() {
             var url = fph.getURLSpecFromFile( entry );
             var title = Utils.STRINGS_BUNDLE.getString(
               "utils.openuri.apppicker.title" );
-            Utils.openURI( url, force, window, title );
+            Utils.openURI( url, force, currentWindow, title );
           }
           break;
         case "contact" :
@@ -402,7 +413,7 @@ ru.akman.znotes.Attachments = function() {
           if ( card ) {
             var abURI = card.abURI;
             var card = card.abCard;
-            window.openDialog(
+            currentWindow.openDialog(
               "chrome://messenger/content/addressbook/abEditCardDialog.xul",
               "",
               "chrome,resizable=no,modal,titlebar,centerscreen",
@@ -496,7 +507,7 @@ ru.akman.znotes.Attachments = function() {
 
     function getContactIcon( card, size ) {
       return card.getProperty( "PhotoURI",
-        "chrome://znotes/skin/contact-16x16.png" );
+        "chrome://znotes_images/skin/contact-16x16.png" );
     };
 
     function getContactCardById( id ) {
@@ -744,16 +755,16 @@ ru.akman.znotes.Attachments = function() {
       var treeItem = null;
       var treeRow = null;
       var treeCell = null;
-      treeRow = document.createElement( "treerow" );
-      treeCell = document.createElement( "treecell" );
+      treeRow = currentWindow.document.createElement( "treerow" );
+      treeCell = currentWindow.document.createElement( "treecell" );
       treeCell.setAttribute( "label", name );
       treeCell.setAttribute( "src", icon );
       treeCell.setAttribute( "properties", "attachment" );
       treeRow.appendChild( treeCell );
-      treeCell = document.createElement( "treecell" );
+      treeCell = currentWindow.document.createElement( "treecell" );
       treeCell.setAttribute( "label", description );
       treeRow.appendChild( treeCell );
-      treeItem = document.createElement( "treeitem" );
+      treeItem = currentWindow.document.createElement( "treeitem" );
       treeItem.appendChild( treeRow );
       treeItem.setAttribute( "value", id + "\u0000" + type );
       return treeItem;
@@ -863,21 +874,25 @@ ru.akman.znotes.Attachments = function() {
       attachmentsController.unregister();
     };
 
-    // CONSTRUCTOR
+    // CONSTRUCTOR ( aWindow, aStyle )
 
-    attachmentTree = document.getElementById( "attachmentTree" );
+    currentWindow = aWindow ? aWindow : window;
+    if ( aStyle ) {
+      currentStyle = aStyle;
+    }
+    attachmentTree = currentWindow.document.getElementById( "attachmentTree" );
     attachmentTreeChildren =
-      document.getElementById( "attachmentTreeChildren" );
+      currentWindow.document.getElementById( "attachmentTreeChildren" );
     noteStateListener = {
       name: "ATTACHMENTS",
       onNoteDeleted: onNoteDeleted,
       onNoteAttachmentAppended: onNoteAttachmentAppended,
       onNoteAttachmentRemoved: onNoteAttachmentRemoved
     };
-    window.focus();
     Common.goSetCommandHidden(
       "znotes_attachmentsaddcontact_command",
-      Utils.IS_STANDALONE
+      Utils.IS_STANDALONE,
+      currentWindow
     );
     attachmentsController.register();
   };

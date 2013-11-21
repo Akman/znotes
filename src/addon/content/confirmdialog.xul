@@ -38,7 +38,7 @@
 
 <dialog
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-  id="znotes_confirmdialog"
+  id="znotes"
   minwidth="350"
   windowtype="znotes">
 

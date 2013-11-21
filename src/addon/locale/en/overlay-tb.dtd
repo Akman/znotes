@@ -34,3 +34,14 @@
 <!ENTITY znotes_menu_accesskey "N">
 <!ENTITY znotes_menupopup_view_label "View">
 <!ENTITY znotes_menupopup_view_accesskey "V">
+
+<!ENTITY znotes_tbnewnote_buttonmenuitem.label "Note">
+<!ENTITY znotes_tbnewnote_buttonmenuitem.accesskey "N">
+<!ENTITY znotes_tbnewnote_newmenuitem.label "Note">
+<!ENTITY znotes_tbnewnote_newmenuitem.accesskey "N">
+<!ENTITY znotes_tbnewnote_menuitem.label "New note">
+<!ENTITY znotes_tbnewnote_menuitem.accesskey "N">
+<!ENTITY znotes_tbnewnote_appnewmenuitem.label "Note">
+<!ENTITY znotes_tbnewnote_appnewmenuitem.accesskey "N">
+<!ENTITY znotes_tbnewnote_appmenuitem.label "New note">
+<!ENTITY znotes_tbnewnote_appmenuitem.accesskey "N">

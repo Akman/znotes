@@ -470,7 +470,7 @@ ru.akman.znotes.Debug = function() {
 
   tests.push( {
     name: "Messenger",
-    description: "Get message info",
+    description: "Get message in .eml format",
     code: function () {
       var mWindow = Utils.getMail3PaneWindow();
       if ( !mWindow ) {
@@ -480,6 +480,9 @@ ru.akman.znotes.Debug = function() {
       var gFolderDisplay = mWindow.gFolderDisplay;
       var messenger = mWindow.messenger;
       var uris = gFolderDisplay.selectedMessageUris;
+      if ( !uris ) {
+        return;
+      }
       for ( var i = 0; i < uris.length; i++ ) {
         var uri = uris[i];
         var msgHdr = messenger.messageServiceFromURI( uri )
@@ -491,8 +494,9 @@ ru.akman.znotes.Debug = function() {
         }
         log( uri );
         log( name );
-        var streamListener = Components.classes["@mozilla.org/network/sync-stream-listener;1"]
-                                       .createInstance( Components.interfaces.nsISyncStreamListener );
+        var streamListener =
+          Components.classes["@mozilla.org/network/sync-stream-listener;1"]
+                    .createInstance( Components.interfaces.nsISyncStreamListener );
         messenger.messageServiceFromURI( uri ).streamMessage(
           uri,
           streamListener,
@@ -547,7 +551,58 @@ ru.akman.znotes.Debug = function() {
       }
     }
   } );
-  
+
+  tests.push( {
+    name: "Platform commands",
+    description: "Platform commands",
+    code: function () {
+      var process = function( commandset ) {
+        var node = commandset.firstChild;
+        var cmd, enabled;
+        while ( node ) {
+          if ( node.nodeName == "commandset" ) {
+            process( node );
+          } else if ( node.hasAttribute( "id" ) ) {
+            cmd = node.getAttribute( "id" );
+            if ( !node.hasAttribute( "disabled" ) ) {
+              Utils.log( cmd + " -> ENABLED" );
+            }
+          }
+          node = node.nextSibling;
+        }
+      };
+      process(
+        Utils.MAIN_WINDOW.document.getElementById( "znotes_commandset" )
+      );
+    }
+  } );
+
+  tests.push( {
+    name: "Permutation",
+    description: "Permutation of char",
+    code: function () {
+      var tests = [
+        [],
+        [ "Alt" ],
+        [ "Alt", "Ctrl" ],
+        [ "Alt", "Ctrl", "Meta" ],
+        [ "Alt", "Ctrl", "Meta", "Shift" ]
+      ];
+      for ( var i = 0; i < tests.length; i++ ) {
+        Utils.log( "[" + tests[i] + "]" );
+        Utils.log( "=========================")
+        Utils.log( "result: [" );
+        var result = Utils.getPermutations( tests[i] );
+        for ( var j = 0; j < result.length; j++ ) {
+          Utils.log( "  " + Object.prototype.toString.call( result ) +
+                     "[" + result[j] + "]" );
+        }
+        Utils.log( "]" );
+        Utils.log( "\n")
+      }
+    }
+  } );
+
   return pub;
 
 }();

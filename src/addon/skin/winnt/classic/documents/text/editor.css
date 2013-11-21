@@ -33,36 +33,3 @@
 /* ***** classic/1.0 winnt **** */
 
 @import url("chrome://znotes_common/skin/documents/text/editor.css");
-
-#editorTabs {
-  padding-top: 5px;
-}
-#designToolBar toolbarbutton {
-  min-height: 30px;
-  max-height: 30px;
-  height: 30px;
-  min-width: 30px;
-  max-width: 30px;
-  width: 30px;
-}
-#designToolBar[iconsize="small"] toolbarbutton {
-  min-height: 24px;
-  max-height: 24px;
-  height: 24px;
-  min-width: 24px;
-  max-width: 24px;
-  width: 24px;
-}
-#fontNameMenuList {
-  margin-left: 0px;
-}
-#fontNameMenuList,
-#edtFontSize {
-  font-size: 12px;
-}
-toolbar #edtFontSize {
-  width: 40px;
-}
-toolbar[iconsize="small"] #edtFontSize {
-  width: 35px;
-}

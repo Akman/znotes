@@ -38,7 +38,7 @@
 
 <dialog
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-  id="znotes_colorselectdialog"
+  id="znotes"
   title="&colorselectdialog_title;"
   windowtype="znotes">
 

@@ -122,7 +122,6 @@ var UpdateManager = function() {
     aup = Components.classes["@mozilla.org/updates/update-prompt;1"]
                     .createInstance( Components.interfaces.nsIUpdatePrompt );
   } catch ( e ) {
-    log( e );
     aus = null;
     mgr = null;
     aup = null;

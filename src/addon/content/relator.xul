@@ -38,7 +38,7 @@
 <overlay id="relator"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <script type="application/x-javascript"
+  <script type="application/javascript"
     src="chrome://znotes/content/relator.js" />
 
   <stringbundleset id="znotes_stringbundleset" />

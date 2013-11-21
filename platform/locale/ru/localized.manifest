@@ -30,7 +30,6 @@
 #
 # ***** END LICENSE BLOCK *****
 
-# /toolkit/chrome
 locale        alerts                 ru    ru/alerts/
 locale        autoconfig             ru    ru/autoconfig/
 locale        cookie                 ru    ru/cookie/
@@ -38,11 +37,9 @@ locale        global                 ru    ru/global/
 locale        global-platform        ru    ru/global-platform/
 locale        global-region          ru    ru/global-region/
 locale        mozapps                ru    ru/mozapps/
+locale        necko                  ru    ru/necko/
 locale        passwordmgr            ru    ru/passwordmgr/
-locale        places                 ru    ru/places/
-locale        search                 ru    ru/search/
-# /security/manager/chrome
 locale        pipnss                 ru    ru/pipnss/
 locale        pippki                 ru    ru/pippki/
-# /netwerk
-locale        netwerk                ru    ru/netwerk/
+locale        places                 ru    ru/places/
+#locale        weave                  ru    ru/weave/

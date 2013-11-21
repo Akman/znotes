@@ -1,0 +1,168 @@
+﻿/* ***** BEGIN LICENSE BLOCK *****
+ *
+ * Version: GPL 3.0
+ *
+ * ZNotes
+ * Copyright (C) 2012 Alexander Kapitman
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * The Original Code is ZNotes.
+ *
+ * Initial Developer(s):
+ *   Alexander Kapitman <akman.ru@gmail.com>
+ *
+ * Portions created by the Initial Developer are Copyright (C) 2012
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+/* ***** classic/1.0 common **** */
+
+.znotes_tbopenmaintab_class {
+  list-style-image: url("chrome://znotes_images/skin/znotes-24x24.png");
+}
+.znotes_tbopenmaintab_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/znotes-disabled-24x24.png");
+}
+toolbar[iconsize="small"] .znotes_tbopenmaintab_class,
+menuitem.znotes_tbopenmaintab_class {
+  list-style-image: url("chrome://znotes_images/skin/znotes-16x16.png");
+}
+toolbar[iconsize="small"] .znotes_tbopenmaintab_class[disabled="true"],
+menuitem.znotes_tbopenmaintab_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/znotes-disabled-16x16.png");
+}
+
+.znotes_tbnewnote_class {
+  list-style-image: url("chrome://znotes_images/skin/new-note-24x24.png");
+}
+.znotes_tbnewnote_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/new-note-disabled-24x24.png");
+}
+toolbar[iconsize="small"] .znotes_tbnewnote_class,
+menuitem.znotes_tbnewnote_class {
+  list-style-image: url("chrome://znotes_images/skin/new-note-16x16.png");
+}
+toolbar[iconsize="small"] .znotes_tbnewnote_class[disabled="true"],
+menuitem.znotes_tbnewnote_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/new-note-disabled-16x16.png");
+}
+
+.znotes_tbsaveasnote_class {
+  list-style-image: url("chrome://znotes_images/skin/import-note-24x24.png");
+}
+.znotes_tbsaveasnote_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/import-note-disabled-24x24.png");
+}
+toolbar[iconsize="small"] .znotes_tbsaveasnote_class,
+menuitem.znotes_tbsaveasnote_class {
+  list-style-image: url("chrome://znotes_images/skin/import-note-16x16.png");
+}
+toolbar[iconsize="small"] .znotes_tbsaveasnote_class[disabled="true"],
+menuitem.znotes_tbsaveasnote_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/import-note-disabled-16x16.png");
+}
+
+.znotes_tbopenoptionsdialog_class {
+  list-style-image: url("chrome://znotes_images/skin/options-24x24.png");
+}
+.znotes_tbopenoptionsdialog_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/options-disabled-24x24.png");
+}
+toolbar[iconsize="small"] .znotes_tbopenoptionsdialog_class,
+menuitem.znotes_tbopenoptionsdialog_class  {
+  list-style-image: url("chrome://znotes_images/skin/options-16x16.png");
+}
+toolbar[iconsize="small"] .znotes_tbopenoptionsdialog_class[disabled="true"],
+menuitem.znotes_tbopenoptionsdialog_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/options-disabled-16x16.png");
+}
+
+.znotes_tbdebug_class {
+  list-style-image: url("chrome://znotes_images/skin/debug-24x24.png");
+}
+.znotes_tbdebug_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/debug-disabled-24x24.png");
+}
+toolbar[iconsize="small"] .znotes_tbdebug_class,
+menuitem.znotes_tbdebug_class  {
+  list-style-image: url("chrome://znotes_images/skin/debug-16x16.png");
+}
+toolbar[iconsize="small"] .znotes_tbdebug_class[disabled="true"],
+menuitem.znotes_tbdebug_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/debug-disabled-16x16.png");
+}
+
+.znotes_tbshowmainmenubar_class {
+  list-style-image: url("chrome://znotes_images/skin/show-menubar-24x24.png");
+}
+.znotes_tbshowmainmenubar_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/show-menubar-disabled-24x24.png");
+}
+toolbar[iconsize="small"] .znotes_tbshowmainmenubar_class,
+menuitem.znotes_tbshowmainmenubar_class  {
+  list-style-image: url("chrome://znotes_images/skin/show-menubar-16x16.png");
+}
+toolbar[iconsize="small"] .znotes_tbshowmainmenubar_class[disabled="true"],
+menuitem.znotes_tbshowmainmenubar_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/show-menubar-disabled-16x16.png");
+}
+
+.znotes_tbshowmaintoolbar_class {
+  list-style-image: url("chrome://znotes_images/skin/show-toolbar-24x24.png");
+}
+.znotes_tbshowmaintoolbar_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/show-toolbar-disabled-24x24.png");
+}
+toolbar[iconsize="small"] .znotes_tbshowmaintoolbar_class,
+menuitem.znotes_tbshowmaintoolbar_class  {
+  list-style-image: url("chrome://znotes_images/skin/show-toolbar-16x16.png");
+}
+toolbar[iconsize="small"] .znotes_tbshowmaintoolbar_class[disabled="true"],
+menuitem.znotes_tbshowmaintoolbar_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/show-toolbar-disabled-16x16.png");
+}
+
+.znotes_tbopenhelp_class {
+  list-style-image: url("chrome://znotes_images/skin/help-24x24.png");
+}
+.znotes_tbopenhelp_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/help-disabled-24x24.png");
+}
+toolbar[iconsize="small"] .znotes_tbopenhelp_class,
+menuitem.znotes_tbopenhelp_class  {
+  list-style-image: url("chrome://znotes_images/skin/help-16x16.png");
+}
+toolbar[iconsize="small"] .znotes_tbopenhelp_class[disabled="true"],
+menuitem.znotes_tbopenhelp_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/help-disabled-16x16.png");
+}
+
+.znotes_tbopenabout_class {
+  list-style-image: url("chrome://znotes_images/skin/znotes-24x24.png");
+}
+.znotes_tbopenabout_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/znotes-disabled-24x24.png");
+}
+toolbar[iconsize="small"] .znotes_tbopenabout_class,
+menuitem.znotes_tbopenabout_class  {
+  list-style-image: url("chrome://znotes_images/skin/znotes-16x16.png");
+}
+toolbar[iconsize="small"] .znotes_tbopenabout_class[disabled="true"],
+menuitem.znotes_tbopenabout_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/znotes-disabled-16x16.png");
+}

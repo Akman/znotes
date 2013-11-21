@@ -1,0 +1,533 @@
+/* ***** BEGIN LICENSE BLOCK *****
+ *
+ * Version: GPL 3.0
+ *
+ * ZNotes
+ * Copyright (C) 2012 Alexander Kapitman
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * The Original Code is ZNotes.
+ *
+ * Initial Developer(s):
+ *   Alexander Kapitman <akman.ru@gmail.com>
+ *
+ * Portions created by the Initial Developer are Copyright (C) 2012
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+/* ***** classic/1.0 common **** */
+
+#editorTabBox {
+  -moz-appearance: none;
+  border: 0px;
+}
+#editorTabs {
+  padding-top: 5px;
+  margin-left: 5px;
+  -moz-appearance: none; 
+}
+#editorPanels {
+  -moz-appearance: none;
+  border: none;
+  padding: 0px;
+}
+
+#designPanel, #sourcePanel {
+}
+
+#designToolBox, #sourceToolBox {
+  -moz-appearance: none;
+  border: none;
+  border-top: 1px solid #AABCCF;
+  padding-top: 1px;
+  padding-bottom: 1px;
+}
+#designToolBox[iconsize="small"], #sourceToolBox[iconsize="small"] {
+}
+#designToolBar1 {
+  padding-bottom: 1px;
+}
+#designToolBar1, #designToolBar2 {
+}
+#designToolBar1[iconsize="small"], #designToolBar2[iconsize="small"] {
+}
+#sourceToolBar2 {
+  display: none;
+}
+
+#fontNameMenuList {
+  font-family: sanserif;
+  margin: 1px;
+}
+toolbar[iconsize="small"] #fontNameMenuList {
+}
+
+#fontSizeTextBox {
+  font-family: sanserif;
+  margin: 1px;
+}
+toolbar[iconsize="small"] #fontSizeTextBox {
+}
+
+#formatBlockMenuList  {
+  font-family: sanserif;
+  margin: 1px;
+}
+toolbar[iconsize="small"] #formatBlockMenuList {
+}
+
+#sourceEditor {
+  overflow: hidden;
+}
+
+.znotes_close_class {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/editor-close-24x24.png");
+}
+.znotes_close_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/editor-close-disabled-24x24.png");
+}
+.znotes_close_class[iconsize="small"],
+toolbar[iconsize="small"] .znotes_close_class,
+menuitem.znotes_close_class  {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/editor-close-16x16.png");
+}
+.znotes_close_class[iconsize="small"][disabled="true"],
+toolbar[iconsize="small"] .znotes_close_class[disabled="true"],
+menuitem.znotes_close_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/editor-close-disabled-16x16.png");
+}
+
+.znotes_forecolor_class {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/colors-24x24.png");
+}
+.znotes_forecolor_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/colors-disabled-24x24.png");
+}
+toolbar[iconsize="small"] .znotes_forecolor_class,
+menuitem.znotes_forecolor_class  {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/colors-16x16.png");
+}
+toolbar[iconsize="small"] .znotes_forecolor_class[disabled="true"],
+menuitem.znotes_forecolor_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/colors-disabled-16x16.png");
+}
+
+.znotes_forecolordelete_class {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/editor-foreground-transparent-24x24.png");
+}
+.znotes_forecolordelete_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/editor-foreground-transparent-disabled-24x24.png");
+}
+toolbar[iconsize="small"] .znotes_forecolordelete_class,
+menuitem.znotes_forecolordelete_class  {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/editor-foreground-transparent-16x16.png");
+}
+toolbar[iconsize="small"] .znotes_forecolordelete_class[disabled="true"],
+menuitem.znotes_forecolordelete_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/editor-foreground-transparent-disabled-16x16.png");
+}
+
+.znotes_backcolor_class {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/background-24x24.png");
+}
+.znotes_backcolor_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/background-disabled-24x24.png");
+}
+toolbar[iconsize="small"] .znotes_backcolor_class,
+menuitem.znotes_backcolor_class  {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/background-16x16.png");
+}
+toolbar[iconsize="small"] .znotes_backcolor_class[disabled="true"],
+menuitem.znotes_backcolor_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/background-disabled-16x16.png");
+}
+
+.znotes_backcolordelete_class {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/editor-background-transparent-24x24.png");
+}
+.znotes_backcolordelete_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/editor-background-transparent-disabled-24x24.png");
+}
+toolbar[iconsize="small"] .znotes_backcolordelete_class,
+menuitem.znotes_backcolordelete_class  {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/editor-background-transparent-16x16.png");
+}
+toolbar[iconsize="small"] .znotes_backcolordelete_class[disabled="true"],
+menuitem.znotes_backcolordelete_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/editor-background-transparent-disabled-16x16.png");
+}
+
+.znotes_bold_class {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/editor-bold-24x24.png");
+}
+.znotes_bold_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/editor-bold-disabled-24x24.png");
+}
+toolbar[iconsize="small"] .znotes_bold_class,
+menuitem.znotes_bold_class  {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/editor-bold-16x16.png");
+}
+toolbar[iconsize="small"] .znotes_bold_class[disabled="true"],
+menuitem.znotes_bold_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/editor-bold-disabled-16x16.png");
+}
+
+.znotes_italic_class {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/editor-italic-24x24.png");
+}
+.znotes_italic_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/editor-italic-disabled-24x24.png");
+}
+toolbar[iconsize="small"] .znotes_italic_class,
+menuitem.znotes_italic_class  {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/editor-italic-16x16.png");
+}
+toolbar[iconsize="small"] .znotes_italic_class[disabled="true"],
+menuitem.znotes_italic_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/editor-italic-disabled-16x16.png");
+}
+
+.znotes_underline_class {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/editor-underline-24x24.png");
+}
+.znotes_underline_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/editor-underline-disabled-24x24.png");
+}
+toolbar[iconsize="small"] .znotes_underline_class,
+menuitem.znotes_underline_class  {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/editor-underline-16x16.png");
+}
+toolbar[iconsize="small"] .znotes_underline_class[disabled="true"],
+menuitem.znotes_underline_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/editor-underline-disabled-16x16.png");
+}
+
+.znotes_strikethrough_class {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/editor-strikethrough-24x24.png");
+}
+.znotes_strikethrough_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/editor-strikethrough-disabled-24x24.png");
+}
+toolbar[iconsize="small"] .znotes_strikethrough_class,
+menuitem.znotes_strikethrough_class  {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/editor-strikethrough-16x16.png");
+}
+toolbar[iconsize="small"] .znotes_strikethrough_class[disabled="true"],
+menuitem.znotes_strikethrough_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/editor-strikethrough-disabled-16x16.png");
+}
+
+.znotes_indent_class {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/editor-indent-24x24.png");
+}
+.znotes_indent_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/editor-indent-disabled-24x24.png");
+}
+toolbar[iconsize="small"] .znotes_indent_class,
+menuitem.znotes_indent_class  {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/editor-indent-16x16.png");
+}
+toolbar[iconsize="small"] .znotes_indent_class[disabled="true"],
+menuitem.znotes_indent_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/editor-indent-disabled-16x16.png");
+}
+
+.znotes_outdent_class {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/editor-outdent-24x24.png");
+}
+.znotes_outdent_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/editor-outdent-disabled-24x24.png");
+}
+toolbar[iconsize="small"] .znotes_outdent_class,
+menuitem.znotes_outdent_class  {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/editor-outdent-16x16.png");
+}
+toolbar[iconsize="small"] .znotes_outdent_class[disabled="true"],
+menuitem.znotes_outdent_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/editor-outdent-disabled-16x16.png");
+}
+
+.znotes_subscript_class {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/editor-subscript-24x24.png");
+}
+.znotes_subscript_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/editor-subscript-disabled-24x24.png");
+}
+toolbar[iconsize="small"] .znotes_subscript_class,
+menuitem.znotes_subscript_class  {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/editor-subscript-16x16.png");
+}
+toolbar[iconsize="small"] .znotes_subscript_class[disabled="true"],
+menuitem.znotes_subscript_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/editor-subscript-disabled-16x16.png");
+}
+
+.znotes_superscript_class {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/editor-superscript-24x24.png");
+}
+.znotes_superscript_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/editor-superscript-disabled-24x24.png");
+}
+toolbar[iconsize="small"] .znotes_superscript_class,
+menuitem.znotes_superscript_class  {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/editor-superscript-16x16.png");
+}
+toolbar[iconsize="small"] .znotes_superscript_class[disabled="true"],
+menuitem.znotes_superscript_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/editor-superscript-disabled-16x16.png");
+}
+
+.znotes_link_class {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/editor-link-24x24.png");
+}
+.znotes_link_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/editor-link-disabled-24x24.png");
+}
+toolbar[iconsize="small"] .znotes_link_class,
+menuitem.znotes_link_class  {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/editor-link-16x16.png");
+}
+toolbar[iconsize="small"] .znotes_link_class[disabled="true"],
+menuitem.znotes_link_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/editor-link-disabled-16x16.png");
+}
+
+.znotes_unlink_class {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/editor-unlink-24x24.png");
+}
+.znotes_unlink_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/editor-unlink-disabled-24x24.png");
+}
+toolbar[iconsize="small"] .znotes_unlink_class,
+menuitem.znotes_unlink_class  {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/editor-unlink-16x16.png");
+}
+toolbar[iconsize="small"] .znotes_unlink_class[disabled="true"],
+menuitem.znotes_unlink_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/editor-unlink-disabled-16x16.png");
+}
+
+.znotes_removeformat_class {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/editor-removeformat-24x24.png");
+}
+.znotes_removeformat_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/editor-removeformat-disabled-24x24.png");
+}
+toolbar[iconsize="small"] .znotes_removeformat_class,
+menuitem.znotes_removeformat_class  {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/editor-removeformat-16x16.png");
+}
+toolbar[iconsize="small"] .znotes_removeformat_class[disabled="true"],
+menuitem.znotes_removeformat_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/editor-removeformat-disabled-16x16.png");
+}
+
+.znotes_insertorderedlist_class {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/editor-insertorderedlist-24x24.png");
+}
+.znotes_insertorderedlist_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/editor-insertorderedlist-disabled-24x24.png");
+}
+toolbar[iconsize="small"] .znotes_insertorderedlist_class,
+menuitem.znotes_insertorderedlist_class  {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/editor-insertorderedlist-16x16.png");
+}
+toolbar[iconsize="small"] .znotes_insertorderedlist_class[disabled="true"],
+menuitem.znotes_insertorderedlist_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/editor-insertorderedlist-disabled-16x16.png");
+}
+
+.znotes_insertunorderedlist_class {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/editor-insertunorderedlist-24x24.png");
+}
+.znotes_insertunorderedlist_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/editor-insertunorderedlist-disabled-24x24.png");
+}
+toolbar[iconsize="small"] .znotes_insertunorderedlist_class,
+menuitem.znotes_insertunorderedlist_class  {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/editor-insertunorderedlist-16x16.png");
+}
+toolbar[iconsize="small"] .znotes_insertunorderedlist_class[disabled="true"],
+menuitem.znotes_insertunorderedlist_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/editor-insertunorderedlist-disabled-16x16.png");
+}
+
+.znotes_inserthorizontalrule_class {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/editor-inserthorizontalrule-24x24.png");
+}
+.znotes_inserthorizontalrule_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/editor-inserthorizontalrule-disabled-24x24.png");
+}
+toolbar[iconsize="small"] .znotes_inserthorizontalrule_class,
+menuitem.znotes_inserthorizontalrule_class  {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/editor-inserthorizontalrule-16x16.png");
+}
+toolbar[iconsize="small"] .znotes_inserthorizontalrule_class[disabled="true"],
+menuitem.znotes_inserthorizontalrule_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/editor-inserthorizontalrule-disabled-16x16.png");
+}
+
+.znotes_insertparagraph_class {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/editor-insertparagraph-24x24.png");
+}
+.znotes_insertparagraph_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/editor-insertparagraph-disabled-24x24.png");
+}
+toolbar[iconsize="small"] .znotes_insertparagraph_class,
+menuitem.znotes_insertparagraph_class  {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/editor-insertparagraph-16x16.png");
+}
+toolbar[iconsize="small"] .znotes_insertparagraph_class[disabled="true"],
+menuitem.znotes_insertparagraph_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/editor-insertparagraph-disabled-16x16.png");
+}
+
+.znotes_insertimage_class {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/editor-insertimage-24x24.png");
+}
+.znotes_insertimage_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/editor-insertimage-disabled-24x24.png");
+}
+toolbar[iconsize="small"] .znotes_insertimage_class,
+menuitem.znotes_insertimage_class  {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/editor-insertimage-16x16.png");
+}
+toolbar[iconsize="small"] .znotes_insertimage_class[disabled="true"],
+menuitem.znotes_insertimage_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/editor-insertimage-disabled-16x16.png");
+}
+
+.znotes_inserttable_class {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/editor-inserttable-24x24.png");
+}
+.znotes_inserttable_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/editor-inserttable-disabled-24x24.png");
+}
+toolbar[iconsize="small"] .znotes_inserttable_class,
+menuitem.znotes_inserttable_class  {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/editor-inserttable-16x16.png");
+}
+toolbar[iconsize="small"] .znotes_inserttable_class[disabled="true"],
+menuitem.znotes_inserttable_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/editor-inserttable-disabled-16x16.png");
+}
+
+.znotes_justifycenter_class {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/editor-justifycenter-24x24.png");
+}
+.znotes_justifycenter_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/editor-justifycenter-disabled-24x24.png");
+}
+toolbar[iconsize="small"] .znotes_justifycenter_class,
+menuitem.znotes_justifycenter_class  {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/editor-justifycenter-16x16.png");
+}
+toolbar[iconsize="small"] .znotes_justifycenter_class[disabled="true"],
+menuitem.znotes_justifycenter_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/editor-justifycenter-disabled-16x16.png");
+}
+
+.znotes_justifyleft_class {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/editor-justifyleft-24x24.png");
+}
+.znotes_justifyleft_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/editor-justifyleft-disabled-24x24.png");
+}
+toolbar[iconsize="small"] .znotes_justifyleft_class,
+menuitem.znotes_justifyleft_class  {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/editor-justifyleft-16x16.png");
+}
+toolbar[iconsize="small"] .znotes_justifyleft_class[disabled="true"],
+menuitem.znotes_justifyleft_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/editor-justifyleft-disabled-16x16.png");
+}
+
+.znotes_justifyright_class {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/editor-justifyright-24x24.png");
+}
+.znotes_justifyright_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/editor-justifyright-disabled-24x24.png");
+}
+toolbar[iconsize="small"] .znotes_justifyright_class,
+menuitem.znotes_justifyright_class  {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/editor-justifyright-16x16.png");
+}
+toolbar[iconsize="small"] .znotes_justifyright_class[disabled="true"],
+menuitem.znotes_justifyright_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/editor-justifyright-disabled-16x16.png");
+}
+
+.znotes_justifyfull_class {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/editor-justifyfull-24x24.png");
+}
+.znotes_justifyfull_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/editor-justifyfull-disabled-24x24.png");
+}
+toolbar[iconsize="small"] .znotes_justifyfull_class,
+menuitem.znotes_justifyfull_class  {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/editor-justifyfull-16x16.png");
+}
+toolbar[iconsize="small"] .znotes_justifyfull_class[disabled="true"],
+menuitem.znotes_justifyfull_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/editor-justifyfull-disabled-16x16.png");
+}
+
+.znotes_sourcebeautify_class {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/source-beautify-24x24.png");
+}
+.znotes_sourcebeautify_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/source-beautify-disabled-24x24.png");
+}
+toolbar[iconsize="small"] .znotes_sourcebeautify_class,
+menuitem.znotes_sourcebeautify_class  {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/source-beautify-16x16.png");
+}
+toolbar[iconsize="small"] .znotes_sourcebeautify_class[disabled="true"],
+menuitem.znotes_sourcebeautify_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/source-beautify-disabled-16x16.png");
+}
+
+.znotes_editorcustomizetoolbar_class {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/customize-toolbar-24x24.png");
+}
+.znotes_editorcustomizetoolbar_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/customize-toolbar-disabled-24x24.png");
+}
+toolbar[iconsize="small"] .znotes_editorcustomizetoolbar_class,
+menuitem.znotes_editorcustomizetoolbar_class  {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/customize-toolbar-16x16.png");
+}
+toolbar[iconsize="small"] .znotes_editorcustomizetoolbar_class[disabled="true"],
+menuitem.znotes_editorcustomizetoolbar_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/customize-toolbar-disabled-16x16.png");
+}
+
+.znotes_editordebug_class {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/debug-24x24.png");
+}
+.znotes_editordebug_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/debug-disabled-24x24.png");
+}
+toolbar[iconsize="small"] .znotes_editordebug_class,
+menuitem.znotes_editordebug_class  {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/debug-16x16.png");
+}
+toolbar[iconsize="small"] .znotes_editordebug_class[disabled="true"],
+menuitem.znotes_editordebug_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/documents/xhtml/debug-disabled-16x16.png");
+}

@@ -34,45 +34,420 @@ if ( !ru ) var ru = {};
 if ( !ru.akman ) ru.akman = {};
 if ( !ru.akman.znotes ) ru.akman.znotes = {};
 
-Components.utils.import( "resource://znotes/utils.js" , ru.akman.znotes );
-Components.utils.import( "resource://znotes/prefsmanager.js" , ru.akman.znotes );
-Components.utils.import( "resource://znotes/documentmanager.js" , ru.akman.znotes );
+Components.utils.import( "resource://znotes/utils.js",
+  ru.akman.znotes
+);
+Components.utils.import( "resource://znotes/prefsmanager.js",
+  ru.akman.znotes
+);
+Components.utils.import( "resource://znotes/documentmanager.js",
+  ru.akman.znotes
+);
 
 ru.akman.znotes.Options = function() {
 
+  var Utils = ru.akman.znotes.Utils;
+
+  var prefsBundle = ru.akman.znotes.PrefsManager.getInstance();
+  
   var pub = {};
 
-  var prefsBundle = null;
+  var optionsTabs = null;
+  var optionsPanels = null;
+  var optionsPrefs = {};
+  var platformPrefs = null;
+  var currentOptions = null;
+  var isOptionsChanged = false;
+  
+  var placeName = null;
+  var isSavePosition = null;
+  var isEditSourceEnabled = null;
+  var isPlaySound = null;
+  var isHighlightRow = null;
+  var isReplaceBackground = null;
+  var isConfirmExit = null;
+  var docTypeMenuList = null;
+  var docTypeMenuPopup = null;
+  var keysPlatformGroupBox = null;
+  var keysPlatformListBox = null;
+  var keysListBox = null;
+  var defaultsButton = null;
+  var defaultDocumentType = null;
+  
+  var platformAssignedKeys = null;
+  var platformKeyset = null;
+  var platformShortcuts = {};
+  var mainKeyset = null;
+  var mainShortcuts = {};
+  
+  // HELPERS
+  
+  function getString( name ) {
+    return Utils.STRINGS_BUNDLE.getString( name );
+  };
+  
+  function fetchPlatformAssignedKeys() {
+    platformAssignedKeys = {};
+    var keysets = Utils.MAIN_WINDOW.document.getElementsByTagName( "keyset" );
+    var process = function( keyset ) {
+      var shortcut, key, keycode, modifiers;
+      var node = keyset.firstChild;
+      while ( node ) {
+        if ( node.nodeName == "keyset" ) {
+          process( node );
+          node = node.nextSibling;
+          continue;
+        }
+        if ( node.nodeName != "key" ) {
+          node = node.nextSibling;
+          continue;
+        }
+        if ( node.hasAttribute( "id" ) &&
+             node.getAttribute( "id" ).indexOf( "znotes_" ) == 0 ) {
+          node = node.nextSibling;
+          continue;
+        }
+        key = node.hasAttribute( "key" ) ?
+          node.getAttribute( "key" ).trim() : "";
+        keycode = node.hasAttribute( "keycode" ) ?
+          node.getAttribute( "keycode" ).trim() : "";
+        modifiers = node.hasAttribute( "modifiers" ) ?
+          node.getAttribute( "modifiers" ).trim() : "";
+        if ( !key.length && !keycode.length ) {
+          node = node.nextSibling;
+          continue;
+        }
+        // extend key with "any" in modifiers attribute to proper keys
+        var m = ( modifiers == "" ) ?
+          [] : modifiers.split( /\s*,\s*|\s+/ );
+        modifiers = [];
+        for ( var i = 0; i < m.length; i++ ) {
+          if ( m[i].trim().length ) {
+            modifiers.push( m[i].toLowerCase() );
+          }
+        }
+        m = [ [] ];
+        var i = modifiers.indexOf( "any" );
+        if ( i >= 0 ) {
+          m = modifiers.slice( 0, i );
+          modifiers = modifiers.slice( i + 1 );
+          if ( !m.length ) {
+            m = [ [] ];
+          } else {
+            m = Utils.getPermutations( m );
+          }
+        }
+        for ( var j = 0; j < m.length; j++ ) {
+          shortcut = Utils.getShortcutFromAttributes(
+            key, keycode, m[j].concat( modifiers ).join( "," ) );
+          if ( shortcut ) {
+            platformAssignedKeys[ shortcut ] = null;
+          }
+        }
+        //
+        node = node.nextSibling;
+      }
+    };
+    for ( var i = 0; i < keysets.length; i++ ) {
+      process( keysets[i] );
+    }
+  };
+  
+  function clearContainers( containers ) {
+    var id, node;
+    for ( var i = 0; i < containers.length; i++ ) {
+      id = containers[i];
+      node = document.getElementById( id );
+      while ( node && node.firstChild ) {
+        node.removeChild( node.firstChild );
+      }
+    }
+  };
+  
+  function isShortcutChanged( shortcuts, name ) {
+    var value = ( shortcuts[name]["original"] === null ) ?
+      shortcuts[name]["default"] : shortcuts[name]["original"];
+    return shortcuts[name]["current"] !== value;
+  };
+  
+  function getTabShortcuts( defaultShortcuts, currentShortcuts ) {
+    var name, result = {};
+    for ( var id in defaultShortcuts ) {
+      name = Utils.getNameFromId( id );
+      if ( name in currentShortcuts ) {
+        result[name] = currentShortcuts[name];
+      } else {
+        result[name] = Utils.getShortcutFromAttributes(
+          defaultShortcuts[id].key,
+          defaultShortcuts[id].keycode,
+          defaultShortcuts[id].modifiers
+        );
+      }
+    }
+    return result;
+  };
+  
+  function getPlatformShortcuts() {
+    var name, result = {};
+    for ( var name in platformShortcuts ) {
+      result[name] = platformShortcuts[name]["current"];
+    }
+    return result;
+  };
 
-  var tb_place_name = null;
-  var cb_is_save_position = null;
-  var cb_is_edit_source_enabled = null;
-  var cb_is_play_sound = null;
-  var ml_default_document_type = null;
-  var mp_default_document_type = null;
+  function getMainShortcuts() {
+    var name, result = {};
+    for ( var name in mainShortcuts ) {
+      result[name] = mainShortcuts[name]["current"];
+    }
+    return result;
+  };
 
-  var defaultDocumentType = ru.akman.znotes.DocumentManager.getDefaultDocument().getType();
-  var currentDocumentType = defaultDocumentType;
+  /**
+   * Check existence of shortcut in platform
+   * @param shortcut - string representing shortcut, ex: "Alt+Ctrl+Z"
+   * @return boolean
+   */
+  function checkPlatformShortcut( shortcut ) {
+    return shortcut in platformAssignedKeys;
+  };
+  
+  function checkShortcut( shortcuts, name, shortcut ) {
+    for ( var n in shortcuts ) {
+      if ( n != name && shortcuts[n] === shortcut ) {
+        return true;
+      }
+    }
+    return false;
+  };
+
+  function isPlatformShortcutExists( name, shortcut ) {
+    var shortcuts = getPlatformShortcuts();
+    if ( checkShortcut( shortcuts, name, shortcut ) ) {
+      return 1;
+    }
+    if ( checkPlatformShortcut( shortcut ) ) {
+      return 2;
+    }
+    return 0;
+  };
+  
+  function isShortcutExists( name, shortcut ) {
+    var shortcuts;
+    for ( var tab in optionsPrefs ) {
+      if ( tab == "main" ) {
+        shortcuts = getMainShortcuts();
+        if ( checkShortcut( shortcuts, name, shortcut ) ) {
+          return 2;
+        }
+      } else {
+        shortcuts = getTabShortcuts(
+          optionsPrefs[tab]["default"].editor.shortcuts,
+          optionsPrefs[tab]["current"].editor.shortcuts
+        );
+        var cs = checkShortcut( shortcuts, name, shortcut );
+        if ( cs ) {
+          return 3;
+        }
+      }
+    }
+    return 0;
+  };
+  
+  /**
+   * existsFlag == 0 shortcut does not exist yet
+   * existsFlag == 1 shortcut exists in current shrortcuts
+   * existsFlag == 2 shortcut exists in main shortcuts
+   * existsFlag == 3 shortcut exists in other shortcuts
+   */
+  function alertTextbox( shortcuts, textbox, message, value, existsFlag ) {
+    var win = textbox.ownerDocument.defaultView;
+    var flag = ( existsFlag === undefined ) ? 1 : existsFlag;
+    if ( flag == 1 ) {
+      textbox.inputField.style.setProperty( "background-color", "red" );
+    } else if ( flag == 2 ) {
+      textbox.inputField.style.setProperty( "background-color", "magenta" );
+    } else if ( flag == 3 ) {
+      textbox.inputField.style.setProperty( "background-color", "tomato" );
+    }
+    textbox.style.setProperty( "font-style", "italic" );
+    textbox.style.removeProperty( "color" );
+    textbox.style.removeProperty( "font-weight" );
+    textbox.value = message;
+    Utils.beep();
+    win.setTimeout(
+      function () {
+        textbox.value = value;
+        updateTextboxStyle( shortcuts, textbox );
+      },
+      1200
+    );
+  };
+  
+  function updateTextboxStyle( shortcuts, textbox ) {
+    var name = Utils.getNameFromId( textbox.getAttribute( "id" ) );
+    textbox.inputField.style.setProperty( "letter-spacing", "1px" );
+    textbox.inputField.style.removeProperty( "background-color" );
+    if ( isShortcutChanged( shortcuts, name ) ) {
+      textbox.style.setProperty( "color", "red" );
+    } else {
+      textbox.style.removeProperty( "color" );
+    }
+    if ( textbox.value !== "" ) {
+      textbox.style.removeProperty( "font-style" );
+      textbox.style.setProperty( "font-weight", "bold" );
+    } else {
+      textbox.style.setProperty( "font-style", "italic" );
+      textbox.style.removeProperty( "font-weight" );
+    }
+  };
+  
+  // SHORTCUTS
+  
+  function loadShortcuts( keyset, shortcuts, origPrefs, currPrefs ) {
+    var doc = keyset.ownerDocument;
+    var originalShortcuts = ( "shortcuts" in origPrefs ) ?
+      origPrefs.shortcuts : {};
+    var currentShortcuts = ( "shortcuts" in currPrefs ) ?
+      currPrefs.shortcuts : {};
+    var node = keyset.firstChild;
+    var name, command;
+    for ( name in shortcuts ) {
+      delete shortcuts[name];
+    }
+    while ( node ) {
+      if ( node.nodeName != "key" || !node.hasAttribute( "command" ) ||
+           !node.hasAttribute( "id" ) ) {
+        node = node.nextSibling;
+        continue;
+      }
+      name = Utils.getNameFromId( node.getAttribute( "id" ) );
+      if ( !name ) {
+        node = node.nextSibling;
+        continue;
+      }
+      command = node.getAttribute( "command" );
+      if ( !doc.getElementById( command ) ) {
+        node = node.nextSibling;
+        continue;
+      }
+      shortcuts[name] = {
+        "command": command,
+        "default": Utils.getShortcutFromAttributes(
+          node.getAttribute( "key" ),
+          node.getAttribute( "keycode" ),
+          node.getAttribute( "modifiers" )
+        ),
+        "original": null,
+        "current": null
+      };
+      if ( name in currentShortcuts ) {
+        shortcuts[name]["current"] = currentShortcuts[name];
+      } else {
+        shortcuts[name]["current"] = shortcuts[name]["default"];
+      }
+      if ( name in originalShortcuts ) {
+        shortcuts[name]["original"] = originalShortcuts[name];
+      } else {
+        shortcuts[name]["original"] = null;
+      }
+      node = node.nextSibling;
+    }
+  };
+  
+  // VIEW
+  
+  function createItem( doc, shortcuts, name, suffix ) {
+    var cmd = doc.getElementById(
+      shortcuts[name].command );
+    var tooltiptext = cmd.getAttribute( "tooltiptext" );
+    var item = doc.createElement( "richlistitem" );
+    item.setAttribute( "id", "znotes_" + name + "_richlistitem" + suffix );
+    item.setAttribute( "class", "key_item" );
+    item.setAttribute( "tooltiptext", tooltiptext );
+    var hbox = doc.createElement( "hbox" );
+    hbox.setAttribute( "id", "znotes_" + name + "_hbox" + suffix );
+    hbox.setAttribute( "class", "key_hbox" );
+    hbox.setAttribute( "flex", "1" );
+    var image = doc.createElement( "image" );
+    image.setAttribute( "id", "znotes_" + name + "_image" + suffix );
+    image.setAttribute( "class", "znotes_" + name + "_class key_image" );
+    hbox.appendChild( image );
+    var label = doc.createElement( "label" );
+    label.setAttribute( "id", "znotes_" + name + "_label" + suffix );
+    label.setAttribute( "class", "key_label" );
+    label.setAttribute( "flex", "1" );
+    label.setAttribute( "crop", "center" );
+    label.setAttribute( "value", tooltiptext );
+    hbox.appendChild( label );
+    var textbox = doc.createElement( "textbox" );
+    textbox.setAttribute( "id", "znotes_" + name + "_textbox" + suffix );
+    textbox.setAttribute( "minwidth", "200" );
+    textbox.setAttribute( "value", shortcuts[name]["current"] );
+    if ( shortcuts[name]["current"] !== "" ) {
+      textbox.style.setProperty( "font-weight", "bold" );
+    }
+    textbox.setAttribute( "placeholder",
+      getString( "options.key.notassigned" ) );
+    textbox.setAttribute( "class", "key_textbox" );
+    textbox.setAttribute( "tooltiptext",
+      getString( "options.key.pressakey" ) );
+    hbox.appendChild( textbox );
+    var bDefault = doc.createElement( "toolbarbutton" );
+    bDefault.setAttribute( "id",
+      "znotes_" + name + "_toolbarbutton1" + suffix );
+    bDefault.setAttribute( "class", "key_default" );
+    bDefault.setAttribute( "tooltiptext", getString( "options.key.default" ) );
+    hbox.appendChild( bDefault );
+    var bClear = doc.createElement( "toolbarbutton" );
+    bClear.setAttribute( "id", "znotes_" + name + "_toolbarbutton2" + suffix );
+    bClear.setAttribute( "class", "key_clear" );
+    bClear.setAttribute( "tooltiptext", getString( "options.key.clear" ) );
+    hbox.appendChild( bClear );
+    item.appendChild( hbox );
+    textbox.addEventListener( "keypress", onKeyPress, true );
+    bDefault.addEventListener( "command", onDefaultPress, false );
+    bClear.addEventListener( "command", onClearPress, false );
+    return {
+      item: item,
+      textbox: textbox
+    };
+  };
+  
+  function populateShortcutsListBox( shortcuts, listbox, appendix ) {
+    var suffix = ( appendix === undefined ) ? "" : appendix;
+    var doc = listbox.ownerDocument;
+    while ( listbox.firstChild ) {
+      listbox.removeChild( listbox.firstChild );
+    }
+    var item, cmd;
+    for ( var name in shortcuts ) {
+      cmd = doc.getElementById( shortcuts[name].command );
+      item = createItem( doc, shortcuts, name, suffix );
+      listbox.appendChild( item.item );
+      updateTextboxStyle( shortcuts, item.textbox );
+    }
+  };
   
   function populateDocumentTypePopup() {
-    ml_default_document_type.selectedItem = null;
-    while ( mp_default_document_type.firstChild ) {
-      mp_default_document_type.removeChild( mp_default_document_type.firstChild );
+    var docs = ru.akman.znotes.DocumentManager.getInstance().getDocuments();
+    docTypeMenuList.selectedItem = null;
+    while ( docTypeMenuPopup.firstChild ) {
+      docTypeMenuPopup.removeChild( docTypeMenuPopup.firstChild );
     }
-    var docs = ru.akman.znotes.DocumentManager.getDocuments();
-    var defaultMenuItem = null;
     for ( var name in docs ) {
       var doc = docs[ name ];
-      var label = doc.getDescription();
-      var value = doc.getType();
-      var text = doc.getName() + "-" + doc.getVersion() + " : " + value;
+      var doctype = doc.getType();
+      var tooltiptext = doc.getName() + "-" + doc.getVersion() +
+        " : " + doctype;
       var menuItem = document.createElement( "menuitem" );
       menuItem.className = "menuitem-iconic";
       menuItem.setAttribute( "id", "menuitem_" + doc.getName() );
-      menuItem.setAttribute( "label", label );
-      menuItem.setAttribute( "tooltiptext", text );
+      menuItem.setAttribute( "label", doc.getDescription() );
+      menuItem.setAttribute( "tooltiptext", tooltiptext );
       menuItem.setAttribute( "image", doc.getIconURL() );
-      menuItem.setAttribute( "value", value );
+      menuItem.setAttribute( "value", doctype );
+      menuItem.addEventListener( "command", onDocTypeSelect, false );
       var style = menuItem.style;
       // BUG: DOES NOT WORK!
       // style.setProperty( "list-style-image", "url( '" + doc.getIconURL() + "' )" , "important" );
@@ -80,62 +455,518 @@ ru.akman.znotes.Options = function() {
       style.setProperty( "background-repeat", "no-repeat" );
       style.setProperty( "background-position", "0 50%" );
       style.setProperty( "padding-left", "20px" );
-      mp_default_document_type.appendChild( menuItem );
-      if ( value == defaultDocumentType ) {
-        defaultMenuItem = menuItem;
-      }
-      if ( value == currentDocumentType ) {
-        ml_default_document_type.selectedItem = menuItem;
-        ml_default_document_type.setAttribute( "tooltiptext", text );
+      docTypeMenuPopup.appendChild( menuItem );
+      if ( doctype == defaultDocumentType ) {
+        docTypeMenuList.selectedItem = menuItem;
+        docTypeMenuList.setAttribute( "tooltiptext", tooltiptext );
       }
     }
-    if ( !ml_default_document_type.selectedItem ) {
-      currentDocumentType = defaultDocumentType;
-      ml_default_document_type.selectedItem = defaultMenuItem;
-      ml_default_document_type.setAttribute( "tooltiptext", defaultMenuItem.getAttribute( "tooltiptext" ) );
+  };
+
+  // EVENTS
+
+  function onKeyPress( event ) {
+    var id = event.target.getAttribute( "id" );
+    var name = Utils.getNameFromId( id );
+    var doc = event.target.ownerDocument;
+    var textbox = doc.getElementById(
+      "znotes_" + name + "_textbox" );
+    var shortcut = Utils.getShortcutFromEvent( event );
+    var listbox = doc.getElementById(
+      "znotes_" + name + "_richlistitem" ).parentNode;
+    var shortcuts, existsFlag;
+    if ( listbox == keysPlatformListBox ) {
+      shortcuts = platformShortcuts;
+      existsFlag = isPlatformShortcutExists( name, shortcut );
+    } else {
+      shortcuts = mainShortcuts;
+      existsFlag = isShortcutExists( name, shortcut );
+    }
+    if ( existsFlag ) {
+      alertTextbox(
+        shortcuts,
+        textbox,
+        getString( "options.key.duplicated" ),
+        shortcuts[name]["current"],
+        existsFlag
+      );
+    } else {
+      textbox.value = shortcut;
+      shortcuts[name]["current"] = shortcut;
+      updateTextboxStyle( shortcuts, textbox );
+    }
+    event.preventDefault();
+    event.stopPropagation();
+    return false;
+  };
+
+  function onClearPress( event ) {
+    var id = event.target.getAttribute( "id" );
+    var name = Utils.getNameFromId( id );
+    var doc = event.target.ownerDocument;
+    var textbox = doc.getElementById(
+      "znotes_" + name + "_textbox" );
+    textbox.value = "";
+    var listbox = doc.getElementById(
+      "znotes_" + name + "_richlistitem" ).parentNode;
+    var shortcuts = ( listbox == keysPlatformListBox ) ?
+      platformShortcuts : mainShortcuts;
+    shortcuts[name]["current"] = "";
+    updateTextboxStyle( shortcuts, textbox );
+  };
+
+  function onDefaultPress( event ) {
+    var id = event.target.getAttribute( "id" );
+    var name = Utils.getNameFromId( id );
+    var doc = event.target.ownerDocument;
+    var textbox = doc.getElementById(
+      "znotes_" + name + "_textbox" );
+    var listbox = doc.getElementById(
+      "znotes_" + name + "_richlistitem" ).parentNode;
+    var shortcuts = ( listbox == keysPlatformListBox ) ?
+      platformShortcuts : mainShortcuts;
+    textbox.value = shortcuts[name]["default"];
+    shortcuts[name]["current"] = shortcuts[name]["default"];
+    updateTextboxStyle( shortcuts, textbox );
+  };
+  
+  function onDefaults( event ) {
+    if ( currentOptions ) {
+      currentOptions.defaults( event );
+      return;
+    }
+    placeName.value = optionsPrefs["main"]["default"].placeName;
+    isSavePosition.checked = optionsPrefs["main"]["default"].isSavePosition;
+    isEditSourceEnabled.checked = optionsPrefs["main"]["default"].isEditSourceEnabled;
+    isPlaySound.checked = optionsPrefs["main"]["default"].isPlaySound;
+    isReplaceBackground.checked = optionsPrefs["main"]["default"].isReplaceBackground;
+    isConfirmExit.checked = optionsPrefs["main"]["default"].isConfirmExit;
+    isHighlightRow.checked = optionsPrefs["main"]["default"].isHighlightRow;
+    defaultDocumentType = optionsPrefs["main"]["default"].defaultDocumentType;
+    populateDocumentTypePopup();
+    var doc = event.target.ownerDocument;
+    var textbox;
+    for ( var name in platformShortcuts ) {
+      textbox = doc.getElementById(
+        "znotes_" + name + "_textbox" );
+      platformShortcuts[name]["current"] = platformShortcuts[name]["default"];
+      textbox.value = platformShortcuts[name]["default"];
+      updateTextboxStyle( platformShortcuts, textbox );
+    }
+    for ( var name in mainShortcuts ) {
+      textbox = doc.getElementById(
+        "znotes_" + name + "_textbox" );
+      mainShortcuts[name]["current"] = mainShortcuts[name]["default"];
+      textbox.value = mainShortcuts[name]["default"];
+      updateTextboxStyle( mainShortcuts, textbox );
+    }
+  };
+
+  function onDocTypeSelect( event ) {
+    defaultDocumentType = event.target.getAttribute( "value" );
+  };
+  
+  function onTabSelect( event ) {
+    if ( currentOptions ) {
+      currentOptions.close();
+    } else {
+      closeMainTab();
+    }
+    var id = optionsTabs.selectedItem.getAttribute( "id" );
+    var name = id.substr( 4 );
+    if ( name == "main" ) {
+      currentOptions = null;
+      openMainTab();
+      return;
+    }
+    // clear
+    clearContainers(
+      [
+        "znotes_editor_commandset",
+        "znotes_editor_keyset",
+        "znotes_editor_popupset",
+        "znotes_editor_stringbundleset"
+      ]
+    );
+    var optionsView = document.getElementById( "optionsView" );
+    if ( optionsView ) {
+      optionsView.parentNode.removeChild( optionsView );
+    }
+    // load
+    var panel = document.getElementById( "panel-" + name );
+    optionsView = document.createElement( "vbox" );
+    optionsView.setAttribute( "id", "optionsView" );
+    optionsView.setAttribute( "flex", "1" );
+    panel.appendChild( optionsView );
+    var doc = ru.akman.znotes.DocumentManager
+                             .getInstance()
+                             .getDocumentByName( name );
+    currentOptions = doc.getOptions();
+    document.loadOverlay(
+      doc.getURL() + "editor.xul",
+      {
+        observe: function( subject, topic, data ) {
+          if ( topic == "xul-overlay-merged" ) {
+            currentOptions.open( window, document, optionsPrefs );
+          }
+        }
+      }
+    );
+  };
+  
+  // PREFERENCES
+  
+  function updateShortcutPreferences( currPrefs, shortcuts ) {
+    var shortcut;
+    var result = {};
+    var isChanged = false;
+    for ( var name in shortcuts ) {
+      shortcut = shortcuts[name]["current"];
+      shortcut = ( shortcuts[name]["default"] === shortcut ) ?
+        null : shortcut;
+      if ( shortcut !== shortcuts[name]["original"] ) {
+        shortcuts[name]["original"] = shortcut;
+        isChanged = true;
+      }
+      if ( shortcut !== null ) {
+        result[name] = shortcut;
+      }
+    }
+    currPrefs.shortcuts = result;
+    return isChanged;
+  };
+
+  function updateMainPreferences( currentPrefs, originalPrefs ) {
+    var isChanged = false;
+    currentPrefs.placeName = placeName.value;
+    isChanged = isChanged ||
+      ( currentPrefs.placeName !== originalPrefs.placeName );
+    currentPrefs.isSavePosition = isSavePosition.checked;
+    isChanged = isChanged ||
+      ( currentPrefs.isSavePosition !== originalPrefs.isSavePosition );
+    currentPrefs.isEditSourceEnabled = isEditSourceEnabled.checked;
+    isChanged = isChanged ||
+      ( currentPrefs.isEditSourceEnabled !== originalPrefs.isEditSourceEnabled );
+    currentPrefs.isPlaySound = isPlaySound.checked;
+    isChanged = isChanged ||
+      ( currentPrefs.isPlaySound !== originalPrefs.isPlaySound );
+    currentPrefs.isReplaceBackground = isReplaceBackground.checked;
+    isChanged = isChanged ||
+      ( currentPrefs.isReplaceBackground !== originalPrefs.isReplaceBackground );
+    currentPrefs.isConfirmExit = isConfirmExit.checked;
+    isChanged = isChanged ||
+      ( currentPrefs.isConfirmExit !== originalPrefs.isConfirmExit );
+    currentPrefs.isHighlightRow = isHighlightRow.checked;
+    isChanged = isChanged ||
+      ( currentPrefs.isHighlightRow !== originalPrefs.isHighlightRow );
+    currentPrefs.defaultDocumentType = defaultDocumentType;
+    isChanged = isChanged ||
+      ( currentPrefs.defaultDocumentType !== originalPrefs.defaultDocumentType );
+    return isChanged;
+  };
+  
+  function getPlatformDefaultPreferences() {
+    var result = {};
+    result.shortcuts = {};
+    var id, name, command, count = 0;
+    var node = platformKeyset.firstChild;
+    while ( node ) {
+      if ( node.nodeName != "key" || !node.hasAttribute( "command" ) ||
+           !node.hasAttribute( "id" ) ) {
+        node = node.nextSibling;
+        continue;
+      }
+      var id = node.getAttribute( "id" );
+      name = Utils.getNameFromId( id );
+      if ( !name ) {
+        node = node.nextSibling;
+        continue;
+      }
+      command = node.getAttribute( "command" );
+      if ( !document.getElementById( command ) ) {
+        node = node.nextSibling;
+        continue;
+      }
+      result.shortcuts[id] = {
+        "command": command,
+        "key": node.getAttribute( "key" ),
+        "keycode": node.getAttribute( "keycode" ),
+        "modifiers": node.getAttribute( "modifiers" )
+      };
+      count++;
+      node = node.nextSibling;
+    }
+    if ( count ) {
+      keysPlatformGroupBox.removeAttribute( "collapsed" );
+    }
+    return result;
+  };
+
+  function getPlatformPreferences() {
+    var result = {};
+    try {
+      result.shortcuts = JSON.parse( Utils.PLATFORM_SHORTCUTS );
+      if ( typeof( result.shortcuts ) !== "object" ) {
+        result.shortcuts = {};
+      }
+    } catch ( e ) {
+      Utils.log( e );
+      result.shortcuts = {};
+    }
+    return result;
+  };
+  
+  function setPlatformPreferences( prefs ) {
+    prefsBundle.setCharPref( "platform_shortcuts", JSON.stringify( prefs.shortcuts ) );
+  };
+  
+  function getMainDefaultPreferences() {
+    var result = {
+      "placeName": "",
+      "defaultDocumentType": "application/xhtml+xml",
+      "isSavePosition": true,
+      "isEditSourceEnabled": true,
+      "isPlaySound": true,
+      "isReplaceBackground": true,
+      "isConfirmExit": true,
+      "isHighlightRow": false
+    };
+    result.shortcuts = {};
+    var id, name, command;
+    var node = mainKeyset.firstChild;
+    while ( node ) {
+      if ( node.nodeName != "key" || !node.hasAttribute( "command" ) ||
+           !node.hasAttribute( "id" ) ) {
+        node = node.nextSibling;
+        continue;
+      }
+      var id = node.getAttribute( "id" );
+      name = Utils.getNameFromId( id );
+      if ( !name ) {
+        node = node.nextSibling;
+        continue;
+      }
+      command = node.getAttribute( "command" );
+      if ( !document.getElementById( command ) ) {
+        node = node.nextSibling;
+        continue;
+      }
+      result.shortcuts[id] = {
+        "command": command,
+        "key": node.getAttribute( "key" ),
+        "keycode": node.getAttribute( "keycode" ),
+        "modifiers": node.getAttribute( "modifiers" )
+      };
+      node = node.nextSibling;
+    }
+    return result;
+  };
+
+  function getMainPreferences() {
+    var result = {
+      "placeName": Utils.PLACE_NAME,
+      "defaultDocumentType": Utils.DEFAULT_DOCUMENT_TYPE,
+      "isSavePosition": Utils.IS_SAVE_POSITION,
+      "isEditSourceEnabled": Utils.IS_EDIT_SOURCE_ENABLED,
+      "isPlaySound": Utils.IS_PLAY_SOUND,
+      "isReplaceBackground": Utils.IS_REPLACE_BACKGROUND,
+      "isConfirmExit": Utils.IS_CONFIRM_EXIT,
+      "isHighlightRow": Utils.IS_HIGHLIGHT_ROW
+    };
+    try {
+      result.shortcuts = JSON.parse( Utils.MAIN_SHORTCUTS );
+      if ( typeof( result.shortcuts ) !== "object" ) {
+        result.shortcuts = {};
+      }
+    } catch ( e ) {
+      Utils.log( e );
+      result.shortcuts = {};
+    }
+    return result;
+  };
+
+  function setMainPreferences( prefs ) {
+    prefsBundle.setCharPref( "placeName", prefs.placeName );
+    prefsBundle.setBoolPref( "isSavePosition", prefs.isSavePosition );
+    prefsBundle.setBoolPref( "isEditSourceEnabled", prefs.isEditSourceEnabled );
+    prefsBundle.setBoolPref( "isPlaySound", prefs.isPlaySound );
+    prefsBundle.setBoolPref( "isReplaceBackground", prefs.isReplaceBackground );
+    prefsBundle.setBoolPref( "isConfirmExit", prefs.isConfirmExit );
+    prefsBundle.setBoolPref( "isHighlightRow", prefs.isHighlightRow );
+    prefsBundle.setCharPref( "defaultDocumentType", prefs.defaultDocumentType );
+    prefsBundle.setCharPref( "main_shortcuts", JSON.stringify( prefs.shortcuts ) );
+  };
+  
+  // TABS
+  
+  function createTabs() {
+    platformKeyset = document.getElementById( "znotes_platform_keyset" );
+    platformPrefs = {
+      "default": getPlatformDefaultPreferences(),
+      "original": getPlatformPreferences(),
+      "current": getPlatformPreferences(),
+    };
+    optionsPrefs["main"] = {
+      "default": getMainDefaultPreferences(),
+      "original": getMainPreferences(),
+      "current": getMainPreferences(),
+      activeElement: null
+    };
+    var docs = ru.akman.znotes.DocumentManager.getInstance().getDocuments();
+    var doc, opt, tab, panel;
+    var editorDefaults, documentDefaults;
+    for ( var name in docs ) {
+      doc = docs[ name ];
+      opt = doc.getOptions();
+      if ( !opt.isSupported() ) {
+        continue;
+      }
+      // tab
+      tab = document.createElement( "tab" );
+      tab.setAttribute( "id", "tab-" + name );
+      tab.setAttribute( "label", " " + doc.getDescription() + " " );
+      tab.setAttribute( "class", "optionsTab" );
+      tab.setAttribute( "image", doc.getIconURL() );
+      optionsTabs.appendChild( tab );
+      // panel
+      panel = document.createElement( "tabpanel" );
+      panel.setAttribute( "id", "panel-" + name );
+      panel.setAttribute( "orient", "vertical" );
+      optionsPanels.appendChild( panel );
+      // prefs
+      var documentPrefs = opt.getDocumentPreferences();
+      var editorPrefs = opt.getEditorPreferences();
+      if ( !( "shortcuts" in editorPrefs ) ||
+           !( typeof( editorPrefs["shortcuts"] ) == "object" ) ) {
+        editorPrefs["shortcuts"] = {};
+      }
+      optionsPrefs[name] = {
+        "default": {
+          editor: opt.getEditorDefaultPreferences(),
+          document: opt.getDocumentDefaultPreferences()
+        },
+        "original": {
+          editor: editorPrefs,
+          document: documentPrefs
+        },
+        "current": {
+          editor: editorPrefs,
+          document: documentPrefs
+        },
+        activeElement: null
+      };
+    }
+  };
+
+  function openMainTab() {
+    var originalPrefs = optionsPrefs["main"].original;
+    var currentPrefs = optionsPrefs["main"].current;
+    placeName.value = currentPrefs.placeName;
+    isSavePosition.checked = currentPrefs.isSavePosition;
+    isEditSourceEnabled.checked = currentPrefs.isEditSourceEnabled;
+    isPlaySound.checked = currentPrefs.isPlaySound;
+    isReplaceBackground.checked = currentPrefs.isReplaceBackground;
+    isConfirmExit.checked = currentPrefs.isConfirmExit;
+    isHighlightRow.checked = currentPrefs.isHighlightRow;
+    defaultDocumentType = currentPrefs.defaultDocumentType;
+    populateDocumentTypePopup();
+    loadShortcuts( mainKeyset, mainShortcuts, originalPrefs, currentPrefs );
+    populateShortcutsListBox( mainShortcuts, keysListBox );
+    loadShortcuts( platformKeyset, platformShortcuts,
+      platformPrefs.original, platformPrefs.current );
+    populateShortcutsListBox( platformShortcuts, keysPlatformListBox );
+    if ( optionsPrefs["main"].activeElement ) {
+      optionsPrefs["main"].activeElement.focus();
     }
   };
   
-  pub.onLoad = function() {
-    tb_place_name = document.getElementById( "tb_place_name" );
-    cb_is_save_position = document.getElementById( "cb_is_save_position" );
-    cb_is_edit_source_enabled = document.getElementById( "cb_is_edit_source_enabled" );
-    cb_is_play_sound = document.getElementById( "cb_is_play_sound" );
-    ml_default_document_type = document.getElementById( "ml_default_document_type" );
-    mp_default_document_type = document.getElementById( "mp_default_document_type" );
-    prefsBundle = ru.akman.znotes.PrefsManager.getInstance();
-    if ( prefsBundle.hasPref( "placeName" ) ) {
-      tb_place_name.value = prefsBundle.getCharPref( "placeName" );
-    } else {
-      tb_place_name.value = "";
+  function closeMainTab() {
+    var originalPrefs = optionsPrefs["main"].original;
+    var currentPrefs = optionsPrefs["main"].current;
+    var isChanged = false;
+    if ( updateMainPreferences( currentPrefs, originalPrefs ) ) {
+      isChanged = true;
     }
-    if ( prefsBundle.hasPref( "defaultDocumentType" ) ) {
-      currentDocumentType = prefsBundle.getCharPref( "defaultDocumentType" );
+    if ( updateShortcutPreferences( currentPrefs, mainShortcuts ) ) {
+      isChanged = true;
     }
-    if ( prefsBundle.getBoolPref( "isSavePosition" ) ) {
-      cb_is_save_position.setAttribute( "checked", "true" );
+    if ( updateShortcutPreferences(
+      platformPrefs.current, platformShortcuts ) ) {
+      isChanged = true;
     }
-    if ( prefsBundle.getBoolPref( "isEditSourceEnabled" ) ) {
-      cb_is_edit_source_enabled.setAttribute( "checked", "true" );
-    }
-    if ( prefsBundle.getBoolPref( "isPlaySound" ) ) {
-      cb_is_play_sound.setAttribute( "checked", "true" );
-    }
-    populateDocumentTypePopup();
+    optionsPrefs["main"].activeElement = document.activeElement;
+    return isChanged;
   };
 
+  // LISTENERS
+  
+  function addEventListeners() {
+    optionsTabs.addEventListener( "select", onTabSelect, false );
+    defaultsButton.addEventListener( "command", onDefaults, false );
+  };
+  
+  // PUBLIC
+  
   pub.onDialogAccept = function() {
-    prefsBundle.setCharPref( "placeName", tb_place_name.value );
-    prefsBundle.setBoolPref( "isSavePosition", cb_is_save_position.hasAttribute( "checked" ) );
-    prefsBundle.setBoolPref( "isEditSourceEnabled", cb_is_edit_source_enabled.hasAttribute( "checked" ) );
-    prefsBundle.setBoolPref( "isPlaySound", cb_is_play_sound.hasAttribute( "checked" ) );
-    prefsBundle.setCharPref( "defaultDocumentType", ml_default_document_type.value );
-    return true;
+    if ( currentOptions ) {
+      currentOptions.close();
+    }
+    closeMainTab();
+    var docs = ru.akman.znotes.DocumentManager.getInstance().getDocuments();
+    var opt;
+    for ( var name in optionsPrefs ) {
+      if ( name == "main" ) {
+        setMainPreferences( optionsPrefs[name].current );
+        setPlatformPreferences( platformPrefs.current );
+        continue;
+      }
+      opt = docs[ name ].getOptions();
+      opt.setDocumentPreferences( optionsPrefs[name].current.document );
+      opt.setEditorPreferences( optionsPrefs[name].current.editor );
+    }
   };
 
+  pub.onLoad = function() {
+    Utils.initGlobals();
+    prefsBundle.loadPrefs();
+    placeName = document.getElementById( "placeName" );
+    isSavePosition = document.getElementById( "isSavePosition" );
+    isEditSourceEnabled = document.getElementById( "isEditSourceEnabled" );
+    isPlaySound = document.getElementById( "isPlaySound" );
+    isReplaceBackground = document.getElementById( "isReplaceBackground" );
+    isConfirmExit = document.getElementById( "isConfirmExit" );
+    isHighlightRow = document.getElementById( "isHighlightRow" );
+    docTypeMenuList = document.getElementById( "docTypeMenuList" );
+    docTypeMenuPopup = document.getElementById( "docTypeMenuPopup" );
+    keysListBox = document.getElementById( "keysListBox" );
+    optionsTabs = document.getElementById( "optionsTabs" );
+    optionsPanels = document.getElementById( "optionsPanels" );
+    defaultsButton = document.getElementById( "defaultsButton" );
+    keysPlatformGroupBox = document.getElementById( "keysPlatformGroupBox" );
+    keysPlatformListBox = document.getElementById( "keysPlatformListBox" );
+    mainKeyset = document.getElementById( "znotes_keyset" );
+    fetchPlatformAssignedKeys();
+    addEventListeners();
+    platformKeyset = null;
+    document.loadOverlay(
+      Utils.IS_STANDALONE ? "chrome://znotes/content/common-xr.xul" :
+        "chrome://znotes/content/common-tb.xul",
+      {
+        observe: function( subject, topic, data ) {
+          if ( topic == "xul-overlay-merged" ) {
+            createTabs();
+            openMainTab();
+          }
+        }
+      }
+    );
+    window.sizeToContent();
+    window.centerWindowOnScreen();
+  };
+  
   return pub;
 
 }();
 
-window.addEventListener( "load"  , function() { ru.akman.znotes.Options.onLoad(); }, false );
+window.addEventListener( "load", function() { ru.akman.znotes.Options.onLoad(); }, false );
 window.addEventListener( "dialogaccept", function() { ru.akman.znotes.Options.onDialogAccept(); }, false );

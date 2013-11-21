@@ -30,25 +30,4 @@
   -
   - ***** END LICENSE BLOCK ***** -->
 
-<!ENTITY printer_window_title "Печать">
-<!ENTITY print_button_label "Печать…">
-<!ENTITY print_button_accesskey "е">
-<!ENTITY setup_button_label "Параметры…">
-<!ENTITY setup_button_accesskey "а">
-<!ENTITY page_label_value "Страница:">
-<!ENTITY page_label_accesskey "р">
-<!ENTITY home_button_tooltip "Первая страница">
-<!ENTITY previous_button_tooltip "Предыдущая страница">
-<!ENTITY number_textbox_label "из">
-<!ENTITY next_button_tooltip "Следующая страница">
-<!ENTITY end_button_tooltip "Последняя страница">
-<!ENTITY scale_label_value "Масштаб:">
-<!ENTITY scale_label_accesskey "ш">
-<!ENTITY shrink_checkbox_label "По размеру">
-<!ENTITY shrink_checkbox_accesskey "у">
-<!ENTITY portrait_button_label "Книжная">
-<!ENTITY portrait_button_accesskey "н">
-<!ENTITY landscape_button_label "Альбомная">
-<!ENTITY landscape_button_accesskey "л">
-<!ENTITY close_button_label "Закрыть">
-<!ENTITY close_button_accesskey "ы">
+<!ENTITY printpreview.title "Печать">

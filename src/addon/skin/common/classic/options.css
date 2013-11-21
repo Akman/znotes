@@ -32,9 +32,58 @@
 
 /* ***** classic/1.0 common **** */
 
-#btnAccept {
-  list-style-image: url("chrome://znotes_images/skin/accept-16x16.png");
+#optionsTabBox {
 }
-#btnCancel {
+#optionsTabs {
+}
+.optionsTab {
+  padding: 3px;
+}
+#optionsPanels {
+  padding: 0px;
+}
+#tab-main {
+  list-style-image: url("chrome://znotes_images/skin/options-16x16.png");
+}
+
+#buttonsHBox {
+  margin-top: 9px;
+}
+#acceptButton {
+  list-style-image: url("chrome://znotes_images/skin/accept-16x16.png");
+  margin-right: 1px;
+}
+#cancelButton {
   list-style-image: url("chrome://znotes_images/skin/cancel-16x16.png");
+}
+#defaultsButton {
+  list-style-image: url("chrome://znotes_images/skin/default-16x16.png");
+  margin-left: -1px;
+}
+
+.key_list {
+  -moz-appearance: none;
+  border: none;
+}
+.key_item {
+}
+.key_hbox {
+}
+.key_image {
+  margin: 2px;
+}
+.key_label {
+  margin-top: 6px;
+}
+.key_textbox {
+  font-size: 16px;
+  font-family: monospace;
+}
+.key_clear {
+  list-style-image: url("chrome://znotes_images/skin/cancel-16x16.png");
+  margin: 2px;
+}
+.key_default {
+  list-style-image: url("chrome://znotes_images/skin/default-16x16.png");
+  margin: 2px;
 }

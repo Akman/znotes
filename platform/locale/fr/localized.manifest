@@ -1,0 +1,45 @@
+# ***** BEGIN LICENSE BLOCK *****
+#
+# Version: GPL 3.0
+#
+# ZNotes
+# Copyright (C) 2012 Alexander Kapitman
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+# The Original Code is ZNotes.
+#
+# Initial Developer(s):
+#   Alexander Kapitman <akman.ru@gmail.com>
+#
+# Portions created by the Initial Developer are Copyright (C) 2012
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#
+# ***** END LICENSE BLOCK *****
+
+locale        alerts                 fr    fr/alerts/
+locale        autoconfig             fr    fr/autoconfig/
+locale        cookie                 fr    fr/cookie/
+locale        global                 fr    fr/global/
+locale        global-platform        fr    fr/global-platform/
+locale        global-region          fr    fr/global-region/
+locale        mozapps                fr    fr/mozapps/
+locale        necko                  fr    fr/necko/
+locale        passwordmgr            fr    fr/passwordmgr/
+locale        pipnss                 fr    fr/pipnss/
+locale        pippki                 fr    fr/pippki/
+locale        places                 fr    fr/places/
+#locale        weave                  fr    fr/weave/

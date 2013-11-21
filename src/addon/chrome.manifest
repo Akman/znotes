@@ -35,11 +35,20 @@ content   znotes_drivers    modules/drivers/
 content   znotes_documents  modules/documents/
 content   znotes_welcome    welcome/
 resource  znotes            modules/
+skin      platform          classic/1.0 jar:chrome/znotes.jar!/skin/platform/winnt/classic/ os=WINNT osversion<6
+skin      platform          classic/1.0 jar:chrome/znotes.jar!/skin/platform/linux/classic/ os!=WINNT
+skin      platform          classic/1.0 jar:chrome/znotes.jar!/skin/platform/winnt/aero/    os=WINNT osversion>=6
 skin      znotes            classic/1.0 jar:chrome/znotes.jar!/skin/winnt/classic/ os=WINNT
-skin      znotes            classic/1.0 jar:chrome/znotes.jar!/skin/linux/classic/ os=Linux
+#skin      znotes            classic/1.0 jar:chrome/znotes.jar!/skin/winnt/aero/ os=WINNT osversion>=6
+skin      znotes            classic/1.0 jar:chrome/znotes.jar!/skin/linux/classic/ os!=WINNT
 skin      znotes_images     classic/1.0 jar:chrome/znotes.jar!/skin/images/classic/
 skin      znotes_sounds     classic/1.0 jar:chrome/znotes.jar!/skin/sounds/classic/
 skin      znotes_common     classic/1.0 jar:chrome/znotes.jar!/skin/common/classic/
-overlay   chrome://messenger/content/messenger.xul        chrome://znotes/content/overlay-tb.xul
-style     chrome://global/content/customizeToolbar.xul    chrome://znotes/skin/overlay-tb.css
+overlay   chrome://messenger/content/messenger.xul chrome://znotes/content/overlay-tb.xul
+overlay   chrome://messenger/content/msgAccountCentral.xul chrome://znotes/content/msgAccountCentral.xul
+style     chrome://global/content/customizeToolbar.xul chrome://znotes/skin/overlay-tb.css
+style     chrome://global/content/customizeToolbar.xul chrome://znotes/skin/common-tb.css
+style     chrome://global/content/customizeToolbar.xul chrome://znotes/skin/common.css
+style     chrome://global/content/customizeToolbar.xul chrome://znotes/skin/documents/text/editor.css
+style     chrome://global/content/customizeToolbar.xul chrome://znotes/skin/documents/xhtml/editor.css
 manifest  locale/localized.manifest

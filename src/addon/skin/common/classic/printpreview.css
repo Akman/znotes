@@ -32,21 +32,6 @@
 
 /* ***** classic/1.0 common **** */
 
-#home_button {
-  list-style-image: url("chrome://znotes_images/skin/navhome-16x16.png");
-}
-#previous_button {
-  list-style-image: url("chrome://znotes_images/skin/navprev-16x16.png");
-}
-#next_button {
-  list-style-image: url("chrome://znotes_images/skin/navnext-16x16.png");
-}
-#end_button {
-  list-style-image: url("chrome://znotes_images/skin/navend-16x16.png");
-}
-#portrait_button {
-  list-style-image: url("chrome://znotes_images/skin/portrait-16x16.png");
-}
-#landscape_button {
-  list-style-image: url("chrome://znotes_images/skin/landscape-16x16.png");
+toolbar[printpreview="true"] {
+  -moz-binding: url( "chrome://global/content/printPreviewBindings.xml#printpreviewtoolbar" );
 }

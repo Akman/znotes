@@ -39,11 +39,14 @@ Components.utils.import( "resource://znotes/utils.js", ru.akman.znotes );
 ru.akman.znotes.Content = function() {
 
   // !!!! %%%% !!!! STRINGS_BUNDLE
-  return function() {
+  return function( aWindow, aStyle ) {
 
     var Utils = ru.akman.znotes.Utils;
     var Common = ru.akman.znotes.Common;
 
+    var currentWindow = null;
+    var currentStyle = null;
+    
     var contentTree = null;
     var contentTreeChildren = null;
 
@@ -70,6 +73,10 @@ ru.akman.znotes.Content = function() {
           return false;
         }
         return true;
+        /*
+        var focusedWindow = currentWindow.top.document.commandDispatcher.focusedWindow;
+        return ( focusedWindow == currentWindow );
+        */
       },
       isCommandEnabled: function( cmd ) {
         if ( !( cmd in contentCommands ) ) {
@@ -99,7 +106,7 @@ ru.akman.znotes.Content = function() {
             var fp = Components.classes["@mozilla.org/filepicker;1"]
                                .createInstance( nsIFilePicker );
             fp.init(
-              window,
+              currentWindow,
               Utils.STRINGS_BUNDLE.getString( "content.addfiledialog.title" ),
               nsIFilePicker.modeOpen
             );
@@ -121,7 +128,7 @@ ru.akman.znotes.Content = function() {
                                .createInstance( nsIFilePicker );
             fp.defaultString = getContentId( currentContent )
             fp.init(
-              window,
+              currentWindow,
               Utils.STRINGS_BUNDLE.getString(
                 "content.savecontentdialog.title"
               ),
@@ -154,7 +161,7 @@ ru.akman.znotes.Content = function() {
               },
               output: null
             };
-            window.openDialog(
+            currentWindow.openDialog(
               "chrome://znotes/content/confirmdialog.xul",
               "",
               "chrome,dialog=yes,modal=yes,centerscreen,resizable=yes",
@@ -173,14 +180,16 @@ ru.akman.znotes.Content = function() {
       },
       getCommand: function( cmd ) {
         if ( cmd in contentCommands ) {
-          return document.getElementById( cmd );
+          return currentWindow.document.getElementById( cmd );
         }
         return null;
       },
       register: function() {
-        Utils.appendAccelText( contentCommands, document );
         try {
-          top.controllers.insertControllerAt( 0, this );
+          currentWindow.controllers.insertControllerAt( 0, this );
+          this.getId = function() {
+            return currentWindow.controllers.getControllerId( this );
+          };
         } catch ( e ) {
           Components.utils.reportError(
             "An error occurred registering '" + this.getName() +
@@ -189,25 +198,27 @@ ru.akman.znotes.Content = function() {
         }
       },
       unregister: function() {
+        for ( var cmd in contentCommands ) {
+          Common.goSetCommandEnabled( cmd, false, currentWindow );
+        }
         try {
-          top.controllers.removeController( this );
+          currentWindow.controllers.removeController( this );
         } catch ( e ) {
           Components.utils.reportError(
             "An error occurred unregistering '" + this.getName() +
             "' controller: " + e
           );
         }
-        Utils.removeAccelText( contentCommands, document );
       }
     };
 
-    function updateCommands() {    
-      window.focus();
-      Common.goUpdateCommand( "znotes_contentaddfile_command" );
-      Common.goUpdateCommand( "znotes_contentopen_command" );
-      Common.goUpdateCommand( "znotes_contentopenwith_command" );
-      Common.goUpdateCommand( "znotes_contentsave_command" );
-      Common.goUpdateCommand( "znotes_contentdelete_command" );
+    function updateCommands() {
+      var id = contentController.getId();
+      Common.goUpdateCommand( "znotes_contentaddfile_command", id, currentWindow );
+      Common.goUpdateCommand( "znotes_contentopen_command", id, currentWindow );
+      Common.goUpdateCommand( "znotes_contentopenwith_command", id, currentWindow );
+      Common.goUpdateCommand( "znotes_contentsave_command", id, currentWindow );
+      Common.goUpdateCommand( "znotes_contentdelete_command", id, currentWindow );
     };
     
     function createContent( file ) {
@@ -247,7 +258,7 @@ ru.akman.znotes.Content = function() {
         var url = fph.getURLSpecFromFile( entry );
         var title = Utils.STRINGS_BUNDLE.getString(
           "utils.openuri.apppicker.title" );
-        Utils.openURI( url, force, window, title );
+        Utils.openURI( url, force, currentWindow, title );
       }
       updateContentTreeItem( anContentIndex );
     };
@@ -284,16 +295,16 @@ ru.akman.znotes.Content = function() {
       var treeItem = null;
       var treeRow = null;
       var treeCell = null;
-      treeRow = document.createElement( "treerow" );
-      treeCell = document.createElement( "treecell" );
+      treeRow = currentWindow.document.createElement( "treerow" );
+      treeCell = currentWindow.document.createElement( "treecell" );
       treeCell.setAttribute( "label", name );
       treeCell.setAttribute( "src", icon );
       treeCell.setAttribute( "properties", "content" );
       treeRow.appendChild( treeCell );
-      treeCell = document.createElement( "treecell" );
+      treeCell = currentWindow.document.createElement( "treecell" );
       treeCell.setAttribute( "label", description );
       treeRow.appendChild( treeCell );
-      treeItem = document.createElement( "treeitem" );
+      treeItem = currentWindow.document.createElement( "treeitem" );
       treeItem.appendChild( treeRow );
       treeItem.setAttribute( "value", id );
       return treeItem;
@@ -532,10 +543,14 @@ ru.akman.znotes.Content = function() {
       contentController.unregister();
     };
     
-    // CONSTRUCTOR
+    // CONSTRUCTOR ( aWindow, aStyle )
 
-    contentTree = document.getElementById( "contentTree" );
-    contentTreeChildren = document.getElementById( "contentTreeChildren" );
+    currentWindow = aWindow ? aWindow : window;
+    if ( aStyle ) {
+      currentStyle = aStyle;
+    }
+    contentTree = currentWindow.document.getElementById( "contentTree" );
+    contentTreeChildren = currentWindow.document.getElementById( "contentTreeChildren" );
     noteStateListener = {
       name: "CONTENT",
       onNoteDeleted: onNoteDeleted,

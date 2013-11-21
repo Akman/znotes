@@ -34,13 +34,19 @@ if ( !ru ) var ru = {};
 if ( !ru.akman ) ru.akman = {};
 if ( !ru.akman.znotes ) ru.akman.znotes = {};
 if ( !ru.akman.znotes.doc ) ru.akman.znotes.doc = {};
+if ( !ru.akman.znotes.core ) ru.akman.znotes.core = {};
 
-Components.utils.import( "resource://znotes/utils.js"  , ru.akman.znotes );
+Components.utils.import( "resource://znotes/utils.js", ru.akman.znotes );
+Components.utils.import( "resource://znotes/event.js", ru.akman.znotes.core );
 
 var EXPORTED_SYMBOLS = ["Document"];
 
 var Document = function() {
 
+  var Utils = ru.akman.znotes.Utils;
+
+  var registryObject = null;
+  
   var DocumentException = function( message ) {
     this.name = "DocumentException";
     this.message = message;
@@ -48,22 +54,51 @@ var Document = function() {
       return this.name + ": " + this.message;
     }
   };
+  
+  var observers = [];
 
   var pub = {};
 
   pub.getInfo = function() {
     return {
       url: "chrome://znotes_documents/content/text/",
-      iconURL: "chrome://znotes_images/skin/documents/text/text.png",
+      iconURL: "chrome://znotes_images/skin/documents/text/icon-16x16.png",
       type: "text/plain",
       defaultNS: "",
       errorNS: "",
-      name: "text",
+      name: "TEXT",
       version: "1.0",
-      description: "Plain Text Document",
+      description: "TEXT Document",
     };
   };
 
+  pub.addObserver = function( aObserver ) {
+    if ( observers.indexOf( aObserver ) < 0 ) {
+      observers.push( aObserver );
+    }
+  };
+
+  pub.removeObserver = function( aObserver ) {
+    var index = observers.indexOf( aObserver );
+    if ( index < 0 ) {
+      return;
+    }
+    observers.splice( index, 1 );
+  };
+
+  pub.notifyObservers = function( event ) {
+    for ( var i = 0; i < observers.length; i++ ) {
+      if ( observers[i][ "on" + event.type ] ) {
+        observers[i][ "on" + event.type ]( event );
+      }
+    }
+  };
+
+  pub.getId = function() {
+    var info = pub.getInfo();
+    return info.name + "-" + info.version;
+  };
+  
   pub.getURL = function() {
     return pub.getInfo().url;
   };
@@ -95,7 +130,7 @@ var Document = function() {
   pub.getDescription = function() {
     return pub.getInfo().description;
   };
-
+  
   pub.getBlankDocument = function( aBaseURI, aTitle, aCommentFlag ) {
     var dom = "";
     if ( aTitle ) {
@@ -145,6 +180,10 @@ var Document = function() {
     return dom;
   };
 
+  pub.getDefaultPreferences = function() {
+    return {};
+  };
+  
   return pub;
 
 }();

@@ -182,7 +182,7 @@ var Note = function( aBook, anEntry, aCategory, aType, aTagID ) {
   };
   
   this.getDocument = function() {
-    var doc = ru.akman.znotes.DocumentManager.getDocument( this.getType() );
+    var doc = ru.akman.znotes.DocumentManager.getInstance().getDocument( this.getType() );
     if ( !doc ) {
       return null;
     }
@@ -190,7 +190,7 @@ var Note = function( aBook, anEntry, aCategory, aType, aTagID ) {
   };
   
   this.setDocument = function( dom ) {
-    var doc = ru.akman.znotes.DocumentManager.getDocument( this.getType() );
+    var doc = ru.akman.znotes.DocumentManager.getInstance().getDocument( this.getType() );
     if ( !doc ) {
       return false;
     }
@@ -209,7 +209,7 @@ var Note = function( aBook, anEntry, aCategory, aType, aTagID ) {
   };
 
   this.importDocument = function( dom ) {
-    var doc = ru.akman.znotes.DocumentManager.getDocument( this.getType() );
+    var doc = ru.akman.znotes.DocumentManager.getInstance().getDocument( this.getType() );
     if ( !doc ) {
       return;
     }
@@ -522,8 +522,8 @@ var Note = function( aBook, anEntry, aCategory, aType, aTagID ) {
       return;
     }
     var oldStatus = {};
-    ru.akman.znotes.Utils.copyObject( this.status, oldStatus );
-    ru.akman.znotes.Utils.copyObject( status, this.status );
+    ru.akman.znotes.Utils.cloneObject( this.status, oldStatus );
+    ru.akman.znotes.Utils.cloneObject( status, this.status );
     this.loadingProgress.push( status );
     if ( !this.isLocked() ) {
       this.notifyStateListener(
@@ -845,9 +845,9 @@ var Note = function( aBook, anEntry, aCategory, aType, aTagID ) {
     this.setTags( arrIDs );
   }
   if ( this.entry.getSize() == 0 ) {
-    var doc = ru.akman.znotes.DocumentManager.getDocument( this.getType() );
+    var doc = ru.akman.znotes.DocumentManager.getInstance().getDocument( this.getType() );
     if ( !doc ) {
-      doc = ru.akman.znotes.DocumentManager.getDefaultDocument();
+      doc = ru.akman.znotes.DocumentManager.getInstance().getDefaultDocument();
       this.setType( doc.getType() );
     }
     if ( doc ) {

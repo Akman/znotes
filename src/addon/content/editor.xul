@@ -38,13 +38,21 @@
 <overlay id="editor"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <script type="application/x-javascript"
+  <script type="application/javascript"
     src="chrome://znotes/content/editor.js" />
-
-  <stringbundleset id="znotes_stringbundleset" />
-  <commandset id="znotes_commandset" />
-  <keyset id="znotes_keyset" />
-  <popupset id="znotes_popupset" />
+    
+  <stringbundleset id="znotes_stringbundleset">
+    <stringbundleset id="znotes_editor_stringbundleset" />
+  </stringbundleset>
+  <commandset id="znotes_commandset">
+    <commandset id="znotes_editor_commandset" />
+  </commandset>
+  <keyset id="znotes_keyset">
+    <keyset id="znotes_editor_keyset" />
+  </keyset>
+  <popupset id="znotes_popupset">
+    <popupset id="znotes_editor_popupset" />
+  </popupset>
 
   <toolbarpalette id="znotes_bodytoolbarpalette">
     <toolbarbutton id="znotes_editoredit_button"

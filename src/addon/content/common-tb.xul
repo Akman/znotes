@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- ***** BEGIN LICENSE BLOCK *****
+  -
+  - Version: GPL 3.0
+  -
+  - ZNotes
+  - Copyright (C) 2012 Alexander Kapitman
+  -
+  - This program is free software: you can redistribute it and/or modify
+  - it under the terms of the GNU General Public License as published by
+  - the Free Software Foundation, either version 3 of the License, or
+  - (at your option) any later version.
+  -
+  - This program is distributed in the hope that it will be useful,
+  - but WITHOUT ANY WARRANTY; without even the implied warranty of
+  - MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  - GNU General Public License for more details.
+  -
+  - You should have received a copy of the GNU General Public License
+  - along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -
+  - The Original Code is ZNotes.
+  -
+  - Initial Developer(s):
+  -   Alexander Kapitman <akman.ru@gmail.com>
+  -
+  - Portions created by the Initial Developer are Copyright (C) 2012
+  - the Initial Developer. All Rights Reserved.
+  -
+  - Contributor(s):
+  -
+  - ***** END LICENSE BLOCK ***** -->
+
+<?xml-stylesheet type="text/css" href="chrome://znotes/skin/common-tb.css" ?>
+  
+<!DOCTYPE overlay SYSTEM "chrome://znotes/locale/common-tb.dtd">
+
+<overlay id="common-tb"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <stringbundleset id="znotes_platform_stringbundleset" />
+  
+  <commandset id="znotes_platform_commandset">
+    <command id="znotes_tbopenmaintab_command"
+      thunderbird="true"
+      label="&znotes_tbopenmaintab_label;"
+      title="&znotes_tbopenmaintab_label;"
+      tooltiptext="&znotes_tbopenmaintab_tooltip;"
+      accesskey="&znotes_tbopenmaintab_accesskey;"
+      key="znotes_tbopenmaintab_key"
+      oncommand="ru.akman.znotes.Common.goDoCommand( 'znotes_tbopenmaintab_command', event.explicitOriginalTarget );"/>
+    <command id="znotes_tbnewnote_command" disabled="true"
+      thunderbird="true"
+      tooltiptext="&znotes_tbnewnote_tooltip;"
+      key="znotes_tbnewnote_key"
+      oncommand="ru.akman.znotes.Common.goDoCommand( 'znotes_tbnewnote_command', event.explicitOriginalTarget );"/>
+    <command id="znotes_tbsaveasnote_command" disabled="true"
+      thunderbird="true"
+      label="&znotes_tbsaveasnote_label;"
+      title="&znotes_tbsaveasnote_label;"
+      tooltiptext="&znotes_tbsaveasnote_tooltip;"
+      accesskey="&znotes_tbsaveasnote_accesskey;"
+      key="znotes_tbsaveasnote_key"
+      oncommand="ru.akman.znotes.Common.goDoCommand( 'znotes_tbsaveasnote_command', event.explicitOriginalTarget );"/>
+    <command id="znotes_tbopenoptionsdialog_command" disabled="true"
+      label="&znotes_tbopenoptionsdialog_label;"
+      title="&znotes_tbopenoptionsdialog_label;"
+      tooltiptext="&znotes_tbopenoptionsdialog_tooltip;"
+      accesskey="&znotes_tbopenoptionsdialog_accesskey;"
+      oncommand="ru.akman.znotes.Common.goDoCommand( 'znotes_tbopenoptionsdialog_command', event.explicitOriginalTarget );"/>
+    <command id="znotes_tbdebug_command" disabled="true" hidden="true"
+      label="&znotes_tbdebug_label;"
+      title="&znotes_tbdebug_label;"
+      tooltiptext="&znotes_tbdebug_tooltip;"
+      accesskey="&znotes_tbdebug_accesskey;"
+      oncommand="ru.akman.znotes.Common.goDoCommand( 'znotes_tbdebug_command', event.explicitOriginalTarget );"/>
+    <command id="znotes_tbshowmainmenubar_command" disabled="true"
+      label="&znotes_tbshowmainmenubar_label;"
+      title="&znotes_tbshowmainmenubar_label;"
+      tooltiptext="&znotes_tbshowmainmenubar_tooltip;"
+      accesskey="&znotes_tbshowmainmenubar_accesskey;"
+      oncommand="ru.akman.znotes.Common.goDoCommand( 'znotes_tbshowmainmenubar_command', event.explicitOriginalTarget );"/>
+    <command id="znotes_tbshowmaintoolbar_command" disabled="true"
+      label="&znotes_tbshowmaintoolbar_label;"
+      title="&znotes_tbshowmaintoolbar_label;"
+      tooltiptext="&znotes_tbshowmaintoolbar_tooltip;"
+      accesskey="&znotes_tbshowmaintoolbar_accesskey;"
+      oncommand="ru.akman.znotes.Common.goDoCommand( 'znotes_tbshowmaintoolbar_command', event.explicitOriginalTarget );"/>
+    <command id="znotes_tbopenhelp_command" disabled="true"
+      label="&znotes_tbopenhelp_label;"
+      title="&znotes_tbopenhelp_label;"
+      tooltiptext="&znotes_tbopenhelp_tooltip;"
+      accesskey="&znotes_tbopenhelp_accesskey;"
+      oncommand="ru.akman.znotes.Common.goDoCommand( 'znotes_tbopenhelp_command', event.explicitOriginalTarget );"/>
+    <command id="znotes_tbopenabout_command" disabled="true"
+      label="&znotes_tbopenabout_label;"
+      title="&znotes_tbopenabout_label;"
+      tooltiptext="&znotes_tbopenabout_tooltip;"
+      accesskey="&znotes_tbopenabout_accesskey;"
+      oncommand="ru.akman.znotes.Common.goDoCommand( 'znotes_tbopenabout_command', event.explicitOriginalTarget )"/>
+  </commandset>
+
+  <keyset id="znotes_platform_keyset">
+    <key id="znotes_tbopenmaintab_key" command="znotes_tbopenmaintab_command"
+      key="&znotes_tbopenmaintab_key;" modifiers="&znotes_tbopenmaintab_key_modifiers;"
+      keycode="&znotes_tbopenmaintab_keycode;"/>
+    <key id="znotes_tbnewnote_key" command="znotes_tbnewnote_command"
+      key="&znotes_tbnewnote_key;" modifiers="&znotes_tbnewnote_key_modifiers;"
+      keycode="&znotes_tbnewnote_keycode;"/>
+    <key id="znotes_tbsaveasnote_key" command="znotes_tbsaveasnote_command"
+      key="&znotes_tbsaveasnote_key;" modifiers="&znotes_tbsaveasnote_key_modifiers;"
+      keycode="&znotes_tbsaveasnote_keycode;"/>
+  </keyset>
+  
+  <popupset id="znotes_platform_popupset" />
+  
+</overlay>

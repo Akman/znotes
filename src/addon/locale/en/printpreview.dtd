@@ -30,25 +30,4 @@
   -
   - ***** END LICENSE BLOCK ***** -->
 
-<!ENTITY printer_window_title "Print">
-<!ENTITY print_button_label "Print…">
-<!ENTITY print_button_accesskey "p">
-<!ENTITY setup_button_label "Setup…">
-<!ENTITY setup_button_accesskey "a">
-<!ENTITY page_label_value "Page:">
-<!ENTITY page_label_accesskey "g">
-<!ENTITY home_button_tooltip "First page">
-<!ENTITY previous_button_tooltip "Previous page">
-<!ENTITY number_textbox_label "of">
-<!ENTITY next_button_tooltip "Next page">
-<!ENTITY end_button_tooltip "Last page">
-<!ENTITY scale_label_value "Scale:">
-<!ENTITY scale_label_accesskey "s">
-<!ENTITY shrink_checkbox_label "Shrink to fit">
-<!ENTITY shrink_checkbox_accesskey "f">
-<!ENTITY portrait_button_label "Portrait">
-<!ENTITY portrait_button_accesskey "t">
-<!ENTITY landscape_button_label "Landscape">
-<!ENTITY landscape_button_accesskey "l">
-<!ENTITY close_button_label "Close">
-<!ENTITY close_button_accesskey "c">
+<!ENTITY printpreview.title "Print">

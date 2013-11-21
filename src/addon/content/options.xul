@@ -34,66 +34,99 @@
 <?xml-stylesheet type="text/css" href="chrome://global/skin/" ?>
 <?xml-stylesheet type="text/css" href="chrome://znotes/skin/options.css" ?>
 
+<?xul-overlay href="chrome://znotes/content/common.xul" ?>
+
 <!DOCTYPE window SYSTEM "chrome://znotes/locale/options.dtd">
 
-<dialog
-  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-  id="znotes_options"
-  orient="vertical"
-  windowtype="znotes"
-  title="&options_window_title;">
+<dialog xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  id="znotes" orient="vertical" windowtype="znotes"
+  minheight="462" height="658" minwidth="462" width="656"
+  title="&window.title;">
 
-  <script type="application/x-javascript"
+  <script type="application/javascript"
     src="chrome://znotes/content/options.js" />
 
-  <groupbox id="gb_place">
-    <caption id="gb_place_caption"
-      label="&options_place_caption;" />
-    <hbox id="hb_place_name" align="center">
-      <textbox id="tb_place_name" flex="1"
-        placeholder="&options_place_description;" />
-    </hbox>
-  </groupbox>
+  <stringbundleset id="znotes_platform_stringbundleset" />
+  <stringbundleset id="znotes_stringbundleset">
+    <stringbundleset id="znotes_editor_stringbundleset" />
+  </stringbundleset>
+  <commandset id="znotes_platform_commandset" />
+  <commandset id="znotes_commandset">
+    <commandset id="znotes_editor_commandset" />
+  </commandset>
+  <keyset id="znotes_platform_keyset" />
+  <keyset id="znotes_keyset">
+    <keyset id="znotes_editor_keyset" />
+  </keyset>
+  <popupset id="znotes_platform_popupset" />
+  <popupset id="znotes_popupset">
+    <popupset id="znotes_editor_popupset" />
+  </popupset>
+    
+  <tabbox id="optionsTabBox" flex="1">
+    <tabs id="optionsTabs">
+      <tab id="tab-main" label="&tab-main.label;" class="optionsTab" />
+    </tabs>
+    <tabpanels id="optionsPanels" flex="1">
+      <tabpanel id="panel-main" orient="vertical" flex="1">
+        <groupbox id="placeNameGroupBox">
+          <caption id="placeNameCaption" label="&placeNameCaption.label;" />
+          <hbox id="placeNameHBox" align="center">
+            <textbox id="placeName" flex="1"
+              placeholder="&placeName.placeholder;" />
+          </hbox>
+        </groupbox>
+        <groupbox id="mainGroupBox">
+          <vbox id="mainVBox" align="start">
+            <checkbox id="isSavePosition"
+              label="&isSavePosition.label;" flex="1" />
+            <checkbox id="isEditSourceEnabled"
+              label="&isEditSourceEnabled.label;" flex="1" />
+          </vbox>
+        </groupbox>
+        <groupbox id="docTypeGroupBox">
+          <caption id="docTypeCaption" label="&docTypeCaption.label;" />
+          <hbox id="docTypeHBox" align="center">
+            <menulist id="docTypeMenuList" flex="1">
+              <menupopup id="docTypeMenuPopup" flex="1" />
+            </menulist>      
+          </hbox>
+        </groupbox>
+        <groupbox id="additionGroupBox">
+          <caption id="additionCaption" label="&additionCaption.label;" />
+          <vbox id="additionVBox" align="start">
+            <checkbox id="isConfirmExit" label="&isConfirmExit.label;" flex="1" />
+            <checkbox id="isReplaceBackground" label="&isReplaceBackground.label;" flex="1" />
+            <checkbox id="isHighlightRow" label="&isHighlightRow.label;" flex="1" />
+            <checkbox id="isPlaySound" label="&isPlaySound.label;" flex="1" />
+          </vbox>
+        </groupbox>
+        <groupbox id="keysPlatformGroupBox" flex="1" collapsed="true">
+          <caption id="keysPlatformCaption"
+            label="&keysPlatformCaption.label;" />
+          <richlistbox id="keysPlatformListBox" class="key_list"
+            seltype="single" flex="1" minheight="83"/>
+        </groupbox>
+        <groupbox id="keysGroupBox" flex="1">
+          <caption id="keysCaption" label="&keysCaption.label;" />
+          <richlistbox id="keysListBox" class="key_list"
+            seltype="single" flex="1" minheight="83"/>
+        </groupbox>
+      </tabpanel>
+    </tabpanels>
+  </tabbox>
 
-  <groupbox id="gb_main">
-    <vbox id="vb_main" align="start">
-      <checkbox id="cb_is_save_position"
-        label="&options_is_save_position;" flex="1" />
-      <checkbox id="cb_is_edit_source_enabled"
-        label="&options_is_edit_source_enabled;" flex="1" />
-    </vbox>
-  </groupbox>
-
-  <groupbox id="gb_default_document_type">
-    <caption id="gb_default_document_type_caption"
-      label="&gb_default_document_type_caption;" />
-    <hbox id="hb_default_document_type" align="center">
-      <menulist id="ml_default_document_type" flex="1">
-        <menupopup id="mp_default_document_type" flex="1" />
-      </menulist>      
-    </hbox>
-  </groupbox>
-  
-  <groupbox id="gb_addition">
-    <vbox id="vb_addition" align="start">
-      <checkbox id="cb_is_play_sound"
-        label="&options_is_play_sound;" flex="1" />
-    </vbox>
-  </groupbox>
-  
-  <spacer id="options_spacer" minheight="20" flex="1"/>
-
-  <hbox id="hb_buttons" dir="rtl">
-    <button id="btnAccept"
-      dlgtype="accept"
-      minwidth="90"
-      label=" &options_accept;"
-      pack="start"/>
-    <button id="btnCancel"
-      dlgtype="cancel"
-      minwidth="90"
-      label=" &options_cancel;"
-      pack="start"/>
+  <hbox id="buttonsHBox" dir="rtl">
+    <button id="acceptButton" dlgtype="accept" minwidth="90"
+      label=" &acceptButton.label;" pack="start"
+      tooltiptext="&acceptButton.tooltip;" />
+    <button id="cancelButton" dlgtype="cancel" minwidth="90"
+      label=" &cancelButton.label;" pack="start"
+      tooltiptext="&cancelButton.tooltip;" />
+    <spacer id="buttonSpacer" flex="1" />
+    <button id="defaultsButton" minwidth="90"
+      label=" &defaultsButton.label;" pack="start"
+      tooltiptext="&defaultsButton.tooltip;" />
   </hbox>
 
 </dialog>

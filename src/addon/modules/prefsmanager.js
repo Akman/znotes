@@ -35,15 +35,19 @@ if ( !ru.akman ) ru.akman = {};
 if ( !ru.akman.znotes ) ru.akman.znotes = {};
 if ( !ru.akman.znotes.core ) ru.akman.znotes.core = {};
 
-Components.utils.import( "resource://znotes/utils.js" , ru.akman.znotes );
-Components.utils.import( "resource://znotes/event.js"  , ru.akman.znotes.core );
+Components.utils.import( "resource://znotes/utils.js", ru.akman.znotes );
+Components.utils.import( "resource://znotes/event.js", ru.akman.znotes.core );
 
 var EXPORTED_SYMBOLS = ["PrefsManager"];
 
 var PrefsManager = function() {
 
-  var log = ru.akman.znotes.Utils.log;
+  var Utils = ru.akman.znotes.Utils;
 
+  var prefsMozilla =
+    Components.classes["@mozilla.org/preferences-service;1"]
+              .getService( Components.interfaces.nsIPrefBranch );
+  
   var prefs = null;
   var observers = [];
 
@@ -70,7 +74,7 @@ var PrefsManager = function() {
       var data = ru.akman.znotes.Utils.readFileContent( entry, "UTF-8" );
       prefs = JSON.parse( data );
     } catch ( e ) {
-      log( e );
+      Utils.log( e );
       prefs = {};
       savePrefs();
     }
@@ -192,6 +196,129 @@ var PrefsManager = function() {
     );
   };
 
+  pub.loadPrefs = function() {
+    if ( prefsMozilla.prefHasUserValue( "extensions.znotes.debug" ) ) {
+      Utils.IS_DEBUG_ENABLED =
+        prefsMozilla.getBoolPref( "extensions.znotes.debug" );
+    }
+    if ( prefsMozilla.prefHasUserValue( "extensions.znotes.debug.active" ) ) {
+      Utils.IS_DEBUG_ACTIVE =
+        prefsMozilla.getBoolPref( "extensions.znotes.debug.active" );
+    }
+    if ( prefsMozilla.prefHasUserValue( "extensions.znotes.debug.raised" ) ) {
+      Utils.IS_DEBUG_RAISED =
+        prefsMozilla.getBoolPref( "extensions.znotes.debug.raised" );
+    }
+    if ( prefsMozilla.prefHasUserValue( "extensions.znotes.sanitize" ) ) {
+      Utils.IS_SANITIZE_ENABLED =
+        prefsMozilla.getBoolPref( "extensions.znotes.sanitize" );
+    }
+    if ( prefsMozilla.prefHasUserValue( "extensions.znotes.ad" ) ) {
+      Utils.IS_AD_ENABLED =
+        prefsMozilla.getBoolPref( "extensions.znotes.ad" );
+    }
+    try {
+      if ( !pub.hasPref( "isFirstRun" ) ) {
+        pub.setBoolPref( "isFirstRun",
+          Utils.IS_FIRST_RUN );
+      }
+      Utils.IS_FIRST_RUN =
+        pub.getBoolPref( "isFirstRun" );
+      //
+      if ( !pub.hasPref( "version" ) ) {
+        pub.setCharPref( "version",
+          Utils.VERSION );
+      }
+      //
+      if ( !pub.hasPref( "isSavePosition" ) ) {
+        pub.setBoolPref( "isSavePosition",
+          Utils.IS_SAVE_POSITION );
+      }
+      Utils.IS_SAVE_POSITION =
+        pub.getBoolPref( "isSavePosition" );
+      //
+      if ( !pub.hasPref( "isEditSourceEnabled" ) ) {
+        pub.setBoolPref( "isEditSourceEnabled",
+          Utils.IS_EDIT_SOURCE_ENABLED );
+      }
+      Utils.IS_EDIT_SOURCE_ENABLED =
+        pub.getBoolPref( "isEditSourceEnabled" );
+      //
+      if ( !pub.hasPref( "isPlaySound" ) ) {
+        pub.setBoolPref( "isPlaySound",
+          Utils.IS_PLAY_SOUND );
+      }
+      Utils.IS_PLAY_SOUND =
+        pub.getBoolPref( "isPlaySound" );
+      //
+      if ( !pub.hasPref( "isHighlightRow" ) ) {
+        pub.setBoolPref( "isHighlightRow",
+          Utils.IS_HIGHLIGHT_ROW );
+      }
+      Utils.IS_HIGHLIGHT_ROW =
+        pub.getBoolPref( "isHighlightRow" );
+      //
+      if ( !pub.hasPref( "isReplaceBackground" ) ) {
+        pub.setBoolPref( "isReplaceBackground",
+          Utils.IS_REPLACE_BACKGROUND );
+      }
+      Utils.IS_REPLACE_BACKGROUND =
+        pub.getBoolPref( "isReplaceBackground" );
+      //
+      if ( !pub.hasPref( "isConfirmExit" ) ) {
+        pub.setBoolPref( "isConfirmExit",
+          Utils.IS_CONFIRM_EXIT );
+      }
+      Utils.IS_CONFIRM_EXIT =
+        pub.getBoolPref( "isConfirmExit" );
+      //
+      if ( !pub.hasPref( "isMainMenubarVisible" ) ) {
+        pub.setBoolPref( "isMainMenubarVisible",
+          Utils.IS_MAINMENUBAR_VISIBLE );
+      }
+      Utils.IS_MAINMENUBAR_VISIBLE =
+        pub.getBoolPref( "isMainMenubarVisible" );
+      //
+      if ( !pub.hasPref( "isMainToolbarVisible" ) ) {
+        pub.setBoolPref( "isMainToolbarVisible",
+          Utils.IS_MAINTOOLBAR_VISIBLE );
+      }
+      Utils.IS_MAINTOOLBAR_VISIBLE =
+        pub.getBoolPref( "isMainToolbarVisible" );
+      //
+      if ( !pub.hasPref( "defaultDocumentType" ) ) {
+        pub.setCharPref( "defaultDocumentType",
+          Utils.DEFAULT_DOCUMENT_TYPE );
+      }
+      Utils.DEFAULT_DOCUMENT_TYPE =
+        pub.getCharPref( "defaultDocumentType" );
+      //
+      if ( !pub.hasPref( "placeName" ) ) {
+        pub.setCharPref( "placeName",
+          Utils.PLACE_NAME );
+      }
+      Utils.PLACE_NAME =
+        pub.getCharPref( "placeName" );
+      //
+      if ( !pub.hasPref( "main_shortcuts" ) ) {
+        pub.setCharPref( "main_shortcuts",
+          Utils.MAIN_SHORTCUTS );
+      }
+      Utils.MAIN_SHORTCUTS =
+        pub.getCharPref( "main_shortcuts" );
+      //
+      if ( !pub.hasPref( "platform_shortcuts" ) ) {
+        pub.setCharPref( "platform_shortcuts",
+          Utils.PLATFORM_SHORTCUTS );
+      }
+      Utils.PLATFORM_SHORTCUTS =
+        pub.getCharPref( "platform_shortcuts" );
+      //
+    } catch ( e ) {
+      Utils.log( e );
+    }
+  };
+  
   pub.getInstance = function() {
     return this;
   };
@@ -210,7 +337,7 @@ var PrefsManager = function() {
     observers.splice( index, 1 );
   };
 
-  // C O N S T R U C T O R
+  // CONSTRUCTOR
 
   init();
 

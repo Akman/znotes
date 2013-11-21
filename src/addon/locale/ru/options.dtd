@@ -30,12 +30,23 @@
   -
   - ***** END LICENSE BLOCK ***** -->
 
-<!ENTITY options_window_title "Параметры">
-<!ENTITY options_place_caption " Рабочее место ">
-<!ENTITY options_place_description "Введите название этого рабочего места ...">
-<!ENTITY options_is_save_position "Запоминать выбранную заметку для каждой категории/тега">
-<!ENTITY options_is_edit_source_enabled "Разрешить редактирование исходного кода заметки">
-<!ENTITY gb_default_document_type_caption "Тип документа по умолчанию">
-<!ENTITY options_is_play_sound "Воспроизводить звук при запуске">
-<!ENTITY options_accept "Принять">
-<!ENTITY options_cancel "Отменить">
+<!ENTITY window.title "Параметры">
+<!ENTITY tab-main.label " Основные ">
+<!ENTITY placeNameCaption.label " Рабочее место ">
+<!ENTITY placeName.placeholder "Введите название этого рабочего места ...">
+<!ENTITY isSavePosition.label "Запоминать выбранную заметку для каждой категории/тега">
+<!ENTITY isEditSourceEnabled.label "Разрешить редактирование исходного кода заметки">
+<!ENTITY docTypeCaption.label "Тип документа по умолчанию">
+<!ENTITY additionCaption.label "Дополнительно">
+<!ENTITY isConfirmExit.label "Запрашивать подтверждение при закрытии приложения">
+<!ENTITY isReplaceBackground.label "Заменять цвет фона заметки используя цвет основного тега">
+<!ENTITY isHighlightRow.label "Подсвечивать строки в списке заметок используя цвет основного тега">
+<!ENTITY isPlaySound.label "Воспроизводить звук при запуске">
+<!ENTITY keysPlatformCaption.label "Сочетания клавиш">
+<!ENTITY keysCaption.label "Сочетания клавиш">
+<!ENTITY defaultsButton.label "По умолчанию">
+<!ENTITY defaultsButton.tooltip "Сбросить к значениям по умолчанию">
+<!ENTITY acceptButton.label "Принять">
+<!ENTITY acceptButton.tooltip "Принять изменения и выйти">
+<!ENTITY cancelButton.label "Отменить">
+<!ENTITY cancelButton.tooltip "Отменить изменения и выйти">

@@ -36,7 +36,7 @@ if ( !ru.akman.znotes ) ru.akman.znotes = {};
 
 Components.utils.import( "resource://znotes/utils.js" , ru.akman.znotes );
 
-ru.akman.znotes.Relator = function() {
+ru.akman.znotes.Relator = function( aWindow, aStyle ) {
 
   // !!!! %%%% !!!! IS_AD_ENABLED
   return function() {
@@ -44,6 +44,9 @@ ru.akman.znotes.Relator = function() {
     var Utils = ru.akman.znotes.Utils;
     var Common = ru.akman.znotes.Common;
 
+    var currentWindow = null;
+    var currentStyle = null;
+    
     var currentNote = null;
 
     var noteStateListener = null;
@@ -65,6 +68,10 @@ ru.akman.znotes.Relator = function() {
           return false;
         }
         return true;
+        /*
+        var focusedWindow = currentWindow.top.document.commandDispatcher.focusedWindow;
+        return ( focusedWindow == currentWindow );
+        */
       },
       isCommandEnabled: function( cmd ) {
         if ( !( cmd in relatorCommands ) ) {
@@ -87,14 +94,16 @@ ru.akman.znotes.Relator = function() {
       },
       getCommand: function( cmd ) {
         if ( cmd in relatorCommands ) {
-          return document.getElementById( cmd );
+          return currentWindow.document.getElementById( cmd );
         }
         return null;
       },
       register: function() {
-        Utils.appendAccelText( relatorCommands, document );
         try {
-          top.controllers.insertControllerAt( 0, this );
+          currentWindow.controllers.insertControllerAt( 0, this );
+          this.getId = function() {
+            return currentWindow.controllers.getControllerId( this );
+          };
         } catch ( e ) {
           Components.utils.reportError(
             "An error occurred registering '" + this.getName() +
@@ -103,20 +112,21 @@ ru.akman.znotes.Relator = function() {
         }
       },
       unregister: function() {
+        for ( var cmd in relatorCommands ) {
+          Common.goSetCommandEnabled( cmd, false, currentWindow );
+        }
         try {
-          top.controllers.removeController( this );
+          currentWindow.controllers.removeController( this );
         } catch ( e ) {
           Components.utils.reportError(
             "An error occurred unregistering '" + this.getName() +
             "' controller: " + e
           );
         }
-        Utils.removeAccelText( relatorCommands, document );
       }
     };
     
     function updateCommands() {
-      window.focus();
     };
     
     // NOTE EVENTS
@@ -289,11 +299,15 @@ ru.akman.znotes.Relator = function() {
       relatorController.unregister();
     };
 
-    // CONSTRUCTOR
+    // CONSTRUCTOR ( aWindow, aStyle )
 
-    addonsTabAd = document.getElementById( "addonsTabAd" );
-    noteAdViewPanel = document.getElementById( "noteAdViewPanel" );
-    adBrowser = document.getElementById( "adBrowser" );
+    currentWindow = aWindow ? aWindow : window;
+    if ( aStyle ) {
+      currentStyle = aStyle;
+    }
+    addonsTabAd = currentWindow.document.getElementById( "addonsTabAd" );
+    noteAdViewPanel = currentWindow.document.getElementById( "noteAdViewPanel" );
+    adBrowser = currentWindow.document.getElementById( "adBrowser" );
     noteStateListener = {
       name: "RELATOR",
       onNoteDeleted: onNoteDeleted,

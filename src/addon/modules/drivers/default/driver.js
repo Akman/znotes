@@ -42,7 +42,7 @@ var Driver = function() {
 
   // D E S C R I P T O R
 
-  var log = ru.akman.znotes.Utils.log;
+  var Utils = ru.akman.znotes.Utils;
   
   var DescriptorException = function( message ) {
     this.name = "DescriptorException";
@@ -777,7 +777,7 @@ var Driver = function() {
           }
           srcEntry.copyTo( contentDirectoryEntry, null );
         } catch ( e ) {
-          log( e );
+          Utils.log( e );
           return null;
         }
       }
@@ -805,7 +805,7 @@ var Driver = function() {
           fileEntry.remove( false );
         }
       } catch ( e ) {
-        log( e );
+        Utils.log( e );
       }
       contentsDescriptor.removeItem( leafName );
       return info;
@@ -876,7 +876,7 @@ var Driver = function() {
               }
               srcEntry.copyTo( attachmentsDirectoryEntry, null );
             } catch ( e ) {
-              log( e );
+              Utils.log( e );
               return null;
             }
           }
@@ -911,7 +911,7 @@ var Driver = function() {
               fileEntry.remove( false );
             }
           } catch ( e ) {
-            log( e );
+            Utils.log( e );
           }
           break;
         case "contact" :
@@ -1189,11 +1189,13 @@ var Driver = function() {
 
   var pub = {};
 
+  pub["default"] = true;
+  
   pub.getInfo = function() {
     return {
       name: "default",
       version: "1.0",
-      description: "Default file system driver"
+      description: "Local file system driver"
     };
   };
 

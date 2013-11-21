@@ -40,8 +40,8 @@
 
   <vbox id="znotes_contenttabpanel">
     <browser id="znotes_contenttabbrowser"
-      class="znotes_contenttabbrowser"
       type="chrome"
+      class="znotes_contenttabbrowser"
       flex="1"
       disablehistory="true"
       disableglobalhistory="true" />

@@ -30,15 +30,6 @@
   -
   - ***** END LICENSE BLOCK ***** -->
 
-<!-- tb -->
-
-<!ENTITY znotes_openmaintab_label "Notes">
-<!ENTITY znotes_openmaintab_tooltip "Switch to notes tab">
-<!ENTITY znotes_openmaintab_accesskey "N">
-<!ENTITY znotes_openmaintab_key "Z">
-<!ENTITY znotes_openmaintab_key_modifiers "accel shift">
-<!ENTITY znotes_openmaintab_keycode "">
-  
 <!-- main -->
   
 <!ENTITY znotes_showmainmenubar_label "Menubar">
@@ -226,8 +217,8 @@
 <!ENTITY znotes_newnote_label "New note">
 <!ENTITY znotes_newnote_tooltip "New note">
 <!ENTITY znotes_newnote_accesskey "N">
-<!ENTITY znotes_newnote_key "">
-<!ENTITY znotes_newnote_key_modifiers "">
+<!ENTITY znotes_newnote_key "Z">
+<!ENTITY znotes_newnote_key_modifiers "accel,alt">
 <!ENTITY znotes_newnote_keycode "">
 
 <!ENTITY znotes_importnote_label "Import note">
@@ -344,9 +335,9 @@
 <!ENTITY znotes_delete_key_modifiers "">
 <!ENTITY znotes_delete_keycode "VK_DELETE">
 
-<!ENTITY znotes_selectall_label "Select all">
-<!ENTITY znotes_selectall_tooltip "Select all">
-<!ENTITY znotes_selectall_accesskey "S">
+<!ENTITY znotes_selectall_label "Select All">
+<!ENTITY znotes_selectall_tooltip "Select All">
+<!ENTITY znotes_selectall_accesskey "A">
 <!ENTITY znotes_selectall_key "A">
 <!ENTITY znotes_selectall_key_modifiers "accel">
 <!ENTITY znotes_selectall_keycode "">
@@ -500,3 +491,30 @@
 <!ENTITY znotes_editorprint_key "P">
 <!ENTITY znotes_editorprint_key_modifiers "accel">
 <!ENTITY znotes_editorprint_keycode "">
+
+<!-- spell -->
+
+<!ENTITY znotes_spelldictionariesmenu_label "Languages">
+<!ENTITY znotes_spelldictionariesmenu_accesskey "L">
+<!ENTITY znotes_spellnosuggestionsmenuitem_label "(No Spelling Suggestions)">
+
+<!ENTITY znotes_addtodictionary_label "Add to Dictionary">
+<!ENTITY znotes_addtodictionary_tooltip "Add to Dictionary">
+<!ENTITY znotes_addtodictionary_accesskey "o">
+<!ENTITY znotes_addtodictionary_key "">
+<!ENTITY znotes_addtodictionary_key_modifiers "">
+<!ENTITY znotes_addtodictionary_keycode "">
+
+<!ENTITY znotes_undoaddtodictionary_label "Undo Add To Dictionary">
+<!ENTITY znotes_undoaddtodictionary_tooltip "Undo Add To Dictionary">
+<!ENTITY znotes_undoaddtodictionary_accesskey "n">
+<!ENTITY znotes_undoaddtodictionary_key "">
+<!ENTITY znotes_undoaddtodictionary_key_modifiers "">
+<!ENTITY znotes_undoaddtodictionary_keycode "">
+
+<!ENTITY znotes_spellcheckenabled_label "Check Spelling">
+<!ENTITY znotes_spellcheckenabled_tooltip "Check Spelling">
+<!ENTITY znotes_spellcheckenabled_accesskey "g">
+<!ENTITY znotes_spellcheckenabled_key "P">
+<!ENTITY znotes_spellcheckenabled_key_modifiers "accel,shift">
+<!ENTITY znotes_spellcheckenabled_keycode "">

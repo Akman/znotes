@@ -33,9 +33,13 @@
 if ( !ru ) var ru = {};
 if ( !ru.akman ) ru.akman = {};
 if ( !ru.akman.znotes ) ru.akman.znotes = {};
+if ( !ru.akman.znotes.core ) ru.akman.znotes.core = {};
 
 Components.utils.import( "resource://znotes/utils.js",
   ru.akman.znotes
+);
+Components.utils.import( "resource://znotes/event.js",
+  ru.akman.znotes.core
 );
 
 ru.akman.znotes.Common = function() {
@@ -44,86 +48,120 @@ ru.akman.znotes.Common = function() {
 
   var Utils = ru.akman.znotes.Utils;
 
-  pub.goDoCommand = function( event, command ) {
+  // COMMANDS
+  
+  pub.goDoCommand = function( command, target ) {
+    var result = false;
+    var win = target ? target.ownerDocument.defaultView : top;
     try {
-      var controller = top.document.commandDispatcher
-                                   .getControllerForCommand( command );
+      var controller = win.controllers.getControllerForCommand( command );
+      if ( !controller ) {
+        controller =
+          top.document.commandDispatcher.getControllerForCommand( command );
+      }
       if ( controller ) {
         if ( controller.isCommandEnabled( command ) ) {
-          // how about event
           controller.doCommand( command );
+          result = true;
         }
-      } else {
-        Utils.log( "goDoCommand() :: " + command + " :: controller was not found!" );
       }
-    } catch( e ) {
+    } catch ( e ) {
       Components.utils.reportError(
         "An error occurred executing the '" + command + "' command: " + e
       );
     }
+    return result;
   };
-  
-  pub.goUpdateCommand = function( command ) {
+
+  pub.goUpdateCommand = function( command, id, cmdwin ) {
+    var win = cmdwin ? cmdwin : top;
     try {
       var enabled = false;
-      var controller = top.document.commandDispatcher
-                          .getControllerForCommand( command );
+      var controller = id ? win.controllers.getControllerById( id ) :
+        win.controllers.getControllerForCommand( command );
       if ( controller ) {
         enabled = controller.isCommandEnabled( command );
-      } else {
-        Utils.log( "goUpdateCommand() :: " + command + " :: controller was not found!" );
       }
-      pub.goSetCommandEnabled( command, enabled );
+      pub.goSetCommandEnabled( command, enabled, cmdwin );
     } catch ( e ) {
       Components.utils.reportError(
-        "An error occurred updating the '" + command + "' command: " + e
+        "An error occurred updating the '" + command + "' command:\n" + e
       );
     }
   };
 
-  pub.goSetCommandEnabled = function( command, enabled ) {
-    var node = document.getElementById( command );
-    if ( !node ) {
-      Utils.log( "goSetCommandEnabled() :: " + command + " :: command node was not found!" );
-      return false;
+  pub.isCommandEnabled = function( command, id, cmdwin ) {
+    var win = cmdwin ? cmdwin : top;
+    var enabled = false;
+    try {
+      var controller = id ? win.controllers.getControllerById( id ) :
+        win.controllers.getControllerForCommand( command );
+      if ( controller ) {
+        enabled = controller.isCommandEnabled( command );
+      }
+    } catch ( e ) {
+      Components.utils.reportError(
+        "An error occurred accessing the '" + command + "' command: " + e
+      );
     }
-    node.setAttribute( "disabled", "true" );
-    node.removeAttribute( "disabled" );
-    if ( !enabled ) {
-      node.setAttribute( "disabled", "true" );
-    }
-    return true;
-  };
-
-  pub.goSetCommandHidden = function( command, hidden ) {
-    var node = document.getElementById( command );
-    if ( !node ) {
-      return false;
-    }
-    node.setAttribute( "hidden", "true" );
-    node.removeAttribute( "hidden" );
-    if ( hidden ) {
-      node.setAttribute( "hidden", "true" );
-    }
-    return true;
-  };
-
-  pub.goSetCommandAttribute = function( command, name, value ) {
-    var node = document.getElementById( command );
-    if ( !node ) {
-      return false;
-    }
-    if ( node.hasAttribute( name ) ) {
-      node.removeAttribute( name );
-    }
-    node.setAttribute( name, value );
-    return true;
+    return enabled;
   };
   
-  pub.goDoCommandWithParams = function( event, command, params ) {
+  pub.goSetCommandEnabled = function( command, enabled, cmdwin ) {
+    var win = cmdwin ? cmdwin : top;
+    var node = win.document.getElementById( command );
+    if ( node ) {
+      node.setAttribute( "disabled", "true" );
+      node.removeAttribute( "disabled" );
+      if ( !enabled ) {
+        node.setAttribute( "disabled", "true" );
+      } else {
+        node.removeAttribute( "disabled" );
+      }
+    }
+  };
+
+  pub.goSetCommandHidden = function( command, hidden, cmdwin ) {
+    var win = cmdwin ? cmdwin : top;
+    var node = win.document.getElementById( command );
+    if ( node ) {
+      node.setAttribute( "hidden", "true" );
+      node.removeAttribute( "hidden" );
+      if ( hidden ) {
+        node.setAttribute( "hidden", "true" );
+      } else {
+        node.removeAttribute( "hidden" );
+      }
+    }
+  };
+
+  pub.goSetCommandAttribute = function( command, name, value, cmdwin ) {
+    var win = cmdwin ? cmdwin : top;
+    var node = win.document.getElementById( command );
+    if ( node ) {
+      node.setAttribute( name, value );
+      node.removeAttribute( name );
+      node.setAttribute( name, value );
+    }
+  };
+
+  pub.goGetCommandAttribute = function( command, name, cmdwin ) {
+    var win = cmdwin ? cmdwin : top;
+    var node = win.document.getElementById( command );
+    if ( node ) {
+      return ( node.getAttribute( name ) === "true" );
+    }
+    return null;
+  };
+  
+  pub.goDoCommandWithParams = function( command, params, target ) {
+    var win = target ? target.ownerDocument.defaultView : top;
     try {
-      var controller = top.document.commandDispatcher
-                                   .getControllerForCommand( command );
+      var controller = win.controllers.getControllerForCommand( command );
+      if ( !controller ) {
+        controller =
+          top.document.commandDispatcher.getControllerForCommand( command );
+      }
       if ( controller ) {
         if ( controller.isCommandEnabled( command ) ) {
           if ( controller instanceof Components.interfaces.nsICommandController ) {
@@ -133,7 +171,7 @@ ru.akman.znotes.Common = function() {
           }
         }
       }
-    } catch( e ) {
+    } catch ( e ) {
       Components.utils.reportError(
         "An error occurred executing the '" + command + "' command: " + e
       );
@@ -144,7 +182,7 @@ ru.akman.znotes.Common = function() {
     try {
       return Components.classes["@mozilla.org/embedcomp/command-params;1"]
                        .createInstance( Components.interfaces.nsICommandParams );
-    } catch( e ) {
+    } catch ( e ) {
       Components.utils.reportError(
         "An error occurred in createCommandParamsObject: " + e
       );

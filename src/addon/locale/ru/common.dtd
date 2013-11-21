@@ -30,15 +30,6 @@
   -
   - ***** END LICENSE BLOCK ***** -->
 
-<!-- tb -->
-
-<!ENTITY znotes_openmaintab_label "Заметки">
-<!ENTITY znotes_openmaintab_tooltip "Переключиться на вкладку заметок">
-<!ENTITY znotes_openmaintab_accesskey "З">
-<!ENTITY znotes_openmaintab_key "Z">
-<!ENTITY znotes_openmaintab_key_modifiers "accel shift">
-<!ENTITY znotes_openmaintab_keycode "">
-
 <!-- main -->
 
 <!ENTITY znotes_showmainmenubar_label "Панель меню">
@@ -226,8 +217,8 @@
 <!ENTITY znotes_newnote_label "Новая заметка">
 <!ENTITY znotes_newnote_tooltip "Новая заметка">
 <!ENTITY znotes_newnote_accesskey "Н">
-<!ENTITY znotes_newnote_key "">
-<!ENTITY znotes_newnote_key_modifiers "">
+<!ENTITY znotes_newnote_key "Z">
+<!ENTITY znotes_newnote_key_modifiers "accel,alt">
 <!ENTITY znotes_newnote_keycode "">
 
 <!ENTITY znotes_importnote_label "Импорт заметки">
@@ -500,3 +491,30 @@
 <!ENTITY znotes_editorprint_key "P">
 <!ENTITY znotes_editorprint_key_modifiers "accel">
 <!ENTITY znotes_editorprint_keycode "">
+
+<!-- spell -->
+
+<!ENTITY znotes_spelldictionariesmenu_label "Языки">
+<!ENTITY znotes_spelldictionariesmenu_accesskey "з">
+<!ENTITY znotes_spellnosuggestionsmenuitem_label "(Нет правописания)">
+
+<!ENTITY znotes_addtodictionary_label "Добавить в словарь">
+<!ENTITY znotes_addtodictionary_tooltip "Добавить слово в словарь">
+<!ENTITY znotes_addtodictionary_accesskey "б">
+<!ENTITY znotes_addtodictionary_key "">
+<!ENTITY znotes_addtodictionary_key_modifiers "">
+<!ENTITY znotes_addtodictionary_keycode "">
+
+<!ENTITY znotes_undoaddtodictionary_label "Отменить добавление">
+<!ENTITY znotes_undoaddtodictionary_tooltip "Отменить добавление слова в словарь">
+<!ENTITY znotes_undoaddtodictionary_accesskey "м">
+<!ENTITY znotes_undoaddtodictionary_key "">
+<!ENTITY znotes_undoaddtodictionary_key_modifiers "">
+<!ENTITY znotes_undoaddtodictionary_keycode "">
+
+<!ENTITY znotes_spellcheckenabled_label "Проверка орфографии">
+<!ENTITY znotes_spellcheckenabled_tooltip "Проверка орфографии">
+<!ENTITY znotes_spellcheckenabled_accesskey "р">
+<!ENTITY znotes_spellcheckenabled_key "P">
+<!ENTITY znotes_spellcheckenabled_key_modifiers "accel,shift">
+<!ENTITY znotes_spellcheckenabled_keycode "">

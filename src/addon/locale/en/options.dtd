@@ -30,12 +30,23 @@
   -
   - ***** END LICENSE BLOCK ***** -->
 
-<!ENTITY options_window_title "Options">
-<!ENTITY options_place_caption " This workplace ">
-<!ENTITY options_place_description "Enter this workplace name ...">
-<!ENTITY options_is_save_position "Remember the selected note for each category/tag">
-<!ENTITY options_is_edit_source_enabled "Allow editing the note's source code">
-<!ENTITY gb_default_document_type_caption "Default document type">
-<!ENTITY options_is_play_sound "Play sound at startup">
-<!ENTITY options_accept "Accept">
-<!ENTITY options_cancel "Cancel">
+<!ENTITY window.title "Options">
+<!ENTITY tab-main.label " Main ">
+<!ENTITY placeNameCaption.label " This workplace ">
+<!ENTITY placeName.placeholder "Enter this workplace name ...">
+<!ENTITY isSavePosition.label "Remember the selected note for each category/tag">
+<!ENTITY isEditSourceEnabled.label "Allow editing the note's source code">
+<!ENTITY docTypeCaption.label "Default document type">
+<!ENTITY additionCaption.label "Additionally">
+<!ENTITY isReplaceBackground.label "Replace the background color of note using the main tag color">
+<!ENTITY isConfirmExit.label "Confirm exit when closing application">
+<!ENTITY isHighlightRow.label "Highlight row in the note list using the main tag color">
+<!ENTITY isPlaySound.label "Play sound at startup">
+<!ENTITY keysPlatformCaption.label "Keyboard shortcuts">
+<!ENTITY keysCaption.label "Keyboard shortcuts">
+<!ENTITY defaultsButton.label "Defaults">
+<!ENTITY defaultsButton.tooltip "Reset to default values">
+<!ENTITY acceptButton.label "Accept">
+<!ENTITY acceptButton.tooltip "Accept changes and exit">
+<!ENTITY cancelButton.label "Cancel">
+<!ENTITY cancelButton.tooltip "Cancel changes and exit">

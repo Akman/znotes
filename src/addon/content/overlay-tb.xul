@@ -33,7 +33,7 @@
 
 <?xml-stylesheet type="text/css" href="chrome://znotes/skin/overlay-tb.css" ?>
 
-<?xul-overlay href="chrome://znotes/content/common.xul" ?>
+<?xul-overlay href="chrome://znotes/content/common-tb.xul" ?>
 <?xul-overlay href="chrome://znotes/content/maintab.xul" ?>
 <?xul-overlay href="chrome://znotes/content/contenttab.xul" ?>
 
@@ -50,171 +50,201 @@
     src="chrome://znotes/content/maintabtype.js" />
   <script type="application/javascript"
     src="chrome://znotes/content/contenttabtype.js" />
-    
+
+  <!-- messenger window -->
+
   <window id="messengerWindow">
-    <stringbundleset id="znotes_stringbundleset" />
-    <commandset id="znotes_commandset" />
-    <keyset id="znotes_keyset" />
-    <popupset id="znotes_popupset" />
+    <stringbundleset id="znotes_platform_stringbundleset">
+      <stringbundle id="znotes_stringbundle"
+        src="chrome://znotes/locale/znotes.properties" />
+    </stringbundleset>
+    <commandset id="znotes_platform_commandset" />
+    <keyset id="znotes_platform_keyset" />
+    <popupset id="znotes_platform_popupset" />
   </window>
 
+  <!-- mail toolbar palette -->
+
   <toolbarpalette id="MailToolbarPalette">
-    <toolbarbutton id="znotes_openmaintab_button"
-      сlass="toolbarbutton-1 znotes_openmaintab_class"
-      command="znotes_openmaintab_command"/>
+    <toolbarbutton id="znotes_tbopenmaintab_button"
+      сlass="toolbarbutton-1 znotes_tbopenmaintab_class"
+      command="znotes_tbopenmaintab_command"/>
+    <toolbarbutton id="znotes_tbsaveasnote_button"
+      сlass="toolbarbutton-1 znotes_tbsaveasnote_class"
+      command="znotes_tbsaveasnote_command"/>
   </toolbarpalette>
 
-  <toolbar id="tabbar-toolbar">
-    <toolbarbutton id="znotes_openmaintab_tabbar_button"
-      class="toolbarbutton-1 znotes_openmaintab_class"
-      command="znotes_openmaintab_command"/>
-  </toolbar>
+  <!-- new button -->
 
-  <toolbarbutton id="button-newmsg" type="menu-button">
-    <menupopup id="button-newMsgPopup">
-     <menuitem id="newMsgButton-znotes-menuitem"
-       class="menuitem-iconic znotes_newnote_class"
-       command="znotes_newnote_command"
-       key="znotes_newnote_key"
-       insertafter="newMsgButton-mail-menuitem"/>
-    </menupopup>
-  </toolbarbutton>
-  
-  <menupopup id="menu_NewPopup">
-    <menuitem id="znotes_newnote_menuitem_1"
-      class="menuitem-iconic"
-      command="znotes_newnote_command"
-      key="znotes_newnote_key"
-      insertbefore="afterltnNewTask,menu_newFolder"/>
+  <menupopup id="button-newMsgPopup">
+    <menuitem id="znotes_tbnewnote_buttonmenuitem"
+      class="menuitem-iconic znotes_tbnewnote_class"
+      label="&znotes_tbnewnote_buttonmenuitem.label;"
+      accesskey="&znotes_tbnewnote_buttonmenuitem.accesskey;"
+      command="znotes_tbnewnote_command"
+      insertafter="newMsgButton-mail-menuitem"/>
   </menupopup>
-  
+
+  <!-- mailmenu -->
+
+  <menupopup id="menu_NewPopup">
+    <menuitem id="znotes_tbnewnote_newmenuitem"
+      class="menuitem-iconic"
+      command="znotes_tbnewnote_command"
+      label="&znotes_tbnewnote_newmenuitem.label;"
+      accesskey="&znotes_tbnewnote_newmenuitem.accesskey;"
+      key="znotes_tbnewnote_key"
+      insertbefore="menu_newFolder"/>
+  </menupopup>
+
+  <menupopup id="messageMenuPopup">
+    <menuitem id="znotes_tbsaveasnote_menuitem"
+      class="menuitem-iconic"
+      command="znotes_tbsaveasnote_command"
+      key="znotes_tbsaveasnote_key"
+      insertafter="messageMenuAfterMarkSeparator"/>
+  </menupopup>
+
   <menubar id="mail-menubar">
     <menu id="znotes_menu"
       label="&znotes_menu_label;"
       accesskey="&znotes_menu_accesskey;"
       insertafter="messageMenu">
       <menupopup id="znotes_menupopup" >
-        <menuitem id="znotes_newnote_menuitem_2"
+        <menuitem id="znotes_tbnewnote_menuitem"
           class="menuitem-iconic"
-          command="znotes_newnote_command"
-          key="znotes_newnote_key"/>
+          command="znotes_tbnewnote_command"
+          label="&znotes_tbnewnote_menuitem.label;"
+          accesskey="&znotes_tbnewnote_menuitem.accesskey;"
+          key="znotes_tbnewnote_key" />
         <menuseparator id="znotes_after_new_section" />
-        <menuitem id="znotes_openmaintab_menuitem"
+        <menuitem id="znotes_tbopenmaintab_menuitem"
           class="menuitem-iconic"
-          command="znotes_openmaintab_command"
-          key="znotes_openmaintab_key"/>
-        <menuitem id="znotes_openoptionsdialog_menuitem"
+          command="znotes_tbopenmaintab_command"
+          key="znotes_tbopenmaintab_key"/>
+        <menuitem id="znotes_tbopenoptionsdialog_menuitem"
           class="menuitem-iconic"
-          command="znotes_openoptionsdialog_command"
-          key="znotes_openoptionsdialog_key"/>
-        <menuitem id="znotes_debug_menuitem"
+          command="znotes_tbopenoptionsdialog_command"/>
+        <menuitem id="znotes_tbdebug_menuitem"
           class="menuitem-iconic"
-          command="znotes_debug_command"
-          key="znotes_debug_key"/>
-        <menuitem id="znotes_addons_menuitem"
-          class="menuitem-iconic"
-          command="znotes_addons_command"
-          key="znotes_addons_key"/>
-        <menuitem id="znotes_update_menuitem"
-          class="menuitem-iconic"
-          command="znotes_update_command"
-          key="znotes_update_key"/>
+          command="znotes_tbdebug_command"/>
         <menu id="znotes_menupopup_view"
           label="&znotes_menupopup_view_label;"
           accesskey="&znotes_menupopup_view_accesskey;">
           <menupopup id="znotes_view_menupopup">
-            <menuitem id="znotes_view_showmainmenubar_menuitem"
+            <menuitem id="znotes_tbshowmainmenubar_menuitem"
               class="menuitem-iconic"
               type="checkbox" checked="false"
-              command="znotes_showmainmenubar_command"
-              key="znotes_showmainmenubar_key"/>
-            <menuitem id="znotes_view_showmaintoolbar_menuitem"
+              command="znotes_tbshowmainmenubar_command"/>
+            <menuitem id="znotes_tbshowmaintoolbar_menuitem"
               class="menuitem-iconic"
               type="checkbox" checked="true"
-              command="znotes_showmaintoolbar_command"
-              key="znotes_showmaintoolbar_key"/>
+              command="znotes_tbshowmaintoolbar_command"/>
           </menupopup>
         </menu>
         <menuseparator id="znotes_before_help_section" />
-        <menuitem id="znotes_openhelp_menuitem"
+        <menuitem id="znotes_tbopenhelp_menuitem"
           class="menuitem-iconic"
-          command="znotes_openhelp_command"
-          key="znotes_openhelp_key"/>
-        <menuitem id="znotes_openabout_menuitem"
+          command="znotes_tbopenhelp_command"/>
+        <menuitem id="znotes_tbopenabout_menuitem"
           class="menuitem-iconic"
-          command="znotes_openabout_command"
-          key="znotes_openabout_key"/>
+          command="znotes_tbopenabout_command"/>
       </menupopup>
     </menu>
   </menubar>
 
+  <!-- appmenu -->
+
   <menupopup id="appmenu_newMenupopup">
-    <menuitem id="znotes_appnewnote_menuitem_1"
+    <menuitem id="znotes_tbnewnote_appnewmenuitem"
       class="menuitem-iconic"
-      command="znotes_newnote_command"
-      key="znotes_newnote_key"
-      insertbefore="appmenu_afterltnNewTask,appmenu_newFolder"/>
+      command="znotes_tbnewnote_command"
+      label="&znotes_tbnewnote_appnewmenuitem.label;"
+      accesskey="&znotes_tbnewnote_appnewmenuitem.accesskey;"
+      key="znotes_tbnewnote_key"
+      insertbefore="appmenu_newFolder"/>
   </menupopup>
-  
+
   <vbox id="appmenuSecondaryPane">
     <menu id="znotes_appmenu"
       label="&znotes_menu_label;"
       accesskey="&znotes_menu_accesskey;"
       insertafter="appmenu_Event_Task,appmenu_messageMenu">
       <menupopup id="znotes_appmenupopup" >
-        <menuitem id="znotes_appnewnote_menuitem_2"
+        <menuitem id="znotes_tbnewnote_appmenuitem"
           class="menuitem-iconic"
-          command="znotes_newnote_command"
-          key="znotes_newnote_key"/>
+          command="znotes_tbnewnote_command"
+          label="&znotes_tbnewnote_appmenuitem.label;"
+          accesskey="&znotes_tbnewnote_appmenuitem.accesskey;"
+          key="znotes_tbnewnote_key" />
         <menuseparator id="znotes_appafter_new_section" />
-        <menuitem id="znotes_appopenmaintab_menuitem"
+        <menuitem id="znotes_tbopenmaintab_appmenuitem"
           class="menuitem-iconic"
-          command="znotes_openmaintab_command"
-          key="znotes_openmaintab_key"/>
+          command="znotes_tbopenmaintab_command"
+          key="znotes_tbopenmaintab_key"/>
         <menu id="znotes_appmenupopup_view"
           label="&znotes_menupopup_view_label;"
           accesskey="&znotes_menupopup_view_accesskey;">
           <menupopup id="znotes_appview_menupopup">
-            <menuitem id="znotes_appview_showmainmenubar_menuitem"
+            <menuitem id="znotes_tbshowmainmenubar_appmenuitem"
               class="menuitem-iconic"
               type="checkbox" checked="false"
-              command="znotes_showmainmenubar_command"
-              key="znotes_showmainmenubar_key"/>
-            <menuitem id="znotes_appview_showmaintoolbar_menuitem"
+              command="znotes_tbshowmainmenubar_command"/>
+            <menuitem id="znotes_tbshowmaintoolbar_appmenuitem"
               class="menuitem-iconic"
               type="checkbox" checked="true"
-              command="znotes_showmaintoolbar_command"
-              key="znotes_showmaintoolbar_key"/>
+              command="znotes_tbshowmaintoolbar_command"/>
           </menupopup>
         </menu>
-        <menuitem id="znotes_appopenoptionsdialog_menuitem"
+        <menuitem id="znotes_tbopenoptionsdialog_appmenuitem"
           class="menuitem-iconic"
-          command="znotes_openoptionsdialog_command"
-          key="znotes_openoptionsdialog_key"/>
-        <menuitem id="znotes_appdebug_menuitem"
+          command="znotes_tbopenoptionsdialog_command"/>
+        <menuitem id="znotes_tbdebug_appmenuitem"
           class="menuitem-iconic"
-          command="znotes_debug_command"
-          key="znotes_debug_key"/>
+          command="znotes_tbdebug_command"/>
         <menuseparator id="znotes_appbefore_help_section" />
-        <menuitem id="znotes_appopenhelp_menuitem"
+        <menuitem id="znotes_tbopenhelp_appmenuitem"
           class="menuitem-iconic"
-          command="znotes_openhelp_command"
-          key="znotes_openhelp_key"/>
-        <menuitem id="znotes_appopenabout_menuitem"
+          command="znotes_tbopenhelp_command"/>
+        <menuitem id="znotes_tbopenabout_appmenuitem"
           class="menuitem-iconic"
-          command="znotes_openabout_command"
-          key="znotes_openabout_key"/>
+          command="znotes_tbopenabout_command"/>
       </menupopup>
     </menu>
   </vbox>
+
+  <menupopup id="appmenu_messageMenuPopup">
+    <menuitem id="znotes_tbsaveasnote_appmenuitem"
+      class="menuitem-iconic"
+      command="znotes_tbsaveasnote_command"
+      key="znotes_tbsaveasnote_key"
+      insertafter="appmenu_messageMenuAfterMarkSeparator" />
+  </menupopup>
+  
+  <!-- tabs -->
 
   <hbox id="tabmail-container">
     <vbox id="znotes_maintabpanel" collapsed="true" />
     <vbox id="znotes_contenttabpanel" collapsed="true" />
   </hbox>
-  
+
+  <!-- message context menu -->
+
+  <menupopup id="mailContext">
+    <menuitem id="znotes_tbsaveasnote_contextmenuitem"
+      class="menuitem-iconic"
+      command="znotes_tbsaveasnote_command"
+      key="znotes_tbsaveasnote_key"
+      insertafter="mailContext-sep-afterMarkMenu" />
+  </menupopup>
+
+  <!-- statusbar -->
+
   <statusbar id="status-bar">
-    <statusbarpanel id="znotes_statusbarpanel" />
+    <statusbarpanel id="znotes_statusbarpanel" hidden="true">
+      <image id="znotes_statusbarpanellogo" />
+      <label id="znotes_statusbarpanellabel" />
+    </statusbarpanel>
   </statusbar>
 
 </overlay>

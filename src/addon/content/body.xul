@@ -81,7 +81,7 @@
             class="toolbarbutton-1 znotes_bodydeletenote_class"
             command="znotes_bodydeletenote_command" />
           <toolbarbutton id="znotes_bodyaddonspanel_button" pack="end"
-            type="checkbox" autocheck="true"
+            type="checkbox" autocheck="false"
             class="toolbarbutton-1 znotes_bodyaddonspanel_class"
             command="znotes_bodyaddonspanel_command" />
         </toolbarpalette>
