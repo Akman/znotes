@@ -33,9 +33,9 @@
 <!ENTITY znotes_mainmenutoolbar_name "Menu">
 <!ENTITY znotes_maintoolbar_name "Notes">
   
-<!ENTITY book_tree_name "Bloc-notes">
+<!ENTITY book_tree_name "Blocs-notes">
 
-<!ENTITY folder_tree_name "Categorie">
+<!ENTITY folder_tree_name "Catégorie">
 <!ENTITY folder_tree_count "Compteur">
 
 <!ENTITY tag_tree_name "Étiquette">
@@ -43,7 +43,7 @@
 
 <!ENTITY note_tree_attachments "Pièces jointes">
 <!ENTITY note_tree_name "Note">
-<!ENTITY note_tree_category "Categorie">
+<!ENTITY note_tree_category "Catégorie">
 <!ENTITY note_tree_tag "Étiquette">
 <!ENTITY note_tree_create_datetime "Créé le">
 <!ENTITY note_tree_update_datetime "Modifié le">

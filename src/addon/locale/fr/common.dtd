@@ -130,8 +130,8 @@
 <!ENTITY znotes_deletebookdata_key_modifiers "">
 <!ENTITY znotes_deletebookdata_keycode "">
 
-<!ENTITY znotes_editbook_label "Editer le bloc-notes">
-<!ENTITY znotes_editbook_tooltip "Editer le bloc-notes">
+<!ENTITY znotes_editbook_label "Éditer le bloc-notes">
+<!ENTITY znotes_editbook_tooltip "Éditer le bloc-notes">
 <!ENTITY znotes_editbook_accesskey "">
 <!ENTITY znotes_editbook_key "">
 <!ENTITY znotes_editbook_key_modifiers "">
@@ -144,22 +144,22 @@
 <!ENTITY znotes_renamebook_key_modifiers "">
 <!ENTITY znotes_renamebook_keycode "">
 
-<!ENTITY znotes_refreshbooktree_label "Rafrîchir les bloc-notes">
-<!ENTITY znotes_refreshbooktree_tooltip "Rafrîchir l'arborescence des bloc-notes">
+<!ENTITY znotes_refreshbooktree_label "Rafraîchir les blocs-notes">
+<!ENTITY znotes_refreshbooktree_tooltip "Rafraîchir l'arborescence des blocs-notes">
 <!ENTITY znotes_refreshbooktree_accesskey "">
 <!ENTITY znotes_refreshbooktree_key "">
 <!ENTITY znotes_refreshbooktree_key_modifiers "">
 <!ENTITY znotes_refreshbooktree_keycode "">
 
-<!ENTITY znotes_refreshfoldertree_label "Rafrîchir les categories">
-<!ENTITY znotes_refreshfoldertree_tooltip "Rafrîchir l'arborescence des categories">
+<!ENTITY znotes_refreshfoldertree_label "Rafraîchir les catégories">
+<!ENTITY znotes_refreshfoldertree_tooltip "Rafraîchir l'arborescence des catégories">
 <!ENTITY znotes_refreshfoldertree_accesskey "">
 <!ENTITY znotes_refreshfoldertree_key "">
 <!ENTITY znotes_refreshfoldertree_key_modifiers "">
 <!ENTITY znotes_refreshfoldertree_keycode "">
 
 <!ENTITY znotes_newcategory_label "Nouvelle catégorie">
-<!ENTITY znotes_newcategory_tooltip "Nouvelle catégoriey">
+<!ENTITY znotes_newcategory_tooltip "Nouvelle catégorie">
 <!ENTITY znotes_newcategory_accesskey "">
 <!ENTITY znotes_newcategory_key "">
 <!ENTITY znotes_newcategory_key_modifiers "">
@@ -173,7 +173,7 @@
 <!ENTITY znotes_deletecategory_keycode "">
 
 <!ENTITY znotes_renamecategory_label "Renommer la catégorie">
-<!ENTITY znotes_renamecategory_tooltip "Renommer category">
+<!ENTITY znotes_renamecategory_tooltip "Renommer la categorie">
 <!ENTITY znotes_renamecategory_accesskey "">
 <!ENTITY znotes_renamecategory_key "">
 <!ENTITY znotes_renamecategory_key_modifiers "">
@@ -208,7 +208,7 @@
 <!ENTITY znotes_renametag_keycode "">
 
 <!ENTITY znotes_colortag_label "Couleur de l'étiquette">
-<!ENTITY znotes_colortag_tooltip "Boulleur de l'étiquette">
+<!ENTITY znotes_colortag_tooltip "Couleur de l'étiquette">
 <!ENTITY znotes_colortag_accesskey "">
 <!ENTITY znotes_colortag_key "">
 <!ENTITY znotes_colortag_key_modifiers "">
@@ -471,8 +471,8 @@
 
 <!-- editor -->
 
-<!ENTITY znotes_editoredit_label "Editer">
-<!ENTITY znotes_editoredit_tooltip "Editer">
+<!ENTITY znotes_editoredit_label "Éditer">
+<!ENTITY znotes_editoredit_tooltip "Éditer">
 <!ENTITY znotes_editoredit_accesskey "E">
 <!ENTITY znotes_editoredit_key "">
 <!ENTITY znotes_editoredit_key_modifiers "">

@@ -33,13 +33,13 @@
 <!ENTITY znotes_mainmenubar_file_label "Fichier">
 <!ENTITY znotes_mainmenubar_file_accesskey "F">
 
-<!ENTITY znotes_mainmenubar_edit_label "Editer">
+<!ENTITY znotes_mainmenubar_edit_label "Éditer">
 <!ENTITY znotes_mainmenubar_edit_accesskey "E">
 
 <!ENTITY znotes_mainmenubar_book_label "Livre">
 <!ENTITY znotes_mainmenubar_book_accesskey "B">
 
-<!ENTITY znotes_mainmenubar_category_label "Categorie">
+<!ENTITY znotes_mainmenubar_category_label "Catégorie">
 <!ENTITY znotes_mainmenubar_category_accesskey "C">
 
 <!ENTITY znotes_mainmenubar_tag_label "Étiquette">
