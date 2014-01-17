@@ -61,7 +61,6 @@ var Editor = function() {
 
   return function() {
 
-    var nsIHTMLEditor = Components.interfaces.nsIHTMLEditor;
     var Utils = ru.akman.znotes.Utils;
     var DOMUtils = ru.akman.znotes.DOMUtils;
     // can't be initialized at once
@@ -104,6 +103,9 @@ var Editor = function() {
     var isParseError = false;
     var isParseModified = false;
 
+    var selectionChunks = null;
+    var selectionRanges = null;
+    
     var undoState = {
       modifications: null,
       index: -1,
@@ -138,10 +140,12 @@ var Editor = function() {
     
     var designFrame = null;
     var designEditor = null;
+    var designEditorTM = null;
     var designToolBox = null;
     var designToolBar1 = null;
     var designToolBar2 = null;
     var prevDesignEditorCursor = null;
+
 
     var sourceFrame = null;
     var sourceWindow = null;
@@ -473,6 +477,9 @@ var Editor = function() {
             doDelete();
             break;
         }
+        if ( designEditor ) {
+          setSelectionRanges( selectionRanges );
+        }
         onSelectionChanged();
       },
       onEvent: function( event ) {
@@ -537,8 +544,9 @@ var Editor = function() {
     };
     
     function doCopy() {
-      var dataText, dataFlavor;
+      var transferable, dataText, dataFlavor;
       var fragment, serializer;
+      var textSupportsString, clipboard;
       if ( isSourceEditingActive ) {
         dataFlavor = "text/unicode";
         dataText = sourceEditor.getDoc().getSelection();
@@ -552,11 +560,11 @@ var Editor = function() {
           dataText = serializer.serializeToString( fragment );
         } catch ( e ) {
           Utils.log( e );
-          return;
+          return true;
         }
       }
       try {
-        var transferable = Components.Constructor(
+        transferable = Components.Constructor(
           "@mozilla.org/widget/transferable;1",
           "nsITransferable"
         )();
@@ -566,14 +574,14 @@ var Editor = function() {
           ).getInterface( Components.interfaces.nsIWebNavigation )
         );
         transferable.addDataFlavor( dataFlavor );
-        var textSupportsString = Components.Constructor(
+        textSupportsString = Components.Constructor(
           "@mozilla.org/supports-string;1",
           "nsISupportsString"
         )();
         textSupportsString.data = dataText;
         transferable.setTransferData(
           dataFlavor, textSupportsString, dataText.length * 2 );
-        var clipboard =
+        clipboard =
           Components.classes['@mozilla.org/widget/clipboard;1']
                     .createInstance( Components.interfaces.nsIClipboard );
         clipboard.setData( transferable, null, clipboard.kGlobalClipboard );
@@ -866,6 +874,9 @@ var Editor = function() {
             ).focus();
             break;
         }
+        if ( designEditor ) {
+          setSelectionRanges( selectionRanges );
+        }
         onSelectionChanged();
       },
       onEvent: function( event ) {
@@ -1015,26 +1026,34 @@ var Editor = function() {
     };
     
     function doBold() {
-      designFrame.contentDocument.execCommand( 'bold', false, null );
-      /*
       var flag = !getCommandState( "znotes_bold_command" );
       try {
         designEditor.beginTransaction();
-        DOMUtils.processSelection( designEditor.selection,
-          function ( element ) {
-            if ( flag ) {
-              setCSSInlineProperty( element, "font-weight", "bold" );
-            } else {
-              removeCSSInlineProperty( element, "font-weight" );
-            }
+        var node, nodes = splitSelectionNodes( true /* surround */ );
+        for ( var i = 0; i < nodes.length; i++ ) {
+          node = nodes[i].node;
+          switch ( nodes[i].kind ) {
+            case 0: 
+              // node is element node and not contains text node
+              break;
+            case 2:
+              // node is element node and contains only one text node
+              if ( flag ) {
+                setCSSInlineProperty( node, "font-weight", "bold" );
+              } else {
+                removeCSSInlineProperty( node, "font-weight" );
+              }
+              break
+            case 4:
+              // node is text node
+              break;
           }
-        );
+        }
       } catch ( e ) {
         Utils.log( e );
       } finally {
         designEditor.endTransaction();
       }
-      */
     };
     
     function doItalic() {
@@ -1166,7 +1185,7 @@ var Editor = function() {
         designEditor.beginTransaction();
         DOMUtils.processSelection( designEditor.selection,
           function ( element ) {
-            var position = getElementPositionInParent( element );
+            var position = DOMUtils.getNodeIndexInParent( element );
             if ( flag ) {
             } else {
             }
@@ -1188,7 +1207,7 @@ var Editor = function() {
         designEditor.beginTransaction();
         DOMUtils.processSelection( designEditor.selection,
           function ( element ) {
-            var position = getElementPositionInParent( element );
+            var position = DOMUtils.getNodeIndexInParent( element );
             if ( flag ) {
             } else {
             }
@@ -1239,7 +1258,7 @@ var Editor = function() {
       try {
         designEditor.beginTransaction();
         var element = designEditor.getSelectedElement( "href" );
-        var position = getElementPositionInParent( element );
+        var position = DOMUtils.getNodeIndexInParent( element );
         while ( element.lastChild ) {
           designEditor.insertNode(
             element.lastChild.cloneNode( true ),
@@ -1350,6 +1369,7 @@ var Editor = function() {
       designEditor.setAttributeOrEquivalent( anAnchor, "href", encodeURI( url ), true );
       designEditor.insertLinkAroundSelection( anAnchor );
       designEditor.endTransaction();
+      return true;
     };
     
     function doInsertTable() {
@@ -1405,6 +1425,7 @@ var Editor = function() {
       }
       designEditor.endTransaction();
       designEditor.selectElement( anImage );
+      return true;
     };
     
     // SOURCE COMMANDS
@@ -1416,13 +1437,21 @@ var Editor = function() {
       );
     };
 
-    // HELPERS
+    // COMMON HELPERS
 
     function isInEditorWindow() {
       var focusedWindow =
         currentWindow.top.document.commandDispatcher.focusedWindow;
       return ( focusedWindow == designFrame.contentWindow ||
                focusedWindow == sourceFrame.contentWindow );
+    };
+
+    function notifyStateListener( event ) {
+      for ( var i = 0; i < listeners.length; i++ ) {
+        if ( listeners[i][ "on" + event.type ] ) {
+          listeners[i][ "on" + event.type ]( event );
+        }
+      }
     };
     
     function getCommandState( cmd ) {
@@ -1432,30 +1461,6 @@ var Editor = function() {
     function setCommandState( cmd, flag ) {
       Common.goSetCommandAttribute( cmd, "checked", flag, currentWindow );
       Common.goSetCommandAttribute( cmd, "checkState", flag, currentWindow );
-    };
-    
-    function isDesignFrameFocused() {
-      return currentDocument.activeElement == designFrame;
-    };
-
-    function isSourceFrameFocused() {
-      return currentDocument.activeElement == sourceFrame;
-    };
-
-    function isDesignModified() {
-      return undoState.getLast().design != undoState.getCurrent().design;
-    };
-
-    function isSourceModified() {
-      return undoState.getLast().source != undoState.getCurrent().source;
-    };
-    
-    function notifyStateListener( event ) {
-      for ( var i = 0; i < listeners.length; i++ ) {
-        if ( listeners[i][ "on" + event.type ] ) {
-          listeners[i][ "on" + event.type ]( event );
-        }
-      }
     };
     
     function getEditorString( name ) {
@@ -1470,6 +1475,45 @@ var Editor = function() {
       return Utils.STRINGS_BUNDLE.getFormattedString( name, values );
     };
     
+    function setBackgroundColor() {
+      if ( !currentNote ) {
+        return;
+      }
+      var tagColor = currentBookTagList.getNoTag().getColor();
+      var tagID = currentNote.getMainTag();
+      if ( tagID ) {
+        tagColor = currentBookTagList.getTagById( tagID ).getColor();
+      }
+      var body = designFrame.contentDocument.body;
+      var color = body && body.style ?
+        body.style.getPropertyValue( 'background-color' ) :
+        "";
+      if ( !designFrame.hasAttribute( "body.backgroundColor" ) ) {
+        designFrame.setAttribute( "body.backgroundColor", color );
+      }
+      if ( Utils.IS_REPLACE_BACKGROUND ) {
+        if ( body && body.style ) {
+          body.style.setProperty( 'background-color', tagColor );
+        }
+      } else {
+        tagColor = designFrame.getAttribute( "body.backgroundColor" );
+        if ( tagColor ) {
+          if ( body && body.style ) {
+            body.style.setProperty( 'background-color', tagColor );
+          }
+        } else {
+          if ( body && body.style ) {
+            body.style.removeProperty( 'background-color' );
+            if ( body.style.length == 0 ) {
+              body.removeAttribute( "style" );
+            }
+          }
+        }
+      }
+    };
+    
+    // EDITOR HELPERS
+ 
     function createFontNameMenuList() {
       var fontNameArray = Utils.getFontNameArray();
       while ( fontNameMenuPopup.firstChild ) {
@@ -1518,42 +1562,21 @@ var Editor = function() {
         formatBlockMenuPopup.appendChild( menuItem );
       }
     };
+ 
+    function isDesignModified() {
+      return undoState.getLast().design != undoState.getCurrent().design;
+    };
+
+    function isSourceModified() {
+      return undoState.getLast().source != undoState.getCurrent().source;
+    };
     
-    function setBackgroundColor() {
-      if ( !currentNote ) {
-        return;
-      }
-      var tagColor = currentBookTagList.getNoTag().getColor();
-      var tagID = currentNote.getMainTag();
-      if ( tagID ) {
-        tagColor = currentBookTagList.getTagById( tagID ).getColor();
-      }
-      var body = designFrame.contentDocument.body;
-      var color = body && body.style ?
-        body.style.getPropertyValue( 'background-color' ) :
-        "";
-      if ( !designFrame.hasAttribute( "body.backgroundColor" ) ) {
-        designFrame.setAttribute( "body.backgroundColor", color );
-      }
-      if ( Utils.IS_REPLACE_BACKGROUND ) {
-        if ( body && body.style ) {
-          body.style.setProperty( 'background-color', tagColor );
-        }
-      } else {
-        tagColor = designFrame.getAttribute( "body.backgroundColor" );
-        if ( tagColor ) {
-          if ( body && body.style ) {
-            body.style.setProperty( 'background-color', tagColor );
-          }
-        } else {
-          if ( body && body.style ) {
-            body.style.removeProperty( 'background-color' );
-            if ( body.style.length == 0 ) {
-              body.removeAttribute( "style" );
-            }
-          }
-        }
-      }
+    function setDocumentEditable( isDocumentEditable ) {
+      var nsIPlaintextEditor = Components.interfaces.nsIPlaintextEditor;
+      var readOnlyMask = nsIPlaintextEditor.eEditorReadonlyMask;
+      var flags = designEditor.flags;
+      designEditor.flags =
+        isDocumentEditable ? flags &= ~readOnlyMask : flags | readOnlyMask;
     };
  
     function removeCSSInlineProperty( element, name ) {
@@ -1570,9 +1593,7 @@ var Editor = function() {
       }
       cssText = "";
       for ( var propertyName in style ) {
-        if ( cssText ) {
-          cssText += " ";
-        }
+        cssText += ( cssText.length ? "" : " " );
         cssText += propertyName + ": " + style[propertyName].value;
         if ( style[propertyName].priority ) {
           cssText += " !" + style[propertyName].priority;
@@ -1581,7 +1602,7 @@ var Editor = function() {
       }
       if ( cssText ) {
         designEditor.setAttributeOrEquivalent(
-          element, "style", cssText, false
+          element, "style", cssText.trim(), false
         );
       }
     };
@@ -1604,9 +1625,7 @@ var Editor = function() {
       }
       cssText = "";
       for ( var propertyName in style ) {
-        if ( cssText ) {
-          cssText += " ";
-        }
+        cssText += ( cssText.length ? "" : " " );
         cssText += propertyName + ": " + style[propertyName].value;
         if ( style[propertyName].priority ) {
           cssText += " !" + style[propertyName].priority;
@@ -1614,7 +1633,7 @@ var Editor = function() {
         cssText += ";";
       }
       designEditor.setAttributeOrEquivalent(
-        element, "style", cssText, false
+        element, "style", cssText.trim(), false
       );
     };
     
@@ -1642,9 +1661,7 @@ var Editor = function() {
       }
       cssText = "";
       for ( var propertyName in style ) {
-        if ( cssText ) {
-          cssText += " ";
-        }
+        cssText += ( cssText.length ? "" : " " );
         cssText += propertyName + ": " + style[propertyName].value;
         if ( style[propertyName].priority ) {
           cssText += " !" + style[propertyName].priority;
@@ -1653,7 +1670,7 @@ var Editor = function() {
       }
       if ( cssText ) {
         designEditor.setAttributeOrEquivalent(
-          element, "style", cssText, false
+          element, "style", cssText.trim(), false
         );
       }
     };
@@ -1685,9 +1702,7 @@ var Editor = function() {
       }
       var cssText = "";
       for ( var propertyName in style ) {
-        if ( cssText ) {
-          cssText += " ";
-        }
+        cssText += ( cssText.length ? "" : " " );
         cssText += propertyName + ": " + style[propertyName].value;
         if ( style[propertyName].priority ) {
           cssText += " !" + style[propertyName].priority;
@@ -1695,16 +1710,8 @@ var Editor = function() {
         cssText += ";";
       }
       designEditor.setAttributeOrEquivalent(
-        element, "style", cssText, false
+        element, "style", cssText.trim(), false
       );
-    };
-    
-    function setDocumentEditable( isDocumentEditable ) {
-      var nsIPlaintextEditor = Components.interfaces.nsIPlaintextEditor;
-      var readOnlyMask = nsIPlaintextEditor.eEditorReadonlyMask;
-      var flags = designEditor.flags;
-      designEditor.flags =
-        isDocumentEditable ? flags &= ~readOnlyMask : flags | readOnlyMask;
     };
     
     function getTextProperty( property, attribute, value, firstHas, anyHas, allHas ) {
@@ -1731,14 +1738,355 @@ var Editor = function() {
       }
     };
 
-    function getElementPositionInParent( element ) {
-      var result = 0;
-      var node = element.parentNode.firstChild;
-      while ( node && node != element ) {
-        node = node.nextSibling;
-        result++;
+    function getSelectionRanges() {
+      var ranges = [];
+      var range, count = designEditor.selection ?
+        designEditor.selection.rangeCount : 0;
+      for ( var i = 0; i < count; i++ ) {
+        range = designEditor.selection.getRangeAt( i );
+        ranges.push( {
+          startContainer: range.startContainer,
+          startOffset: range.startOffset,
+          endContainer: range.endContainer,
+          endOffset: range.endOffset
+        } );
+      }
+      return ranges;
+    };
+
+    function setSelectionRanges( ranges ) {
+      designEditor.selection.removeAllRanges();
+      var range, count = ranges.length;
+      for ( var i = 0; i < count; i++ ) {
+        range = designEditor.document.createRange();
+        range.setStart( ranges[i].startContainer, ranges[i].startOffset );
+        range.setEnd( ranges[i].endContainer, ranges[i].endOffset );
+        designEditor.selection.addRange( range );
+      }
+    };
+    
+    function getSelectionChunks() {
+      if ( !designEditor.selection || !designEditor.selection.rangeCount ) {
+        return [];
+      }
+      // begin
+      var processSelectionNode = function( range, root, chunks ) {
+        if ( root.nodeType == DOMUtils.NODE.ELEMENT_NODE &&
+             root == range.startContainer &&
+             range.startContainer == range.endContainer &&
+             range.startOffset == range.endOffset ) {
+          chunks.push( {
+            element: root,
+            info: []
+          } );
+          return;
+        }
+        var startOffset, endOffset;
+        var elementIndex, nodeIndex;
+        var node, info, offsets;
+        if ( root.hasChildNodes() ) {
+          node = root.firstChild;
+          while ( node ) {
+            processSelectionNode( range, node, chunks );
+            node = node.nextSibling;
+          }
+          return;
+        }
+        if ( !range.intersectsNode( root ) ) {
+          return;
+        }
+        switch ( root.nodeType ) {
+          case DOMUtils.NODE.ELEMENT_NODE:
+            chunks.push( {
+              element: root,
+              info: []
+            } );
+            break;
+          case DOMUtils.NODE.TEXT_NODE:
+            startOffset = ( root == range.startContainer ) ?
+              range.startOffset : 0;
+            endOffset = ( root == range.endContainer ) ?
+              range.endOffset : root.length;
+            node = root;
+            while ( node && node.nodeType != DOMUtils.NODE.ELEMENT_NODE ) {
+              node = node.parentNode;
+            }
+            while ( node &&
+                    ( node.hasAttribute( "_moz_editor_bogus_node" ) ||
+                      designEditor.isAnonymousElement( node ) ) ) {
+              node = node.parentNode;
+            }
+            elementIndex = -1;
+            for ( var i = 0; i < chunks.length; i++ ) {
+              if ( chunks[i].element == node ) {
+                elementIndex = i;
+                break;
+              }
+            }
+            if ( elementIndex == -1 ) {
+              chunks.push( {
+                element: node,
+                info: []
+              } );
+              elementIndex = chunks.length - 1;
+            }
+            info = chunks[elementIndex].info;
+            nodeIndex = -1;
+            for ( var i = 0; i < info.length; i++ ) {
+              if ( info[i].node == root ) {
+                nodeIndex = i;
+                break;
+              }
+            }
+            if ( nodeIndex == -1 ) {
+              info.push( {
+                node: root,
+                offsets: []
+              } );
+              nodeIndex = info.length - 1;
+            }
+            offsets = info[nodeIndex].offsets;
+            offsets.push( {
+              startOffset: startOffset,
+              endOffset: endOffset
+            } );
+            break;
+        }
+      };
+      // end
+      DOMUtils.convolveSelection( designEditor.selection );
+      var range, chunks = [];
+      for ( var i = 0; i < designEditor.selection.rangeCount; i++ ) {
+        range = designEditor.selection.getRangeAt( i );
+        processSelectionNode( range, range.commonAncestorContainer, chunks );
+      }
+      return chunks;
+    };
+    
+    function splitSelectionNodes( surround ) {
+      var node, info, result = [];
+      for ( var i = 0; i < selectionChunks.length; i++ ) {
+        node = selectionChunks[i].element;
+        info = selectionChunks[i].info;
+        if ( !info.length ) {
+          result.push( {
+            node: node,
+            kind: 0
+          } );
+        } else {
+          if ( node.childNodes.length == 1 &&
+               info.length == 1 &&
+               info[0].offsets.length == 1 &&
+               info[0].offsets[0].startOffset == 0 &&
+               info[0].offsets[0].endOffset == info[0].node.length ) {
+            result.push( {
+              node: node,
+              kind: 2
+            } );
+          } else {
+            for ( var j = 0; j < info.length; j++ ) {
+              result = result.concat(
+                splitTextNodeByOffsets(
+                  info[j].node,
+                  info[j].offsets,
+                  surround
+                )
+              );
+            }
+          }
+        }
       }
       return result;
+    };
+    
+    function splitTextNodeByOffsets( node, offsets, surround ) {
+      var result = [];
+      var text, offset, delta = 0;
+      for ( var k = 0; k < offsets.length; k++ ) {
+        offset = offsets[k].startOffset - delta;
+        delta += offset;
+        if ( offset > 0 ) {
+          splitTextNode( node, offset );
+        }
+        offset = offsets[k].endOffset - delta;
+        delta += offset;
+        text = offset < node.length ? splitTextNode( node, offset ) : node;
+        result.push( {
+          node: ( surround ? surroundNode( text, "span" ) : text ),
+          kind: ( surround ? 2 : 4 )
+        } );
+      }
+      return result;
+    };
+    
+    function surroundNode( node, tag ) {
+      var txn = new SurroundNodeTransaction( node, tag );
+      designEditorTM.doTransaction( txn );
+      return txn.getSurround();
+    };
+    
+    function splitTextNode( rightNode, offset ) {
+      var txn = new SplitTextNodeTransaction( rightNode, offset );
+      designEditorTM.doTransaction( txn );
+      return txn.getLeftNode();
+    };
+
+    // HELPER TRANSACTIONS
+    
+    function SplitTextNodeTransaction( rightNode, offset ) {
+      this.wrappedJSObject = this;
+      this.mRightNode = rightNode;
+      this.mOffset = offset;
+      this.mLeftNode = null;
+    };
+    SplitTextNodeTransaction.prototype = {
+      isTransient: false,
+      doTransaction: function() {
+        if ( !this.mLeftNode ) {
+          this.mLeftNode =
+            this.mRightNode.parentNode.ownerDocument.createTextNode(
+              this.mRightNode.textContent.substring( 0, this.mOffset )
+            );
+        } 
+        this.redoTransaction();
+      },
+      redoTransaction: function() {
+        this.mRightNode.parentNode.insertBefore(
+          this.mLeftNode, this.mRightNode );
+        this.mRightNode.textContent =
+          this.mRightNode.textContent.substring( this.mOffset );
+        var node, range, count = selectionRanges.length;
+        var startContainer, startOffset;
+        var endContainer, endOffset;
+        for ( var i = 0; i < count; i++ ) {
+          range = selectionRanges[i];
+          startContainer = range.startContainer;
+          startOffset = range.startOffset;
+          endContainer = range.endContainer;
+          endOffset = range.endOffset;
+          if ( startContainer.nodeType == DOMUtils.NODE.ELEMENT_NODE ) {
+            node = startContainer.childNodes[startOffset + 1];
+            if ( DOMUtils.isRightSibling( this.mRightNode, node ) ) {
+              range.startOffset++;
+            }
+          }
+          if ( endContainer.nodeType == DOMUtils.NODE.ELEMENT_NODE ) {
+            node = endContainer.childNodes[endOffset];
+            if ( DOMUtils.isRightSibling( this.mRightNode, node ) ) {
+              range.endOffset++;
+            }
+          }
+          if ( startContainer == this.mRightNode ) {
+            if ( startOffset < this.mOffset ) {
+              range.startContainer = this.mLeftNode;
+            } else {
+              range.startOffset -= this.mOffset;
+            }
+          }
+          if ( endContainer == this.mRightNode ) {
+            if ( this.mOffset < endOffset ) {
+              range.endOffset -= this.mOffset;
+            } else {
+              range.endContainer = this.mLeftNode;
+            }
+          }
+        }
+      },
+      undoTransaction: function() {
+        var node, range, count = selectionRanges.length;
+        var startContainer, startOffset;
+        var endContainer, endOffset;
+        for ( var i = 0; i < count; i++ ) {
+          range = selectionRanges[i];
+          startContainer = range.startContainer;
+          startOffset = range.startOffset;
+          endContainer = range.endContainer;
+          endOffset = range.endOffset;
+          if ( startContainer.nodeType == DOMUtils.NODE.ELEMENT_NODE ) {
+            node = startContainer.childNodes[startOffset];
+            if ( DOMUtils.isRightSibling( this.mRightNode, node ) ) {
+              range.startOffset--;
+            }
+          }
+          if ( endContainer.nodeType == DOMUtils.NODE.ELEMENT_NODE ) {
+            node = endContainer.childNodes[endOffset-1];
+            if ( DOMUtils.isRightSibling( this.mRightNode, node ) ) {
+              range.endOffset--;
+            }
+          }
+          if ( startContainer == this.mRightNode ) {
+            range.startOffset += this.mOffset;
+          }
+          if ( startContainer == this.mLeftNode ) {
+            range.startContainer = this.mRightNode;
+          }
+          if ( endContainer == this.mRightNode ) {
+            range.endOffset += this.mOffset;
+          }
+          if ( endContainer == this.mLeftNode ) {
+            range.endContainer = this.mRightNode;
+          }
+        }
+        this.mRightNode.textContent =
+          this.mLeftNode.textContent + this.mRightNode.textContent;
+        this.mRightNode.parentNode.removeChild( this.mLeftNode );
+      },
+      merge: function( aTxn ) {
+        return false;
+      },
+      QueryInterface: function( aIID, theResult ) {
+        if ( aIID.equals( Components.interfaces.nsITransaction ) ||
+             aIID.equals( Components.interfaces.nsISupports ) ) {
+          return this;
+        }
+        Components.returnCode = Components.results.NS_ERROR_NO_INTERFACE;
+        return null;
+      },
+      getLeftNode: function() {
+        return this.mLeftNode;
+      }
+    };
+    
+    function SurroundNodeTransaction( node, tag ) {
+      this.wrappedJSObject = this;
+      this.mNode = node;
+      this.mTag = tag;
+      this.mSurround = null;
+    };
+    SurroundNodeTransaction.prototype = {
+      isTransient: false,
+      doTransaction: function() {
+        if ( !this.mSurround ) {
+          this.mSurround =
+            this.mNode.ownerDocument.createElement( this.mTag );
+        }
+        this.redoTransaction();
+      },
+      redoTransaction: function() {
+        this.mNode.parentNode.insertBefore(
+          this.mSurround, this.mNode );
+        this.mSurround.appendChild( this.mNode );
+      },
+      undoTransaction: function() {
+        this.mNode = this.mSurround.removeChild( this.mNode );
+        this.mSurround.parentNode.insertBefore(
+          this.mNode, this.mSurround );
+        this.mSurround.parentNode.removeChild( this.mSurround );
+      },
+      merge: function( aTxn ) {
+        return false;
+      },
+      QueryInterface: function( aIID, theResult ) {
+        if ( aIID.equals( Components.interfaces.nsITransaction ) ||
+             aIID.equals( Components.interfaces.nsISupports ) ) {
+          return this;
+        }
+        Components.returnCode = Components.results.NS_ERROR_NO_INTERFACE;
+        return null;
+      },
+      getSurround: function() {
+        return this.mSurround;
+      }
     };
     
     // TOOLBAR
@@ -1805,100 +2153,642 @@ var Editor = function() {
 
     // DEBUG
     
-    function doDebug() {
-      var focusedElement = getSelectionElement();
-      if ( !focusedElement ) {
-        return;
+    function dumpSelection() {
+      var range, commonAncestorContainer;
+      var startContainer, startOffset
+      var endContainer, endOffset;
+      var count = designEditor.selection ?
+        designEditor.selection.rangeCount : 0;
+      for ( var i = 0; i < count; i++ ) {
+        range = designEditor.selection.getRangeAt( i );
+        startContainer = range.startContainer;
+        startOffset = range.startOffset;
+        endContainer = range.endContainer;
+        endOffset = range.endOffset;
+        commonAncestorContainer = range.commonAncestorContainer;
+        Utils.log( i + ") ancestor => " + ( commonAncestorContainer.id ? commonAncestorContainer.id : commonAncestorContainer.nodeName ) );
+        Utils.log( i + ") start => " + ( startContainer.id ? startContainer.id : startContainer.nodeName ) +
+          " : " + startOffset );
+        if ( startContainer.nodeType == DOMUtils.NODE.TEXT_NODE ) {
+          text = startContainer.textContent
+                               .substring( startOffset, ( startContainer == endContainer ? endOffset : undefined ) )
+                               .replace( /\n/img, "\\n" );
+          Utils.log( i + ") '" + text + "'" );
+        }
+        Utils.log( i + ") end => " + ( endContainer.id ? endContainer.id : endContainer.nodeName ) +
+          " : " + endOffset );
+        if ( endContainer.nodeType == DOMUtils.NODE.TEXT_NODE ) {
+          text = endContainer.textContent
+                               .substring( ( startContainer == endContainer ? startOffset : 0 ), endOffset )
+                               .replace( /\n/img, "\\n" );
+          Utils.log( i + ") '" + text + "'" );
+        }
       }
-      Utils.log(
-        ( focusedElement.flag ? "[1] " : "[ ] " ) +
-        "name: '" + focusedElement.node.nodeName + "'" +
-        ( focusedElement.node.id ? ", id: '" + focusedElement.node.id + "'" : "" )
-      );
-      var selectionContainer = designEditor.getSelectionContainer();
-      if ( selectionContainer != focusedElement.node ) {
-        Utils.log(
-          "selectionContainer: '" + selectionContainer.nodeName +
-          "', id: '" + selectionContainer.id + "'"
-        );
+    };
+
+    function dumpSelectionChunks() {
+      var element, info, node, offsets;
+      var startOffset, endOffset, text;
+      for ( var i = 0; i < selectionChunks.length; i++ ) {
+        element = selectionChunks[i].element;
+        info = selectionChunks[i].info;
+        Utils.log( element.nodeName + ( info.length ? " TEXT" : " ELEMENT" ) );
+        for ( var j = 0; j < info.length; j++ ) {
+          node = info[j].node;
+          offsets = info[j].offsets;
+          if ( offsets.length == 1 &&
+               offsets[0].startOffset == 0 &&
+               offsets[0].endOffset == node.length ) {
+            Utils.log( "* : '" + node.textContent + "'" );
+          } else {
+            for ( var k = 0; k < offsets.length; k++ ) {
+              startOffset = offsets[k].startOffset;
+              endOffset = offsets[k].endOffset;
+              text = node.textContent.substring( startOffset, endOffset )
+                                     .replace( /\n/img, "\\n" );
+              Utils.log( k + " : '" + text + "', { " + startOffset + ", " +
+                endOffset + " }" );
+            }
+          }
+        }
       }
-      /*
-      var firstHas = { value: null };
-      var anyHas = { value: null };
-      var allHas = { value: null };
-      getTextProperty( "text", "decoration", "underline", firstHas, anyHas, allHas );
-      Utils.log( "first: " + firstHas.value + ", any: " + anyHas.value + ", all: " + allHas.value );
-      */
+    };
+
+    function dumpSelectionElements( surround ) {
+      try {
+        designEditor.beginTransaction();
+        var node, kind, name, text;
+        var nodes = splitSelectionNodes( surround );
+        for ( var i = 0; i < nodes.length; i++ ) {
+          node = nodes[i].node;
+          kind = nodes[i].kind;
+          name = node.nodeName;
+          switch ( kind ) {
+            case 0: 
+              // node is element node and not contains text node
+              Utils.log( "[" + kind + "] " + name );
+              break;
+            case 2:
+              // node is element node and contains only one text node
+              text = node.firstChild.textContent.replace( /\n/img, "\\n" );
+              Utils.log( "[" + kind + "] " + name + "\n'" + text + "'" );
+              break
+            case 4:
+              // node is text node
+              text = node.textContent.replace( /\n/img, "\\n" );
+              Utils.log( "[" + kind + "] " + name + "\n'" + text + "'" );
+              break;
+          }
+        }
+      } catch ( e ) {
+        Utils.log( e );
+      } finally {
+        designEditor.endTransaction();
+      }
     };
     
-    // CONTROLS
+    function doDebug() {
+      Utils.log( "== dumpSelection() ==" );
+      dumpSelection();
+      Utils.log( "== dumpSelectionChunks() ==" );
+      dumpSelectionChunks();
+      Utils.log( "== dumpSelectionElements( true ) ==" );
+      dumpSelectionElements( true /* surround */);
+      doUndo();
+    };
+
+    // DESIGN CONTROLS
+
+    // name: font-family
+    // inherited: yes
+    // computed value: as specified
+    //                 [ family-name | generic-family ][, ...]
+    // initial: depends on user agent
+    // comment:
+    function getFontFamilyState( mixed ) {
+      var fontMapping = Utils.getDefaultFontMapping();
+      var element, computedStyle, value;
+      var result = null;
+      mixed.value = false;
+      for ( var i = 0; i < selectionChunks.length; i++ ) {
+        element = selectionChunks[i].element;
+        computedStyle = element.ownerDocument
+                               .defaultView
+                               .getComputedStyle( element, null );
+        value = computedStyle.fontFamily;
+        if ( !value ) {
+          value = fontMapping.defaultName;
+        }
+        if ( result === null ) {
+          result = value;
+        } else {
+          if ( result !== value ) {
+            mixed.value = true;
+            break;
+          }
+        }
+      }
+      return result;
+    };
+    
+    // name: font-size
+    // inherited: yes
+    // computed value: absolute length in px
+    // initial: medium
+    // comment:
+    function getFontSizeState( mixed ) {
+      var element, computedStyle, value;
+      var result = null;
+      mixed.value = false;
+      for ( var i = 0; i < selectionChunks.length; i++ ) {
+        element = selectionChunks[i].element;
+        computedStyle = element.ownerDocument
+                               .defaultView
+                               .getComputedStyle( element, null );
+        value = computedStyle.fontSize;
+        if ( value !== null ) {
+          value = parseInt( value.substring( 0, value.indexOf( "px" ) ) );
+        }
+        if ( result === null ) {
+          result = value;
+        } else {
+          if ( result !== value ) {
+            mixed.value = true;
+            break;
+          }
+        }
+      }
+      return result;
+    };
+    
+    // name: font-style
+    // inherited: yes
+    // computed value: as specified
+    //                 normal | italic | oblique
+    // initial: normal
+    // comment:
+    function getFontStyleState( mixed ) {
+      var element, computedStyle, value;
+      var result = null;
+      mixed.value = false;
+      for ( var i = 0; i < selectionChunks.length; i++ ) {
+        element = selectionChunks[i].element;
+        computedStyle = element.ownerDocument
+                               .defaultView
+                               .getComputedStyle( element, null );
+        value = computedStyle.fontStyle;
+        if ( result === null ) {
+          result = value;
+        } else {
+          if ( result !== value ) {
+            mixed.value = true;
+            break;
+          }
+        }
+      }
+      return result;
+    };
+    
+    // name: font-weight
+    // inherited: yes
+    // computed value: '100' - '900'
+    // initial: normal === '400'
+    // comment: bold === '700'
+    function getFontWeightState( mixed ) {
+      var element, computedStyle, value;
+      var result = null;
+      mixed.value = false;
+      for ( var i = 0; i < selectionChunks.length; i++ ) {
+        element = selectionChunks[i].element;
+        computedStyle = element.ownerDocument
+                               .defaultView
+                               .getComputedStyle( element, null );
+        value = computedStyle.fontWeight;
+        if ( result === null ) {
+          result = value;
+        } else {
+          if ( result !== value ) {
+            mixed.value = true;
+            break;
+          }
+        }
+      }
+      return result;
+    };
+    
+    // name: text-decoration
+    // inherited: no
+    // computed value: as specified
+    //                 none | [ underline || overline || line-through || blink ]
+    // initial: none
+    // comment: strange behavior ( inherited )
+    function getTextDecorationState( mixed, underline, strike ) {
+      var element, computedStyle, value;
+      var result = null;
+      mixed.value = false;
+      for ( var i = 0; i < selectionChunks.length; i++ ) {
+        element = selectionChunks[i].element;
+        value = [];
+        while ( element && element.nodeType == DOMUtils.NODE.ELEMENT_NODE ) {
+          computedStyle = element.ownerDocument
+                                 .defaultView
+                                 .getComputedStyle( element, null );
+          value = value.concat(
+            computedStyle.textDecoration.split( /\s+/ )
+          );
+          element = element.parentNode;
+        }
+        value = value.join( " " );
+        if ( result === null ) {
+          result = value;
+          underline.value = ( value.indexOf( "underline" ) != -1 );
+          strike.value = ( value.indexOf( "line-through" ) != -1 );
+        } else {
+          if ( result !== value ) {
+            mixed.value = true;
+            break;
+          }
+        }
+      }
+    };
+    
+    // name: text-align
+    // inherited: yes
+    // computed value: the initial value or as specified
+    //                 left | right | center | justify
+    // initial: a nameless value that acts as
+    //          left if direction is ltr,
+    //          right if direction is rtl
+    // comment: applies to block containers
+    function getAlignmentState( mixed ) {
+      var element, computedStyle, value, direction;
+      var result = null;
+      mixed.value = false;
+      for ( var i = 0; i < selectionChunks.length; i++ ) {
+        element = selectionChunks[i].element;
+        computedStyle = element.ownerDocument
+                               .defaultView
+                               .getComputedStyle( element, null );
+        direction = computedStyle.direction;
+        value = computedStyle.textAlign;
+        if ( !value ) {
+          value = "start";
+        }
+        switch ( value ) {
+          case "start":
+            value = ( direction == "ltr" ) ? "left" : "right";
+            break;
+          case "end":
+            value = ( direction == "ltr" ) ? "right" : "left";
+            break;
+        }
+        if ( result === null ) {
+          result = value;
+        } else {
+          if ( result !== value ) {
+            mixed.value = true;
+            break;
+          }
+        }
+      }
+      return result;
+    };
+
+    // name: color
+    // inherited: yes
+    // computed value: as specified
+    // initial: depends on user agent
+    // comment:
+    function getFontColorState( mixed ) {
+      var element, computedStyle, value;
+      var result = null;
+      mixed.value = false;
+      for ( var i = 0; i < selectionChunks.length; i++ ) {
+        element = selectionChunks[i].element;
+        computedStyle = element.ownerDocument
+                               .defaultView
+                               .getComputedStyle( element, null );
+        value = computedStyle.color;
+        if ( result === null ) {
+          result = value;
+        } else {
+          if ( result !== value ) {
+            mixed.value = true;
+            break;
+          }
+        }
+      }
+      return result;
+    };
+    
+    // name: background-color
+    // inherited: no
+    // computed value: as specified
+    // initial: transparent
+    // comment:
+    function getHighlightColorState( mixed ) {
+      var element, computedStyle, value;
+      var result = null;
+      mixed.value = false;
+      for ( var i = 0; i < selectionChunks.length; i++ ) {
+        element = selectionChunks[i].element;
+        while ( element && element.nodeType == DOMUtils.NODE.ELEMENT_NODE ) {
+          computedStyle = element.ownerDocument
+                                 .defaultView
+                                 .getComputedStyle( element, null );
+          value = computedStyle.backgroundColor;
+          if ( value != "transparent" ) {
+            break;
+          }
+          element = element.parentNode;
+        }
+        if ( result === null ) {
+          result = value;
+        } else {
+          if ( result !== value ) {
+            mixed.value = true;
+            break;
+          }
+        }
+      }
+      return result;
+    };
+
+    // name: background-color
+    // inherited: no
+    // computed value: as specified
+    // initial: transparent
+    // comment:
+    function getBackgroundColorState( mixed ) {
+      var element, computedStyle, value;
+      var result = null;
+      mixed.value = false;
+      for ( var i = 0; i < selectionChunks.length; i++ ) {
+        element = selectionChunks[i].element;
+        computedStyle = element.ownerDocument
+                               .defaultView
+                               .getComputedStyle( element, null );
+        value = computedStyle.backgroundColor;
+        if ( result === null ) {
+          result = value;
+        } else {
+          if ( result !== value ) {
+            mixed.value = true;
+            break;
+          }
+        }
+      }
+      return result;
+    };
+    
+    // name: display
+    // inherited: no
+    // computed value: inline | block | list-item | inline-block | table |
+    //                 inline-table | table-row-group | table-header-group |
+    //                 table-footer-group | table-row | table-column-group |
+    //                 table-column | table-cell | table-caption | none
+    // initial: inline
+    // comment:
+    function getBlockState( mixed ) {
+      var element, computedStyle, value;
+      var value, found, result = null;
+      mixed.value = false;
+      for ( var i = 0; i < selectionChunks.length; i++ ) {
+        element = selectionChunks[i].element;
+        value = "";
+        while ( element && element.nodeType == DOMUtils.NODE.ELEMENT_NODE &&
+                element != element.ownerDocument.body ) {
+          computedStyle = element.ownerDocument
+                                 .defaultView
+                                 .getComputedStyle( element, null );
+          if ( computedStyle.display == "block" ) {
+            found = false;
+            for ( var name in formatBlockObject ) {
+              if ( formatBlockObject[name] == element.nodeName ) {
+                found = true;
+                break;
+              }
+            }
+            if ( found ) {
+              value = element.nodeName;
+              break;
+            }
+          }
+          element = element.parentNode;
+        }
+        if ( result === null ) {
+          result = value;
+        } else {
+          if ( result !== value ) {
+            mixed.value = true;
+            break;
+          }
+        }
+      }
+      return result;
+    };
+    
+    // name: margin-left
+    // inherited: no
+    // computed value: the percentage as specified or the absolute length
+    // initial: 0
+    // comment: applies to all elements except elements with
+    //          table display types other than table-caption,
+    //          table and inline-table
+    function getIndentState( mixed ) {
+      var element, computedStyle, value;
+      var value, index, result = null;
+      mixed.value = false;
+      for ( var i = 0; i < selectionChunks.length; i++ ) {
+        element = selectionChunks[i].element;
+        value = 0;
+        while ( element && element.nodeType == DOMUtils.NODE.ELEMENT_NODE ) {
+          computedStyle = element.ownerDocument
+                                 .defaultView
+                                 .getComputedStyle( element, null );
+          if ( computedStyle.display == "block" ) {
+            value = computedStyle.marginLeft;
+            index = ( value !== null ) ? value.indexOf( "px" ) : -1;
+            if ( index != -1 ) {
+              value = parseInt( value.substring( 0, index ) );
+              value = ( value >= 40 ) && ( ( value % 40 ) == 0 );
+              if ( value ) {
+                break;
+              }
+            }
+          }
+          if ( element == element.ownerDocument.body ) {
+            break;
+          }
+          element = element.parentNode;
+        }
+        if ( result === null ) {
+          result = value;
+        } else {
+          if ( result !== value ) {
+            mixed.value = true;
+            break;
+          }
+        }
+      }
+      return result;
+    };
+
+    // is the selection "ol" || "ul" || "dl" element
+    function getListState( mixed, ol, ul, dl ) {
+      var element, value, result = null;
+      mixed.value = false;
+      for ( var i = 0; i < selectionChunks.length; i++ ) {
+        element = selectionChunks[i].element;
+        ol.value = false;
+        ul.value = false;
+        dl.value = false;
+        value = 0;
+        while ( element && element.nodeType == DOMUtils.NODE.ELEMENT_NODE &&
+                element != element.ownerDocument.body ) {
+          switch ( element.nodeName ) {
+            case "ol":
+              ol.value = true;
+              ul.value = false;
+              dl.value = false;
+              value = 4;
+              break;
+            case "ul":
+              ol.value = false;
+              ul.value = true;
+              dl.value = false;
+              value = 2;
+              break;
+            case "dl":
+              ol.value = false;
+              ul.value = false;
+              dl.value = true;
+              value = 1;
+              break;
+          }
+          if ( value ) {
+            break;
+          }
+          element = element.parentNode;
+        }
+        if ( result === null ) {
+          result = value;
+        } else {
+          if ( result !== value ) {
+            mixed.value = true;
+            break;
+          }
+        }
+      }
+    };
+      
+    // is the selection "li" || "dt" || "dd" element
+    function getListItemState( mixed, li, dt, dd ) {
+      var element, value, result = null;
+      mixed.value = false;
+      for ( var i = 0; i < selectionChunks.length; i++ ) {
+        element = selectionChunks[i].element;
+        if ( element.nodeName == "ol" ||
+             element.nodeName == "ul" ||
+             element.nodeName == "dl" ) {
+          continue;
+        }
+        li.value = false;
+        dt.value = false;
+        dd.value = false;
+        value = 0;
+        while ( element && element.nodeType == DOMUtils.NODE.ELEMENT_NODE &&
+                element != element.ownerDocument.body ) {
+          switch ( element.nodeName ) {
+            case "li":
+              li.value = true;
+              dt.value = false;
+              dd.value = false;
+              value = 4;
+              break;
+            case "dt":
+              li.value = false;
+              dt.value = true;
+              dd.value = false;
+              value = 2;
+              break;
+            case "dd":
+              li.value = false;
+              dt.value = false;
+              dd.value = true;
+              value = 1;
+              break;
+          }
+          if ( value ) {
+            break;
+          }
+          element = element.parentNode;
+        }
+        if ( result === null ) {
+          result = value;
+        } else {
+          if ( result !== value ) {
+            mixed.value = true;
+            break;
+          }
+        }
+      }
+    };
+
+    // is the selection descendant of a "sub" element
+    function getSUBState( mixed ) {
+      var element, computedStyle, value;
+      var value, result = null;
+      mixed.value = false;
+      for ( var i = 0; i < selectionChunks.length; i++ ) {
+        element = selectionChunks[i].element;
+        value = DOMUtils.isElementDescendantOf( element, "sub" );
+        if ( result === null ) {
+          result = value;
+        } else {
+          if ( result !== value ) {
+            mixed.value = true;
+            break;
+          }
+        }
+      }
+      return result;
+    };
+
+    // is the selection descendant of a "sup" element
+    function getSUPState( mixed ) {
+      var element, computedStyle, value;
+      var value, result = null;
+      mixed.value = false;
+      for ( var i = 0; i < selectionChunks.length; i++ ) {
+        element = selectionChunks[i].element;
+        value = DOMUtils.isElementDescendantOf( element, "sup" );
+        if ( result === null ) {
+          result = value;
+        } else {
+          if ( result !== value ) {
+            mixed.value = true;
+            break;
+          }
+        }
+      }
+      return result;
+    };
     
     function updateDesignControls() {
-      var focusedElement = getSelectionElement();
-      if ( !focusedElement ) {
-        return;
-      }
-      var computedStyle =
-        currentWindow.getComputedStyle( focusedElement.node, null );
-      // font-size ( inherited ) computed-value: absolute length
-      var fontSize = computedStyle.fontSize;
-      if ( fontSize ) {
-        fontSize = parseInt(
-          fontSize.substring( 0, fontSize.indexOf( "px" ) )
-        );
-      } else {
-        fontSize = "";
-      }
-      fontSizeTextBox.value = fontSize;
-      // font-style ( inherited ) computed-value: as specified
-      var fontStyle = computedStyle.fontStyle;
-      setCommandState( "znotes_italic_command", fontStyle == "italic" );
-      // font-weight ( inherited ) computed-value: 100-900
-      var fontWeight = computedStyle.fontWeight;
-      setCommandState( "znotes_bold_command", fontWeight == "700" );
-      // text-decoration ( no inherited ) computed value: as specified
-      var textDecoration = DOMUtils.getElementTextDecoration( focusedElement.node );
-      var values = { underline: false, linethrough: false };
-      values.underline = ( textDecoration.indexOf( "underline" ) != -1 );
-      values.linethrough = ( textDecoration.indexOf( "line-through" ) != -1 );
-      setCommandState( "znotes_underline_command", values.underline );
-      setCommandState( "znotes_strikethrough_command", values.linethrough );
-      // subscript
-      var nodeName, found = false;
-      var element = focusedElement.node;
-      while ( element && element.nodeType == DOMUtils.NODE.ELEMENT_NODE ) {
-        nodeName = element.nodeName.toLowerCase();
-        if ( nodeName == "sub" ) {
-          found = true;
-          break;
-        }
-        element = element.parentNode;
-      }
-      setCommandState( "znotes_subscript_command", found );
-      // superscript
-      var nodeName, found = false;
-      var element = focusedElement.node;
-      while ( element && element.nodeType == DOMUtils.NODE.ELEMENT_NODE ) {
-        nodeName = element.nodeName.toLowerCase();
-        if ( nodeName == "sup" ) {
-          found = true;
-          break;
-        }
-        element = element.parentNode;
-      }
-      setCommandState( "znotes_superscript_command", found );
-      // font-family
       var fontNameArray = Utils.getFontNameArray();
       var fontMapping = Utils.getDefaultFontMapping();
-      var mixed = { value: null };
-      fontFamily = designEditor.getFontFaceState( mixed );
-      var name, index = fontNameArray.indexOf( fontMapping.defaultValue );
+      var iconSize = ( currentStyle.iconsize == "small" ) ? 16 : 24;
+      var mixed, name, value, index, found;
+      var underline, strike, align, fgColor, bgColor;
+      // font-family
+      mixed = { value: null };
+      value = getFontFamilyState( mixed );
+      index = -1;
       if ( !mixed.value ) {
-        fontFamily = fontFamily ?
-          fontFamily.split( /\s*,\s*/ ) : [ fontMapping.defaultName ];
-        index = -1;
-        for ( var i = 0; i < fontFamily.length; i++ ) {
-          name = fontFamily[i];
+        value = value.split( /\s*,\s*/ );
+        for ( var i = 0; i < value.length; i++ ) {
+          name = value[i];
           if ( name.charAt( 0 ) == "'" || name.charAt( 0 ) == '"' ) {
             name = name.substring( 1, name.length - 1 );
           }
@@ -1912,75 +2802,152 @@ var Editor = function() {
         }
       }
       fontNameMenuList.selectedIndex = index;
-      // text-align
-      var values = { left: false, center: false, right: false, full: false };
+      // font-size
       mixed = { value: null };
-      var align = { value: null };
-      designEditor.getAlignment( mixed, align );
+      value = getFontSizeState( mixed );
+      if ( mixed.value ) {
+        value = "";
+      } else {
+        value = value ? value : "";
+      }
+      if ( !value ) {
+        fontSizeTextBox.removeAttribute( "type" );
+        fontSizeTextBox.value = "";
+        fontSizeTextBox.setAttribute( "value", "" );
+      } else {
+        fontSizeTextBox.setAttribute( "type", "number" );
+        fontSizeTextBox.value = value;
+        fontSizeTextBox.setAttribute( "value", value );
+      }
+      // font-style
+      mixed = { value: null };
+      value = getFontStyleState( mixed );
       if ( !mixed.value ) {
-        switch ( align.value ) {
-          case nsIHTMLEditor.eLeft:
-            values.left = true;
+        setCommandState( "znotes_italic_command", value == "italic" );
+      } else {
+        setCommandState( "znotes_italic_command", false );
+      }
+      // font-weight
+      mixed = { value: null };
+      value = getFontWeightState( mixed );
+      if ( !mixed.value ) {
+        setCommandState( "znotes_bold_command", value == "700" );
+      } else {
+        setCommandState( "znotes_bold_command", false );
+      }
+      // text-decoration
+      underline = { value: null };
+      strike = { value: null };
+      mixed = { value: null };
+      getTextDecorationState( mixed, underline, strike );
+      if ( !mixed.value ) {
+        setCommandState( "znotes_underline_command", underline.value );
+        setCommandState( "znotes_strikethrough_command", strike.value );
+      } else {
+        setCommandState( "znotes_underline_command", false );
+        setCommandState( "znotes_strikethrough_command", false );
+      }
+      // text-align
+      align = { left: false, center: false, right: false, full: false };
+      mixed = { value: null };
+      value = getAlignmentState( mixed );
+      if ( !mixed.value ) {
+        switch ( value ) {
+          case "left":
+            align.left = true;
             break;
-          case nsIHTMLEditor.eRight:
-            values.right = true;
+          case "right":
+            align.right = true;
             break;
-          case nsIHTMLEditor.eCenter:
-            values.center = true;
+          case "center":
+            align.center = true;
             break;
-          case nsIHTMLEditor.eJustify:
-            values.full = true;
+          case "justify":
+            align.full = true;
             break;
         }
       }
-      setCommandState( "znotes_justifyleft_command", values.left );
-      setCommandState( "znotes_justifycenter_command", values.center );
-      setCommandState( "znotes_justifyright_command", values.right );
-      setCommandState( "znotes_justifyfull_command", values.full );
-      // format block
+      setCommandState( "znotes_justifyleft_command", align.left );
+      setCommandState( "znotes_justifycenter_command", align.center );
+      setCommandState( "znotes_justifyright_command", align.right );
+      setCommandState( "znotes_justifyfull_command", align.full );
+      // background color
       mixed = { value: null };
-      var state = designEditor.getParagraphState( mixed );
-      var found = false, index = 0;
+      value = getBackgroundColorState( mixed );
+      backColorButton.setAttribute( "image",
+        Utils.makeBackColorImage( value, iconSize ) );
+      // foreground && highlight colors
+      fgColor = getFontColorState( mixed );
+      bgColor = getHighlightColorState( mixed );
+      foreColorButton.setAttribute( "image",
+        Utils.makeForeColorImage( fgColor, iconSize, bgColor ) );
+      // block format
+      mixed = { value: null };
+      value = getBlockState( mixed );
+      found = false;
+      index = 0;
       if ( !mixed.value ) {
         for ( var name in formatBlockObject ) {
-          if ( formatBlockObject[name] == state ) {
+          if ( formatBlockObject[name] == value ) {
             found = true;
             break;
           }
           index++;
         }
+      } else {
+        found = true;
+        index = -1;
       }
       formatBlockMenuList.selectedIndex = ( found ? index : 0 );
-      // colors
-      var iconSize = ( currentStyle.iconsize == "small" ) ? 16 : 24;
-      mixed = { value: null };
-      var bgColor = designEditor.getHighlightColorState( mixed );
-      var fgColor = designEditor.getFontColorState( mixed );
-      var bColor = designEditor.getBackgroundColorState( mixed );
-      backColorButton.setAttribute( "image",
-        Utils.makeBackColorImage( bgColor, iconSize ) );
-      foreColorButton.setAttribute( "image",
-        Utils.makeForeColorImage( fgColor, iconSize, bgColor ) );
       // indent && outdent
-      var canIndent = { value: null };
-      var canOutdent = { value: null };
-      designEditor.getIndentState( canIndent, canOutdent );
-      Common.goSetCommandEnabled( "znotes_indent_command", canIndent.value, currentWindow );
-      Common.goSetCommandEnabled( "znotes_outdent_command", canOutdent.value, currentWindow );
-      // ol && ul
+      mixed = { value: null };
+      value = getIndentState( mixed );
+      Common.goSetCommandEnabled( "znotes_indent_command", true , currentWindow );
+      if ( mixed.value ) {
+        Common.goSetCommandEnabled( "znotes_outdent_command", false, currentWindow );
+      } else {
+        Common.goSetCommandEnabled( "znotes_outdent_command", value, currentWindow );
+      }
+      // ol && ul && dl
       mixed = { value: null };
       var ol = { value: null };
       var ul = { value: null };
       var dl = { value: null };
-      designEditor.getListState( mixed, ol, ul, dl );
-      setCommandState( "znotes_insertorderedlist_command", ol.value );
-      setCommandState( "znotes_insertunorderedlist_command", ul.value );
+      getListState( mixed, ol, ul, dl );
+      if ( !mixed.value ) {
+        setCommandState( "znotes_insertorderedlist_command", ol.value );
+        setCommandState( "znotes_insertunorderedlist_command", ul.value );
+      } else {
+        setCommandState( "znotes_insertorderedlist_command", false );
+        setCommandState( "znotes_insertunorderedlist_command", false );
+      }
+      /*
+      // li && dt && dd
       mixed = { value: null };
       var li = { value: null };
       var dt = { value: null };
       var dd = { value: null };
-      designEditor.getListItemState( mixed, li, dt, dd );
+      getListItemState( mixed, li, dt, dd );
+      */
+      // subscript
+      var mixed = { value: null };
+      var isSubscripted = getSUBState( mixed );
+      if ( !mixed.value ) {
+        setCommandState( "znotes_subscript_command", isSubscripted );
+      } else {
+        setCommandState( "znotes_subscript_command", false );
+      }
+      // superscript
+      var mixed = { value: null };
+      var isSuperscripted = getSUPState( mixed );
+      if ( !mixed.value ) {
+        setCommandState( "znotes_superscript_command", isSuperscripted );
+      } else {
+        setCommandState( "znotes_superscript_command", false );
+      }
     };
+    
+    // SOURCE CONTROLS
     
     function updateSourceControls() {
     };
@@ -2000,60 +2967,17 @@ var Editor = function() {
     };
     
     // SELECTION
-
-    function getSelectionElement() {
-      var selection = designEditor.selection;
-      if ( !selection || selection.rangeCount == 0 ) {
-        return null;
+    
+    function updateSelection() {
+      if ( isSourceEditingActive ) {
+        return;
       }
-      var result = {
-        node: null,
-        flag: false
-      };
-      var range = selection.getRangeAt( 0 );
-      if ( selection.isCollapsed ) {
-        result.node = range.startContainer;      
+      if ( designEditor ) {
+        selectionChunks = getSelectionChunks();
+        selectionRanges = getSelectionRanges();
       } else {
-        var rangeCount = selection.rangeCount;
-        if ( rangeCount == 1 ) {
-          result.node = designEditor.getSelectedElement( "" );
-          if ( !result.node &&
-               range.startContainer.nodeType == DOMUtils.NODE.TEXT_NODE &&
-               range.startOffset == range.startContainer.length &&
-               range.endContainer.nodeType == DOMUtils.NODE.TEXT_NODE &&
-               range.endOffset == range.endContainer.length &&
-               range.endContainer.nextSibling == null &&
-               range.startContainer.nextSibling == range.endContainer.parentNode
-             ) {
-            result.node = range.endContainer.parentNode;
-          }
-          if ( !result.node ) {
-            result.node = range.commonAncestorContainer;
-          } else {
-            result.flag = true;
-          }
-        } else {
-          var container = range.startContainer;
-          for ( var i = 1; i < rangeCount; i++ ) {
-            range = selection.getRangeAt( i );
-            if ( container != range.startContainer ) {
-              container = container.parentNode;
-              break;
-            }
-          }
-          result.node = container;
-        }
+        selectionChunks = null;
       }
-      while ( result.node &&
-              result.node.nodeType != DOMUtils.NODE.ELEMENT_NODE ) {
-        result.node = result.node.parentNode;
-      }
-      while ( result.node && (
-              result.node.hasAttribute( "_moz_editor_bogus_node" ) ||
-              designEditor.isAnonymousElement( result.node ) ) ) {
-        result.node = result.node.parentNode;
-      }
-      return result;
     };
     
     function onSelectionChanged( event ) {
@@ -2068,6 +2992,7 @@ var Editor = function() {
           } else {
             designFrame.focus();
           }
+          updateSelection();
           updateCommandsVisibility();
           updateEditCommands();
           updateSpellCommands();
@@ -2162,19 +3087,25 @@ var Editor = function() {
  
     function onFontNameChange( event ) {
       doFontFamily();
-      designFrame.focus();
+      onSelectionChanged();
       return true;
     };
     
     function onFormatBlockChange( event ) {
       doBlockFormat();
-      designFrame.focus();
+      onSelectionChanged();
       return true;
     };
     
     function onFontSizeTextBoxChange( event ) {
-      doFontSize();
-      designFrame.focus();
+      var fontSize = parseInt( fontSizeTextBox.value );
+      if ( !fontSize ) {
+        Utils.beep();
+        fontSizeTextBox.select();
+      } else {
+        doFontSize();
+        onSelectionChanged();
+      }
       return true;
     };
     
@@ -2820,7 +3751,11 @@ var Editor = function() {
       // designEditor is instance of nsIEditor && nsIHTMLEditor
       designEditor =
         designFrame.getEditor( designFrame.contentWindow )
-                   .QueryInterface( nsIHTMLEditor );
+                   .QueryInterface( Components.interfaces.nsIHTMLEditor );
+      designEditorTM = designEditor.transactionManager;
+      designEditorTM = designEditorTM.QueryInterface(
+        Components.interfaces.nsITransactionManager );
+      designEditorTM.maxTransactionCount = -1;
       designEditor.resetModificationCount();
       designEditor.enableUndo( true );
       // BUG: Does not interact with the undo/redo system
@@ -2872,6 +3807,7 @@ var Editor = function() {
         }
       }
       designEditor = null;
+      designEditorTM = null;
       spellCheckerUI = null;
     };
     

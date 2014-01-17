@@ -52,6 +52,11 @@
         <url>ru/index.xhtml</url>
         <forum>forum/viewforum.php?f=38</forum>
       </locale>
+      <locale name="fr">
+        <language>Français</language>
+        <url>fr/index.xhtml</url>
+        <forum>forum/viewforum.php?f=37</forum>
+      </locale>
     </localized>
   </site>
 

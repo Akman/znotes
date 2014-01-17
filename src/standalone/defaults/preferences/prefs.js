@@ -51,6 +51,7 @@ pref("nglayout.debug.disable_xul_fastload", true);
 
 /* extensions update */
 
+pref("extensions.getAddons.cache.enabled", true);
 pref("extensions.update.enabled", false);
 
 /* application update */

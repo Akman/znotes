@@ -52,14 +52,14 @@ toolbar[iconsize="small"] #znotes_tbopenmaintab_button[disabled="true"] {
 }
 
 #znotes_tbsaveasnote_button {
-  list-style-image: url("chrome://znotes_images/skin/import-note-24x24.png");
+  list-style-image: url("chrome://znotes_images/skin/save-email-24x24.png");
 }
 #znotes_tbsaveasnote_button[disabled="true"] {
-  list-style-image: url("chrome://znotes_images/skin/import-note-disabled-24x24.png");
+  list-style-image: url("chrome://znotes_images/skin/save-email-disabled-24x24.png");
 }
 toolbar[iconsize="small"] #znotes_tbsaveasnote_button {
-  list-style-image: url("chrome://znotes_images/skin/import-note-16x16.png");
+  list-style-image: url("chrome://znotes_images/skin/save-email-16x16.png");
 }
 toolbar[iconsize="small"] #znotes_tbsaveasnote_button[disabled="true"] {
-  list-style-image: url("chrome://znotes_images/skin/import-note-disabled-16x16.png");
+  list-style-image: url("chrome://znotes_images/skin/save-email-disabled-16x16.png");
 }

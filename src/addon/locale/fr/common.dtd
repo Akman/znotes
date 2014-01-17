@@ -249,8 +249,8 @@
 <!ENTITY znotes_processnote_key_modifiers "">
 <!ENTITY znotes_processnote_keycode "">
 
-<!ENTITY znotes_updatenote_label "Modifier la note">
-<!ENTITY znotes_updatenote_tooltip "Modifier la note">
+<!ENTITY znotes_updatenote_label "Mettre à jour la note">
+<!ENTITY znotes_updatenote_tooltip "Mettre à jour la note">
 <!ENTITY znotes_updatenote_accesskey "">
 <!ENTITY znotes_updatenote_key "">
 <!ENTITY znotes_updatenote_key_modifiers "">

@@ -196,7 +196,14 @@ ru.akman.znotes.Relator = function( aWindow, aStyle ) {
     };
     
     function onLoad( event ) {
-      adBrowser.removeEventListener( "load", onLoad, false );
+      adBrowser.removeEventListener( "load", onLoad, true );
+      /*
+      var serializer =
+        Components.classes["@mozilla.org/xmlextras/xmlserializer;1"]
+                  .createInstance( Components.interfaces.nsIDOMSerializer );
+      Utils.log( serializer.serializeToString( adBrowser.contentDocument ) );
+      Utils.log( "Done." );
+      */
       if ( adBrowser.contentDocument.body ) {
         adBrowser.contentDocument.body.style.setProperty(
           'background-color',
@@ -227,16 +234,18 @@ ru.akman.znotes.Relator = function( aWindow, aStyle ) {
     function load() {
       var ciWN = Components.interfaces.nsIWebNavigation;
       var language = encodeURIComponent( Utils.getLanguage() );
-      var keywords = currentNote.getKeyWords();
+      var keywords = [ "test", "advertising", "keyword" ]; //currentNote.getKeyWords();
       var url = Utils.SITE + "adv/?language=" + language;
+      //"&flag=" + ( new Date() ).getTime();
+      //Utils.log( "Loading: " + url );
+      adBrowser.addEventListener( "load", onLoad, true );
       adBrowser.webNavigation.loadURI(
         url,
         ciWN.LOAD_FLAGS_BYPASS_CACHE,
-        null,
+        null, // nsIURI referer
         createPostData( keywords ),
-        null
+        null // nsIInputStream headers
       );
-      adBrowser.addEventListener( "load", onLoad, false );
     };
     
     function showCurrentView() {

@@ -66,19 +66,24 @@
 # ***** END LICENSE BLOCK *****
 
 [App]
-Vendor=</xsl:text><xsl:value-of select="//application/vendor" /><xsl:text>
 Name=</xsl:text><xsl:value-of select="//application/name" /><xsl:text>
 Version=</xsl:text><xsl:value-of select="//application/version" /><xsl:text>
-BuildID=</xsl:text><xsl:value-of select="//application/build" /><xsl:text>
 ID=</xsl:text><xsl:value-of select="//application/id" /><xsl:text>
+BuildID=</xsl:text><xsl:value-of select="//application/build" /><xsl:text>
 Copyright=Copyright (C) </xsl:text>
 <xsl:value-of select="//application/copyright/year" />
 <xsl:text> </xsl:text>
 <xsl:value-of select="//application/copyright/author" />
 <xsl:text>. All Rights Reserved.
+Vendor=</xsl:text><xsl:value-of select="//application/vendor" /><xsl:text>
+
 [Gecko]
 MinVersion=</xsl:text><xsl:value-of select="//application/gecko/version/min" /><xsl:text>
 MaxVersion=</xsl:text><xsl:value-of select="//application/gecko/version/max" /><xsl:text>
+
+[Shell]
+Icon=icons/znotes
+
 [XRE]
 EnableExtensionManager=1
 </xsl:text>

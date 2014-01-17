@@ -53,7 +53,7 @@
   <tabpanels id="addonsPanels">
     <tabpanel id="noteAdViewPanel" flex="1" hidden="true">
       <browser id="adBrowser" 
-        type="content"
+        type="content-primary"
         flex="1" />
     </tabpanel>
   </tabpanels>
