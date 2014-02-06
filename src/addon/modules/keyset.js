@@ -156,6 +156,7 @@ var Keyset = function() {
         return false;
       }
       var eventCharCode = ( "charCode" in event ) ? event.charCode : 0;
+      var eventKeyCode = ( "keyCode" in event ) ? event.keyCode : 0;
       var eventShortcut = Utils.getShortcutFromEvent( event );
       var handler = function( node ) {
         var nodeShortcut = Utils.getShortcutFromAttributes(
@@ -178,6 +179,14 @@ var Keyset = function() {
           event.stopPropagation();
           event.preventDefault();
           return false;
+        }
+        switch ( eventKeyCode ) {
+          case event.DOM_VK_DELETE:
+            event.stopPropagation();
+            event.preventDefault();
+            return false;
+          default:
+            Utils.log( "command: '" + command + "', keyCode: " + keyCode );
         }
       }
       return true;

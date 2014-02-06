@@ -37,6 +37,7 @@
   <property name="site.dir" value="./site/src" />
   <property name="src.dir" value="./src" />
   <property name="platform.dir" value="./platform" />
+  <property name="extensions.dir" value="./extensions" />
   <property name="addon.dir" value="${src.dir}/addon" />
   <property name="standalone.dir" value="${src.dir}/standalone" />
   <property name="template.dir" value="${src.dir}/template" />
@@ -1090,6 +1091,17 @@
     </if>
   </target>
 
+  <target
+    name="deploy-development-extensions-locally"
+    description="- Deploy development extensions for standalone application into local installation directory">
+    <delete dir="${config.local.znotes.dir}/extensions" quiet="true" includeemptydirs="true" />    
+    <copy todir="${config.local.znotes.dir}/extensions">
+      <fileset dir="${extensions.dir}">
+        <include name="*/**" />
+      </fileset>
+    </copy>
+  </target>
+  
   <target
     name="release-development"
     description="- Release addon and standalone for development needs"

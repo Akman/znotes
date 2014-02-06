@@ -86,6 +86,7 @@ var DOMUtils = function() {
     return result;
   };
   
+  // is testedNode right sibling of baseNode
   pub.isRightSibling = function( baseNode, testedNode ) {
     var node = baseNode.nextSibling;
     while ( node ) {
@@ -234,25 +235,50 @@ var DOMUtils = function() {
   
   // STYLE
   
+  pub.ElementStyle = function() {
+  };
+  pub.ElementStyle.prototype = {
+    toString: function() {
+      var name, flag = false, result = "";
+      for ( name in this ) {
+        if ( this.hasOwnProperty( name ) ) {
+          if ( flag ) {
+            result += " ";
+          } else {
+            flag = true;
+          }
+          result += name + ": " + this[name].value;
+          if ( this[name].priority ) {
+            result += " !" + this[name].priority;
+          }
+          result += ";";
+        }
+      }
+      return result;
+    }
+  };
+  
   pub.getElementStyle = function( element ) {
     if ( !element || !element.style ) {
       return null;
     }
     var result = null;
-    var elementStyle = element.style;
-    var splitStyle = elementStyle.cssText.split( ";" );
+    var style = element.style;
+    var declarations = style.cssText.split( ";" );
     var index, declaration, name, value, priority;
-    for ( var i = 0; i < splitStyle.length; i++ ) {
-      declaration = splitStyle[i].trim();
+    for ( var i = 0; i < declarations.length; i++ ) {
+      declaration = declarations[i].trim();
       index = declaration.indexOf( ":" );
-      if ( index != -1 ) {
+      if ( index > 1 ) {
         if ( !result ) {
-          result = {};
+          result = new pub.ElementStyle();
         }
         name = declaration.substring( 0, index );
+        // TODO: How about short form ?
+        // "margin: 10px 10px 10px 10px;"
         result[ name ] = {
-          value: elementStyle.getPropertyValue( name ),
-          priority: elementStyle.getPropertyPriority( name )
+          value: style.getPropertyValue( name ),
+          priority: style.getPropertyPriority( name )
         }
       }
     }

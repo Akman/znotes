@@ -27,11 +27,12 @@
   - the Initial Developer. All Rights Reserved.
   -
   - Contributor(s):
+  -   Paweł Krafczyk <pkrafczyk@gmail.com>
   -
   - ***** END LICENSE BLOCK ***** -->
 
-<!ENTITY title "Debug">
-<!ENTITY debug_tabmain_caption "Debug">
-<!ENTITY clear_debug_view_button_tooltip "Clear view">
-<!ENTITY exec_test_button_tooltip "Select test">
-<!ENTITY always_raised_button_tooltip "Debug window always raised">
+<!ENTITY title "Testy">
+<!ENTITY test_tabmain_caption "Test">
+<!ENTITY clear_test_view_button_tooltip "Jasny obraz">
+<!ENTITY exec_test_button_tooltip "Wybierz testy">
+<!ENTITY always_raised_button_tooltip "Okno testow, zawsze pojawia się">

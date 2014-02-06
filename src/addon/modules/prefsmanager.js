@@ -201,13 +201,13 @@ var PrefsManager = function() {
       Utils.IS_DEBUG_ENABLED =
         prefsMozilla.getBoolPref( "extensions.znotes.debug" );
     }
-    if ( prefsMozilla.prefHasUserValue( "extensions.znotes.debug.active" ) ) {
-      Utils.IS_DEBUG_ACTIVE =
-        prefsMozilla.getBoolPref( "extensions.znotes.debug.active" );
+    if ( prefsMozilla.prefHasUserValue( "extensions.znotes.test.active" ) ) {
+      Utils.IS_TEST_ACTIVE =
+        prefsMozilla.getBoolPref( "extensions.znotes.test.active" );
     }
-    if ( prefsMozilla.prefHasUserValue( "extensions.znotes.debug.raised" ) ) {
-      Utils.IS_DEBUG_RAISED =
-        prefsMozilla.getBoolPref( "extensions.znotes.debug.raised" );
+    if ( prefsMozilla.prefHasUserValue( "extensions.znotes.test.raised" ) ) {
+      Utils.IS_TEST_RAISED =
+        prefsMozilla.getBoolPref( "extensions.znotes.test.raised" );
     }
     if ( prefsMozilla.prefHasUserValue( "extensions.znotes.sanitize" ) ) {
       Utils.IS_SANITIZE_ENABLED =

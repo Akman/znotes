@@ -30,8 +30,8 @@
   -
   - ***** END LICENSE BLOCK ***** -->
 
-<!ENTITY title "Отладка">
-<!ENTITY debug_tabmain_caption "Отладка">
-<!ENTITY clear_debug_view_button_tooltip "Очистить вывод">
+<!ENTITY title "Тесты">
+<!ENTITY test_tabmain_caption "Тест">
+<!ENTITY clear_test_view_button_tooltip "Очистить вывод">
 <!ENTITY exec_test_button_tooltip "Выбрать тест">
-<!ENTITY always_raised_button_tooltip "Окно отладки всегда поднято">
+<!ENTITY always_raised_button_tooltip "Окно тестов всегда поднято">

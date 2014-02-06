@@ -83,8 +83,8 @@ ru.akman.znotes.ZNotes = function() {
 
   var mainShutdownObserver = {
     observe: function( aSubject, aTopic, aData ) {
-      isMainLoaded = false;
       mainWindow = null;
+      isMainLoaded = false;
       updateCommands();
     },
     register: function() {
@@ -246,7 +246,7 @@ ru.akman.znotes.ZNotes = function() {
 
   pub.close = function( event ) {
     Utils.IS_QUIT_ENABLED = true;
-    observerService.notifyObservers( null, "znotes-quit", null );
+    observerService.notifyObservers( null, "znotes-query-quit", null );
     if ( !Utils.IS_QUIT_ENABLED ) {
       event.stopPropagation();
       event.preventDefault();

@@ -86,7 +86,7 @@ ru.akman.znotes.ZNotes = function() {
     observe: function( aSubject, aTopic, aData ) {
       aSubject.data = true;
       Utils.IS_QUIT_ENABLED = true;
-      observerService.notifyObservers( null, "znotes-quit", null );
+      observerService.notifyObservers( null, "znotes-query-quit", null );
       if ( !Utils.IS_QUIT_ENABLED ) {
         return;
       }
@@ -116,8 +116,8 @@ ru.akman.znotes.ZNotes = function() {
 
   var mainShutdownObserver = {
     observe: function( aSubject, aTopic, aData ) {
-      isMainLoaded = false;
       mainWindow = null;
+      isMainLoaded = false;
       updateCommands();
     },
     register: function() {
@@ -152,9 +152,12 @@ ru.akman.znotes.ZNotes = function() {
       switch ( data ) {
         case "debug":
           Utils.IS_DEBUG_ENABLED = this.branch.getBoolPref( "debug" );
-          Common.goSetCommandHidden( "znotes_tbdebug_command",
+          Common.goSetCommandHidden( "znotes_tbtestsuite_command",
             !Utils.IS_DEBUG_ENABLED, window );
-          Common.goUpdateCommand( "znotes_tbdebug_command", platformController.getId(), window );
+          Common.goUpdateCommand( "znotes_tbtestsuite_command", platformController.getId(), window );
+          Common.goSetCommandHidden( "znotes_tbconsole_command",
+            !Utils.IS_DEBUG_ENABLED, window );
+          Common.goUpdateCommand( "znotes_tbconsole_command", platformController.getId(), window );
           break;
       }
     },
@@ -178,7 +181,8 @@ ru.akman.znotes.ZNotes = function() {
     "znotes_tbnewnote_command": null,
     "znotes_tbsaveasnote_command": null,
     "znotes_tbopenoptionsdialog_command": null,
-    "znotes_tbdebug_command": null,
+    "znotes_tbtestsuite_command": null,
+    "znotes_tbconsole_command": null,
     "znotes_tbshowmainmenubar_command": null,
     "znotes_tbshowmaintoolbar_command": null,
     "znotes_tbopenhelp_command": null,
@@ -212,8 +216,10 @@ ru.akman.znotes.ZNotes = function() {
                  Common.isCommandEnabled( "znotes_newnote_command", null, mainWindow );
         case "znotes_tbopenoptionsdialog_command":
           return Common.isCommandEnabled( "znotes_openoptionsdialog_command", null, mainWindow );
-        case "znotes_tbdebug_command":
-          return Common.isCommandEnabled( "znotes_debug_command", null, mainWindow );
+        case "znotes_tbtestsuite_command":
+          return Common.isCommandEnabled( "znotes_testsuite_command", null, mainWindow );
+        case "znotes_tbconsole_command":
+          return Common.isCommandEnabled( "znotes_console_command", null, mainWindow );
         case "znotes_tbshowmainmenubar_command":
           return Common.isCommandEnabled( "znotes_showmainmenubar_command", null, mainWindow );
         case "znotes_tbshowmaintoolbar_command":
@@ -248,10 +254,16 @@ ru.akman.znotes.ZNotes = function() {
             mainWindow.document.getElementById( "znotes_openoptionsdialog_command" )
           );
           break;
-        case "znotes_tbdebug_command":
+        case "znotes_tbtestsuite_command":
           Common.goDoCommand(
-            "znotes_debug_command",
-            mainWindow.document.getElementById( "znotes_debug_command" )
+            "znotes_testsuite_command",
+            mainWindow.document.getElementById( "znotes_testsuite_command" )
+          );
+          break;
+        case "znotes_tbconsole_command":
+          Common.goDoCommand(
+            "znotes_console_command",
+            mainWindow.document.getElementById( "znotes_console_command" )
           );
           break;
         case "znotes_tbshowmainmenubar_command":
@@ -331,7 +343,8 @@ ru.akman.znotes.ZNotes = function() {
   };
 
   function updateCommandsVisibility() {
-    Common.goSetCommandHidden( "znotes_tbdebug_command", !Utils.IS_DEBUG_ENABLED, window );
+    Common.goSetCommandHidden( "znotes_tbtestsuite_command", !Utils.IS_DEBUG_ENABLED, window );
+    Common.goSetCommandHidden( "znotes_tbconsole_command", !Utils.IS_DEBUG_ENABLED, window );
   };
 
   function doNewBook() {
@@ -505,7 +518,7 @@ ru.akman.znotes.ZNotes = function() {
 
   pub.close = function( event ) {
     Utils.IS_QUIT_ENABLED = true;
-    observerService.notifyObservers( null, "znotes-quit", null );
+    observerService.notifyObservers( null, "znotes-query-quit", null );
     if ( !Utils.IS_QUIT_ENABLED ) {
       event.stopPropagation();
       event.preventDefault();

@@ -416,7 +416,7 @@ var Driver = function() {
       var createdDateTime = this.entry.lastModifiedTime;
       var updatedDateTime = this.entry.lastModifiedTime;
       var id = ru.akman.znotes.Utils.createUUID();
-      var type = "unknown";
+      var type = this.entry.isDirectory() ? "" : "unknown";
       var data = "{}";
       var result = false;
       if ( info[1] === undefined ) {

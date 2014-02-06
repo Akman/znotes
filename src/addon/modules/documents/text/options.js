@@ -349,7 +349,7 @@ var Options = function() {
   };
   
   function onDefaults( event ) {
-    isSpellcheckEnabled.checked = defaultPrefs.isSavePosition;
+    isSpellcheckEnabled.checked = defaultPrefs.isSpellcheckEnabled;
     var doc = event.target.ownerDocument;
     var textbox;
     for ( var name in editorShortcuts ) {

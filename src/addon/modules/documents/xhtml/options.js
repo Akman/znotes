@@ -60,6 +60,7 @@ var Options = function() {
   var editorSuffix = null;
   
   var isSpellcheckEnabled = null;
+  var isTagsModeActive = null;
 
   // HELPERS
   
@@ -349,7 +350,8 @@ var Options = function() {
   };
   
   function onDefaults( event ) {
-    isSpellcheckEnabled.checked = defaultPrefs.isSavePosition;
+    isSpellcheckEnabled.checked = defaultPrefs.isSpellcheckEnabled;
+    isTagsModeActive.checked = defaultPrefs.isTagsModeActive;
     var doc = event.target.ownerDocument;
     var textbox;
     for ( var name in editorShortcuts ) {
@@ -376,6 +378,9 @@ var Options = function() {
     currPrefs.isSpellcheckEnabled = isSpellcheckEnabled.checked;
     isChanged = isChanged ||
       ( currPrefs.isSpellcheckEnabled !== origPrefs.isSpellcheckEnabled );
+    currPrefs.isTagsModeActive = isTagsModeActive.checked;
+    isChanged = isChanged ||
+      ( currPrefs.isTagsModeActive !== origPrefs.isTagsModeActive );
     return isChanged;
   };
   
@@ -405,6 +410,9 @@ var Options = function() {
     isSpellcheckEnabled = currentDocument.getElementById(
       "isSpellcheckEnabled" + editorSuffix );
     isSpellcheckEnabled.checked = currentPrefs.isSpellcheckEnabled;
+    isTagsModeActive = currentDocument.getElementById(
+      "isTagsModeActive" + editorSuffix );
+    isTagsModeActive.checked = currentPrefs.isTagsModeActive;
     var keysListBox = currentDocument.getElementById(
       "keysListBox" + editorSuffix );
     keysListBox.addEventListener( "select", onKeySelect, false );

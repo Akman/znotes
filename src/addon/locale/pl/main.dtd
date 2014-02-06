@@ -46,6 +46,7 @@
 <!ENTITY note_tree_name "Notatki">
 <!ENTITY note_tree_category "Kategoria">
 <!ENTITY note_tree_tag "Tag">
+<!ENTITY note_tree_type "Typ">
 <!ENTITY note_tree_create_datetime "Utworzono">
 <!ENTITY note_tree_update_datetime "Aktualizacja">
 

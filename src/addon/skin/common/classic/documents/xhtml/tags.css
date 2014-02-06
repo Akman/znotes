@@ -1,0 +1,913 @@
+/* ***** BEGIN LICENSE BLOCK *****
+ *
+ * Version: GPL 3.0
+ *
+ * ZNotes
+ * Copyright (C) 2012 Alexander Kapitman
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * The Original Code is ZNotes.
+ *
+ * Initial Developer(s):
+ *   Alexander Kapitman <akman.ru@gmail.com>
+ *
+ * Portions created by the Initial Developer are Copyright (C) 2012
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+/* ***** classic/1.0 common **** */
+
+*:not([\_moz_anonclass])::before,
+*:not([\_moz_anonclass])::after {
+  padding: 0px 3px;
+  margin: 0px 3px;
+  font-family: monospace;
+  font-size: 12px;
+  font-weight: normal;
+  font-style: normal;
+  color: rgb( 0, 255, 0 );
+  background: rgba( 255, 255, 0, 0.5 );
+  border: 1px solid #AABCCF;
+}
+*:not([\_moz_anonclass])::before {
+  border-radius: 30px 0px 0px 30px;
+}
+*:not([\_moz_anonclass])::after {
+  border-radius: 0px 30px 30px 0px;
+}
+
+*[\_moz_anonclass]::before,
+*[\_moz_anonclass]::after {
+  content: none !important;
+}
+
+/* BEFORE */
+
+a::before {
+  content: 'a';
+}
+
+abbr::before {
+  content: 'abbr';
+}
+
+address::before {
+  content: 'address';
+}
+
+area::before {
+  content: 'area';
+}
+
+article::before {
+  content: 'article';
+}
+
+aside::before {
+  content: 'aside';
+}
+
+audio::before {
+  content: 'audio';
+}
+
+b::before {
+  content: 'b';
+}
+
+base::before {
+  content: 'base';
+}
+
+bdi::before {
+  content: 'bdi';
+}
+
+bdo::before {
+  content: 'bdo';
+}
+
+blockquote::before {
+  content: 'blockquote';
+}
+
+/*
+body::before {
+  content: 'body';
+}
+*/
+
+/*
+br::before {
+  content: 'br';
+}
+*/
+
+/*
+button::before {
+  content: 'button';
+}
+*/
+
+canvas::before {
+  content: 'canvas';
+}
+
+caption::before {
+  content: 'caption';
+}
+
+cite::before {
+  content: 'cite';
+}
+
+code::before {
+  content: 'code';
+}
+
+col::before {
+  content: 'col';
+}
+
+colgroup::before {
+  content: 'colgroup';
+}
+
+command::before {
+  content: 'command';
+}
+
+datalist::before {
+  content: 'datalist';
+}
+
+dd::before {
+  content: 'dd';
+}
+
+del::before {
+  content: 'del';
+}
+
+details::before {
+  content: 'details';
+}
+
+div::before {
+  content: 'div';
+}
+
+dl::before {
+  content: 'dl';
+}
+
+dt::before {
+  content: 'dt';
+}
+
+em::before {
+  content: 'em';
+}
+
+embed::before {
+  content: 'embed';
+}
+
+fieldset::before {
+  content: 'fieldset';
+}
+
+figcaption::before {
+  content: 'figcaption';
+}
+
+figure::before {
+  content: 'figure';
+}
+
+footer::before {
+  content: 'footer';
+}
+
+form::before {
+  content: 'form';
+}
+
+/*
+head::before {
+  content: 'head';
+}
+*/
+
+/*
+html::before {
+  content: 'html';
+}
+*/
+
+h1::before {
+  content: 'h1';
+}
+
+h2::before {
+  content: 'h2';
+}
+
+h3::before {
+  content: 'h3';
+}
+
+h4::before {
+  content: 'h4';
+}
+
+h5::before {
+  content: 'h5';
+}
+
+h6::before {
+  content: 'h6';
+}
+
+header::before {
+  content: 'header';
+}
+
+hgroup::before {
+  content: 'hgroup';
+}
+
+hr::before {
+  content: 'hr';
+}
+
+i::before {
+  content: 'i';
+}
+
+iframe::before {
+  content: 'iframe';
+}
+
+/*
+img::before {
+  content: 'img';
+}
+*/
+
+input::before {
+  content: 'input';
+}
+
+ins::before {
+  content: 'ins';
+}
+
+kbd::before {
+  content: 'kbd';
+}
+
+keygen::before {
+  content: 'keygen';
+}
+
+label::before {
+  content: 'label';
+}
+
+legend::before {
+  content: 'legend';
+}
+
+li::before {
+  content: 'li';
+}
+
+link::before {
+  content: 'link';
+}
+
+map::before {
+  content: 'map';
+}
+
+mark::before {
+  content: 'mark';
+}
+
+meter::before {
+  content: 'meter';
+}
+
+nav::before {
+  content: 'nav';
+}
+
+noscript::before {
+  content: 'noscript';
+}
+
+object::before {
+  content: 'object';
+}
+
+ol::before {
+  content: 'ol';
+}
+
+optgroup::before {
+  content: 'optgroup';
+}
+
+option::before {
+  content: 'option';
+}
+
+output::before {
+  content: 'output';
+}
+
+p::before {
+  content: 'p';
+}
+
+param::before {
+  content: 'param';
+}
+
+pre::before {
+  content: 'pre';
+}
+
+progress::before {
+  content: 'progress';
+}
+
+q::before {
+  content: 'q';
+}
+
+rp::before {
+  content: 'rp';
+}
+
+rt::before {
+  content: 'rt';
+}
+
+ruby::before {
+  content: 'ruby';
+}
+
+s::before {
+  content: 's';
+}
+
+samp::before {
+  content: 'samp';
+}
+
+section::before {
+  content: 'section';
+}
+
+select::before {
+  content: 'select';
+}
+
+small::before {
+  content: 'small';
+}
+
+source::before {
+  content: 'source';
+}
+
+span::before {
+  content: 'span';
+}
+
+strong::before {
+  content: 'strong';
+}
+
+style::before {
+  content: 'style';
+}
+
+sub::before {
+  content: 'sub';
+}
+
+summary::before {
+  content: 'summary';
+}
+
+sup::before {
+  content: 'sup';
+}
+
+table::before {
+  content: 'table';
+}
+
+tbody::before {
+  content: 'tbody';
+}
+
+td::before {
+  content: 'td';
+}
+
+textarea::before {
+  content: 'textarea';
+}
+
+tfoot::before {
+  content: 'tfoot';
+}
+
+th::before {
+  content: 'th';
+}
+
+thead::before {
+  content: 'thead';
+}
+
+time::before {
+  content: 'time';
+}
+
+title::before {
+  content: 'title';
+}
+
+/*
+tr::before {
+  content: 'tr';
+}
+*/
+
+track::before {
+  content: 'track';
+}
+
+ul::before {
+  content: 'ul';
+}
+
+var::before {
+  content: 'var';
+}
+
+video::before {
+  content: 'video';
+}
+
+wbr::before {
+  content: 'wbr';
+}
+
+/* AFTER */
+
+a::after {
+  content: '';
+}
+
+abbr::after {
+  content: '';
+}
+
+address::after {
+  content: '';
+}
+
+area::after {
+  content: '';
+}
+
+article::after {
+  content: '';
+}
+
+aside::after {
+  content: '';
+}
+
+audio::after {
+  content: '';
+}
+
+b::after {
+  content: '';
+}
+
+base::after {
+  content: '';
+}
+
+bdi::after {
+  content: '';
+}
+
+bdo::after {
+  content: '';
+}
+
+blockquote::after {
+  content: '';
+}
+
+/*
+body::after {
+  content: '';
+}
+*/
+
+/*
+br::after {
+  content: '';
+}
+*/
+
+/*
+button::after {
+  content: '';
+}
+*/
+
+canvas::after {
+  content: '';
+}
+
+caption::after {
+  content: '';
+}
+
+cite::after {
+  content: '';
+}
+
+code::after {
+  content: '';
+}
+
+col::after {
+  content: '';
+}
+
+colgroup::after {
+  content: '';
+}
+
+command::after {
+  content: '';
+}
+
+datalist::after {
+  content: '';
+}
+
+dd::after {
+  content: '';
+}
+
+del::after {
+  content: '';
+}
+
+details::after {
+  content: '';
+}
+
+div::after {
+  content: '';
+}
+
+dl::after {
+  content: '';
+}
+
+dt::after {
+  content: '';
+}
+
+em::after {
+  content: '';
+}
+
+embed::after {
+  content: '';
+}
+
+fieldset::after {
+  content: '';
+}
+
+figcaption::after {
+  content: '';
+}
+
+figure::after {
+  content: '';
+}
+
+footer::after {
+  content: '';
+}
+
+form::after {
+  content: '';
+}
+
+/*
+head::after {
+  content: '';
+}
+*/
+
+/*
+html::after {
+  content: '';
+}
+*/
+
+h1::after {
+  content: '';
+}
+
+h2::after {
+  content: '';
+}
+
+h3::after {
+  content: '';
+}
+
+h4::after {
+  content: '';
+}
+
+h5::after {
+  content: '';
+}
+
+h6::after {
+  content: '';
+}
+
+header::after {
+  content: '';
+}
+
+hgroup::after {
+  content: '';
+}
+
+hr::after {
+  content: '';
+}
+
+i::after {
+  content: '';
+}
+
+iframe::after {
+  content: '';
+}
+
+/*
+img::after {
+  content: '';
+}
+*/
+
+input::after {
+  content: '';
+}
+
+ins::after {
+  content: '';
+}
+
+kbd::after {
+  content: '';
+}
+
+keygen::after {
+  content: '';
+}
+
+label::after {
+  content: '';
+}
+
+legend::after {
+  content: '';
+}
+
+li::after {
+  content: '';
+}
+
+link::after {
+  content: '';
+}
+
+map::after {
+  content: '';
+}
+
+mark::after {
+  content: '';
+}
+
+meter::after {
+  content: '';
+}
+
+nav::after {
+  content: '';
+}
+
+noscript::after {
+  content: '';
+}
+
+object::after {
+  content: '';
+}
+
+ol::after {
+  content: '';
+}
+
+optgroup::after {
+  content: '';
+}
+
+option::after {
+  content: '';
+}
+
+output::after {
+  content: '';
+}
+
+p::after {
+  content: '';
+}
+
+param::after {
+  content: '';
+}
+
+pre::after {
+  content: '';
+}
+
+progress::after {
+  content: '';
+}
+
+q::after {
+  content: '';
+}
+
+rp::after {
+  content: '';
+}
+
+rt::after {
+  content: '';
+}
+
+ruby::after {
+  content: '';
+}
+
+s::after {
+  content: '';
+}
+
+samp::after {
+  content: '';
+}
+
+section::after {
+  content: '';
+}
+
+select::after {
+  content: '';
+}
+
+small::after {
+  content: '';
+}
+
+source::after {
+  content: '';
+}
+
+span::after {
+  content: '';
+}
+
+strong::after {
+  content: '';
+}
+
+style::after {
+  content: '';
+}
+
+sub::after {
+  content: '';
+}
+
+summary::after {
+  content: '';
+}
+
+sup::after {
+  content: '';
+}
+
+table::after {
+  content: '';
+}
+
+tbody::after {
+  content: '';
+}
+
+td::after {
+  content: '';
+}
+
+textarea::after {
+  content: '';
+}
+
+tfoot::after {
+  content: '';
+}
+
+th::after {
+  content: '';
+}
+
+thead::after {
+  content: '';
+}
+
+time::after {
+  content: '';
+}
+
+title::after {
+  content: '';
+}
+
+/*
+tr::after {
+  content: '';
+}
+*/
+
+track::after {
+  content: '';
+}
+
+ul::after {
+  content: '';
+}
+
+var::after {
+  content: '';
+}
+
+video::after {
+  content: '';
+}
+
+wbr::after {
+  content: '';
+}

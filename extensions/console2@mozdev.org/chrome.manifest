@@ -1,0 +1,94 @@
+content	console2	jar:chrome/console2.jar!/content/console2/
+
+#Gecko 2.0 component registration.
+component {1280606b-2510-4fe0-97ef-9b5a22eafe81} components/console2-clhandler.js
+contract @zeniko/console2-clh;1 {1280606b-2510-4fe0-97ef-9b5a22eafe81}
+category command-line-handler b-console2 @zeniko/console2-clh;1
+
+locale	console2	en-US	jar:chrome/console2.jar!/locale/en-US/console2/
+locale	console2	en-GB	jar:chrome/console2.jar!/locale/en-GB/console2/
+locale	console2	bg-BG	jar:chrome/console2.jar!/locale/bg-BG/console2/
+locale	console2	cs-CZ	jar:chrome/console2.jar!/locale/cs-CZ/console2/
+# locale	console2	de-CH	jar:chrome/console2.jar!/locale/de-CH/console2/
+locale	console2	de   	jar:chrome/console2.jar!/locale/de/console2/
+locale	console2	es-ES	jar:chrome/console2.jar!/locale/es-ES/console2/
+locale	console2	fi-FI	jar:chrome/console2.jar!/locale/fi-FI/console2/
+locale	console2	fr   	jar:chrome/console2.jar!/locale/fr/console2/
+locale	console2	he-IL	jar:chrome/console2.jar!/locale/he-IL/console2/
+locale	console2	hu-HU	jar:chrome/console2.jar!/locale/hu-HU/console2/
+locale	console2	it-IT	jar:chrome/console2.jar!/locale/it-IT/console2/
+locale	console2	ja-JP	jar:chrome/console2.jar!/locale/ja-JP/console2/
+locale	console2	ko-KR	jar:chrome/console2.jar!/locale/ko-KR/console2/
+locale	console2	lt-LT	jar:chrome/console2.jar!/locale/lt-LT/console2/
+locale	console2	nl   	jar:chrome/console2.jar!/locale/nl/console2/
+locale	console2	pl   	jar:chrome/console2.jar!/locale/pl/console2/
+locale	console2	pt-BR	jar:chrome/console2.jar!/locale/pt-BR/console2/
+locale	console2	ru-RU	jar:chrome/console2.jar!/locale/ru-RU/console2/
+locale	console2	sk-SK	jar:chrome/console2.jar!/locale/sk-SK/console2/
+locale	console2	sv-SE	jar:chrome/console2.jar!/locale/sv-SE/console2/
+locale	console2	tr-TR	jar:chrome/console2.jar!/locale/tr-TR/console2/
+locale	console2	zh-CN	jar:chrome/console2.jar!/locale/zh-CN/console2/
+locale	console2	zh-TW	jar:chrome/console2.jar!/locale/zh-TW/console2/
+
+skin	console2	classic/1.0	jar:chrome/console2.jar!/skin/classic/console2/
+
+overlay	chrome://browser/content/browser.xul	chrome://console2/content/overlay.xul
+
+# Thunderbird Only {3550f703-e582-4d05-9a08-453d09bdfdc6}
+overlay	chrome://messenger/content/mailWindowOverlay.xul	chrome://console2/content/overlay.xul	application={3550f703-e582-4d05-9a08-453d09bdfdc6}
+overlay	chrome://messenger/content/messengercompose/messengercompose.xul	chrome://console2/content/overlay.xul	application={3550f703-e582-4d05-9a08-453d09bdfdc6}
+
+# Postbox Only {92650c4d-4b8e-4d2a-b7eb-24ecf4f6b63a}
+overlay	chrome://messenger/content/mailWindowOverlay.xul	chrome://console2/content/overlay.xul	application={92650c4d-4b8e-4d2a-b7eb-24ecf4f6b63a}
+overlay	chrome://messenger/content/messengercompose/messengercompose.xul	chrome://console2/content/overlay.xul	application={92650c4d-4b8e-4d2a-b7eb-24ecf4f6b63a}
+
+# SuiteRunner Only {92650c4d-4b8e-4d2a-b7eb-24ecf4f6b63a}
+overlay	chrome://navigator/content/navigator.xul	chrome://console2/content/seamonkey-overlay.xul	application={92650c4d-4b8e-4d2a-b7eb-24ecf4f6b63a}
+overlay	chrome://messenger/content/mailWindowOverlay.xul	chrome://console2/content/seamonkey-overlay.xul	application={92650c4d-4b8e-4d2a-b7eb-24ecf4f6b63a}
+overlay	chrome://messenger/content/messengercompose/messengercompose.xul	chrome://console2/content/seamonkey-overlay.xul	application={92650c4d-4b8e-4d2a-b7eb-24ecf4f6b63a}
+overlay	chrome://console2/content/console2.xul	chrome://console2/content/seamonkey-hack.xul	application={92650c4d-4b8e-4d2a-b7eb-24ecf4f6b63a}
+overlay	chrome://console2/content/console2.xul	chrome://console2/content/suite/consoleOverlay.xul	application={92650c4d-4b8e-4d2a-b7eb-24ecf4f6b63a}
+
+overlay	chrome://calendar/content/calendar.xul	chrome://console2/content/overlay.xul
+
+overlay	chrome://emusic/content/startup.xul	chrome://console2/content/overlay.xul
+
+# Komodo IDE
+overlay  chrome://komodo/content/komodo.xul	chrome://console2/content/komodo-overlay.xul	appversion>=6.9	application={92650c4d-4b8e-4d2a-b7eb-24ecf4f6b63a}
+# Komodo Edit
+overlay  chrome://komodo/content/komodo.xul	chrome://console2/content/komodo-overlay.xul	appversion>=6.9	application={b1042fb5-9e9c-11db-b107-000d935d3368}
+
+override	chrome://global/content/console.xul	chrome://console2/content/console2.xul
+style	chrome://global/content/customizeToolbar.xul	chrome://console2/skin/console-toolbar.css
+style	chrome://global/content/customizeToolbar.xul	chrome://console2/skin/toolbar.css
+
+# remove these override lines, if you don't want to take advantage of Console²'s richlistbox
+#override	chrome://global/content/bindings/richlistbox.xml	chrome://console2/content/global/richlistbox.xml
+#override	chrome://global/skin/richlistbox.css	chrome://console2/skin/richlistbox.css
+
+# richlistbox CSS styling based on platform
+# Firefox
+override	chrome://console2/skin/richlistbox.css	chrome://console2/skin/richlistbox.gecko-1.9-plus.css	application={ec8030f7-c20a-464f-9b0e-13a3a9e97384} appversion>=3.0b5
+override	chrome://console2/skin/richlistbox.css	chrome://console2/skin/richlistbox.gecko-pre-1.9.css	application={ec8030f7-c20a-464f-9b0e-13a3a9e97384} appversion<3.0b5
+override	chrome://console2/skin/c2version.css	chrome://console2/skin/c2version.gecko-191.css			application={ec8030f7-c20a-464f-9b0e-13a3a9e97384} appversion>3.1a1
+override	chrome://console2/skin/c2version.css	chrome://console2/skin/c2version.gecko-192.css			application={ec8030f7-c20a-464f-9b0e-13a3a9e97384} appversion>3.6a
+
+# SeaMonkey
+override	chrome://console2/skin/richlistbox.css	chrome://console2/skin/richlistbox.gecko-1.9-plus.css	application={92650c4d-4b8e-4d2a-b7eb-24ecf4f6b63a}
+override	chrome://console2/skin/c2version.css	chrome://console2/skin/c2version.gecko-191.css			application={92650c4d-4b8e-4d2a-b7eb-24ecf4f6b63a}
+override	chrome://console2/skin/c2version.css	chrome://console2/skin/c2version.gecko-192.css			application={92650c4d-4b8e-4d2a-b7eb-24ecf4f6b63a} appversion>2.1a
+
+# Thunderbird
+override	chrome://console2/skin/richlistbox.css	chrome://console2/skin/richlistbox.gecko-1.9-plus.css	application={3550f703-e582-4d05-9a08-453d09bdfdc6} appversion>=3.0a1
+override	chrome://console2/skin/richlistbox.css	chrome://console2/skin/richlistbox.gecko-pre-1.9.css	application={3550f703-e582-4d05-9a08-453d09bdfdc6} appversion<3.0a1
+override	chrome://console2/skin/c2version.css	chrome://console2/skin/c2version.gecko-191.css			application={3550f703-e582-4d05-9a08-453d09bdfdc6} appversion>=3.0a1
+override	chrome://console2/skin/c2version.css	chrome://console2/skin/c2version.gecko-192.css			application={3550f703-e582-4d05-9a08-453d09bdfdc6} appversion>3.1a
+
+# Sunbird
+override	chrome://console2/skin/richlistbox.css	chrome://console2/skin/richlistbox.gecko-1.9-plus.css	application={718e30fb-e89b-41dd-9da7-e25a45638b28} appversion>=1.0pre
+override	chrome://console2/skin/richlistbox.css	chrome://console2/skin/richlistbox.gecko-pre-1.9.css	application={718e30fb-e89b-41dd-9da7-e25a45638b28} appversion<1.0pre
+override	chrome://console2/skin/c2version.css	chrome://console2/skin/c2version.gecko-191.css			application={718e30fb-e89b-41dd-9da7-e25a45638b28} appversion>=1.0pre
+override	chrome://console2/skin/c2version.css	chrome://console2/skin/c2version.gecko-192.css			application={718e30fb-e89b-41dd-9da7-e25a45638b28} appversion>1.1pre
+
+# ConsoleFilter
+override	chrome://consolefilter/content/consolefilter.xul	chrome://console2/content/global/blank.xul

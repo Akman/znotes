@@ -245,8 +245,16 @@
 <!ENTITY znotes_editordebug_key_modifiers "">
 <!ENTITY znotes_editordebug_keycode "">
 
+<!ENTITY znotes_toggletagsmode_label "Show tags">
+<!ENTITY znotes_toggletagsmode_tooltip "Show tags">
+<!ENTITY znotes_toggletagsmode_accesskey "">
+<!ENTITY znotes_toggletagsmode_key "">
+<!ENTITY znotes_toggletagsmode_key_modifiers "">
+<!ENTITY znotes_toggletagsmode_keycode "">
+
 <!-- OPTIONS -->
 
 <!ENTITY mainCaption.xhtml.label "Main">
 <!ENTITY isSpellcheckEnabled.xhtml.label "Enable spellcheker by default">
+<!ENTITY isTagsModeActive.xhtml.label "Show tags by default">
 <!ENTITY keysCaption.xhtml.label "Keyboard shortcuts">

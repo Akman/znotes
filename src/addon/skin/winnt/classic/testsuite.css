@@ -30,28 +30,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/* ***** classic/1.0 common **** */
+/* ***** classic/1.0 winnt **** */
 
-#debugToolBox {
-  margin: 1px;
-}
-#debugTextBox {
-  font-family: Courier New, monospace;
-  font-size: 12px;
-  margin-top: 0px;
-  margin-left: 1px;
-  margin-right: 1px;
-  margin-bottom: 1px;
-}
-#clearDebugViewButton {
-  list-style-image: url("chrome://znotes_images/skin/debug-clear-16x16.png");
-}
-#execTestButton {
-  list-style-image: url("chrome://znotes_images/skin/debug-menu-16x16.png");
-}
-#alwaysRaisedButton {
-  list-style-image: url("chrome://znotes_images/skin/debug-raised-16x16.png");
-}
-menuitem.testmenuitem {
-  list-style-image: url("chrome://znotes_images/skin/debug-exec-16x16.png");
-}
+@import url("chrome://znotes_common/skin/testsuite.css");

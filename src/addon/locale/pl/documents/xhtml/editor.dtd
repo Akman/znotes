@@ -247,8 +247,16 @@
 <!ENTITY znotes_editordebug_key_modifiers "">
 <!ENTITY znotes_editordebug_keycode "">
 
+<!ENTITY znotes_toggletagsmode_label "Pasek tagi">
+<!ENTITY znotes_toggletagsmode_tooltip "Pasek tagi">
+<!ENTITY znotes_toggletagsmode_accesskey "">
+<!ENTITY znotes_toggletagsmode_key "">
+<!ENTITY znotes_toggletagsmode_key_modifiers "">
+<!ENTITY znotes_toggletagsmode_keycode "">
+
 <!-- OPTIONS -->
 
 <!ENTITY mainCaption.xhtml.label "Główny">
 <!ENTITY isSpellcheckEnabled.xhtml.label "Włącz sprawdź pisownię domyślnie">
+<!ENTITY isTagsModeActive.xhtml.label "Pasek tagi domyślnie">
 <!ENTITY keysCaption.xhtml.label "Skróty klawiaturowe">

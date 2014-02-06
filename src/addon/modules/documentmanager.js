@@ -204,11 +204,35 @@ var DocumentManager = function() {
       Components.utils.import( url + "editor.js", ru.akman.znotes.doc[ name ] );
       Components.utils.import( url + "document.js", ru.akman.znotes.doc[ name ] );
       Components.utils.import( url + "options.js", ru.akman.znotes.doc[ name ] );
+      var modules, entry;
+      try {
+        var entry = Utils.getFileFromURLSpec( url + "modules.json" );
+        if ( entry && entry.exists() && !entry.isDirectory() ) {
+          modules = JSON.parse( Utils.readFileContent( entry, "UTF-8" ) );
+          if ( modules instanceof Array ) {
+            for ( var i = 0; i < modules.length; i++ ) {
+              if ( "path" in modules[i] ) {
+                try {
+                  Components.utils.import( url + modules[i].path,
+                    ru.akman.znotes.doc[ name ] );
+                } catch ( e ) {
+                  Utils.log( e );
+                }
+              }
+            }
+          }
+        }
+      } catch ( e ) {
+        Utils.log( e );
+      }
       var doc = ru.akman.znotes.doc[ name ].Document;
       var opt = ru.akman.znotes.doc[ name ].Options;
       // inject into Document
       ru.akman.znotes.doc[ name ].Document.getOptions = function() {
         return opt;
+      };
+      doc.getNamespace = function() {
+        return ru.akman.znotes.doc[ name ];
       };
       doc.getEditor = function() {
         return new ru.akman.znotes.doc[ name ].Editor();

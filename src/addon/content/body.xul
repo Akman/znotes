@@ -59,6 +59,7 @@
         key="znotes_bodycustomizetoolbar_key" />
     </menupopup>
     <menupopup id="znotes_bodytags_menupopup" />
+    <menupopup id="znotes_bodytypes_menupopup" />
   </popupset>
 
   <vbox id="noteBodyView">
@@ -73,6 +74,12 @@
             class="toolbarbutton-1 znotes_bodytagsmenu_class"
             command="znotes_bodytagsmenu_command">
             <menupopup id="znotes_bodytagsmenu_menupopup" collapsed="true"/>
+          </toolbarbutton>
+          <toolbarbutton id="znotes_bodytypesmenu_button" pack="end"
+            type="menu"
+            class="toolbarbutton-1 znotes_bodytypesmenu_class"
+            command="znotes_bodytypesmenu_command">
+            <menupopup id="znotes_bodytypesmenu_menupopup" collapsed="true"/>
           </toolbarbutton>
           <toolbarbutton id="znotes_bodyrenamenote_button" pack="end"
             class="toolbarbutton-1 znotes_bodyrenamenote_class"
@@ -90,7 +97,7 @@
           toolbarname="&znotes_bodytoolbar_name;" customizable="true"
           fullscreentoolbar="true" mode="icons" iconsize="small"
           context="znotes_bodytoolbar_menupopup"
-          defaultset="znotes_bodytoolbar_spacer,znotes_editoredit_button,znotes_editorsave_button,znotes_bodytagsmenu_button,znotes_attachmentsaddfile_button,znotes_attachmentsaddcontact_button,znotes_bodyrenamenote_button,znotes_bodydeletenote_button,znotes_editorprint_button,znotes_bodyaddonspanel_button" />
+          defaultset="znotes_bodytoolbar_spacer,znotes_editoredit_button,znotes_editorsave_button,znotes_bodytagsmenu_button,znotes_bodytypesmenu_button,znotes_attachmentsaddfile_button,znotes_attachmentsaddcontact_button,znotes_bodyrenamenote_button,znotes_bodydeletenote_button,znotes_editorprint_button,znotes_bodyaddonspanel_button" />
         <toolbarset id="znotes_bodytoolbarset"
           context="znotes_bodytoolbar_menupopup" />
       </toolbox>

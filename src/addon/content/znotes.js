@@ -36,6 +36,14 @@ if ( !ru.akman.znotes ) ru.akman.znotes = {};
 
 Components.utils.import( "resource://znotes/utils.js", ru.akman.znotes );
 
+// following function needs venkman debugger
+// @see https://developer.mozilla.org/en-US/docs/Mozilla/Projects/XULRunner/Debugging_XULRunner_applications
+function toOpenWindowByType( inType, uri ) {
+  var winopts =
+    "chrome,extrachrome,menubar,resizable,scrollbars,status,toolbar";
+  window.open( uri, "_blank", winopts );
+}
+
 ru.akman.znotes.Platform = function() {
 
   var pub = {};

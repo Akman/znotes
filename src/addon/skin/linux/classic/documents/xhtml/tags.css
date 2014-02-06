@@ -30,6 +30,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/* ***** classic/1.0 winnt **** */
+/* ***** classic/1.0 linux **** */
 
-@import url("chrome://znotes_common/skin/debug.css");
+@import url("chrome://znotes_common/skin/documents/xhtml/tags.css");
+

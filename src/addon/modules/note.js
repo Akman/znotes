@@ -43,6 +43,8 @@ var EXPORTED_SYMBOLS = ["Note"];
 
 var Note = function( aBook, anEntry, aCategory, aType, aTagID ) {
 
+  var Utils = ru.akman.znotes.Utils;
+
   this.getBook = function() {
     return this.book;
   };
@@ -120,6 +122,11 @@ var Note = function( aBook, anEntry, aCategory, aType, aTagID ) {
     }
     this.type = type;
     this.entry.setType( type );
+    this.notifyStateListener(
+      new ru.akman.znotes.core.Event(
+        "NoteTypeChanged",
+        { parentCategory: this.getParent(), changedNote: this } )
+    );
   };
 
   this.getData = function() {
@@ -522,8 +529,8 @@ var Note = function( aBook, anEntry, aCategory, aType, aTagID ) {
       return;
     }
     var oldStatus = {};
-    ru.akman.znotes.Utils.cloneObject( this.status, oldStatus );
-    ru.akman.znotes.Utils.cloneObject( status, this.status );
+    Utils.cloneObject( this.status, oldStatus );
+    Utils.cloneObject( status, this.status );
     this.loadingProgress.push( status );
     if ( !this.isLocked() ) {
       this.notifyStateListener(
@@ -559,10 +566,10 @@ var Note = function( aBook, anEntry, aCategory, aType, aTagID ) {
     this.setOrigin( aURL );
     this.setLoading( true );
     var aNote = this;
-    var aDocument = ru.akman.znotes.Utils.MAIN_WINDOW.document;
+    var aDocument = Utils.MAIN_WINDOW.document;
     var aParent = aDocument.getElementById( "znotes_maintabpanel" );
     var frame = aDocument.createElement( "iframe" );
-    frame.setAttribute( "id", "import_" + ru.akman.znotes.Utils.createUUID() );
+    frame.setAttribute( "id", "import_" + Utils.createUUID() );
     frame.setAttribute( "type", "content-primary" );
     frame.setAttribute( "disablehistory", "true" );
     frame.setAttribute( "disableglobalhistory", "true" );
@@ -598,7 +605,7 @@ var Note = function( aBook, anEntry, aCategory, aType, aTagID ) {
         return;
       }
       // prepare to save document localy
-      var tmpName = ru.akman.znotes.Utils.createUUID();
+      var tmpName = Utils.createUUID();
       var directoryService = Components.classes["@mozilla.org/file/directory_service;1"]
                                        .getService( Components.interfaces.nsIProperties );
       var contentDirectory = directoryService.get( "TmpD", Components.interfaces.nsIFile );
@@ -611,7 +618,7 @@ var Note = function( aBook, anEntry, aCategory, aType, aTagID ) {
       var contentType = aNote.getType();
       //
       var onSaveCallback = function() {
-        ru.akman.znotes.Utils.fixupContent( frame.contentDocument, contentDirectory );
+        Utils.fixupContent( frame.contentDocument, contentDirectory );
         aNote.loadContentDirectory( contentDirectory, true );
         if ( contentFile.exists() ) {
           contentFile.remove( false );
@@ -626,7 +633,7 @@ var Note = function( aBook, anEntry, aCategory, aType, aTagID ) {
       };
       //
       var onStylesSaveCallback = function() {
-        ru.akman.znotes.Utils.saveContent(
+        Utils.saveContent(
           frame.contentDocument,
           contentFile,
           contentDirectory,
@@ -637,7 +644,7 @@ var Note = function( aBook, anEntry, aCategory, aType, aTagID ) {
       };
       // https://bugzilla.mozilla.org/show_bug.cgi?id=115107
       // Bug 115107 - CSS not fixed up by webbrowserpersist.
-      ru.akman.znotes.Utils.inlineStyles(
+      Utils.inlineStyles(
         frame.contentDocument,
         contentDirectory,
         onStylesSaveCallback
@@ -721,7 +728,7 @@ var Note = function( aBook, anEntry, aCategory, aType, aTagID ) {
           if ( aStateFlags & ciWPL.STATE_STOP && aStateFlags & ciWPL.STATE_IS_NETWORK ||
                aStateFlags & ciWPL.STATE_STOP && aStateFlags & ciWPL.STATE_IS_DOCUMENT ) {
             if ( !Components.isSuccessCode( aStatus ) ) {
-              onErrorCallback( ru.akman.znotes.Utils.getErrorName( aStatus ) );
+              onErrorCallback( Utils.getErrorName( aStatus ) );
               return 0;
             }
           }
@@ -819,7 +826,7 @@ var Note = function( aBook, anEntry, aCategory, aType, aTagID ) {
   // C O N S T R U C T O R
   
   // for debug purpose
-  this.instanceId = ru.akman.znotes.Utils.createUUID();
+  this.instanceId = Utils.createUUID();
 
   this.loading = false;
   this.status = {};
@@ -837,6 +844,13 @@ var Note = function( aBook, anEntry, aCategory, aType, aTagID ) {
   this.type = this.entry.getType();
   if ( aType && aType != this.type ) {
     this.setType( aType );
+  }
+  if ( this.type === "unknown" ) {
+    if ( this.getMainContent().indexOf( "<?xml" ) == 0 ) {
+      this.setType( "application/xhtml+xml" );
+    } else {
+      this.setType( "text/plain" );
+    }
   }
   this.tags = this.entry.getTags();
   var arrIDs = this.getTags();

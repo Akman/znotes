@@ -46,8 +46,8 @@ var EXPORTED_SYMBOLS = ["Utils"];
 var Utils = function() {
 
   var isDebugEnabled = false;
-  var isDebugActive = false;
-  var isDebugRaised = false;
+  var isTestActive = false;
+  var isTestRaised = false;
   var isSanitizeEnabled = true;
   var isAdEnabled = false;
   var isFirstRun = true;
@@ -102,20 +102,20 @@ var Utils = function() {
       isDebugEnabled = value;
     },
 
-    get IS_DEBUG_ACTIVE() {
-      return isDebugActive;
+    get IS_TEST_ACTIVE() {
+      return isTestActive;
     },
     
-    set IS_DEBUG_ACTIVE( value ) {
-      isDebugActive = value;
+    set IS_TEST_ACTIVE( value ) {
+      isTestActive = value;
     },
     
-    get IS_DEBUG_RAISED() {
-      return isDebugRaised;
+    get IS_TEST_RAISED() {
+      return isTestRaised;
     },
     
-    set IS_DEBUG_RAISED( value ) {
-      isDebugRaised = value;
+    set IS_TEST_RAISED( value ) {
+      isTestRaised = value;
     },
     
     get IS_SANITIZE_ENABLED() {
@@ -293,6 +293,14 @@ var Utils = function() {
       isQuitEnabled = value;
     },
     
+    get IS_DEBUGGER_INSTALLED() {
+      return pub.convertChromeURL( "chrome://venkman/content/" );
+    },
+    
+    get IS_INSPECTOR_INSTALLED() {
+      return pub.convertChromeURL( "chrome://inspector/content/" );
+    },
+    
     // C O M M O N  P R E F E R E N S E S
 
     get IS_SAVE_POSITION() {
@@ -459,6 +467,34 @@ var Utils = function() {
                         .getService(Components.interfaces.nsIChromeRegistry);
     var uri = ios.newURI( "chrome://znotes_documents/content/", null, null );
     return fph.getFileFromURLSpec( chr.convertChromeURL( uri ).spec ).parent.clone();
+  };
+  
+  pub.getFileFromURLSpec = function( url ) {
+    var ios = Components.classes["@mozilla.org/network/io-service;1"]
+                        .getService( Components.interfaces.nsIIOService );
+    var fph = ios.getProtocolHandler( "file" )
+                 .QueryInterface( Components.interfaces.nsIFileProtocolHandler );
+    var chr = Components.classes["@mozilla.org/chrome/chrome-registry;1"]
+                        .getService(Components.interfaces.nsIChromeRegistry);
+    var uri = ios.newURI( url, null, null );
+    return fph.getFileFromURLSpec( chr.convertChromeURL( uri ).spec ).clone();
+  };
+
+  pub.convertChromeURL = function( url ) {
+    var ios = Components.classes["@mozilla.org/network/io-service;1"]
+                        .getService( Components.interfaces.nsIIOService );
+    var fph = ios.getProtocolHandler( "file" )
+                 .QueryInterface( Components.interfaces.nsIFileProtocolHandler );
+    var chr = Components.classes["@mozilla.org/chrome/chrome-registry;1"]
+                        .getService(Components.interfaces.nsIChromeRegistry);
+    var uri;
+    try {
+      uri = chr.convertChromeURL( ios.newURI( url, null, null ) );
+    } catch ( e ) {
+      Utils.log( e );
+      return null;
+    }
+    return uri.spec;
   };
   
   pub.getLocale = function() {
@@ -980,7 +1016,7 @@ var Utils = function() {
     while ( green.length < 2 ) green = "0" + green;
     var blue = b.toString( 16 );
     while ( blue.length < 2 ) blue = "0" + blue;
-    return "#"+red+green+blue;
+    return ( "#" + red + green + blue ).toUpperCase();
   };
 
   pub.HEX2RGB = function( hex ) {
@@ -1146,6 +1182,10 @@ var Utils = function() {
     return result;
   };
   
+  pub.setProperty = function( node, value ) {
+    node.setAttribute( "properties", value );
+  };
+
   pub.addProperty = function( node, value ) {
     var properties = node.hasAttribute( "properties" ) ?
       node.getAttribute( "properties" ).trim() : "";
@@ -1987,6 +2027,13 @@ var Utils = function() {
     var sound = Components.classes["@mozilla.org/sound;1"]
                           .createInstance( Components.interfaces.nsISound );
     sound.beep();
+  };
+
+  pub.loadScript = function( url, context, charset ) {
+    var loader =
+      Components.classes["@mozilla.org/moz/jssubscript-loader;1"]
+                .getService( Components.interfaces.mozIJSSubScriptLoader );
+    loader.loadSubScript( url, context, charset ); 
   };
 
   return pub;

@@ -165,10 +165,10 @@ ru.akman.znotes.Viewer = function() {
       pub.onClose();
     },
     register: function() {
-      observerService.addObserver( this, "znotes-main-shutdown", false );
+      observerService.addObserver( this, "znotes-query-quit", false );
     },
     unregister: function() {
-      observerService.removeObserver( this, "znotes-main-shutdown" );
+      observerService.removeObserver( this, "znotes-query-quit" );
     }
   };
   
@@ -248,6 +248,15 @@ ru.akman.znotes.Viewer = function() {
     }
   };
 
+  function onNoteTypeChanged( e ) {
+    var aCategory = e.data.parentCategory;
+    var aNote = e.data.changedNote;
+    var aBook = aCategory.getBook();
+    if ( currentNote && currentNote == aNote && !currentNote.isLoading() ) {
+      body.show( currentNote, true );
+    }
+  };
+  
   function onNoteDeleted( e ) {
     var aCategory = e.data.parentCategory;
     var aNote = e.data.deletedNote;
@@ -309,7 +318,8 @@ ru.akman.znotes.Viewer = function() {
     noteStateListener = {
       name: "VIEWER",
       onNoteChanged: onNoteChanged,
-      onNoteDeleted: onNoteDeleted
+      onNoteDeleted: onNoteDeleted,
+      onNoteTypeChanged: onNoteTypeChanged
     };
     currentNote.addStateListener( noteStateListener );
     document.title = currentNote.getName();

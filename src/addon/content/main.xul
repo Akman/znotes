@@ -286,9 +286,18 @@
       <toolbarbutton id="znotes_openoptionsdialog_button"
         class="toolbarbutton-1 znotes_openoptionsdialog_class"
         command="znotes_openoptionsdialog_command"/>
-      <toolbarbutton id="znotes_debug_button"
-        class="toolbarbutton-1 znotes_debug_class"
-        command="znotes_debug_command"/>
+      <toolbarbutton id="znotes_testsuite_button"
+        class="toolbarbutton-1 znotes_testsuite_class"
+        command="znotes_testsuite_command"/>
+      <toolbarbutton id="znotes_console_button"
+        class="toolbarbutton-1 znotes_console_class"
+        command="znotes_console_command"/>
+      <toolbarbutton id="znotes_debugger_button"
+        class="toolbarbutton-1 znotes_debugger_class"
+        command="znotes_debugger_command"/>
+      <toolbarbutton id="znotes_inspector_button"
+        class="toolbarbutton-1 znotes_inspector_class"
+        command="znotes_inspector_command"/>
       <toolbarbutton id="znotes_addons_button"
         class="toolbarbutton-1 znotes_addons_class"
         command="znotes_addons_command"/>
@@ -353,7 +362,7 @@
       iconsize="small"
       customizable="true"
       context="znotes_maintoolbar_menupopup"
-      defaultset="znotes_appendbook_button,separator,znotes_newcategory_button,znotes_deletecategory_button,separator,znotes_newtag_button,znotes_deletetag_button,separator,znotes_importnote_button,znotes_newnote_button,znotes_deletenote_button,separator,znotes_openoptionsdialog_button,znotes_openabout_button,znotes_openhelp_button,spring,znotes_edit_undo_button,znotes_edit_redo_button,separator,znotes_edit_cut_button,znotes_edit_copy_button,znotes_edit_paste_button,znotes_edit_delete_button,separator,znotes_edit_selectall_button,spring,znotes_showfilterbar_button,znotes_debug_button,znotes_addons_button,znotes_update_button,znotes_showappmenu_button" />
+      defaultset="znotes_appendbook_button,separator,znotes_newcategory_button,znotes_deletecategory_button,separator,znotes_newtag_button,znotes_deletetag_button,separator,znotes_importnote_button,znotes_newnote_button,znotes_deletenote_button,separator,znotes_openoptionsdialog_button,znotes_openabout_button,znotes_openhelp_button,spring,znotes_edit_undo_button,znotes_edit_redo_button,separator,znotes_edit_cut_button,znotes_edit_copy_button,znotes_edit_paste_button,znotes_edit_delete_button,separator,znotes_edit_selectall_button,spring,znotes_showfilterbar_button,znotes_testsuite_button,znotes_console_button,znotes_debugger_button,znotes_inspector_button,znotes_addons_button,znotes_update_button,znotes_showappmenu_button" />
     <toolbarset id="znotes_maintoolbarset"
       context="znotes_maintoolbar_menupopup" />
   </toolbox>
@@ -469,6 +478,11 @@
               ignoreincolumnpicker="true" sortActive="true"
               sortDirection="ascending"/>
             <splitter id="noteTreeTagSplitter" class="tree-splitter"/>
+            <treecol id="noteTreeType" label="&note_tree_type;" flex="1"
+              crop="center" persist="width ordinal hidden" hideheader="false"
+              ignoreincolumnpicker="true" sortActive="true"
+              sortDirection="ascending"/>
+            <splitter id="noteTreeTypeSplitter" class="tree-splitter"/>
             <treecol id="noteTreeCreateDateTime" flex="1" crop="center"
               label="&note_tree_create_datetime;" hideheader="false"
               persist="width ordinal hidden" ignoreincolumnpicker="true"

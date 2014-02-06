@@ -37,7 +37,7 @@ if ( !ru.akman.znotes ) ru.akman.znotes = {};
 Components.utils.import( "resource://znotes/utils.js" , ru.akman.znotes );
 Components.utils.import( "resource://znotes/updatemanager.js" , ru.akman.znotes );
 
-ru.akman.znotes.Debug = function() {
+ru.akman.znotes.TestSuite = function() {
 
   var pub = {};
 
@@ -46,7 +46,7 @@ ru.akman.znotes.Debug = function() {
   var mozPrefs = Components.classes["@mozilla.org/preferences-service;1"]
                            .getService( Components.interfaces.nsIPrefBranch );
 
-  var debugTextBox = null;
+  var testTextBox = null;
   var alwaysRaisedButton = null;
   var ctx = null;
   var win = null;
@@ -54,10 +54,10 @@ ru.akman.znotes.Debug = function() {
   var tests = [];
 
   function log( msg ) {
-    debugTextBox.value += msg + "\n";
+    testTextBox.value += msg + "\n";
   };
   
-  function debugCommand( event ) {
+  function testCommand( event ) {
     var testIndex = parseInt( event.target.value );
     var delimiter = "========" + new Array( tests[testIndex].name.length + 1 ).join( "=" );
     var header = "[BEGIN] " + tests[testIndex].name;
@@ -72,12 +72,12 @@ ru.akman.znotes.Debug = function() {
   };
   
   pub.onLoad = function( event ) {
-    Utils.IS_DEBUG_ACTIVE = true;
-    mozPrefs.setBoolPref( "extensions.znotes.debug.active", true );
-    debugTextBox = document.getElementById( "debugTextBox" );
-    Utils.DEBUG_TEXTBOX = debugTextBox;
+    Utils.IS_TEST_ACTIVE = true;
+    mozPrefs.setBoolPref( "extensions.znotes.test.active", true );
+    testTextBox = document.getElementById( "testTextBox" );
+    Utils.DEBUG_TEXTBOX = testTextBox;
     alwaysRaisedButton = document.getElementById( "alwaysRaisedButton" );
-    alwaysRaisedButton.checked = Utils.IS_DEBUG_RAISED;
+    alwaysRaisedButton.checked = Utils.IS_TEST_RAISED;
     pub.alwaysRaised();
     ctx = window.arguments[0];
     win = ctx.win;
@@ -86,19 +86,19 @@ ru.akman.znotes.Debug = function() {
   
   pub.onClose = function( event ) {
     Utils.DEBUG_TEXTBOX = null;
-    Utils.IS_DEBUG_ACTIVE = false;
-    mozPrefs.setBoolPref( "extensions.znotes.debug.active", false );
+    Utils.IS_TEST_ACTIVE = false;
+    mozPrefs.setBoolPref( "extensions.znotes.test.active", false );
   };
   
-  pub.clearDebugView = function( event ) {
-    debugTextBox.value = "";
+  pub.clearTestView = function( event ) {
+    testTextBox.value = "";
     return true;
   };
 
   pub.execTest = function( event ) {
-    var debugMenu = document.getElementById( "debugMenu" );
-    while ( debugMenu.firstChild ) {
-      debugMenu.removeChild( debugMenu.firstChild );
+    var testMenu = document.getElementById( "testMenu" );
+    while ( testMenu.firstChild ) {
+      testMenu.removeChild( testMenu.firstChild );
     }
     for ( var i = 0; i < tests.length; i++ ) {
       var test = tests[i];
@@ -107,11 +107,11 @@ ru.akman.znotes.Debug = function() {
       menuItem.setAttribute( "value", i );
       menuItem.setAttribute( "label", test.name );
       menuItem.setAttribute( "tooltiptext", test.description );
-      menuItem.addEventListener( "command", debugCommand, false );
-      debugMenu.appendChild( menuItem );
+      menuItem.addEventListener( "command", testCommand, false );
+      testMenu.appendChild( menuItem );
     }
     var execTestButton = document.getElementById( "execTestButton" );
-    debugMenu.openPopup(
+    testMenu.openPopup(
       execTestButton,
       "end_before",
       null,
@@ -130,8 +130,8 @@ ru.akman.znotes.Debug = function() {
                        .QueryInterface( Components.interfaces.nsIInterfaceRequestor)
                        .getInterface( Components.interfaces.nsIXULWindow );
     var value = alwaysRaisedButton.checked
-    Utils.IS_DEBUG_RAISED = value;
-    mozPrefs.setBoolPref( "extensions.znotes.debug.raised", value );
+    Utils.IS_TEST_RAISED = value;
+    mozPrefs.setBoolPref( "extensions.znotes.test.raised", value );
     value = value ? xulWin.raisedZ : xulWin.normalZ;
     window.setTimeout(
       function() {
@@ -159,7 +159,7 @@ ru.akman.znotes.Debug = function() {
         var cl1 = localeService.getApplicationLocale().getCategory( "NSILOCALE_CTYPE" );
         var cl2 = localeService.getLocaleComponentForUserAgent();
 
-        debugTextBox.value += "selected: " + cl3 + "\n" +
+        testTextBox.value += "selected: " + cl3 + "\n" +
                               "system: " + cl0 + "\n" +
                               "application: " + cl1 + "\n" +
                               "useragent: " + cl2 + "\n\n" +
@@ -173,7 +173,7 @@ ru.akman.znotes.Debug = function() {
       name: "GetId",
       description: "Get Id of current note",
       code: function () {
-        debugTextBox.value += ctx.note.getId() + "\n";
+        testTextBox.value += ctx.note.getId() + "\n";
       }
     }
   );
@@ -184,10 +184,10 @@ ru.akman.znotes.Debug = function() {
       description: "Get URIs of current note",
       code: function () {
         var designFrame = doc.getElementById( "designEditor" );
-        debugTextBox.value += "getBaseURI() :: " + decodeURIComponent( ctx.note.getBaseURI().spec ) + "\n";
-        debugTextBox.value += "getURI() :: " + decodeURIComponent( ctx.note.getURI().spec ) + "\n";
-        debugTextBox.value += "BaseURI :: " + decodeURIComponent( designFrame.contentDocument.baseURIObject.spec ) + "\n";
-        debugTextBox.value += "DocumentURI :: " + decodeURIComponent( designFrame.contentDocument.documentURIObject.spec ) + "\n";
+        testTextBox.value += "getBaseURI() :: " + decodeURIComponent( ctx.note.getBaseURI().spec ) + "\n";
+        testTextBox.value += "getURI() :: " + decodeURIComponent( ctx.note.getURI().spec ) + "\n";
+        testTextBox.value += "BaseURI :: " + decodeURIComponent( designFrame.contentDocument.baseURIObject.spec ) + "\n";
+        testTextBox.value += "DocumentURI :: " + decodeURIComponent( designFrame.contentDocument.documentURIObject.spec ) + "\n";
       }
     }
   );
@@ -198,7 +198,7 @@ ru.akman.znotes.Debug = function() {
       description: "Create welcome note",
       code: function () {
         var note = ctx.createWelcomeNote( ctx.book );
-        debugTextBox.value += note;
+        testTextBox.value += note;
       }
     }
   );
@@ -208,79 +208,79 @@ ru.akman.znotes.Debug = function() {
       name: "Info",
       description: "Get application info",
       code: function () {
-        debugTextBox.value += "\n";
-        debugTextBox.value += "ID :: "  + Utils.ID + "\n";
-        debugTextBox.value += "BUNDLE :: "  + Utils.BUNDLE + "\n";
-        debugTextBox.value += "NAME :: "  + Utils.NAME + "\n";
-        debugTextBox.value += "VENDOR :: "  + Utils.VENDOR + "\n";
-        debugTextBox.value += "VERSION :: "  + Utils.VERSION + "\n";
-        debugTextBox.value += "BUILD :: "  + Utils.BUILD + "\n";
-        debugTextBox.value += "LANGUAGES :: "  + Utils.LANGUAGES + "\n";
-        debugTextBox.value += "SITE :: "  + Utils.SITE + "\n";
-        debugTextBox.value += "SITE_LANGUAGES :: "  + Utils.SITE_LANGUAGES + "\n";
-        debugTextBox.value += "TITLE :: "  + Utils.decodeUTF8( Utils.TITLE ) + "\n";
-        debugTextBox.value += "DESCRIPTION :: "  + Utils.decodeUTF8( Utils.DESCRIPTION ) + "\n";
-        debugTextBox.value += "LICENSES :: \n";
+        testTextBox.value += "\n";
+        testTextBox.value += "ID :: "  + Utils.ID + "\n";
+        testTextBox.value += "BUNDLE :: "  + Utils.BUNDLE + "\n";
+        testTextBox.value += "NAME :: "  + Utils.NAME + "\n";
+        testTextBox.value += "VENDOR :: "  + Utils.VENDOR + "\n";
+        testTextBox.value += "VERSION :: "  + Utils.VERSION + "\n";
+        testTextBox.value += "BUILD :: "  + Utils.BUILD + "\n";
+        testTextBox.value += "LANGUAGES :: "  + Utils.LANGUAGES + "\n";
+        testTextBox.value += "SITE :: "  + Utils.SITE + "\n";
+        testTextBox.value += "SITE_LANGUAGES :: "  + Utils.SITE_LANGUAGES + "\n";
+        testTextBox.value += "TITLE :: "  + Utils.decodeUTF8( Utils.TITLE ) + "\n";
+        testTextBox.value += "DESCRIPTION :: "  + Utils.decodeUTF8( Utils.DESCRIPTION ) + "\n";
+        testTextBox.value += "LICENSES :: \n";
         for ( var i = 0; i < Utils.LICENSES.length; i++ ) {
           var license = Utils.LICENSES[i];
-          debugTextBox.value += "[" + (i+1) + "] name = " + license.name + "\n";
-          debugTextBox.value += "[" + (i+1) + "] link = " + license.link + "\n";
+          testTextBox.value += "[" + (i+1) + "] name = " + license.name + "\n";
+          testTextBox.value += "[" + (i+1) + "] link = " + license.link + "\n";
         }
-        debugTextBox.value += "REPOSITORIES :: \n";
+        testTextBox.value += "REPOSITORIES :: \n";
         for ( var i = 0; i < Utils.REPOSITORIES.length; i++ ) {
           var repository = Utils.REPOSITORIES[i];
-          debugTextBox.value += "[" + (i+1) + "] name = " + repository.name + "\n";
-          debugTextBox.value += "[" + (i+1) + "] link = " + repository.link + "\n";
+          testTextBox.value += "[" + (i+1) + "] name = " + repository.name + "\n";
+          testTextBox.value += "[" + (i+1) + "] link = " + repository.link + "\n";
         }
-        debugTextBox.value += "CREATORS :: \n";
+        testTextBox.value += "CREATORS :: \n";
         for ( var i = 0; i < Utils.CREATORS.length; i++ ) {
           var creator = Utils.CREATORS[i];
-          debugTextBox.value += "[" + (i+1) + "] name = " + Utils.decodeUTF8( creator.name ) + "\n";
-          debugTextBox.value += "[" + (i+1) + "] link = " + creator.link + "\n";
+          testTextBox.value += "[" + (i+1) + "] name = " + Utils.decodeUTF8( creator.name ) + "\n";
+          testTextBox.value += "[" + (i+1) + "] link = " + creator.link + "\n";
         }
-        debugTextBox.value += "CONTRIBUTORS :: \n";
+        testTextBox.value += "CONTRIBUTORS :: \n";
         for ( var i = 0; i < Utils.CONTRIBUTORS.length; i++ ) {
           var contributor = Utils.CONTRIBUTORS[i];
-          debugTextBox.value += "[" + (i+1) + "] name = " + Utils.decodeUTF8( contributor.name ) + "\n";
-          debugTextBox.value += "[" + (i+1) + "] title = " + Utils.decodeUTF8( contributor.title ) + "\n";
-          debugTextBox.value += "[" + (i+1) + "] description = " + Utils.decodeUTF8( contributor.description ) + "\n";
-          debugTextBox.value += "[" + (i+1) + "] link = " + contributor.link + "\n";
-          debugTextBox.value += "  LICENSES :: \n";
+          testTextBox.value += "[" + (i+1) + "] name = " + Utils.decodeUTF8( contributor.name ) + "\n";
+          testTextBox.value += "[" + (i+1) + "] title = " + Utils.decodeUTF8( contributor.title ) + "\n";
+          testTextBox.value += "[" + (i+1) + "] description = " + Utils.decodeUTF8( contributor.description ) + "\n";
+          testTextBox.value += "[" + (i+1) + "] link = " + contributor.link + "\n";
+          testTextBox.value += "  LICENSES :: \n";
           for ( var j = 0; j < contributor.licenses.length; j++ ) {
-            debugTextBox.value += "  [" + (j+1) + "] name = " + Utils.decodeUTF8( contributor.licenses[j].name ) + "\n";
-            debugTextBox.value += "  [" + (j+1) + "] link = " + contributor.licenses[j].link + "\n";
+            testTextBox.value += "  [" + (j+1) + "] name = " + Utils.decodeUTF8( contributor.licenses[j].name ) + "\n";
+            testTextBox.value += "  [" + (j+1) + "] link = " + contributor.licenses[j].link + "\n";
           }
         }
-        debugTextBox.value += "CREDITS :: \n";
+        testTextBox.value += "CREDITS :: \n";
         for ( var i = 0; i < Utils.CREDITS.length; i++ ) {
           var credit = Utils.CREDITS[i];
-          debugTextBox.value += "[" + (i+1) + "] name = " + Utils.decodeUTF8( credit.name ) + "\n";
-          debugTextBox.value += "[" + (i+1) + "] title = " + Utils.decodeUTF8( credit.title ) + "\n";
-          debugTextBox.value += "[" + (i+1) + "] description = " + Utils.decodeUTF8( credit.description ) + "\n";
-          debugTextBox.value += "[" + (i+1) + "] link = " + credit.link + "\n";
-          debugTextBox.value += "  LICENSES :: \n";
+          testTextBox.value += "[" + (i+1) + "] name = " + Utils.decodeUTF8( credit.name ) + "\n";
+          testTextBox.value += "[" + (i+1) + "] title = " + Utils.decodeUTF8( credit.title ) + "\n";
+          testTextBox.value += "[" + (i+1) + "] description = " + Utils.decodeUTF8( credit.description ) + "\n";
+          testTextBox.value += "[" + (i+1) + "] link = " + credit.link + "\n";
+          testTextBox.value += "  LICENSES :: \n";
           for ( var j = 0; j < credit.licenses.length; j++ ) {
-            debugTextBox.value += "  [" + (j+1) + "] name = " + Utils.decodeUTF8( credit.licenses[j].name ) + "\n";
-            debugTextBox.value += "  [" + (j+1) + "] link = " + credit.licenses[j].link + "\n";
+            testTextBox.value += "  [" + (j+1) + "] name = " + Utils.decodeUTF8( credit.licenses[j].name ) + "\n";
+            testTextBox.value += "  [" + (j+1) + "] link = " + credit.licenses[j].link + "\n";
           }
         }
-        debugTextBox.value += "TRANSLATORS :: \n";
+        testTextBox.value += "TRANSLATORS :: \n";
         for ( var i = 0; i < Utils.TRANSLATORS.length; i++ ) {
           var translator = Utils.TRANSLATORS[i];
-          debugTextBox.value += "[" + (i+1) + "] name = " + Utils.decodeUTF8( translator.name ) + "\n";
-          debugTextBox.value += "[" + (i+1) + "] link = " + translator.link + "\n";
+          testTextBox.value += "[" + (i+1) + "] name = " + Utils.decodeUTF8( translator.name ) + "\n";
+          testTextBox.value += "[" + (i+1) + "] link = " + translator.link + "\n";
         }
-        debugTextBox.value += "COPYRIGHTS :: \n";
+        testTextBox.value += "COPYRIGHTS :: \n";
         for ( var i = 0; i < Utils.COPYRIGHTS.length; i++ ) {
           var copyright = Utils.COPYRIGHTS[i];
-          debugTextBox.value += "[" + (i+1) + "] prefix = " + Utils.decodeUTF8( copyright.prefix ) + "\n";
-          debugTextBox.value += "[" + (i+1) + "] year = " + copyright.year + "\n";
-          debugTextBox.value += "[" + (i+1) + "] author = " + Utils.decodeUTF8( copyright.author ) + "\n";
-          debugTextBox.value += "[" + (i+1) + "] reserved = " + Utils.decodeUTF8( copyright.reserved ) + "\n";
+          testTextBox.value += "[" + (i+1) + "] prefix = " + Utils.decodeUTF8( copyright.prefix ) + "\n";
+          testTextBox.value += "[" + (i+1) + "] year = " + copyright.year + "\n";
+          testTextBox.value += "[" + (i+1) + "] author = " + Utils.decodeUTF8( copyright.author ) + "\n";
+          testTextBox.value += "[" + (i+1) + "] reserved = " + Utils.decodeUTF8( copyright.reserved ) + "\n";
         }
-        debugTextBox.value += "URLS :: \n";
-        debugTextBox.value += "index = " + Utils.SITE + Utils.URLS.index + "\n";
-        debugTextBox.value += "forum = " + Utils.SITE + Utils.URLS.forum + "\n";
+        testTextBox.value += "URLS :: \n";
+        testTextBox.value += "index = " + Utils.SITE + Utils.URLS.index + "\n";
+        testTextBox.value += "forum = " + Utils.SITE + Utils.URLS.forum + "\n";
       }
     }
   );
@@ -409,13 +409,13 @@ ru.akman.znotes.Debug = function() {
         var aNote1 = ctx.createNote(
           ctx.book,
           ctx.category,
-          "debug note 1",
+          "test note 1",
           Utils.DEFAULT_DOCUMENT_TYPE
         );
         var aNote2 = ctx.createNote(
           ctx.book,
           ctx.category,
-          "debug note 2",
+          "test note 2",
           Utils.DEFAULT_DOCUMENT_TYPE
         );
         aNote1.load( "https://developer.mozilla.org/ru/docs/DOM/Node.replaceChild" );
@@ -607,5 +607,5 @@ ru.akman.znotes.Debug = function() {
 
 }();
 
-window.addEventListener( "load"  , function() { ru.akman.znotes.Debug.onLoad(); }, false );
-window.addEventListener( "close"  , function() { ru.akman.znotes.Debug.onClose(); }, false );
+window.addEventListener( "load"  , function() { ru.akman.znotes.TestSuite.onLoad(); }, false );
+window.addEventListener( "close"  , function() { ru.akman.znotes.TestSuite.onClose(); }, false );

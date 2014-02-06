@@ -48,6 +48,10 @@ ru.akman.znotes.Editor = function() {
     var Utils = ru.akman.znotes.Utils;
     var Common = ru.akman.znotes.Common;
 
+    var observerService =
+      Components.classes["@mozilla.org/observer-service;1"]
+                .getService( Components.interfaces.nsIObserverService );
+
     var currentWindow = null;
     var currentMode = "viewer";
     var currentStyle = {
@@ -63,11 +67,9 @@ ru.akman.znotes.Editor = function() {
     var editorView = null;
     
     var editorStateListener = null;
-    
-    //
+
     // COMMANDS
-    //
-    
+
     var editorCommands = {
       "znotes_editoredit_command": null,
       "znotes_editorsave_command": null,
@@ -234,6 +236,8 @@ ru.akman.znotes.Editor = function() {
       removeEventListeners();
       currentNote = aNote;
       if ( currentNote && currentNote.isExists() && !currentNote.isLoading() ) {
+        // currentEditor is always new instance of Editor
+        // @see documentmanager.js, line: 217
         currentEditor = ru.akman.znotes.DocumentManager
                                        .getInstance()
                                        .getDocument( currentNote.getType() )

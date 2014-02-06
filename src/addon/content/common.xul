@@ -282,13 +282,34 @@
       accesskey="&znotes_showappmenu_accesskey;"
       key="znotes_showappmenu_key"
       oncommand="ru.akman.znotes.Common.goDoCommand( 'znotes_showappmenu_command', event.explicitOriginalTarget );"/>
-    <command id="znotes_debug_command" disabled="true" hidden="true"
-      label="&znotes_debug_label;"
-      title="&znotes_debug_label;"
-      tooltiptext="&znotes_debug_tooltip;"
-      accesskey="&znotes_debug_accesskey;"
-      key="znotes_debug_key"
-      oncommand="ru.akman.znotes.Common.goDoCommand( 'znotes_debug_command', event.explicitOriginalTarget );"/>
+    <command id="znotes_testsuite_command" disabled="true"
+      label="&znotes_testsuite_label;"
+      title="&znotes_testsuite_label;"
+      tooltiptext="&znotes_testsuite_tooltip;"
+      accesskey="&znotes_testsuite_accesskey;"
+      key="znotes_testsuite_key"
+      oncommand="ru.akman.znotes.Common.goDoCommand( 'znotes_testsuite_command', event.explicitOriginalTarget );"/>
+    <command id="znotes_console_command" disabled="true"
+      label="&znotes_console_label;"
+      title="&znotes_console_label;"
+      tooltiptext="&znotes_console_tooltip;"
+      accesskey="&znotes_console_accesskey;"
+      key="znotes_console_key"
+      oncommand="ru.akman.znotes.Common.goDoCommand( 'znotes_console_command', event.explicitOriginalTarget );"/>
+    <command id="znotes_debugger_command" disabled="true"
+      label="&znotes_debugger_label;"
+      title="&znotes_debugger_label;"
+      tooltiptext="&znotes_debugger_tooltip;"
+      accesskey="&znotes_debugger_accesskey;"
+      key="znotes_debugger_key"
+      oncommand="ru.akman.znotes.Common.goDoCommand( 'znotes_debugger_command', event.explicitOriginalTarget );"/>
+    <command id="znotes_inspector_command" disabled="true"
+      label="&znotes_inspector_label;"
+      title="&znotes_inspector_label;"
+      tooltiptext="&znotes_inspector_tooltip;"
+      accesskey="&znotes_inspector_accesskey;"
+      key="znotes_inspector_key"
+      oncommand="ru.akman.znotes.Common.goDoCommand( 'znotes_inspector_command', event.explicitOriginalTarget );"/>
     <command id="znotes_addons_command" disabled="true"
       label="&znotes_addons_label;"
       title="&znotes_addons_label;"
@@ -382,6 +403,13 @@
       accesskey="&znotes_bodytagsmenu_accesskey;"
       key="znotes_bodytagsmenu_key"
       oncommand="ru.akman.znotes.Common.goDoCommand( 'znotes_bodytagsmenu_command', event.explicitOriginalTarget );"/>
+    <command id="znotes_bodytypesmenu_command" disabled="true"
+      label="&znotes_bodytypesmenu_label;"
+      title="&znotes_bodytypesmenu_label;"
+      tooltiptext="&znotes_bodytypesmenu_tooltip;"
+      accesskey="&znotes_bodytypesmenu_accesskey;"
+      key="znotes_bodytypesmenu_key"
+      oncommand="ru.akman.znotes.Common.goDoCommand( 'znotes_bodytypesmenu_command', event.explicitOriginalTarget );"/>
     <command id="znotes_bodyaddonspanel_command" disabled="true"
       label="&znotes_bodyaddonspanel_label;"
       title="&znotes_bodyaddonspanel_label;"
@@ -626,9 +654,18 @@
     <key id="znotes_showappmenu_key" command="znotes_showappmenu_command"
       key="&znotes_showappmenu_key;" modifiers="&znotes_showappmenu_key_modifiers;"
       keycode="&znotes_showappmenu_keycode;"/>
-    <key id="znotes_debug_key" command="znotes_debug_command"
-      key="&znotes_debug_key;" modifiers="&znotes_debug_key_modifiers;"
-      keycode="&znotes_debug_keycode;"/>
+    <key id="znotes_testsuite_key" command="znotes_testsuite_command"
+      key="&znotes_testsuite_key;" modifiers="&znotes_testsuite_key_modifiers;"
+      keycode="&znotes_testsuite_keycode;"/>
+    <key id="znotes_console_key" command="znotes_console_command"
+      key="&znotes_console_key;" modifiers="&znotes_console_key_modifiers;"
+      keycode="&znotes_console_keycode;"/>
+    <key id="znotes_debugger_key" command="znotes_debugger_command"
+      key="&znotes_debugger_key;" modifiers="&znotes_debugger_key_modifiers;"
+      keycode="&znotes_debugger_keycode;"/>
+    <key id="znotes_inspector_key" command="znotes_inspector_command"
+      key="&znotes_inspector_key;" modifiers="&znotes_inspector_key_modifiers;"
+      keycode="&znotes_inspector_keycode;"/>
     <key id="znotes_addons_key" command="znotes_addons_command"
       key="&znotes_addons_key;" modifiers="&znotes_addons_key_modifiers;"
       keycode="&znotes_addons_keycode;"/>
@@ -673,6 +710,9 @@
     <key id="znotes_bodytagsmenu_key" command="znotes_bodytagsmenu_command"
       key="&znotes_bodytagsmenu_key;" modifiers="&znotes_bodytagsmenu_key_modifiers;"
       keycode="&znotes_bodytagsmenu_keycode;"/>
+    <key id="znotes_bodytypesmenu_key" command="znotes_bodytypesmenu_command"
+      key="&znotes_bodytypesmenu_key;" modifiers="&znotes_bodytypesmenu_key_modifiers;"
+      keycode="&znotes_bodytypesmenu_keycode;"/>
     <!-- attachments -->
     <key id="znotes_attachmentsaddcontact_key" command="znotes_attachmentsaddcontact_command"
       key="&znotes_attachmentsaddcontact_key;" modifiers="&znotes_attachmentsaddcontact_key_modifiers;"

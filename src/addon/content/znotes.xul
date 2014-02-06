@@ -58,7 +58,7 @@
   
   <script type="application/javascript"
     src="chrome://znotes/content/znotes.js" />
-
+    
   <tabbox id="znotes_tabbox" flex="1">
     <tabpanels id="znotes_tabpanels" flex="1">
       <vbox id="znotes_maintabpanel" />

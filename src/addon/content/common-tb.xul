@@ -68,12 +68,18 @@
       tooltiptext="&znotes_tbopenoptionsdialog_tooltip;"
       accesskey="&znotes_tbopenoptionsdialog_accesskey;"
       oncommand="ru.akman.znotes.Common.goDoCommand( 'znotes_tbopenoptionsdialog_command', event.explicitOriginalTarget );"/>
-    <command id="znotes_tbdebug_command" disabled="true" hidden="true"
-      label="&znotes_tbdebug_label;"
-      title="&znotes_tbdebug_label;"
-      tooltiptext="&znotes_tbdebug_tooltip;"
-      accesskey="&znotes_tbdebug_accesskey;"
-      oncommand="ru.akman.znotes.Common.goDoCommand( 'znotes_tbdebug_command', event.explicitOriginalTarget );"/>
+    <command id="znotes_tbconsole_command" disabled="true"
+      label="&znotes_tbconsole_label;"
+      title="&znotes_tbconsole_label;"
+      tooltiptext="&znotes_tbconsole_tooltip;"
+      accesskey="&znotes_tbconsole_accesskey;"
+      oncommand="ru.akman.znotes.Common.goDoCommand( 'znotes_tbconsole_command', event.explicitOriginalTarget );"/>
+    <command id="znotes_tbtestsuite_command" disabled="true"
+      label="&znotes_tbtestsuite_label;"
+      title="&znotes_tbtestsuite_label;"
+      tooltiptext="&znotes_tbtestsuite_tooltip;"
+      accesskey="&znotes_tbtestsuite_accesskey;"
+      oncommand="ru.akman.znotes.Common.goDoCommand( 'znotes_tbtestsuite_command', event.explicitOriginalTarget );"/>
     <command id="znotes_tbshowmainmenubar_command" disabled="true"
       label="&znotes_tbshowmainmenubar_label;"
       title="&znotes_tbshowmainmenubar_label;"

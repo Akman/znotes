@@ -39,6 +39,7 @@ pref("intl.locale.matchOS", false);
 pref("accessibility.typeaheadfind.flashBar", 0);
 pref("print.use_global_printsettings", true);
 pref("print.save_print_settings", true);
+
 /* debug mode */
 
 /*
@@ -49,10 +50,27 @@ pref("nglayout.debug.disable_xul_cache", true);
 pref("nglayout.debug.disable_xul_fastload", true);
 */
 
+/* extensions */
+
+pref("xpinstall.dialog.confirm", "chrome://mozapps/content/xpinstall/xpinstallConfirm.xul");
+pref("xpinstall.dialog.progress.skin", "chrome://mozapps/content/extensions/extensions.xul?type=themes");
+pref("xpinstall.dialog.progress.chrome", "chrome://mozapps/content/extensions/extensions.xul?type=extensions");
+pref("xpinstall.dialog.progress.type.skin", "Extension:Manager-themes");
+pref("xpinstall.dialog.progress.type.chrome", "Extension:Manager-extensions");
+pref("extensions.dss.enabled", false);
+pref("extensions.dss.switchPending", false);
+pref("extensions.ignoreMTimeChanges", false);
+pref("extensions.logging.enabled", false);
+pref("general.skins.selectedSkin", "classic/1.0");
+
 /* extensions update */
 
 pref("extensions.getAddons.cache.enabled", true);
 pref("extensions.update.enabled", false);
+pref("extensions.update.interval", 86400);
+pref("extensions.update.url", "chrome://mozapps/locale/extensions/extensions.properties");
+pref("extensions.getMoreExtensionsURL", "chrome://mozapps/locale/extensions/extensions.properties");
+pref("extensions.getMoreThemesURL", "chrome://mozapps/locale/extensions/extensions.properties");
 
 /* application update */
 

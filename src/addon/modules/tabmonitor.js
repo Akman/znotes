@@ -59,8 +59,7 @@ var TabMonitor = function() {
     onTabOpened: function( aTab ) {
       if ( aTab.mode.name == "znotesMainTab" ) {
         prefsManager.setBoolPref( "isOpened", true );
-      }
-      if ( aTab.mode.name == "znotesContentTab" ) {
+      } else if ( aTab.mode.name == "znotesContentTab" ) {
         sessionManager.updateState(
           aTab, { opened: true, background: true } );
       }
@@ -76,8 +75,7 @@ var TabMonitor = function() {
     onTabClosing: function( aTab ) {
       if ( aTab.mode.name == "znotesMainTab" ) {
         prefsManager.setBoolPref( "isOpened", false );
-      }
-      if ( aTab.mode.name == "znotesContentTab" ) {
+      } else if ( aTab.mode.name == "znotesContentTab" ) {
         sessionManager.updateState( aTab, { opened: false } );
       }
     },

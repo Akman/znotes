@@ -53,3 +53,5 @@ style     chrome://global/content/customizeToolbar.xul    chrome://znotes/skin/d
 manifest  platform/locale/localized.manifest
 manifest  branding/locale/localized.manifest
 manifest  locale/localized.manifest
+# venkman
+skin      communicator      classic/1.0 chrome/platform.jar!/skin/communicator/

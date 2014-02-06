@@ -32,48 +32,48 @@
   - ***** END LICENSE BLOCK ***** -->
 
 <?xml-stylesheet type="text/css" href="chrome://global/skin/" ?>
-<?xml-stylesheet type="text/css" href="chrome://znotes/skin/debug.css" ?>
+<?xml-stylesheet type="text/css" href="chrome://znotes/skin/testsuite.css" ?>
 
-<!DOCTYPE window SYSTEM "chrome://znotes/locale/debug.dtd">
+<!DOCTYPE window SYSTEM "chrome://znotes/locale/testsuite.dtd">
 
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   id="znotes"
   title="&title;"
-  windowtype="znotes:debug"
+  windowtype="znotes:test"
   persist="width height screenX screenY sizemode">
   
-  <script type="application/javascript" src="chrome://znotes/content/debug.js"/>
+  <script type="application/javascript" src="chrome://znotes/content/testsuite.js"/>
 
-  <menupopup id="debugMenu" />
+  <menupopup id="testMenu" />
   
-  <toolbox id="debugToolBox"
+  <toolbox id="testToolBox"
     orient="horizontal"
     pack="start"
     align="stretch"
     mode="icons"
     iconsize="small">
-    <toolbar id="debugToolbar"
+    <toolbar id="testToolbar"
       pack="start"
       align="stretch"
       flex="1"
       mode="icons">
-      <toolbarbutton id="clearDebugViewButton"
-        tooltiptext="&clear_debug_view_button_tooltip;"
-        oncommand="ru.akman.znotes.Debug.clearDebugView( event );"
+      <toolbarbutton id="clearTestViewButton"
+        tooltiptext="&clear_test_view_button_tooltip;"
+        oncommand="ru.akman.znotes.TestSuite.clearTestView( event );"
         pack="start"/>
       <toolbarbutton id="execTestButton"
         tooltiptext="&exec_test_button_tooltip;"
-        oncommand="ru.akman.znotes.Debug.execTest( event );"
+        oncommand="ru.akman.znotes.TestSuite.execTest( event );"
         pack="start"/>
-      <toolbarspring id="debugToolbarSpring" flex="1" />
+      <toolbarspring id="testToolbarSpring" flex="1" />
       <toolbarbutton id="alwaysRaisedButton"
         type="checkbox" autocheck="true"
         tooltiptext="&always_raised_button_tooltip;"
-        oncommand="ru.akman.znotes.Debug.alwaysRaised( event );"
+        oncommand="ru.akman.znotes.TestSuite.alwaysRaised( event );"
         align="end"/>
     </toolbar>
   </toolbox>
-  <textbox id="debugTextBox"
+  <textbox id="testTextBox"
     orient="horizontal"
     flex="1"
     pack="start"

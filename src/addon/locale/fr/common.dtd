@@ -60,12 +60,33 @@
 <!ENTITY znotes_openoptionsdialog_key_modifiers "">
 <!ENTITY znotes_openoptionsdialog_keycode "">
 
-<!ENTITY znotes_debug_label "Debogage">
-<!ENTITY znotes_debug_tooltip "Ouvrir la fenêtre de débogage">
-<!ENTITY znotes_debug_accesskey "D">
-<!ENTITY znotes_debug_key "D">
-<!ENTITY znotes_debug_key_modifiers "accel,alt">
-<!ENTITY znotes_debug_keycode "">
+<!ENTITY znotes_testsuite_label "Tests">
+<!ENTITY znotes_testsuite_tooltip "Open test suite">
+<!ENTITY znotes_testsuite_accesskey "T">
+<!ENTITY znotes_testsuite_key "T">
+<!ENTITY znotes_testsuite_key_modifiers "accel,alt">
+<!ENTITY znotes_testsuite_keycode "">
+
+<!ENTITY znotes_debugger_label "Debogage">
+<!ENTITY znotes_debugger_tooltip "Start debugger">
+<!ENTITY znotes_debugger_accesskey "D">
+<!ENTITY znotes_debugger_key "D">
+<!ENTITY znotes_debugger_key_modifiers "accel,alt">
+<!ENTITY znotes_debugger_keycode "">
+
+<!ENTITY znotes_console_label "Console">
+<!ENTITY znotes_console_tooltip "Open error console">
+<!ENTITY znotes_console_accesskey "E">
+<!ENTITY znotes_console_key "">
+<!ENTITY znotes_console_key_modifiers "">
+<!ENTITY znotes_console_keycode "">
+
+<!ENTITY znotes_inspector_label "Inspector">
+<!ENTITY znotes_inspector_tooltip "Start inspector">
+<!ENTITY znotes_inspector_accesskey "I">
+<!ENTITY znotes_inspector_key "">
+<!ENTITY znotes_inspector_key_modifiers "">
+<!ENTITY znotes_inspector_keycode "">
 
 <!ENTITY znotes_addons_label "Extensions">
 <!ENTITY znotes_addons_tooltip "Gérer les extensions">
@@ -371,6 +392,13 @@
 <!ENTITY znotes_bodytagsmenu_key "T">
 <!ENTITY znotes_bodytagsmenu_key_modifiers "accel">
 <!ENTITY znotes_bodytagsmenu_keycode "">
+
+<!ENTITY znotes_bodytypesmenu_label "Type">
+<!ENTITY znotes_bodytypesmenu_tooltip "Type">
+<!ENTITY znotes_bodytypesmenu_accesskey "e">
+<!ENTITY znotes_bodytypesmenu_key "">
+<!ENTITY znotes_bodytypesmenu_key_modifiers "">
+<!ENTITY znotes_bodytypesmenu_keycode "">
 
 <!ENTITY znotes_bodyaddonspanel_label "Extensions">
 <!ENTITY znotes_bodyaddonspanel_tooltip "Afficher/Masquer le panneau des extensions">

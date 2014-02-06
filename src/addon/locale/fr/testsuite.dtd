@@ -30,8 +30,8 @@
   -
   - ***** END LICENSE BLOCK ***** -->
 
-<!ENTITY title "Debogage">
-<!ENTITY debug_tabmain_caption "Debogage">
-<!ENTITY clear_debug_view_button_tooltip "Effacer la vue">
+<!ENTITY title "Tests">
+<!ENTITY test_tabmain_caption "Test">
+<!ENTITY clear_test_view_button_tooltip "Effacer la vue">
 <!ENTITY exec_test_button_tooltip "Sélection test">
-<!ENTITY always_raised_button_tooltip "Fenêtre de débogage toujours active">
+<!ENTITY always_raised_button_tooltip "Fenêtre de test toujours active">

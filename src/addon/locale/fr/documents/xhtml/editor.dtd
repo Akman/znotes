@@ -245,8 +245,16 @@
 <!ENTITY znotes_editordebug_key_modifiers "">
 <!ENTITY znotes_editordebug_keycode "">
 
+<!ENTITY znotes_toggletagsmode_label "Barre étiquettes">
+<!ENTITY znotes_toggletagsmode_tooltip "Barre étiquettes">
+<!ENTITY znotes_toggletagsmode_accesskey "">
+<!ENTITY znotes_toggletagsmode_key "">
+<!ENTITY znotes_toggletagsmode_key_modifiers "">
+<!ENTITY znotes_toggletagsmode_keycode "">
+
 <!-- OPTIONS -->
 
 <!ENTITY mainCaption.xhtml.label "Général">
 <!ENTITY isSpellcheckEnabled.xhtml.label "Activer la correction orthographique par défaut">
+<!ENTITY isTagsModeActive.xhtml.label "Barre étiquettes par défaut">
 <!ENTITY keysCaption.xhtml.label "Raccourcis clavier">
