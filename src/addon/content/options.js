@@ -66,6 +66,7 @@ ru.akman.znotes.Options = function() {
   var isHighlightRow = null;
   var isReplaceBackground = null;
   var isConfirmExit = null;
+  var isExitQuitTB = null;
   var docTypeMenuList = null;
   var docTypeMenuPopup = null;
   var keysPlatformGroupBox = null;
@@ -541,6 +542,7 @@ ru.akman.znotes.Options = function() {
     isPlaySound.checked = optionsPrefs["main"]["default"].isPlaySound;
     isReplaceBackground.checked = optionsPrefs["main"]["default"].isReplaceBackground;
     isConfirmExit.checked = optionsPrefs["main"]["default"].isConfirmExit;
+    isExitQuitTB.checked = optionsPrefs["main"]["default"].isExitQuitTB;
     isHighlightRow.checked = optionsPrefs["main"]["default"].isHighlightRow;
     defaultDocumentType = optionsPrefs["main"]["default"].defaultDocumentType;
     populateDocumentTypePopup();
@@ -656,6 +658,9 @@ ru.akman.znotes.Options = function() {
     currentPrefs.isConfirmExit = isConfirmExit.checked;
     isChanged = isChanged ||
       ( currentPrefs.isConfirmExit !== originalPrefs.isConfirmExit );
+    currentPrefs.isExitQuitTB = isExitQuitTB.checked;
+    isChanged = isChanged ||
+      ( currentPrefs.isExitQuitTB !== originalPrefs.isExitQuitTB );
     currentPrefs.isHighlightRow = isHighlightRow.checked;
     isChanged = isChanged ||
       ( currentPrefs.isHighlightRow !== originalPrefs.isHighlightRow );
@@ -729,6 +734,7 @@ ru.akman.znotes.Options = function() {
       "isPlaySound": true,
       "isReplaceBackground": true,
       "isConfirmExit": true,
+      "isExitQuitTB": true,
       "isHighlightRow": false
     };
     result.shortcuts = {};
@@ -771,6 +777,7 @@ ru.akman.znotes.Options = function() {
       "isPlaySound": Utils.IS_PLAY_SOUND,
       "isReplaceBackground": Utils.IS_REPLACE_BACKGROUND,
       "isConfirmExit": Utils.IS_CONFIRM_EXIT,
+      "isExitQuitTB": Utils.IS_EXIT_QUIT_TB,
       "isHighlightRow": Utils.IS_HIGHLIGHT_ROW
     };
     try {
@@ -792,6 +799,7 @@ ru.akman.znotes.Options = function() {
     prefsBundle.setBoolPref( "isPlaySound", prefs.isPlaySound );
     prefsBundle.setBoolPref( "isReplaceBackground", prefs.isReplaceBackground );
     prefsBundle.setBoolPref( "isConfirmExit", prefs.isConfirmExit );
+    prefsBundle.setBoolPref( "isExitQuitTB", prefs.isExitQuitTB );
     prefsBundle.setBoolPref( "isHighlightRow", prefs.isHighlightRow );
     prefsBundle.setCharPref( "defaultDocumentType", prefs.defaultDocumentType );
     prefsBundle.setCharPref( "main_shortcuts", JSON.stringify( prefs.shortcuts ) );
@@ -867,6 +875,7 @@ ru.akman.znotes.Options = function() {
     isPlaySound.checked = currentPrefs.isPlaySound;
     isReplaceBackground.checked = currentPrefs.isReplaceBackground;
     isConfirmExit.checked = currentPrefs.isConfirmExit;
+    isExitQuitTB.checked = currentPrefs.isExitQuitTB;
     isHighlightRow.checked = currentPrefs.isHighlightRow;
     defaultDocumentType = currentPrefs.defaultDocumentType;
     populateDocumentTypePopup();
@@ -935,6 +944,10 @@ ru.akman.znotes.Options = function() {
     isPlaySound = document.getElementById( "isPlaySound" );
     isReplaceBackground = document.getElementById( "isReplaceBackground" );
     isConfirmExit = document.getElementById( "isConfirmExit" );
+    isExitQuitTB = document.getElementById( "isExitQuitTB" );
+    if ( Utils.IS_STANDALONE ) {
+      isExitQuitTB.setAttribute( "hidden", true );
+    }
     isHighlightRow = document.getElementById( "isHighlightRow" );
     docTypeMenuList = document.getElementById( "docTypeMenuList" );
     docTypeMenuPopup = document.getElementById( "docTypeMenuPopup" );

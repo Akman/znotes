@@ -272,6 +272,13 @@ var PrefsManager = function() {
       Utils.IS_CONFIRM_EXIT =
         pub.getBoolPref( "isConfirmExit" );
       //
+      if ( !pub.hasPref( "isExitQuitTB" ) ) {
+        pub.setBoolPref( "isExitQuitTB",
+          Utils.IS_EXIT_QUIT_TB );
+      }
+      Utils.IS_EXIT_QUIT_TB =
+        pub.getBoolPref( "isExitQuitTB" );
+      //
       if ( !pub.hasPref( "isMainMenubarVisible" ) ) {
         pub.setBoolPref( "isMainMenubarVisible",
           Utils.IS_MAINMENUBAR_VISIBLE );

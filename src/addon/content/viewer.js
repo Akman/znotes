@@ -153,22 +153,25 @@ ru.akman.znotes.Viewer = function() {
             break;
           }
         }
-        var tabContainer = Utils.getTabContainer();
-        tabContainer.selectedIndex = tabIndex;
+        if ( tabIndex != -1 ) {
+          Utils.getTabContainer().selectedIndex = tabIndex;
+        }
+        Utils.getTabMail().closeTab( currentTab );
       } else {
         var windowService =
           Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
                     .getService( Components.interfaces.nsIWindowWatcher );
         windowService.activeWindow = window;
         window.focus();
+        pub.onClose();
+        window.close();
       }
-      pub.onClose();
     },
     register: function() {
-      observerService.addObserver( this, "znotes-query-quit", false );
+      observerService.addObserver( this, "znotes-quit-accepted", false );
     },
     unregister: function() {
-      observerService.removeObserver( this, "znotes-query-quit" );
+      observerService.removeObserver( this, "znotes-quit-accepted" );
     }
   };
   
@@ -262,7 +265,6 @@ ru.akman.znotes.Viewer = function() {
     var aNote = e.data.deletedNote;
     if ( currentNote == aNote ) {
       if ( currentTab ) {
-        // pub.onClose called indirectly by tab
         Utils.getTabMail().closeTab( currentTab );
       } else {
         pub.onClose();

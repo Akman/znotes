@@ -39,6 +39,7 @@
 <!ENTITY docTypeCaption.label "Type de document par défaut">
 <!ENTITY additionCaption.label "Supplément">
 <!ENTITY isConfirmExit.label "Confirmer la sortie lors de la fermeture de l'application">
+<!ENTITY isExitQuitTB.label "Exiting application leads to closing TB">
 <!ENTITY isReplaceBackground.label "Remplacer la couleur de fond de la note en utilisant la couleur de l'étiquette principale">
 <!ENTITY isHighlightRow.label "Mettre en surbrillance la ligne dans la liste des notes en utilisant la couleur de l'étiquette principale">
 <!ENTITY isPlaySound.label "Jouer un son au démarrage">

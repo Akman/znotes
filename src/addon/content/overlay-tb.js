@@ -41,9 +41,6 @@ Components.utils.import( "resource://znotes/utils.js",
 Components.utils.import( "resource://znotes/event.js",
   ru.akman.znotes.core
 );
-Components.utils.import( "resource://znotes/sessionmanager.js",
-  ru.akman.znotes
-);
 Components.utils.import( "resource://znotes/drivermanager.js",
   ru.akman.znotes
 );
@@ -54,6 +51,9 @@ Components.utils.import( "resource://znotes/tabmonitor.js",
   ru.akman.znotes
 );
 Components.utils.import( "resource://znotes/prefsmanager.js",
+  ru.akman.znotes
+);
+Components.utils.import( "resource://znotes/sessionmanager.js",
   ru.akman.znotes
 );
 Components.utils.import( "resource://znotes/keyset.js",
@@ -71,26 +71,31 @@ ru.akman.znotes.ZNotes = function() {
   var Utils = ru.akman.znotes.Utils;
   var Common = ru.akman.znotes.Common;
 
+  var prefsBundle = ru.akman.znotes.PrefsManager.getInstance();
+  var sessionManager = ru.akman.znotes.SessionManager.getInstance();
+  var tabMonitor = ru.akman.znotes.TabMonitor.getInstance();;
+  
   var mailWindow = null;
   var folderTree = null;
   var threadTree = null;
   
-  var prefsBundle = null;
   var keySet = null;
   var isMainLoaded = false;
   var mainWindow = null;
+  var mainWindowState = null;
   
   // PLATFORM
 
   var platformShutdownObserver = {
     observe: function( aSubject, aTopic, aData ) {
-      aSubject.data = true;
       Utils.IS_QUIT_ENABLED = true;
-      observerService.notifyObservers( null, "znotes-query-quit", null );
-      if ( !Utils.IS_QUIT_ENABLED ) {
-        return;
+      // uncomment this to confirming exiting tb application
+      // observerService.notifyObservers( null, "znotes-quit-requested", null );
+      if ( Utils.IS_QUIT_ENABLED ) {
+        tabMonitor.setActive( false );
+        observerService.notifyObservers( null, "znotes-quit-accepted", null );
       }
-      aSubject.data = false;
+      aSubject.data = !Utils.IS_QUIT_ENABLED;
     },
     register: function() {
       observerService.addObserver( this, "quit-application-requested", false );
@@ -234,7 +239,7 @@ ru.akman.znotes.ZNotes = function() {
     doCommand: function( cmd ) {
       switch ( cmd ) {
         case "znotes_tbopenmaintab_command":
-          Utils.openMainTab( true );
+          doOpenMainWindow();
           break;
         case "znotes_tbnewbook_command":
           doNewBook();
@@ -374,7 +379,7 @@ ru.akman.znotes.ZNotes = function() {
     newBook.setDescription( params.output.description );
     newBook.setDriver( params.output.driver );
     newBook.setConnection( params.output.connection );
-    Utils.openMainTab( true );
+    doOpenMainWindow();
   };
   
   function doSaveMessages() {
@@ -392,6 +397,20 @@ ru.akman.znotes.ZNotes = function() {
       params,
       mainWindow.document.getElementById( "znotes_dummy_command" )
     );
+  };
+  
+  function doOpenMainWindow( background ) {
+    if ( mainWindow ) {
+      Utils.openMainTab( true );
+    } else {
+      sessionManager.init();
+      var persistedState = sessionManager.getPersistedState();
+      if ( persistedState.tabs.length > 0 ) {
+        Utils.openMainTab( !background, persistedState );
+      } else {
+        Utils.openMainTab( !background, null );
+      }
+    }
   };
   
   // FOLDER & THREAD TREE
@@ -447,7 +466,7 @@ ru.akman.znotes.ZNotes = function() {
     }
     tabMail.registerTabType( ru.akman.znotes.MainTabType );
     tabMail.registerTabType( ru.akman.znotes.ContentTabType );
-    tabMail.registerTabMonitor( ru.akman.znotes.TabMonitor );
+    tabMail.registerTabMonitor( tabMonitor );
   };
 
   // PERSISTING STATE
@@ -485,8 +504,8 @@ ru.akman.znotes.ZNotes = function() {
     Utils.initGlobals();
     mailWindow = Utils.getMail3PaneWindow();
     mailWindow.addEventListener( "close", ru.akman.znotes.ZNotes.close, false );
-    prefsBundle = ru.akman.znotes.PrefsManager.getInstance();  
     prefsBundle.loadPrefs();
+    mainWindowState = getState();
     addMessengerListeners();
   };
   
@@ -505,25 +524,22 @@ ru.akman.znotes.ZNotes = function() {
     mainStartupObserver.register();
     mainShutdownObserver.register();
     updateCommandsVisibility();
-    var state = getState();
-    var persistedState = ru.akman.znotes.SessionManager.getPersistedState();
-    if ( persistedState.tabs.length > 0 ) {
-      Utils.openMainTab( state.active, persistedState );
-    } else {
-      if ( state.open ) {
-        Utils.openMainTab( state.active, null );
-      }
+    if ( mainWindowState.open ) {
+      doOpenMainWindow( !mainWindowState.active );
     }
   };
-
+  
   pub.close = function( event ) {
     Utils.IS_QUIT_ENABLED = true;
-    observerService.notifyObservers( null, "znotes-query-quit", null );
+    // uncomment this to confirming closing tb window
+    // observerService.notifyObservers( null, "znotes-quit-requested", null );
     if ( !Utils.IS_QUIT_ENABLED ) {
       event.stopPropagation();
       event.preventDefault();
       return false;
     }
+    tabMonitor.setActive( false );
+    observerService.notifyObservers( null, "znotes-quit-accepted", null );
     return true;
   };
   

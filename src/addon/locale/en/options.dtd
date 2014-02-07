@@ -40,6 +40,7 @@
 <!ENTITY additionCaption.label "Additionally">
 <!ENTITY isReplaceBackground.label "Replace the background color of note using the main tag color">
 <!ENTITY isConfirmExit.label "Confirm exit when closing application">
+<!ENTITY isExitQuitTB.label "Exiting application leads to closing TB">
 <!ENTITY isHighlightRow.label "Highlight row in the note list using the main tag color">
 <!ENTITY isPlaySound.label "Play sound at startup">
 <!ENTITY keysPlatformCaption.label "Keyboard shortcuts">

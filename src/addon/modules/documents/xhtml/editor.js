@@ -3982,9 +3982,9 @@ var Editor = function() {
     };
     
     function onSelectionChanged( event ) {
-      // sometimes parameter function of setTimeout() executing
-      // with currentWindow === null !!!!!!!!!!!! because
-      // setTimeout() ;)
+      if ( !currentWindow ) {
+        return;
+      }
       currentWindow.setTimeout(
         function() {
           if ( isSourceEditingActive ) {

@@ -42,7 +42,10 @@ var SessionManager = function() {
 
   var Utils = ru.akman.znotes.Utils;
 
-  var getEntry = function() {
+  var persistedState = null;
+  var currentState = null;
+  
+  function getEntry() {
     var entry = Utils.getPlacesPath();
     var placeId = Utils.getPlaceId();
     entry.append( placeId );
@@ -53,7 +56,7 @@ var SessionManager = function() {
     return entry.clone();
   };
 
-  var loadSession = function() {
+  function loadSession() {
     var state = {
       tabs: []
     };
@@ -73,18 +76,20 @@ var SessionManager = function() {
     return state;
   };
 
-  var saveSession = function( state ) {
+  function saveSession( state ) {
     var data = JSON.stringify( state );
     var entry = getEntry();
     Utils.writeFileContent( entry, "UTF-8", data );
   };
 
-  var persistedState = loadSession();
-  var currentState = { tabs: [] };
-  saveSession( currentState );
-
   var pub = {};
 
+  pub.init = function() {
+    persistedState = loadSession();
+    currentState = { tabs: [] };
+    saveSession( currentState );
+  };
+  
   pub.getPersistedState = function() {
     return { tabs: persistedState.tabs.slice( 0 ) };
   };
@@ -142,6 +147,10 @@ var SessionManager = function() {
     }
   };
 
+  pub.getInstance = function() {
+    return this;
+  };
+  
   return pub;
 
 }();

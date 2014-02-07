@@ -39,6 +39,7 @@
 <!ENTITY docTypeCaption.label "Тип документа по умолчанию">
 <!ENTITY additionCaption.label "Дополнительно">
 <!ENTITY isConfirmExit.label "Запрашивать подтверждение при закрытии приложения">
+<!ENTITY isExitQuitTB.label "Выход из приложения закрывает TB">
 <!ENTITY isReplaceBackground.label "Заменять цвет фона заметки используя цвет основного тега">
 <!ENTITY isHighlightRow.label "Подсвечивать строки в списке заметок используя цвет основного тега">
 <!ENTITY isPlaySound.label "Воспроизводить звук при запуске">

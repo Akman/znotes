@@ -89,11 +89,12 @@ ru.akman.znotes.Main = function() {
               .getService( Components.interfaces.nsIPrefBranch );
               
   var prefsBundle = ru.akman.znotes.PrefsManager.getInstance();
+  var sessionManager = ru.akman.znotes.SessionManager.getInstance();
+  var tabMonitor = ru.akman.znotes.TabMonitor.getInstance();
 
   var consoleWindow = null;
   
   var windowsList = null;
-  var windowsMonitor = null;
   
   var mainPanel = null;
   var mainToolBox = null;
@@ -250,13 +251,51 @@ ru.akman.znotes.Main = function() {
   
   var platformQuitObserver = {
     observe: function( aSubject, aTopic, aData ) {
-      Utils.IS_QUIT_ENABLED = close();
+      switch ( aTopic ) {
+        case "znotes-quit-requested":
+          Utils.IS_QUIT_ENABLED = true;
+          var testWindowFlag = false;
+          var windowMediator =
+            Components.classes["@mozilla.org/appshell/window-mediator;1"]
+                      .getService( Components.interfaces.nsIWindowMediator );
+          var win = windowMediator.getMostRecentWindow( "znotes:test" );
+          if ( win ) {
+            testWindowFlag = true;
+            win.close();
+          }
+          if ( Utils.IS_CONFIRM_EXIT ) {
+            var params = {
+              input: {
+                title: getString( "main.confirmQuit.title" ),
+                message1: getString( "main.confirmQuit.message" ),
+                kind: 1 // question
+              },
+              output: null
+            };
+            window.openDialog(
+              "chrome://znotes/content/confirmdialog.xul",
+              "",
+              "chrome,dialog=yes,modal=yes,centerscreen,resizable=yes",
+              params
+            ).focus();
+            Utils.IS_QUIT_ENABLED = !!params.output;
+            if ( !Utils.IS_QUIT_ENABLED && testWindowFlag ) {
+              doOpenTestSuiteWindow();
+            }
+          }
+          break;
+        case "znotes-quit-accepted":
+          quit();
+          break;
+      }
     },
     register: function() {
-      observerService.addObserver( this, "znotes-query-quit", false );
+      observerService.addObserver( this, "znotes-quit-requested", false );
+      observerService.addObserver( this, "znotes-quit-accepted", false );
     },
     unregister: function() {
-      observerService.removeObserver( this, "znotes-query-quit" );
+      observerService.removeObserver( this, "znotes-quit-accepted" );
+      observerService.removeObserver( this, "znotes-quit-requested" );
     }
   };
   
@@ -279,6 +318,9 @@ ru.akman.znotes.Main = function() {
         case "isConfirmExit":
           Utils.IS_CONFIRM_EXIT = event.data.newValue;
           break;
+        case "isExitQuitTB":
+          Utils.IS_EXIT_QUIT_TB = event.data.newValue;
+          break;
         case "isHighlightRow":
           Utils.IS_HIGHLIGHT_ROW = event.data.newValue;
           updateTagsCSSRules();
@@ -291,14 +333,6 @@ ru.akman.znotes.Main = function() {
           Utils.IS_EDIT_SOURCE_ENABLED = event.data.newValue;
           currentNoteChanged();
           break;
-        /*
-        case "isOpened":
-          var isOpened = event.data.newValue;
-          if ( !isOpened ) {
-            unload();
-          }
-          break;
-        */
         case "isMainMenubarVisible":
           Utils.IS_MAINMENUBAR_VISIBLE = event.data.newValue;
           updateMainMenubarVisibility();
@@ -1104,21 +1138,22 @@ ru.akman.znotes.Main = function() {
   
   // znotes_exit_command
   function doExit() {
-    if ( !close() ) {
+    Utils.IS_QUIT_ENABLED = true;
+    observerService.notifyObservers( null, "znotes-quit-requested", null );
+    if ( !Utils.IS_QUIT_ENABLED ) {
       return true;
     }
-    // This is necessary for correct session saving
+    tabMonitor.setActive( false );
+    observerService.notifyObservers( null, "znotes-quit-accepted", null );
+    if ( !Utils.IS_STANDALONE ) {
+      Utils.getTabMail().closeTab( Utils.getMainTab() );
+      if ( !Utils.IS_EXIT_QUIT_TB ) {
+        return true;
+      }
+    }
     var appStartupSvc =
       Components.classes["@mozilla.org/toolkit/app-startup;1"]
                 .getService( Components.interfaces.nsIAppStartup );
-    /*
-      eConsiderQuit 0x01  Attempt to quit if all windows are closed.
-      eAttemptQuit  0x02  Try to close all windows, then quit if successful.
-      eForceQuit    0x03  Force all windows to close, then quit.
-      eRestart      0x10  Restart the application after quitting.
-                          The application will be restarted with the same
-                          profile and an empty command line.
-    */
     appStartupSvc.quit( Components.interfaces.nsIAppStartup.eAttemptQuit );
     return true;
   };
@@ -3292,8 +3327,8 @@ ru.akman.znotes.Main = function() {
         // session support for windows (not tabs)
         win.addEventListener( "load", function() {
           windowsList.push( win.name );
-          if ( windowsMonitor && "onTabOpened" in windowsMonitor ) {
-            windowsMonitor.onTabOpened(
+          if ( tabMonitor && "onTabOpened" in tabMonitor ) {
+            tabMonitor.onTabOpened(
               {
                 window: win,
                 bookId: bookId,
@@ -3305,7 +3340,7 @@ ru.akman.znotes.Main = function() {
             );
           }
         }, false );
-        win.addEventListener( "unload", function() {
+        win.addEventListener( "close", function() {
           var index = windowsList.indexOf( win.name );
           if ( index != -1 ) {
             windowsList.splice( index, 1 );
@@ -3318,8 +3353,8 @@ ru.akman.znotes.Main = function() {
               name: "znotesContentTab"
             }
           };
-          if ( windowsMonitor && "onTabClosing" in windowsMonitor ) {
-            windowsMonitor.onTabClosing( tab );
+          if ( tabMonitor && "onTabClosing" in tabMonitor ) {
+            tabMonitor.onTabClosing( tab );
           }
         }, false );
         if ( aBackground ) {
@@ -5287,7 +5322,7 @@ ru.akman.znotes.Main = function() {
   function getPersistedState() {
     var persistedState = null;
     if ( Utils.IS_STANDALONE ) {
-      persistedState = ru.akman.znotes.SessionManager.getPersistedState();
+      persistedState = sessionManager.getPersistedState();
     } else {
       var tab = Utils.getMainTab();
       if ( tab && tab.persistedState ) {
@@ -5321,12 +5356,10 @@ ru.akman.znotes.Main = function() {
   
   function initGlobals() {
     Utils.initGlobals();
-    if ( !Utils.IS_STANDALONE ) {
-      return;
+    if ( Utils.IS_STANDALONE ) {
+      windowsList = [];
     }
-    // XR only
-    windowsList = [];
-    windowsMonitor = ru.akman.znotes.TabMonitor;
+    tabMonitor.setActive( true );
   };
   
   function initMain() {
@@ -5784,7 +5817,7 @@ ru.akman.znotes.Main = function() {
     observerService.notifyObservers( window, "znotes-main-startup", null );
   };
 
-  function unload() {
+  function quit() {
     doneBody();
     removeUpdaters();
     removeControllers();
@@ -5792,66 +5825,8 @@ ru.akman.znotes.Main = function() {
     disconnectPlatformObservers();
     disconnectMutationObservers();
     disconnectPrefsObservers();
+    closeConsole();
   };
-  
-  function close() {
-    var canClose = true;
-    //
-    var testWindowFlag = false;
-    var windowMediator =
-      Components.classes["@mozilla.org/appshell/window-mediator;1"]
-                .getService( Components.interfaces.nsIWindowMediator );
-    var win = windowMediator.getMostRecentWindow( "znotes:test" );
-    if ( win ) {
-      testWindowFlag = true;
-      win.close();
-    }
-    if ( Utils.IS_CONFIRM_EXIT ) {
-      var params = {
-        input: {
-          title: getString( "main.confirmQuit.title" ),
-          message1: getString( "main.confirmQuit.message" ),
-          kind: 1 // question
-        },
-        output: null
-      };
-      window.openDialog(
-        "chrome://znotes/content/confirmdialog.xul",
-        "",
-        "chrome,dialog=yes,modal=yes,centerscreen,resizable=yes",
-        params
-      ).focus();
-      canClose = params.output;
-      if ( !canClose ) {
-        if ( testWindowFlag ) {
-          doOpenTestSuiteWindow();
-        }
-        return false;
-      }
-    }
-    // global:console
-    if ( consoleWindow ) {
-      consoleWindow.removeEventListener( "close", onConsoleClose, true );
-      //consoleWindow.close();
-    }
-    if ( !Utils.IS_STANDALONE ) {
-      unload();
-      return true;
-    }
-    observerService.notifyObservers( window, "znotes-main-shutdown", null );
-    windowsMonitor = null;
-    var windowService =
-      Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
-                .getService( Components.interfaces.nsIWindowWatcher );
-    // znotes:viewer
-    for ( var i = 0; i < windowsList.length; i++ ) {
-      win = windowService.getWindowByName( windowsList[i], null );
-      if ( win ) {
-        win.close();
-      }
-    }
-    return true;
-  };  
   
   // HELPERS
 
@@ -5982,6 +5957,15 @@ ru.akman.znotes.Main = function() {
     }
   };
   
+  function closeConsole() {
+    if ( consoleWindow ) {
+      consoleWindow.removeEventListener( "close", onConsoleClose, true );
+      if ( !Utils.IS_DEBUG_ENABLED ) {
+        consoleWindow.close();
+      }
+    }
+  };
+  
   // PUBLIC
 
   pub.onLoad = function() {
@@ -5989,7 +5973,20 @@ ru.akman.znotes.Main = function() {
   };
 
   pub.onClose = function() {
-    return close();
+    Utils.IS_QUIT_ENABLED = true;
+    observerService.notifyObservers( null, "znotes-quit-requested", null );
+    if ( Utils.IS_QUIT_ENABLED ) {
+      if ( !Utils.IS_STANDALONE ) {
+        prefsBundle.setBoolPref( "isOpened", false );
+      }
+      tabMonitor.setActive( false );
+      observerService.notifyObservers( null, "znotes-quit-accepted", null );
+    }
+    return Utils.IS_QUIT_ENABLED;
+  };
+  
+  pub.onUnload = function() {
+    observerService.notifyObservers( window, "znotes-main-shutdown", null );
   };
   
   return pub;
@@ -5998,3 +5995,4 @@ ru.akman.znotes.Main = function() {
 
 window.addEventListener( "load", ru.akman.znotes.Main.onLoad, false );
 window.addEventListener( "close", ru.akman.znotes.Main.onClose, false );
+window.addEventListener( "unload", ru.akman.znotes.Main.onUnload, false );

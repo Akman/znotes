@@ -44,6 +44,12 @@ Components.utils.import( "resource://znotes/event.js",
 Components.utils.import( "resource://znotes/prefsmanager.js",
   ru.akman.znotes
 );
+Components.utils.import( "resource://znotes/sessionmanager.js",
+  ru.akman.znotes
+);
+Components.utils.import( "resource://znotes/tabmonitor.js",
+  ru.akman.znotes
+);
 Components.utils.import( "resource://znotes/keyset.js",
   ru.akman.znotes
 );
@@ -60,6 +66,8 @@ ru.akman.znotes.ZNotes = function() {
   var Common = ru.akman.znotes.Common;
 
   var prefsBundle = ru.akman.znotes.PrefsManager.getInstance();
+  var sessionManager = ru.akman.znotes.SessionManager.getInstance();
+  var tabMonitor = ru.akman.znotes.TabMonitor.getInstance();
 
   var mainWindow = null;
   var isMainLoaded = false;
@@ -67,6 +75,24 @@ ru.akman.znotes.ZNotes = function() {
   
   // PLATFORM
 
+  var platformShutdownObserver = {
+    observe: function( aSubject, aTopic, aData ) {
+      Utils.IS_QUIT_ENABLED = true;
+      observerService.notifyObservers( null, "znotes-quit-requested", null );
+      if ( Utils.IS_QUIT_ENABLED ) {
+        tabMonitor.setActive( false );
+        observerService.notifyObservers( null, "znotes-quit-accepted", null );
+      }
+      aSubject.data = Utils.IS_QUIT_ENABLED;
+    },
+    register: function() {
+      observerService.addObserver( this, "quit-application-requested", false );
+    },
+    unregister: function() {
+      observerService.removeObserver( this, "quit-application-requested" );
+    }
+  };
+  
   var mainStartupObserver = {
     observe: function( aSubject, aTopic, aData ) {
       mainWindow = aSubject;
@@ -227,7 +253,9 @@ ru.akman.znotes.ZNotes = function() {
   pub.load = function( event ) {
     window.removeEventListener( "load", ru.akman.znotes.ZNotes.load, false );
     Utils.initGlobals();
+    platformShutdownObserver.register();    
     prefsBundle.loadPrefs();
+    sessionManager.init();
     setupKeyset();
     updateKeyset();
     platformController.register();
@@ -240,18 +268,21 @@ ru.akman.znotes.ZNotes = function() {
 
   pub.unload = function( event ) {
     platformController.unregister();
+    platformShutdownObserver.unregister();    
     closeAllWindows();
     return true;
   };
 
   pub.close = function( event ) {
     Utils.IS_QUIT_ENABLED = true;
-    observerService.notifyObservers( null, "znotes-query-quit", null );
+    observerService.notifyObservers( null, "znotes-quit-requested", null );
     if ( !Utils.IS_QUIT_ENABLED ) {
       event.stopPropagation();
       event.preventDefault();
       return false;
     }
+    tabMonitor.setActive( false );
+    observerService.notifyObservers( null, "znotes-quit-accepted", null );
     return true;
   };
   

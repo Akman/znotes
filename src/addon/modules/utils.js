@@ -69,6 +69,7 @@ var Utils = function() {
   var isMainMenubarVisible = false;
   var isMainToolbarVisible = true;
   var isConfirmExit = true;
+  var isExitQuitTB = true;
   var isReplaceBackground = true;
   var isHighlightRow = false;
   var defaultDocumentType = "application/xhtml+xml";
@@ -365,6 +366,14 @@ var Utils = function() {
     
     set IS_CONFIRM_EXIT( value ) {
       isConfirmExit = value;
+    },
+    
+    get IS_EXIT_QUIT_TB() {
+      return isExitQuitTB;
+    },
+    
+    set IS_EXIT_QUIT_TB( value ) {
+      isExitQuitTB = value;
     }
 
   };
@@ -560,10 +569,9 @@ var Utils = function() {
   };
 
   pub.switchToMainTab = function() {
-    if ( pub.IS_STANDALONE ) {
-      return;
+    if ( !pub.IS_STANDALONE ) {
+      pub.openMainTab( true );
     }
-    pub.openMainTab( true );
   };
   
   pub.openMainTab = function( isActive, persistedState ) {

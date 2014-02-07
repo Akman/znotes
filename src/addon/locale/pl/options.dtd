@@ -40,6 +40,7 @@
 <!ENTITY docTypeCaption.label "Domyślny typ dokumentu">
 <!ENTITY additionCaption.label "Dodatkowo">
 <!ENTITY isConfirmExit.label "Potwierdź wyjście po zamknięciu aplikacji">
+<!ENTITY isExitQuitTB.label "Exiting application leads to closing TB">
 <!ENTITY isReplaceBackground.label "Zastąp kolor tła notatkę, za pomocą głównego koloru znacznika">
 <!ENTITY isHighlightRow.label "Zaznacz wiersz w liście notatkę przy wykorzystaniu głównego koloru znacznika">
 <!ENTITY isPlaySound.label "Odtwórz dźwięk przy starcie">

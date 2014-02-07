@@ -134,7 +134,8 @@ ru.akman.znotes.ContentTabType = function() {
       !docShell.contentViewer.permitUnload()
     );
     if ( canClose ) {
-      canClose = aTab.browser.contentWindow.ru.akman.znotes.Viewer.onClose();
+      canClose = aTab.browser.contentWindow
+                             .ru.akman.znotes.Viewer.onClose();
     }
     return canClose;
   };
