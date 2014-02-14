@@ -708,12 +708,6 @@ var Utils = function() {
     throw Components.results.NS_ERROR_UNEXPECTED;
   };
 
-  pub.getStatusbarPanel = function() {
-    return pub.MAIN_WINDOW.document.getElementById(
-      "znotes_statusbarpanel"
-    );
-  };
-
   pub.dumpObject = function( obj, chr, cnt ) {
     if ( obj === undefined ) {
       pub.log( "undefined" );
@@ -1424,6 +1418,66 @@ var Utils = function() {
     }
   };
 
+  pub.getTempFileEntry = function( fileName, fileSuffix ) {
+    var directoryService =
+      Components.classes["@mozilla.org/file/directory_service;1"]
+                .getService( Components.interfaces.nsIProperties );
+    var tempDirectory =
+      directoryService.get( "TmpD", Components.interfaces.nsIFile );
+    var tmpDir, tmpFile;
+    var tmpFileSuffix = fileSuffix ? fileSuffix : ".tmp";
+    var tmpFileName = fileName ? fileName : Utils.createUUID().toLowerCase();
+    var tmpName = tmpFileName + tmpFileSuffix;
+    var tmpDirName = "";
+    do {
+      tmpDir = tempDirectory.clone();
+      if ( tmpDirName ) {
+        tmpDir.append( tmpDirName );
+      }
+      tmpFile = tmpDir.clone();
+      tmpFile.append( tmpName );
+      tmpDirName = Utils.createUUID();
+    } while (
+      tmpFile.exists() && !tmpFile.isDirectory()
+    );
+    if ( !tmpDir.exists() || !tmpDir.isDirectory() ) {
+      tmpDir.create(
+        Components.interfaces.nsIFile.DIRECTORY_TYPE,
+        parseInt( "0774", 8 )
+      );
+    }
+    return tmpFile.clone();
+  };
+  
+  pub.getEntriesToSaveContent = function( fileSuffix, dirSuffix ) {
+    var directoryService =
+      Components.classes["@mozilla.org/file/directory_service;1"]
+                .getService( Components.interfaces.nsIProperties );
+    var tempDirectory =
+      directoryService.get( "TmpD", Components.interfaces.nsIFile );
+    var tmpName, tmpFile, tmpDir;
+    var tmpDirSuffix = dirSuffix ? dirSuffix : "_files";
+    var tmpFileSuffix = fileSuffix ? fileSuffix : ".xhtml";
+    do {
+      tmpName = Utils.createUUID();
+      tmpFile = tempDirectory.clone();
+      tmpFile.append( tmpName + tmpFileSuffix );
+      tmpDir = tempDirectory.clone();
+      tmpDir.append( tmpName + tmpDirSuffix );
+    } while (
+      tmpDir.exists() && tmpDir.isDirectory() ||
+      tmpFile.exists() && !tmpFile.isDirectory()
+    );
+    tmpDir.create(
+      Components.interfaces.nsIFile.DIRECTORY_TYPE,
+      parseInt( "0774", 8 )
+    );
+    return {
+      fileEntry: tmpFile.clone(),
+      directoryEntry: tmpDir.clone()
+    };
+  };
+
   pub.saveContent = function( doc, fileEntry, dirEntry, mime, onsave, onerror ) {
     var ciWBP = Components.interfaces.nsIWebBrowserPersist;
     var ciWPL = Components.interfaces.nsIWebProgressListener;
@@ -1432,7 +1486,6 @@ var Utils = function() {
     var webBrowserPersist =
       Components.classes["@mozilla.org/embedding/browser/nsWebBrowserPersist;1"]
                 .createInstance( ciWBP );
-                
     /*
     PERSIST_STATE_READY       Persister is ready to save data.
     PERSIST_STATE_SAVING      Persister is saving data.
@@ -1484,13 +1537,15 @@ var Utils = function() {
     var encodingFlags = null;
     var progressListener = {
       QueryInterface: function( aIID ) {
-        if ( aIID.equals( ciWPL ) || aIID.equals( ciSWR ) || aIID.equals( ciS ) ) {
+        if ( aIID.equals( ciWPL ) || aIID.equals( ciSWR ) ||
+             aIID.equals( ciS ) ) {
           return this;
         }
         throw Components.results.NS_NOINTERFACE;
       },
       onStateChange: function( aWebProgress, aRequest, aStateFlags, aStatus ) {
-        if ( aStateFlags & ciWPL.STATE_IS_NETWORK && aStateFlags & ciWPL.STATE_STOP ) {
+        if ( aStateFlags & ciWPL.STATE_IS_NETWORK &&
+             aStateFlags & ciWPL.STATE_STOP ) {
           webBrowserPersist.progressListener = null;
           if ( !Components.isSuccessCode( aStatus ) ) {
             onerror( pub.getErrorName( aStatus ) );
@@ -1673,16 +1728,25 @@ var Utils = function() {
   // https://bugzilla.mozilla.org/show_bug.cgi?id=115107
   // Bug 115107 - CSS not fixed up by webbrowserpersist.
   pub.inlineStyles = function( dom, dirEntry, onsave ) {
-    var ioService = Components.classes["@mozilla.org/network/io-service;1"]
-                              .getService( Components.interfaces.nsIIOService );
+    var ioService =
+      Components.classes["@mozilla.org/network/io-service;1"]
+                .getService( Components.interfaces.nsIIOService );
+    var mimeService =
+      Components.classes["@mozilla.org/mime;1"]
+                .getService( Components.interfaces.nsIMIMEService );
     var processStyleSheet = function( sheet, rules, urls, dir, onloadresource ) {
-      var rulesCount = 0;
+      var rulesCount, current, href, sheetURI;
+      var rule, commentFlag;
+      var style, propertiesCount, urlFlag, cssText;
+      var name, value, priority, index, qIndex, sIndex, mimeType;
+      var url, uri, scheme, fileName, filePrefix, fileSuffix, fileEntry;
+      rulesCount = 0;
       try {
         rulesCount = sheet.cssRules.length;
       } catch ( e ) {
       }
-      var current = sheet;
-      var href = current.href;
+      current = sheet;
+      href = current.href;
       while ( !href ) {
         if ( current.parentStyleSheet ) {
           current = current.parentStyleSheet;
@@ -1691,10 +1755,10 @@ var Utils = function() {
           href = dom.documentURI;
         }
       }
-      var sheetURI = ioService.newURI( href, null, null );
-      var commentFlag = false;
+      sheetURI = ioService.newURI( href, null, null );
+      commentFlag = false;
       for ( var j = 0; j < rulesCount; j++ ) {
-        var rule = sheet.cssRules[j];
+        rule = sheet.cssRules[j];
         // NOT IMPORT_RULE
         if ( !commentFlag && rule.type != 3 ) {
           commentFlag = true;
@@ -1706,50 +1770,76 @@ var Utils = function() {
               processStyleSheet( rule.styleSheet, rules, urls, dir, onloadresource );
             }
             break;
-          case 4: // MEDIA_RULE
-            rules.push( rule.cssText );
-            break;
           case 5: // FONT_FACE_RULE
-            rules.push( rule.cssText );
-            break;
+            rule.selectorText = "@font-face";
           case 1: // STYLE_RULE
-          case 6: // PAGE_RULE
-            var style = rule.style;
-            var propertiesCount = style.length;
-            var urlFlag = false;
-            var cssText = rule.selectorText + " {";
+            style = rule.style;
+            propertiesCount = style.length;
+            urlFlag = false;
+            cssText = rule.selectorText + " {";
             for ( var k = 0; k < propertiesCount; k++ ) {
-              var name = style[k];
-              var value = style.getPropertyValue( name );
-              var priority = style.getPropertyPriority( name );
-              var urlRes = /^(url\(\")(.+)(\"\))$/i.exec( value );
-              if ( urlRes ) {
-                urlFlag = true;
-                var url = sheetURI.resolve( urlRes[2] );
-                if ( ! ( url in urls ) ) {
-                  var uri = ioService.newURI( url, null, null );
-                  var fileName = uri.path.substr( uri.path.lastIndexOf( "/" ) + 1 );
-                  var index = fileName.indexOf( "?" );
-                  fileName = index < 0 ? fileName : fileName.substring( 0, index );
-                  var fileEntry = dirEntry.clone();
-                  fileEntry.append( fileName );
-                  while ( fileEntry.exists() && !fileEntry.isDirectory() ) {
-                    fileName = "_" + fileName;
-                    fileEntry = dirEntry.clone();
-                    fileEntry.append( fileName );                  
+              name = style[k];
+              value = style.getPropertyValue( name );
+              priority = style.getPropertyPriority( name );
+              value = value.replace( /url\s*\(\s*(['"]?)(\S+)\1\s*\)/img,
+                function( s0, s1, s2 ) {
+                  urlFlag = true;
+                  url = sheetURI.resolve( s2 );
+                  uri = ioService.newURI( url, null, null );
+                  scheme = uri.scheme;
+                  fileSuffix = "";
+                  if ( scheme === "data" ) {
+                    mimeType = url.substring( url.indexOf( ":" ) + 1,
+                      url.indexOf( ";" ) );
+                    fileName = pub.createUUID().toLowerCase() + "." +
+                               mimeService.getPrimaryExtension( mimeType, "" );
+                  } else {
+                    url = uri.prePath;
+                    index = uri.path.lastIndexOf( "/" );
+                    fileName = uri.path.substr( index + 1 );
+                    filePrefix = uri.path.substring( 0, index + 1 );
+                    qIndex = fileName.indexOf( "?" );
+                    sIndex = fileName.indexOf( "#" );
+                    if ( qIndex != -1 ) {
+                      if ( sIndex != -1 ) {
+                        index = sIndex < qIndex ? sIndex : qIndex;
+                      } else {
+                        index = qIndex;
+                      }
+                    } else {
+                      index = sIndex;
+                    }
+                    if ( index != -1 ) {
+                      fileSuffix = fileName.substring( index );
+                      fileName = fileName.substring( 0, index );
+                    }
+                    url += filePrefix + fileName;
                   }
-                  urls[url] = fileEntry;
-                  urls.length++;
-                  pub.loadResource( url, fileEntry, onloadresource );
+                  if ( ! ( url in urls ) ) {
+                    fileEntry = dirEntry.clone();
+                    fileEntry.append( fileName );
+                    while ( fileEntry.exists() && !fileEntry.isDirectory() ) {
+                      fileName = "_" + fileName;
+                      fileEntry = dirEntry.clone();
+                      fileEntry.append( fileName );                  
+                    }
+                    urls[url] = {
+                      entry: fileEntry,
+                      suffix: fileSuffix
+                    };
+                    urls.length++;
+                    pub.loadResource( url, fileEntry, onloadresource );
+                  }
+                  return "url(" + s1 + urls[url].entry.leafName +
+                         urls[url].suffix + s1 + ")";
                 }
-                value = 'url( "' + urls[url].leafName + '" )';
-              }
+              );
               cssText += " " + name + ": " + value + ( priority == "" ? "" : " " + priority ) + ";"; 
             }
             cssText += " }";
             rules.push( urlFlag ? cssText : rule.cssText );
             break;
-          default: // UNKNOWN
+          default: // MEDIA_RULE, PAGE_RULE, CHARSET_RULE
             rules.push( rule.cssText );
             break;
         }
@@ -1759,25 +1849,27 @@ var Utils = function() {
       }
     };
     //
-    var saveFlag = false;
-    var urls = {};
+    var saveFlag = false, urls = {}, rules = [];
     urls.length = 0;
-    var onLoadResource = function( url, entry, result ) {
-      if ( url in urls ) {
-        delete urls[url];
-        urls.length--;
-        if ( urls.length == 0 ) {
-          if ( !saveFlag ) {
-            saveFlag = true;
-            onsave();
+    for ( var i = 0; i < dom.styleSheets.length; i++ ) {
+      processStyleSheet(
+        dom.styleSheets[i],
+        rules,
+        urls,
+        dirEntry,
+        function ( url, entry, result ) {
+          if ( url in urls ) {
+            delete urls[url];
+            urls.length--;
+            if ( urls.length == 0 ) {
+              if ( !saveFlag ) {
+                saveFlag = true;
+                onsave();
+              }
+            }
           }
         }
-      }
-    };
-    //
-    var rules = [];
-    for ( var i = 0; i < dom.styleSheets.length; i++ ) {
-      processStyleSheet( dom.styleSheets[i], rules, urls, dirEntry, onLoadResource );
+      );
     }
     if ( rules.length == 0 ) {
       if ( !saveFlag ) {
@@ -1801,15 +1893,35 @@ var Utils = function() {
     }
   };
   
-  /**
-   * @see /chrome/comm/content/communicator/contentAreaClick.js
-   *
-   * Extract the href from the link click event.
-   * We look for HTMLAnchorElement, HTMLAreaElement, HTMLLinkElement,
-   * HTMLInputElement.form.action, and nested anchor tags.
-   *
-   * @return href for the url being clicked
-   */
+  pub.getURLFromRequest = function( aRequest ) {
+    if ( !aRequest ) {
+      return "";
+    }
+    var aURI;
+    try {
+      aURI = aRequest.QueryInterface( Components.interfaces.nsIChannel ).URI;
+    } catch ( e ) {
+      aURI = null;
+    }
+    return pub.getURLFromURI( aURI );
+  };
+  
+  pub.getURLFromURI = function( aURI ) {
+    if ( !aURI ) {
+      return "";
+    }
+    var result, nsIURIFixup;
+    try {
+      nsIURIFixup =
+        Components.classes["@mozilla.org/docshell/urifixup;1"]
+                  .getService( Components.interfaces.nsIURIFixup );
+      result = nsIURIFixup.createExposableURI( aURI ).spec;
+    } catch( e ) {
+      result = aURI.spec;
+    }
+    return result;
+  };
+  
   pub.getHREFForClickEvent = function( aEvent, aDontCheckInputElement ) {
     var href = null;
     var target = aEvent.target;
@@ -1835,14 +1947,6 @@ var Utils = function() {
     return href;
   };
 
-  /**
-   * @see /chrome/comm/content/communicator/contentAreaClick.js
-   *
-   * Forces a url to open in an external application according to the protocol
-   * service settings.
-   *
-   * @param url  A url string or an nsIURI containing the url to open.
-   */
   pub.openLinkExternally = function( url ) {
     var uri = url;
     if ( !( uri instanceof Components.interfaces.nsIURI ) ) {
@@ -1895,7 +1999,11 @@ var Utils = function() {
         return name;
       }
     }
-    return "" + code;
+    var e = new Components.Exception( "", code );
+    if ( e.name ) {
+      return e.name;
+    }
+    return "0x" + Number( code ).toString( 16 ).toUpperCase();
   };
 
   pub.updateKeyAttribute = function( node ) {

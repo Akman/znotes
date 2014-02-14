@@ -40,7 +40,8 @@
 
 <!DOCTYPE window SYSTEM "chrome://znotes/locale/viewer.dtd">
 
-<window xmlns:html="http://www.w3.org/1999/xhtml" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+<window xmlns:html="http://www.w3.org/1999/xhtml"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   id="znotes"
   windowtype="znotes:viewer"
   title="&viewer_window_title;"
@@ -69,8 +70,11 @@
   <vbox id="noteBodyView" flex="1" class="noteBodyView" />
 
   <statusbar id="znotes_statusbar" class="chromeclass-status znotes_statusbar">
-    <spacer id="znotes_statusbar_spacer" flex="1"/>
-    <statusbarpanel id="znotes_statusbarpanel"/>
+    <statusbarpanel id="znotes_statusbarpanel" flex="1">
+      <image id="znotes_statusbarpanellogo" />
+      <label id="znotes_statusbarpanellabel" />
+      <spacer id="znotes_statusbar_spacer" flex="1"/>      
+    </statusbarpanel>
   </statusbar>
   
 </window>

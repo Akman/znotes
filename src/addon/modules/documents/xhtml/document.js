@@ -332,20 +332,23 @@ var Document = function() {
   };
   
   pub.serializeToString = function( aDOM ) {
+    var fullHREF, relativeHREF, result;
     var base = aDOM.getElementsByTagName( "base" ).length > 0 ?
       aDOM.getElementsByTagName( "base" )[0] : null;
     if ( base ) {
-      var fullHREF = base.getAttribute( "href" );
-      var relativeHREF = fullHREF.substring( 0, fullHREF.length - 1 );
-      relativeHREF =
-        relativeHREF.substring( relativeHREF.lastIndexOf( "/" ) + 1 ) + "/";
-      base.setAttribute( "href", relativeHREF );
+      fullHREF = base.getAttribute( "href" );
+      if ( fullHREF ) {
+        relativeHREF = fullHREF.substring( 0, fullHREF.length - 1 );
+        relativeHREF =
+          relativeHREF.substring( relativeHREF.lastIndexOf( "/" ) + 1 ) + "/";
+        base.setAttribute( "href", relativeHREF );
+      }
     }
-    var result =
+    result =
       Components.classes["@mozilla.org/xmlextras/xmlserializer;1"]
                 .createInstance( Components.interfaces.nsIDOMSerializer )
                 .serializeToString( aDOM );
-    if ( base ) {
+    if ( base && fullHREF ) {
       base.setAttribute( "href", fullHREF );
     }
     return result.replace( /\r\n/g, "\n" );

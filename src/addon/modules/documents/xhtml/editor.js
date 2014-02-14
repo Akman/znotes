@@ -73,6 +73,9 @@ var Editor = function() {
     var atomService =
       Components.classes["@mozilla.org/atom-service;1"]
                 .getService( Components.interfaces.nsIAtomService );
+    var observerService =
+      Components.classes["@mozilla.org/observer-service;1"]
+                .getService( Components.interfaces.nsIObserverService );
     
     var self = this;
     
@@ -4162,6 +4165,19 @@ var Editor = function() {
       return Utils.clickHandler( event );
     };
     
+    function designOverHandler( event ) {
+      var href = "", element = event.target;
+      while ( element ) {
+        if ( element.nodeName === "a" ) {
+          href = element.href;
+          break;
+        }
+        element = element.parentNode;
+      }
+      observerService.notifyObservers( currentWindow, "znotes-href", href );
+      return true;
+    };
+    
     // DESIGN EDITOR EVENTS
     
     function updateDesignEditorDirtyState() {
@@ -4720,6 +4736,7 @@ var Editor = function() {
     function addEventListeners() {
       editorTabs.addEventListener( "select", onEditorTabSelect, false );
       designFrame.addEventListener( "click", designClickHandler, false );
+      designFrame.addEventListener( "mouseover", designOverHandler, false );
       //
       designFrame.contentDocument.addEventListener( "mouseup",
         onSelectionChanged, false );
@@ -4752,6 +4769,7 @@ var Editor = function() {
     function removeEventListeners() {
       editorTabs.removeEventListener( "select", onEditorTabSelect, false );
       designFrame.removeEventListener( "click", designClickHandler, false );
+      designFrame.removeEventListener( "mouseover", designOverHandler, false );
       //
       if ( currentNote && currentNote.isExists() ) {
         designFrame.contentDocument.removeEventListener( "mouseup",

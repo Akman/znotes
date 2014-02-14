@@ -32,3 +32,6 @@
 
 /* ***** classic/1.0 common **** */
 
+#znotes_statusbarpanellogo {
+  list-style-image: url("chrome://znotes_images/skin/net-16x16.png");
+}

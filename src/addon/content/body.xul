@@ -36,7 +36,6 @@
 <?xul-overlay href="chrome://znotes/content/attachments.xul" ?>
 <?xul-overlay href="chrome://znotes/content/content.xul" ?>
 <?xul-overlay href="chrome://znotes/content/relator.xul" ?>
-<?xul-overlay href="chrome://znotes/content/loader.xul" ?>
 <?xul-overlay href="chrome://znotes/content/editor.xul" ?>
 
 <!DOCTYPE overlay SYSTEM "chrome://znotes/locale/body.dtd">
@@ -104,7 +103,6 @@
       <vbox id="noteMainView" flex="1">
         <deck id="noteViewDeck" flex="1" selectedIndex="0">
           <vbox id="noteView" flex="1" />
-          <vbox id="loadView" flex="1" />
         </deck>
       </vbox>
     </vbox>

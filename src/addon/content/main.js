@@ -104,12 +104,12 @@ ru.akman.znotes.Main = function() {
   var mainAppMenu = null;
   var mainMenu = null;
   
+  var statusBar = null;
   var statusBarPanel = null;
   var statusBarLogo = null;
   var statusBarLabel = null;
   
   var newNoteButtonMenuPopup = null;
-  var importNoteButtonMenuPopup = null;
   var selectedPopupItem = null;
   
   var mutationObservers = null;
@@ -221,7 +221,6 @@ ru.akman.znotes.Main = function() {
     onNoteChanged: onNoteChanged,
     onNoteTypeChanged: onNoteTypeChanged,
     onNoteLoadingChanged: onNoteLoadingChanged,
-    onNoteStatusChanged: onNoteStatusChanged,
     onNoteTagsChanged: onNoteTagsChanged,
     onNoteMainTagChanged: onNoteMainTagChanged,
     onNoteMainContentChanged: onNoteMainContentChanged,
@@ -299,9 +298,33 @@ ru.akman.znotes.Main = function() {
     }
   };
   
-  //
+  // HELPER OBSERVER
+  
+  var helperObserver = {
+    observe: function( aSubject, aTopic, aData ) {
+      switch ( aTopic ) {
+        case "znotes-href":
+          if ( aSubject != window || !currentNote ||
+               currentNote.getMode() == "editor" ) {
+            break;
+          }
+          if ( aData ) {
+            statusBarLabel.setAttribute( "value", aData );
+          } else {
+            statusBarLabel.setAttribute( "value", "" );
+          }
+          break;
+      }
+    },
+    register: function() {
+      observerService.addObserver( this, "znotes-href", false );
+    },
+    unregister: function() {
+      observerService.removeObserver( this, "znotes-href" );
+    }
+  };
+  
   // PREFERENCES
-  //
   
   var prefsBundleObserver = {
     onPrefChanged: function( event ) {
@@ -1676,7 +1699,7 @@ ru.akman.znotes.Main = function() {
           getValidNoteName( category, subject ),
           "text/plain"
         );
-        note.setDocument( textBodies.join("") );
+        note.setDocument( textBodies.join( "" ) );
         setAttachments( note );
         setAuthor( note );
       }
@@ -1738,82 +1761,32 @@ ru.akman.znotes.Main = function() {
   };
 
   // znotes_importnote_command
-  
-  function updateImportNoteMenuPopup() {
-    importNoteButtonMenuPopup = document.getElementById(
-      "znotes_importnote_button_menupopup" );
-    if ( !importNoteButtonMenuPopup ) {
-      return;
-    }
-    while ( importNoteButtonMenuPopup.firstChild ) {
-      importNoteButtonMenuPopup.removeChild(
-        importNoteButtonMenuPopup.firstChild );
-    }
-    var docs = ru.akman.znotes.DocumentManager.getInstance().getDocuments();
-    for ( var name in docs ) {
-      var doc = docs[name];
-      var menuItem = document.createElement( "menuitem" );
-      menuItem.className = "menuitem-iconic";
-      menuItem.setAttribute( "id", "importNoteButtonMenuPopup_" +
-        doc.getName() );
-      menuItem.setAttribute( "label", " " + doc.getDescription() );
-      menuItem.setAttribute( "tooltiptext", doc.getName() +
-        "-" + doc.getVersion() + " : " + doc.getType() );
-      menuItem.style.setProperty( "list-style-image",
-        "url( '" + doc.getIconURL() + "' )" , "important" );
-      menuItem.addEventListener( "command", updateSelectedPopupItem, false );
-      importNoteButtonMenuPopup.appendChild( menuItem );
-    }
-  };
-  
-  function doImportNote() {
-    var id = selectedPopupItem ? selectedPopupItem.getAttribute( "id" ) : "";
-    selectedPopupItem = null;
-    var docType = Utils.DEFAULT_DOCUMENT_TYPE;
-    if ( id.indexOf( "importNoteButtonMenuPopup_" ) == 0 ) {
-      var doc = ru.akman.znotes.DocumentManager.getInstance().getDocumentByName(
-        // document name starts from position 26
-        // importNoteButtonMenuPopup_XXXXXXXXX
-        // 012345678901234567890123456
-        id.substr( 26 )
+  function doImportNote( note, url, silent ) {
+    var windowMediator =
+      Components.classes["@mozilla.org/appshell/window-mediator;1"]
+                .getService( Components.interfaces.nsIWindowMediator );
+    var windowWatcher =
+      Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
+                .getService( Components.interfaces.nsIWindowWatcher );
+    var aWindow = windowMediator.getMostRecentWindow( "znotes:browser" );
+    if ( aWindow ) {
+      windowWatcher.activeWindow = aWindow;
+    } else {
+      aWindow = window.open(
+        "chrome://znotes/content/browser.xul",
+        "znotes:browser",
+        "chrome,toolbar,status,resizable,centerscreen"
       );
-      if ( doc ) {
-        docType = doc.getType();
-      }
+      aWindow.arguments = [
+        {
+          note: note ? note : null,
+          url: url ? url : "",
+          silent: ( silent === undefined ) ? false : silent,
+          iconsize: mainToolBar.getAttribute( "iconsize" )
+        }
+      ];
     }
-    var params = {
-      input: {
-        title: getString( "main.note.import.title" ),
-        caption: " " + getString( "main.note.import.caption" ) + " ",
-        value: "http://"
-      },
-      output: null
-    };
-    window.openDialog(
-      "chrome://znotes/content/inputdialog.xul",
-      "",
-      "chrome,dialog=yes,modal=yes,centerscreen,resizable=yes",
-      params
-    ).focus();
-    if ( !params.output ) {
-      return true;
-    }
-    var url = params.output.result;
-    url = url.replace(/(^\s+)|(\s+$)/g, "");
-    if ( url.length == 0 ) {
-      return true;
-    }
-    var category = currentCategory;
-    if ( currentBook.getSelectedTree() == "Tags" )
-      category = currentBook.getContentTree().getRoot();
-    var name = getValidNoteName( category,
-      getString( "main.note.import.name" ) );
-    var aNote = createNote( currentBook, category, name, docType );
-    aNote.load( url );
-    var aRow = notesList.indexOf( aNote );
-    noteTreeBoxObject.ensureRowIsVisible( aRow );
-    noteTree.view.selection.select( aRow );
-    return true;
+    aWindow.focus();
   };
 
   // znotes_deletenote_command
@@ -2180,7 +2153,6 @@ ru.akman.znotes.Main = function() {
   function onCustomizeMainToolbarDone( isChanged ) {
     body.updateStyle( { iconsize: mainToolBar.getAttribute( "iconsize" ) } );
     updateNewNoteMenuPopup();
-    updateImportNoteMenuPopup();
     updateMainCommands();
     updateEditCommands();
     updateQuickFilterState();
@@ -3147,7 +3119,7 @@ ru.akman.znotes.Main = function() {
     }
     var url = "chrome://znotes_welcome/content/index_" +
       Utils.getSiteLanguage() + ".xhtml";
-    note.load( url );
+    doImportNote( note, url, true );
     return note;
   };
 
@@ -4802,68 +4774,11 @@ ru.akman.znotes.Main = function() {
     updateNoteTreeItem( aNote );
     if ( currentNote && currentNote == aNote && !currentNote.isLoading() ) {
       currentNoteChanged( true );
-    }
-  };
-
-  function onNoteStatusChanged( e ) {
-    var aCategory = e.data.parentCategory;
-    var aNote = e.data.changedNote;
-    var oldStatus = e.data.oldValue;
-    var newStatus = e.data.newValue;
-    if ( welcomeNote && welcomeNote == aNote ) {
-      return;
-    }
-    switch ( newStatus.type ) {
-      case "success" :
-        Utils.showPopup(
-          "chrome://znotes_images/skin/message-32x32.png",
-          getString( "main.note.import.title" ),
-          getString( "main.note.loading.success" )
-        );
-        break;
-      case "error" :
-        Utils.showPopup(
-          "chrome://znotes_images/skin/warning-32x32.png",
-          getString( "main.note.import.title" ),
-          newStatus.message
-        );
-        var params = {
-          input: {
-            title: getString( "main.note.confirmDelete.title" ),
-            message1: getFormattedString( "main.note.confirmDelete.message1", [ aNote.getName() ] ),
-            message2: aNote.getOrigin()
-          },
-          output: null
-        };
-        window.openDialog(
-          "chrome://znotes/content/confirmdialog.xul",
-          "",
-          "chrome,dialog=yes,modal=yes,centerscreen,resizable=yes",
-          params
-        ).focus();
-        if ( params.output ) {
-          aNote.remove();
-        }
-        break;
-      case "abort" :
-        var params = {
-          input: {
-            title: getString( "main.note.confirmDelete.title" ),
-            message1: getFormattedString( "main.note.confirmDelete.message1", [ aNote.getName() ] ),
-            message2: aNote.getOrigin()
-          },
-          output: null
-        };
-        window.openDialog(
-          "chrome://znotes/content/confirmdialog.xul",
-          "",
-          "chrome,dialog=yes,modal=yes,centerscreen,resizable=yes",
-          params
-        ).focus();
-        if ( params.output ) {
-          aNote.remove();
-        }
-        break;
+      Utils.showPopup(
+        "chrome://znotes_images/skin/message-32x32.png",
+        getString( "main.note.import.title" ),
+        getString( "main.note.loading.success" )
+      );
     }
   };
   
@@ -5382,15 +5297,17 @@ ru.akman.znotes.Main = function() {
       document.getElementById( "znotes_keyset" )
     );
     // statusbar
-    statusBarPanel = Utils.getStatusbarPanel();
-    /*
-    if ( statusBarPanel.hasAttribute( "hidden" ) ) {
-      statusBarPanel.removeAttribute( "hidden" );
+    statusBar = Utils.MAIN_WINDOW.document.getElementById(
+      "znotes_statusbar" );
+    if ( !Utils.IS_STANDALONE ) {
+      statusBar = Utils.MAIN_WINDOW.document.getElementById(
+        "status-bar" );
     }
-    */
-    statusBarLogo = statusBarPanel.querySelector(
+    statusBarPanel = Utils.MAIN_WINDOW.document.getElementById(
+      "znotes_statusbarpanel" );
+    statusBarLogo = Utils.MAIN_WINDOW.document.getElementById(
       "znotes_statusbarpanellogo" );
-    statusBarLabel = statusBarPanel.querySelector(
+    statusBarLabel = Utils.MAIN_WINDOW.document.getElementById(
       "znotes_statusbarpanellabel" );
     // view
     folderBox = document.getElementById( "folderBox" );
@@ -5709,6 +5626,14 @@ ru.akman.znotes.Main = function() {
     platformQuitObserver.unregister();
   };
   
+  function connectHelperObservers() {
+    helperObserver.register();
+  };
+
+  function disconnectHelperObservers() {
+    helperObserver.unregister();
+  };
+  
   function connectConsoleObserver() {
     var windowService = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
                                   .getService( Components.interfaces.nsIWindowWatcher );
@@ -5759,7 +5684,6 @@ ru.akman.znotes.Main = function() {
   
   function updateUI() {
     updateNewNoteMenuPopup();
-    updateImportNoteMenuPopup();
     updateMainMenubarVisibility();
     updateMainToolbarVisibility();
     updateCommandsVisibility();
@@ -5797,6 +5721,7 @@ ru.akman.znotes.Main = function() {
     connectPlatformObservers();
     connectPrefsObservers();
     connectMutationObservers();
+    connectHelperObservers();
     initBody();
     updateUI();
     //
@@ -5823,6 +5748,7 @@ ru.akman.znotes.Main = function() {
     removeControllers();
     removeEventListeners();
     disconnectPlatformObservers();
+    disconnectHelperObservers();
     disconnectMutationObservers();
     disconnectPrefsObservers();
     closeConsole();

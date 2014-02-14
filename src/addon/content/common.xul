@@ -496,14 +496,6 @@
       accesskey="&znotes_contentdelete_accesskey;"
       key="znotes_contentdelete_key"
       oncommand="ru.akman.znotes.Common.goDoCommand( 'znotes_contentdelete_command', event.explicitOriginalTarget );"/>
-    <!-- loader -->
-    <command id="znotes_loaderabort_command" disabled="true"
-      label="&znotes_loaderabort_label;"
-      title="&znotes_loaderabort_label;"
-      tooltiptext="&znotes_loaderabort_tooltip;"
-      accesskey="&znotes_loaderabort_accesskey;"
-      key="znotes_loaderabort_key"
-      oncommand="ru.akman.znotes.Common.goDoCommand( 'znotes_loaderabort_command', event.explicitOriginalTarget );"/>
     <!-- editor -->
     <command id="znotes_editoredit_command" disabled="true"
       label="&znotes_editoredit_label;"
@@ -748,10 +740,6 @@
     <key id="znotes_contentdelete_key" command="znotes_contentdelete_command"
       key="&znotes_contentdelete_key;" modifiers="&znotes_contentdelete_key_modifiers;"
       keycode="&znotes_contentdelete_keycode;"/>
-    <!-- loader -->
-    <key id="znotes_loaderabort_key" command="znotes_loaderabort_command"
-      key="&znotes_loaderabort_key;" modifiers="&znotes_loaderabort_key_modifiers;"
-      keycode="&znotes_loaderabort_keycode;"/>
     <!-- editor -->
     <key id="znotes_editoredit_key" command="znotes_editoredit_command"
       key="&znotes_editoredit_key;" modifiers="&znotes_editoredit_key_modifiers;"

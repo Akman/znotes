@@ -262,11 +262,8 @@
         <menupopup id="znotes_newnote_button_menupopup" />
       </toolbarbutton>
       <toolbarbutton id="znotes_importnote_button"
-        type="menu-button"
         class="toolbarbutton-1 znotes_importnote_class"
-        command="znotes_importnote_command">
-        <menupopup id="znotes_importnote_button_menupopup" />
-      </toolbarbutton>
+        command="znotes_importnote_command"/>
       <toolbarbutton id="znotes_deletenote_button"
         class="toolbarbutton-1 znotes_deletenote_class"
         command="znotes_deletenote_command"/>

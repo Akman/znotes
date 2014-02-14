@@ -30,6 +30,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/* ***** classic/1.0 winnt **** */
+/* ***** classic/1.0 linux **** */
 
-@import url("chrome://znotes_common/skin/loader.css");
+@import url("chrome://znotes_common/skin/browser.css");
+
+.loaderView {
+  border-bottom: 1px solid #AABCCF;
+}

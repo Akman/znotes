@@ -67,8 +67,6 @@
 
   <vbox id="znotes_tabpanelcontainer" collapsed="true" />
   
-  <statusbar id="znotes_statusbar">
-    <spacer id="znotes_statusbar_spacer" flex="1"/>
-  </statusbar>
+  <statusbar id="znotes_statusbar" />
   
 </window>

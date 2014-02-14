@@ -66,7 +66,6 @@ ru.akman.znotes.Body = function() {
     var currentToolbox = null;
     
     var currentNote = null;
-    var currentEditor = null;
     var tagList = null;
 
     var noteBodyView = null;
@@ -657,19 +656,6 @@ ru.akman.znotes.Body = function() {
       }
     };
 
-    /*
-    function onNoteContentLoaded( e ) {
-      var aNote = e.data.changedNote;
-      if ( currentNote == aNote ) {
-        if ( currentMode == "editor" ) {
-          content.show( currentNote );
-        } else {
-          attachments.show( currentNote );
-        }
-      }
-    };
-    */
-    
     function onNoteTagsChanged( e ) {
       var aCategory = e.data.parentCategory;
       var aNote = e.data.changedNote;
@@ -757,22 +743,18 @@ ru.akman.znotes.Body = function() {
     // V I E W
     
     function showCurrentView() {
-      if ( currentNote.isLoading() ) {
-        noteViewDeck.selectedIndex = 1;
-      } else {
-        noteViewDeck.selectedIndex = 0;
-        refreshTagMenu( bodyTagsMenu, onCmdTagMenuClear, onCmdTagMenuClick );
-        updateTagMenu( currentNote, bodyTagsMenu );
-        updateTagsButtons( currentNote, onCmdTagButtonClick );
-        refreshTypeMenu( bodyTypesMenu, onCmdTypeMenuClick );
-        noteBodySplitter.removeAttribute( "disabled" );
-        noteBodyView.removeAttribute( "disabled" );
-      }
+      noteViewDeck.selectedIndex = 0; // or 1 or 2 or ...
+      refreshTagMenu( bodyTagsMenu, onCmdTagMenuClear, onCmdTagMenuClick );
+      updateTagMenu( currentNote, bodyTagsMenu );
+      updateTagsButtons( currentNote, onCmdTagButtonClick );
+      refreshTypeMenu( bodyTypesMenu, onCmdTypeMenuClick );
+      noteBodySplitter.removeAttribute( "disabled" );
+      noteBodyView.removeAttribute( "disabled" );
       restoreCurrentNotePreferences();
     };
 
     function hideCurrentView() {
-      noteViewDeck.selectedIndex = 0;
+      noteViewDeck.selectedIndex = 0; // only 0
       noteBodySplitter.setAttribute( "state", "collapsed" );
       noteBodySplitter.setAttribute( "collapsed", "true" );
       noteBodySplitter.setAttribute( "disabled", "true" );
@@ -998,11 +980,10 @@ ru.akman.znotes.Body = function() {
     bodyController.register();
     noteStateListener = {
       name: "BODY",
-      onNoteDeleted: onNoteDeleted, // ?
+      onNoteDeleted: onNoteDeleted,
       onNoteTagsChanged: onNoteTagsChanged,
       onNoteTypeChanged: onNoteTypeChanged,
       onNoteMainTagChanged: onNoteMainTagChanged,
-      //onNoteContentLoaded: onNoteContentLoaded,
       onNotePrefChanged: onNotePrefChanged
     };
     tagListStateListener = {
@@ -1014,9 +995,7 @@ ru.akman.znotes.Body = function() {
     addObserver( new ru.akman.znotes.Attachments( currentWindow, currentStyle ) );
     addObserver( new ru.akman.znotes.Content( currentWindow, currentStyle ) );
     addObserver( new ru.akman.znotes.Relator( currentWindow, currentStyle ) );
-    addObserver( new ru.akman.znotes.Loader( currentWindow, currentStyle ) );
-    currentEditor = new ru.akman.znotes.Editor( currentWindow, currentMode, currentStyle );
-    addObserver( currentEditor );
+    addObserver( new ru.akman.znotes.Editor( currentWindow, currentMode, currentStyle ) );
   };
 
 }();

@@ -488,15 +488,6 @@
 <!ENTITY znotes_contentdelete_key_modifiers "">
 <!ENTITY znotes_contentdelete_keycode "">
 
-<!-- loader -->
-
-<!ENTITY znotes_loaderabort_label "">
-<!ENTITY znotes_loaderabort_tooltip "Abort import">
-<!ENTITY znotes_loaderabort_accesskey "">
-<!ENTITY znotes_loaderabort_key "">
-<!ENTITY znotes_loaderabort_key_modifiers "">
-<!ENTITY znotes_loaderabort_keycode "">
-
 <!-- editor -->
 
 <!ENTITY znotes_editoredit_label "Edit">

@@ -63,3 +63,7 @@ toolbar[iconsize="small"] #znotes_tbsaveasnote_button {
 toolbar[iconsize="small"] #znotes_tbsaveasnote_button[disabled="true"] {
   list-style-image: url("chrome://znotes_images/skin/save-email-disabled-16x16.png");
 }
+
+#znotes_statusbarpanellogo {
+  list-style-image: url("chrome://znotes_images/skin/znotes-16x16.png");
+}

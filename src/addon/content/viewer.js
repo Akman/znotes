@@ -61,7 +61,10 @@ ru.akman.znotes.Viewer = function() {
   var currentNote = null;
   var currentBackground = null;
   var currentStyle = null;
-  var currentStatusbar = null;  
+  var currentStatusbar = null;
+  var currentStatusbarPanel = null;
+  var currentStatusbarLogo = null;
+  var currentStatusbarLabel = null;
   var currentToolbox = null;
   var currentTab = null;
   var noteBodyView = null;
@@ -69,9 +72,33 @@ ru.akman.znotes.Viewer = function() {
   var body = null;
   var noteStateListener = null;
 
-  //
+  // HELPER OBSERVER
+  
+  var helperObserver = {
+    observe: function( aSubject, aTopic, aData ) {
+      switch ( aTopic ) {
+        case "znotes-href":
+          if ( aSubject != window || !currentNote ||
+               currentNote.getMode() == "editor" ) {
+            break;
+          }
+          if ( aData ) {
+            currentStatusbarLabel.setAttribute( "value", aData );
+          } else {
+            currentStatusbarLabel.setAttribute( "value", "" );
+          }
+          break;
+      }
+    },
+    register: function() {
+      observerService.addObserver( this, "znotes-href", false );
+    },
+    unregister: function() {
+      observerService.removeObserver( this, "znotes-href" );
+    }
+  };
+  
   // COMMANDS
-  //
 
   var viewerCommands = {
   };
@@ -273,8 +300,6 @@ ru.akman.znotes.Viewer = function() {
     }
   };
 
-  // KEYBOARD EVENT
-  
   var pub = {};
 
   pub.onLoad = function() {
@@ -286,11 +311,25 @@ ru.akman.znotes.Viewer = function() {
     }
     currentToolbox = document.getElementById( "znotes_viewertoolbox" );
     currentStatusbar = document.getElementById( "znotes_statusbar" );
+    currentStatusbarPanel = document.getElementById(
+      "znotes_statusbarpanel" );
+    currentStatusbarLogo = document.getElementById(
+      "znotes_statusbarpanellogo" );
+    currentStatusbarLabel = document.getElementById(
+      "znotes_statusbarpanellabel" );
+    if ( !Utils.IS_STANDALONE ) {
+      currentStatusbar.setAttribute( "hidden", "true" );
+      currentStatusbar = mainWindow.document.getElementById( "status-bar" );
+      currentStatusbarPanel = mainWindow.document.getElementById(
+        "znotes_statusbarpanel" );
+      currentStatusbarLogo = mainWindow.document.getElementById(
+        "znotes_statusbarpanellogo" );
+      currentStatusbarLabel = mainWindow.document.getElementById(
+        "znotes_statusbarpanellabel" );
+    }
     currentNote = null;
     currentTab = getCurrentTab();
     if ( currentTab ) {
-      currentStatusbar.setAttribute( "hidden", "true" );
-      currentStatusbar = mainWindow.document.getElementById( "status-bar" );
       currentPage = currentTab.contentPage;
       currentNote = currentTab.note;
       currentBackground = currentTab.background;
@@ -298,9 +337,6 @@ ru.akman.znotes.Viewer = function() {
     }
     if ( !currentNote ) {
       if ( window.arguments.length == 4 ) {
-        if ( currentStatusbar.hasAttribute( "hidden" ) ) {
-          currentStatusbar.removeAttribute( "hidden" );
-        }
         currentPage = window.arguments[0];
         currentNote = window.arguments[1];
         currentBackground = window.arguments[2];
@@ -328,6 +364,7 @@ ru.akman.znotes.Viewer = function() {
     viewerController.register();
     prefsBundleObserver.register();
     mainBundleObserver.register();
+    helperObserver.register();
     body = new ru.akman.znotes.Body(
       {
         window: window,
@@ -343,6 +380,7 @@ ru.akman.znotes.Viewer = function() {
   };
 
   pub.onClose = function() {
+    helperObserver.unregister();
     mainBundleObserver.unregister();
     prefsBundleObserver.unregister();
     viewerController.unregister();

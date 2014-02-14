@@ -30,32 +30,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/* ***** classic/1.0 common **** */
+/* ***** classic/1.0 winnt **** */
 
-#loaderPanels {
-  -moz-appearance: none; 
-  border: none;
-  padding: 0px;
-}
-#loaderBox {
-  padding: 10px 10px 10px 10px;
-}
-#url {
-  font-family: courier;
-  font-weight: bold;
-  font-size: 18px;
-}
-#indicator {
-  height: 30px;
-}
-#log {
-  font-family: courier;
-  font-weight: bold;
-  font-size: 18px;
-}
-#error {
-  font-family: courier;
-  font-weight: bold;
-  font-size: 24px;
-  color: red;
-}
+@import url("chrome://znotes_common/skin/browser.css");

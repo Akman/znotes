@@ -194,6 +194,7 @@ ru.akman.znotes.Editor = function() {
     function onEditorModeChanged( e ) {
       var aNote = e.data.note;
       var aMode = e.data.mode;
+      aNote.setMode( aMode );
       var aFlag = ( aMode == "editor" );
       if ( currentNote && currentNote == aNote && currentEditor ) {
         Common.goSetCommandHidden( "znotes_editoredit_command", aFlag, currentWindow );
