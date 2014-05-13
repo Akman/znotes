@@ -43,6 +43,8 @@
 <!ENTITY isExitQuitTB.label "Exiting application leads to closing TB">
 <!ENTITY isReplaceBackground.label "Zastąp kolor tła notatkę, za pomocą głównego koloru znacznika">
 <!ENTITY isHighlightRow.label "Zaznacz wiersz w liście notatkę przy wykorzystaniu głównego koloru znacznika">
+<!ENTITY isCloseBrowserAfterImport.label "Close browser window after note import">
+<!ENTITY isSelectNoteAfterImport.label "Select imported note after note import">
 <!ENTITY isPlaySound.label "Odtwórz dźwięk przy starcie">
 <!ENTITY keysPlatformCaption.label "Skróty klawiaturowe">
 <!ENTITY keysCaption.label "Skróty klawiaturowe">

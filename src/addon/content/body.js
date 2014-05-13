@@ -38,6 +38,9 @@ if ( !ru.akman.znotes.core ) ru.akman.znotes.core = {};
 Components.utils.import( "resource://znotes/utils.js",
   ru.akman.znotes
 );
+Components.utils.import( "resource://znotes/documentmanager.js",
+  ru.akman.znotes
+);
 Components.utils.import( "resource://znotes/prefsmanager.js",
   ru.akman.znotes
 );
@@ -151,10 +154,10 @@ ru.akman.znotes.Body = function() {
             currentWindow.openDialog(
               "chrome://znotes/content/confirmdialog.xul",
               "",
-              "chrome,dialog=yes,modal=yes,centerscreen,resizable=yes",
+              "chrome,dialog=yes,modal=yes,centerscreen,resizable=no",
               params
             ).focus();
-            if ( params.output ) {
+            if ( params.output && params.output.result ) {
               currentNote.remove();
             }
             break;
@@ -433,7 +436,7 @@ ru.akman.znotes.Body = function() {
     };
 
     function updateTagsButtons( aNote, aCmdTagButtonClick ) {
-      if ( currentNote != aNote ) {
+      if ( currentNote && currentNote != aNote ) {
         return;
       }
       var tags = [];
@@ -583,25 +586,28 @@ ru.akman.znotes.Body = function() {
         aMenu.removeChild( aMenu.firstChild );
       }
       var aType, aNoteType = currentNote.getType();
-      var menuItem, doc;
+      var menuItem, types, doc;
       var docs = ru.akman.znotes.DocumentManager.getInstance().getDocuments();
       for ( var name in docs ) {
         doc = docs[name];
-        aType = doc.getType();
-        menuItem = currentWindow.document.createElement( "menuitem" );
-        menuItem.className = "menuitem-iconic";
-        menuItem.setAttribute( "id", "bodytypes_menupopup_" + doc.getName() );
-        menuItem.setAttribute( "tooltiptext", doc.getName() +
-          "-" + doc.getVersion() + " : " + doc.getType() );
-        menuItem.style.setProperty( "list-style-image",
-          "url( '" + doc.getIconURL() + "' )" , "important" );
-        if ( aNoteType === aType ) {
-          menuItem.setAttribute( "label", "\u2713 " + doc.getDescription() );
-        } else {
-          menuItem.setAttribute( "label", "  " + doc.getDescription() );
-          menuItem.addEventListener( "command", aCmdTypeMenuClick, false );
+        types = doc.getTypes();
+        for ( var i = 0; i < types.length; i++ ) {
+          aType = types[i];
+          menuItem = currentWindow.document.createElement( "menuitem" );
+          menuItem.className = "menuitem-iconic";
+          menuItem.setAttribute( "id", "bodytypes_menupopup_" + doc.getName() + "_" + i );
+          menuItem.setAttribute( "value", aType );
+          menuItem.setAttribute( "tooltiptext", aType );
+          menuItem.style.setProperty( "list-style-image",
+            "url( '" + doc.getIconURL() + "' )" , "important" );
+          if ( aNoteType === aType ) {
+            menuItem.setAttribute( "label", "\u2713 " + doc.getDescription() );
+          } else {
+            menuItem.setAttribute( "label", "  " + doc.getDescription() );
+            menuItem.addEventListener( "command", aCmdTypeMenuClick, false );
+          }
+          aMenu.appendChild( menuItem );
         }
-        aMenu.appendChild( menuItem );
       }
     };
 
@@ -610,18 +616,7 @@ ru.akman.znotes.Body = function() {
       if ( id.indexOf( "bodytypes_menupopup_" ) != 0 ) {
         return true;
       }
-      var doc = ru.akman.znotes.DocumentManager
-                               .getInstance()
-                               .getDocumentByName(
-        // document name starts from position 20 of id
-        // bodytypes_menupopup_XXXXXXXXX
-        // 012345678901234567890123
-        id.substr( 20 )
-      );
-      if ( !doc ) {
-        return true;
-      }
-      currentNote.setType( doc.getType() );
+      currentNote.setType( event.target.getAttribute( "value" ) );
       return true;
     };
     
@@ -759,6 +754,7 @@ ru.akman.znotes.Body = function() {
       noteBodySplitter.setAttribute( "collapsed", "true" );
       noteBodySplitter.setAttribute( "disabled", "true" );
       noteBodyView.setAttribute( "disabled", "true" );
+      updateTagsButtons( currentNote, onCmdTagButtonClick );
     };
     
     // L I S T E N E R S
@@ -863,6 +859,10 @@ ru.akman.znotes.Body = function() {
     };
     
     // PUBLIC
+    
+    this.notify = function( event ) {
+      notifyObservers( event );
+    };
     
     this.updateStyle = function( style ) {
       if ( !Utils.cloneObject( style, currentStyle ) ) {
@@ -996,6 +996,7 @@ ru.akman.znotes.Body = function() {
     addObserver( new ru.akman.znotes.Content( currentWindow, currentStyle ) );
     addObserver( new ru.akman.znotes.Relator( currentWindow, currentStyle ) );
     addObserver( new ru.akman.znotes.Editor( currentWindow, currentMode, currentStyle ) );
+    
   };
 
 }();

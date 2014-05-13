@@ -35,6 +35,7 @@ if ( !ru.akman ) ru.akman = {};
 if ( !ru.akman.znotes ) ru.akman.znotes = {};
 
 Components.utils.import( "resource://znotes/utils.js" , ru.akman.znotes );
+Components.utils.import( "resource://znotes/domutils.js" , ru.akman.znotes );
 Components.utils.import( "resource://znotes/updatemanager.js" , ru.akman.znotes );
 
 ru.akman.znotes.TestSuite = function() {
@@ -42,6 +43,7 @@ ru.akman.znotes.TestSuite = function() {
   var pub = {};
 
   var Utils = ru.akman.znotes.Utils;
+  var DOMUtils = ru.akman.znotes.DOMUtils;
   
   var mozPrefs = Components.classes["@mozilla.org/preferences-service;1"]
                            .getService( Components.interfaces.nsIPrefBranch );
@@ -53,22 +55,18 @@ ru.akman.znotes.TestSuite = function() {
   var doc = null;
   var tests = [];
 
-  function log( msg ) {
-    testTextBox.value += msg + "\n";
-  };
-  
   function testCommand( event ) {
     var testIndex = parseInt( event.target.value );
     var delimiter = "========" + new Array( tests[testIndex].name.length + 1 ).join( "=" );
     var header = "[BEGIN] " + tests[testIndex].name;
-    log( header );
-    log( delimiter );
+    Utils.log( header );
+    Utils.log( delimiter );
     try {
       tests[testIndex].code( event );
     } catch ( e ) {
-      log( e );
+      Utils.log( e );
     }
-    log( delimiter + "\n" );
+    Utils.log( delimiter + "\n" );
   };
   
   pub.onLoad = function( event ) {
@@ -343,7 +341,7 @@ ru.akman.znotes.TestSuite = function() {
               }
             }
             json = json.substring( 0, json.length - 2 ) + "\n  }\n}";
-            log( json );
+            Utils.log( json );
           }
         }
       }
@@ -363,7 +361,7 @@ ru.akman.znotes.TestSuite = function() {
                             .getService(Components.interfaces.nsIChromeRegistry);
         var uri = ios.newURI( "chrome://znotes_drivers/content/filename.js", null, null );
         var dir = fph.getFileFromURLSpec( chr.convertChromeURL( uri ).spec ).parent.clone();
-        log( dir.path );
+        Utils.log( dir.path );
       }
     }
   );
@@ -395,34 +393,41 @@ ru.akman.znotes.TestSuite = function() {
         );
         var serializer = Components.classes["@mozilla.org/xmlextras/xmlserializer;1"]
                                    .createInstance( Components.interfaces.nsIDOMSerializer );
-        log( serializer.serializeToString( dom ) );
+        Utils.log( serializer.serializeToString( dom ) );
       }
     }
   );
 
-  tests.push(
-    {
-      name: "Import",
-      description: "Async import notes",
-      code: function () {
-        //
-        var aNote1 = ctx.createNote(
-          ctx.book,
-          ctx.category,
-          "test note 1",
-          Utils.DEFAULT_DOCUMENT_TYPE
-        );
-        var aNote2 = ctx.createNote(
-          ctx.book,
-          ctx.category,
-          "test note 2",
-          Utils.DEFAULT_DOCUMENT_TYPE
-        );
-        aNote1.load( "https://developer.mozilla.org/ru/docs/DOM/Node.replaceChild" );
-        aNote2.load( "https://developer.mozilla.org/ru/docs/DOM/Node.appendChild" );
+  tests.push( {
+    name: "Validate name",
+    description: "Validate note name",
+    code: function () {
+      function getValidNoteName( category, name, aType ) {
+        var index = 0, suffix = "";
+        while ( !category.canCreateNote( name + suffix, aType ) ) {
+          suffix = " (" + ++index + ")";
+        }
+        return name + suffix;
+      };
+      var book = ctx.book;
+      var category = ctx.category;
+      var params = [
+        { name: "abc", type: "text/plain" },
+        { name: "abc", type: "application/xhtml+xml" },
+        { name: "abc", type: "text/plain" },
+        { name: "abc", type: "application/xhtml+xml" },
+      ];
+      var name, note;
+      for each ( var param in params ) {
+        Utils.log( "type: '" + param.type + "'" );
+        Utils.log( "name: '" + param.name + "'" );
+        name = getValidNoteName( category, param.name, param.type );
+        Utils.log( "----> '" + name + "'" );
+        note = ctx.createNote( book, category, name, param.type );
+        Utils.log( note );
       }
     }
-  );
+  } );
 
   tests.push(
     {
@@ -430,17 +435,17 @@ ru.akman.znotes.TestSuite = function() {
       description: "Font's prefs",
       code: function () {
         var fontMapping = Utils.getDefaultFontMapping();
-        log( "default-name: " + fontMapping.defaultName );
-        log( "default-value: " + fontMapping.defaultValue );
-        log( "" );
-        log( "serif: " + fontMapping.generics["serif"] );
-        log( "sans-serif: " + fontMapping.generics["sans-serif"] );
-        log( "cursive: " + fontMapping.generics["cursive"] );
-        log( "fantasy: " + fontMapping.generics["fantasy"] );
-        log( "monospace: " + fontMapping.generics["monospace"] );
-        log( "" );
-        log( "size-variable: " + fontMapping.varSize );
-        log( "size-fixed: " + fontMapping.fixSize );
+        Utils.log( "default-name: " + fontMapping.defaultName );
+        Utils.log( "default-value: " + fontMapping.defaultValue );
+        Utils.log( "" );
+        Utils.log( "serif: " + fontMapping.generics["serif"] );
+        Utils.log( "sans-serif: " + fontMapping.generics["sans-serif"] );
+        Utils.log( "cursive: " + fontMapping.generics["cursive"] );
+        Utils.log( "fantasy: " + fontMapping.generics["fantasy"] );
+        Utils.log( "monospace: " + fontMapping.generics["monospace"] );
+        Utils.log( "" );
+        Utils.log( "size-variable: " + fontMapping.varSize );
+        Utils.log( "size-fixed: " + fontMapping.fixSize );
       }
     }
   );
@@ -457,14 +462,14 @@ ru.akman.znotes.TestSuite = function() {
       var outerHeight = win.outerHeight;
       var availWidth = win.screen.availWidth;
       var availHeight = win.screen.availHeight;
-      log( "screenX = " + screenX );
-      log( "screenY = " + screenY );
-      log( "availLeft = " + availLeft );
-      log( "availTop = " + availTop );
-      log( "outerWidth = " + outerWidth );
-      log( "outerHeight = " + outerHeight );
-      log( "availWidth = " + availWidth );
-      log( "availHeight = " + availHeight );
+      Utils.log( "screenX = " + screenX );
+      Utils.log( "screenY = " + screenY );
+      Utils.log( "availLeft = " + availLeft );
+      Utils.log( "availTop = " + availTop );
+      Utils.log( "outerWidth = " + outerWidth );
+      Utils.log( "outerHeight = " + outerHeight );
+      Utils.log( "availWidth = " + availWidth );
+      Utils.log( "availHeight = " + availHeight );
     }
   } );
 
@@ -474,7 +479,7 @@ ru.akman.znotes.TestSuite = function() {
     code: function () {
       var mWindow = Utils.getMail3PaneWindow();
       if ( !mWindow ) {
-        log( "TB required" );
+        Utils.log( "TB required" );
         return;
       }
       var gFolderDisplay = mWindow.gFolderDisplay;
@@ -492,8 +497,8 @@ ru.akman.znotes.TestSuite = function() {
         if ( msgHdr.flags & Components.interfaces.nsMsgMessageFlags.HasRe ) {
           name = ( name ) ? "Re: " + name : "Re: ";
         }
-        log( uri );
-        log( name );
+        Utils.log( uri );
+        Utils.log( name );
         var streamListener =
           Components.classes["@mozilla.org/network/sync-stream-listener;1"]
                     .createInstance( Components.interfaces.nsISyncStreamListener );
@@ -516,7 +521,7 @@ ru.akman.znotes.TestSuite = function() {
           true,
           {}
         );
-        log( plainTextMessage );
+        Utils.log( plainTextMessage );
       }
     }
   } );
@@ -527,26 +532,26 @@ ru.akman.znotes.TestSuite = function() {
     code: function () {
       var mgr = ru.akman.znotes.UpdateManager;
       if ( !mgr.isSupported() ) {
-        log( "Update service is not supported." );
+        Utils.log( "Update service is not supported." );
         return;
       }
-      log( "Can Update: " + mgr.canUpdate() );
-      log( "Is Active: " + mgr.isActive() );
+      Utils.log( "Can Update: " + mgr.canUpdate() );
+      Utils.log( "Is Active: " + mgr.isActive() );
       if ( mgr.isActive() ) {
-        log( "Update name: " + mgr.getName() );
+        Utils.log( "Update name: " + mgr.getName() );
       }
       switch ( mgr.getState() ) {
         case "default":
-          log( "Check for updates ..." );
+          Utils.log( "Check for updates ..." );
           break;
         case "downloading":
-          log( "Downloading updates ..." );
+          Utils.log( "Downloading updates ..." );
           break;
         case "paused":
-          log( "Resume downloading updates ..." );
+          Utils.log( "Resume downloading updates ..." );
           break;
         case "pending":
-          log( "Apply downloaded updates now ..." );
+          Utils.log( "Apply downloaded updates now ..." );
           break;
       }
     }
@@ -603,6 +608,346 @@ ru.akman.znotes.TestSuite = function() {
     }
   } );
 
+  tests.push( {
+    name: "Content Tab",
+    description: "Content Tab",
+    code: function () {
+      var tabMail = Utils.getTabMail();
+      if ( !tabMail ) {
+        return;
+      }
+      tabMail.openTab(
+        "contentTab",
+        {
+          contentPage: "https://mozilla.org/"
+        }
+      );
+    }
+  } );
+
+  tests.push( {
+    name: "Open note",
+    description: "Open note dialog",
+    code: function () {
+      var params = {
+        input: {
+          title: "Select note",
+          aBook: ctx.book,
+          aCategory: ctx.category,
+          aTag: ctx.tag,
+          aNote: ctx.note
+        },
+        output: null
+      };
+      window.openDialog(
+        "chrome://znotes/content/opensavedialog.xul?mode=open&type=note",
+        "",
+        "chrome,dialog=yes,modal=yes,centerscreen,resizable=yes",
+        params
+      ).focus();
+      if ( !params.output ) {
+        return;
+      }
+      Utils.log( params.output.aBook.getName() );
+      Utils.log( params.output.aNote.getName() );
+    }
+  } );
+
+  tests.push( {
+    name: "Save note",
+    description: "Save note dialog",
+    code: function () {
+      var params = {
+        input: {
+          title: "Save note",
+          canOverwrite: true,
+          aBook: ctx.book,
+          aCategory: ctx.category,
+          aTag: ctx.tag,
+          aNote: ctx.note
+        },
+        output: null
+      };
+      window.openDialog(
+        "chrome://znotes/content/opensavedialog.xul?mode=save&type=note",
+        "",
+        "chrome,dialog=yes,modal=yes,centerscreen,resizable=yes",
+        params
+      ).focus();
+      if ( !params.output ) {
+        return;
+      }
+      Utils.log( params.output.aBook.getName() );
+      Utils.log( params.output.aCategory.getName() );
+      Utils.log( params.output.aTags );
+      Utils.log( params.output.aType );
+      Utils.log( params.output.aName );
+    }
+  } );
+
+  tests.push( {
+    name: "Open category",
+    description: "Open category dialog",
+    code: function () {
+      var params = {
+        input: {
+          title: "Open category",
+          aBook: ctx.book,
+          aCategory: ctx.category,
+          aTag: ctx.tag,
+          aNote: ctx.note
+        },
+        output: null
+      };
+      window.openDialog(
+        "chrome://znotes/content/opensavedialog.xul?mode=open&type=category",
+        "",
+        "chrome,dialog=yes,modal=yes,centerscreen,resizable=yes",
+        params
+      ).focus();
+      if ( !params.output ) {
+        return;
+      }
+      Utils.log( params.output.aBook.getName() );
+      Utils.log( params.output.aCategory.getName() );
+    }
+  } );
+  
+  tests.push( {
+    name: "Save category",
+    description: "Save category dialog",
+    code: function () {
+      var params = {
+        input: {
+          title: "Save category",
+          canOverwrite: true,
+          aBook: ctx.book,
+          aCategory: ctx.category,
+          aTag: ctx.tag,
+          aNote: ctx.note
+        },
+        output: null
+      };
+      window.openDialog(
+        "chrome://znotes/content/opensavedialog.xul?mode=save&type=category",
+        "",
+        "chrome,dialog=yes,modal=yes,centerscreen,resizable=yes",
+        params
+      ).focus();
+      if ( !params.output ) {
+        return;
+      }
+      Utils.log( params.output.aBook.getName() );
+      Utils.log( params.output.aCategory.getName() );
+      Utils.log( params.output.aName );
+      Utils.log( params.output.aTags );
+      Utils.log( params.output.aType );
+    }
+  } );
+
+  tests.push( {
+    name: "Show many alerts",
+    description: "Show popups by alerts service",
+    code: function () {
+      var alertsService =
+        Components.classes['@mozilla.org/alerts-service;1']
+                  .getService( Components.interfaces.nsIAlertsService );
+      var observer = {
+        observe: function( subject, topic, data ) {
+          switch ( topic ) {
+            case "alertshow":
+              Utils.log( "alertshow: " + data );
+              break;
+            case "alertclickcallback":
+              Utils.log( "alertclickcallback: " + data );
+              break;
+            case "alertfinished":
+              Utils.log( "alertfinished: " + data );
+              break;
+          }
+        }
+      };
+      for ( var i = 0; i < 5; i++ ) {
+        try {
+          alertsService.showAlertNotification(
+            "chrome://znotes_images/skin/message-32x32.png",
+            "POPUP" + i,
+            "( =" + i + "= )",
+            true,
+            "data" + i,
+            observer,
+            "popup" + i
+          );
+        } catch ( e ) {
+          Utils.log( e );
+        }
+      }
+    }
+  } );
+  
+  tests.push( {
+    name: "Show many popups",
+    description: "Show popups by window mediator",
+    code: function () {
+      function showPopup( image, title, text, clickable, cookie, observer, name ) {
+        var win = window.open(
+          "chrome://global/content/alerts/alert.xul",
+          "znotes:popup",
+          "chrome,titlebar=no,popup=yes"
+        );
+        win.arguments = [ image, title, text, clickable, cookie, observer, name ];
+      };
+      var observer = {
+        observe: function( subject, topic, data ) {
+          switch ( topic ) {
+            case "alertshow":
+              Utils.log( "alertshow: " + data );
+              break;
+            case "alertclickcallback":
+              Utils.log( "alertclickcallback: " + data );
+              break;
+            case "alertfinished":
+              Utils.log( "alertfinished: " + data );
+              break;
+          }
+        }
+      };
+      for ( var i = 0; i < 5; i++ ) {
+        showPopup(
+          "chrome://znotes_images/skin/message-32x32.png",
+          "POPUP" + i,
+          "( =" + i + "= )",
+          true,
+          "data" + i,
+          observer,
+          "popup" + i
+        );
+      }
+    }
+  } );
+
+  tests.push( {
+    name: "Parse & Serialize HTML",
+    description: "Parse & serialize text/html",
+    code: function () {
+      var aDOM, aText, anURI, aBaseURI, aPrincipal;
+      var tmpBrowser, tmpFile, tmpURL;
+      var ioService =
+        Components.classes["@mozilla.org/network/io-service;1"]
+                  .getService( Components.interfaces.nsIIOService );
+      var securityManager =
+        Components.classes["@mozilla.org/scriptsecuritymanager;1"]
+                  .getService( Components.interfaces.nsIScriptSecurityManager );
+      var domParser =
+        Components.classes["@mozilla.org/xmlextras/domparser;1"]
+                  .createInstance( Components.interfaces.nsIDOMParser );
+      aText = 
+        '<!-- before document -->\n' +
+        //'<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"\n' +
+        //'  "http://www.w3.org/TR/html4/strict.dtd">\n' +
+        //'<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"\n' +
+        //'  "http://www.w3.org/TR/html4/loose.dtd">\n' +
+        //'<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Frameset//EN"\n' +
+        //'  "http://www.w3.org/TR/html4/frameset.dtd">\n' +
+        '<!DOCTYPE html>\n' +
+        '<!-- after doctype -->\n' +
+        '<html>\n' +
+        '    <!-- before head -->\n' +
+        '    <head>\n' +
+        '        <meta charset="utf-8"></meta>\n' +
+        '        <base href="file:///F:\Development/workspace/gecko/znotes/etc/Samples/sample1_files/"></base>\n' +
+        '        <title>title</title>\n' +
+        '    </head>\n' +
+        '    <!-- after head -->\n' +
+        '    <body>\n' +
+        '        <img src="fox.jpg"></img>\n' +
+        '    </body>\n' +
+        '    <!-- after body -->\n' +
+        '</html>\n' +
+        '<!-- after document -->\n';
+      Utils.log( "SOURCE TEXT:\n" + aText + "\n" );
+      anURI = ioService.newURI( "file:///F:\Development/workspace/gecko/znotes/etc/Samples/sample1.html", null, null );
+      aBaseURI = ioService.newURI( "file:///F:\Development/workspace/gecko/znotes/etc/Samples/sample1_files/", null, null );
+      aPrincipal = securityManager.getCodebasePrincipal( anURI );
+      domParser.init( aPrincipal, null /* anURI */, aBaseURI, null );
+      aDOM = domParser.parseFromString( aText, "text/html" );
+      Utils.log( "SERIALIZED TEXT:\n" + DOMUtils.serializeHTMLToString( aDOM ) + "\n" );
+    }
+  } );
+
+  tests.push( {
+    name: "Split selector",
+    description: "Split css selector",
+    code: function () {
+    
+      function splitSelector( selector ) {
+        var index = -1;
+        do {
+          index = selector.indexOf( ":", index + 1 );
+        } while ( index > 0 && selector.charAt( index - 1) === "\\" );
+        if ( index !== -1 ) {
+          return [ selector.substring( 0, index ), selector.substring( index ) ];
+        }
+        return [ selector, "" ];
+      };
+
+      Utils.log( "abc\\:xyz:123\\:456" );
+      Utils.log( splitSelector( "abc\\:xyz:123:456" ) );
+      Utils.log( "abc:xyz\\:123\\:456" );
+      Utils.log( splitSelector( "abc:xyz\\:123\\:456" ) );
+      Utils.log( "abc" );
+      Utils.log( splitSelector( "abc" ) );
+      Utils.log( "abc:xyz" );
+      Utils.log( splitSelector( "abc:xyz" ) );
+      
+    }
+  } );
+
+  tests.push( {
+    name: "Check name",
+    description: "Validate XML Name",
+    code: function () {
+    
+      function checkName( name ) {
+        var re = new RegExp(
+          "^[\:A-Z_a-z" +
+          "\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u02FF\u0370-\u037D\u037F-\u1FFF" +
+          "\u200C\u200D\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF" +
+          "\uFDF0-\uFFFD]" +
+          "[\:A-Z_a-z" +
+          "\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u02FF\u0370-\u037D\u037F-\u1FFF" +
+          "\u200C\u200D\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF" +
+          "\uFDF0-\uFFFD" +
+          "\-\.0-9\u00B7\u0300-\u036F\u203F-\u2040]*"
+        );
+        /*
+        var re = new RegExp(
+          "^[\:_A-Za-z" +
+          "\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u02FF\u0370-\u037D\u037F-\u1FFF" +
+          "\u200C\u200D\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF" +
+          "\uFDF0-\uFFFD]" +
+          "[\-\.\:_A-Za-z0-9" +
+          "\u00B7\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u036F\u0370-\u037D\u037F-\u1FFF" +
+          "\u200C\u200D\u203F\u2040\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF" +
+          "\uF900-\uFDCF\uFDF0-\uFFFD]*"
+        );
+        */
+        var result = re.exec( name );
+        return ( result ? result[0] : "" );
+      };
+
+      Utils.log( "abc" );
+      Utils.log( checkName( "abc" ) );
+
+      Utils.log( "br=clear" );
+      Utils.log( checkName( "br=clear" ) );
+
+      Utils.log( "fb:like:xxxxx" );
+      Utils.log( checkName( "fb:like:xxxxx" ) );
+      
+    }
+  } );
+  
   return pub;
 
 }();

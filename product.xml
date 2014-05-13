@@ -5,8 +5,8 @@
   <prefix>znotes</prefix>
   <id>znotes@akman.ru</id>
   <bundle>net.akman.znotes</bundle>
-  <version>0.9.20</version>
-  <build>20131124</build>
+  <version>0.9.21</version>
+  <build>20140513</build>
 
   <licenses>
     <license>
@@ -35,7 +35,7 @@
     <id>{3550f703-e582-4d05-9a08-453d09bdfdc6}</id>
     <version>
       <min>17.0</min>
-      <max>26.*</max>
+      <max>30.*</max>
     </version>
   </gecko>
 
@@ -64,7 +64,7 @@
   <description>Program for creating and managing notes.</description>
   <copyright>
     <prefix>Copyright (C)</prefix>
-    <year>2012, 2013</year>
+    <year>2012, 2014</year>
     <author>Alexander Kapitman</author>
     <reserved>All rights reserved</reserved>
   </copyright>
@@ -143,7 +143,7 @@
       <description>Program for creating and managing notes.</description>
       <copyright>
         <prefix>Copyright (C)</prefix>
-        <year>2012, 2013</year>
+        <year>2012, 2014</year>
         <author>Alexander Kapitman</author>
         <reserved>All rights reserved</reserved>
       </copyright>
@@ -221,7 +221,7 @@
       <description>Программа для создания и организации заметок</description>
       <copyright>
         <prefix>Авторские права (C)</prefix>
-        <year>2012, 2013</year>
+        <year>2012, 2014</year>
         <author>Александр Капитман</author>
         <reserved>Все права зарезервированы</reserved>
       </copyright>
@@ -297,7 +297,7 @@
       <description>Program for creating and managing notes.</description>
       <copyright>
         <prefix>Copyright (C)</prefix>
-        <year>2012, 2013</year>
+        <year>2012, 2014</year>
         <author>Alexander Kapitman</author>
         <reserved>All rights reserved</reserved>
       </copyright>
@@ -375,7 +375,7 @@
       <description>Programme pour créer et gérer des ntoes.</description>
       <copyright>
         <prefix>Copyright (C)</prefix>
-        <year>2012, 2013</year>
+        <year>2012, 2014</year>
         <author>Alexander Kapitman</author>
         <reserved>Tous droits réservés</reserved>
       </copyright>

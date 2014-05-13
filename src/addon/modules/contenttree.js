@@ -35,13 +35,15 @@ if ( !ru.akman ) ru.akman = {};
 if ( !ru.akman.znotes ) ru.akman.znotes = {};
 if ( !ru.akman.znotes.core ) ru.akman.znotes.core = {};
 
-Components.utils.import( "resource://znotes/utils.js"    , ru.akman.znotes );
-Components.utils.import( "resource://znotes/category.js" , ru.akman.znotes.core );
-Components.utils.import( "resource://znotes/note.js"     , ru.akman.znotes.core );
+Components.utils.import( "resource://znotes/utils.js", ru.akman.znotes );
+Components.utils.import( "resource://znotes/category.js", ru.akman.znotes.core );
+Components.utils.import( "resource://znotes/note.js", ru.akman.znotes.core );
 
 var EXPORTED_SYMBOLS = ["ContentTree"];
 
 var ContentTree = function( book, rootCategoryEntry ) {
+
+  var Utils = ru.akman.znotes.Utils;
 
   this.getBook = function() {
     return this.book;
@@ -100,6 +102,26 @@ var ContentTree = function( book, rootCategoryEntry ) {
     }
   };
 
+  this.getCategoryById = function( categoryId ) {
+    var result = [];
+    var getCategoryByIdProcessor = {
+      id: categoryId,
+      categories: result,
+      processCategory: function( aCategory ) {
+        if ( aCategory.getId() == this.id )
+          this.categories.push( aCategory );
+      },
+      processNote: function( aNote ) {
+      }
+    };
+    this.process( getCategoryByIdProcessor );
+    if ( result.length > 0 ) {
+      return result[0];
+    } else {
+      return null;
+    }
+  };
+  
   this.getNoteByName = function( aName ) {
     var result = [];
     var getNoteByNameProcessor = {
@@ -134,7 +156,11 @@ var ContentTree = function( book, rootCategoryEntry ) {
       }
     };
     this.process( getNoteByIdProcessor );
-    return result;
+    if ( result.length > 0 ) {
+      return result[0];
+    } else {
+      return null;
+    }
   };
 
   this.getNotesByTag = function( tagID ) {

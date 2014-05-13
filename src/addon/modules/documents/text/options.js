@@ -52,14 +52,19 @@ var Options = function() {
   var currentPreferences = null;
   var currentName = null;
   
-  var defaultPrefs = null;
-  var originalPrefs = null;
-  var currentPrefs = null;
+  var defaultEditorPrefs = null;
+  var originalEditorPrefs = null;
+  var currentEditorPrefs = null;
+
+  var defaultDocPrefs = null;
+  var originalDocPrefs = null;
+  var currentDocPrefs = null;
   
   var editorShortcuts = {};
   var editorSuffix = null;
   
   var isSpellcheckEnabled = null;
+  //var fileExtension = null;
   
   // HELPERS
   
@@ -349,7 +354,8 @@ var Options = function() {
   };
   
   function onDefaults( event ) {
-    isSpellcheckEnabled.checked = defaultPrefs.isSpellcheckEnabled;
+    isSpellcheckEnabled.checked = defaultEditorPrefs.isSpellcheckEnabled;
+    //fileExtension.value = defaultDocPrefs.fileExtension;
     var doc = event.target.ownerDocument;
     var textbox;
     for ( var name in editorShortcuts ) {
@@ -371,7 +377,15 @@ var Options = function() {
   
   // PREFERENCES
 
-  function updatePreferences( currPrefs, origPrefs ) {
+  function updateDocPreferences( currPrefs, origPrefs ) {
+    var isChanged = false;
+    //currPrefs.fileExtension = fileExtension.value.trim();
+    //isChanged = isChanged ||
+    //  ( currPrefs.fileExtension !== origPrefs.fileExtension );
+    return isChanged;
+  };
+  
+  function updateEditorPreferences( currPrefs, origPrefs ) {
     var isChanged = false;
     currPrefs.isSpellcheckEnabled = isSpellcheckEnabled.checked;
     isChanged = isChanged ||
@@ -404,11 +418,15 @@ var Options = function() {
   function init() {
     isSpellcheckEnabled = currentDocument.getElementById(
       "isSpellcheckEnabled" + editorSuffix );
-    isSpellcheckEnabled.checked = currentPrefs.isSpellcheckEnabled;
+    isSpellcheckEnabled.checked = currentEditorPrefs.isSpellcheckEnabled;
+    //fileExtension = currentDocument.getElementById(
+    //  "fileExtension" + editorSuffix );
+    //fileExtension.value = ( currentDocPrefs.fileExtension === undefined ?
+    //  "" : currentDocPrefs.fileExtension );
     var keysListBox = currentDocument.getElementById(
       "keysListBox" + editorSuffix );
     keysListBox.addEventListener( "select", onKeySelect, false );
-    loadShortcuts( editorShortcuts, defaultPrefs, originalPrefs, currentPrefs );
+    loadShortcuts( editorShortcuts, defaultEditorPrefs, originalEditorPrefs, currentEditorPrefs );
     populateShortcuts( editorShortcuts, keysListBox, editorSuffix );
     keysListBox.selectedIndex = keysListBox.itemCount ? 0 : -1;
     if ( currentPreferences[currentName].activeElement ) {
@@ -432,10 +450,13 @@ var Options = function() {
     currentPreferences[currentName].activeElement =
       currentDocument.activeElement;
     var isChanged = false;
-    if ( updatePreferences( currentPrefs, originalPrefs ) ) {
+    if ( updateDocPreferences( currentDocPrefs, originalDocPrefs ) ) {
       isChanged = true;
     }
-    if ( updateShortcutPreferences( currentPrefs, editorShortcuts ) ) {
+    if ( updateEditorPreferences( currentEditorPrefs, originalEditorPrefs ) ) {
+      isChanged = true;
+    }
+    if ( updateShortcutPreferences( currentEditorPrefs, editorShortcuts ) ) {
       isChanged = true;
     }
     return isChanged;
@@ -452,9 +473,12 @@ var Options = function() {
     currentWindow = win;
     currentDocument = doc;
     currentPreferences = prefs;
-    defaultPrefs = currentPreferences[currentName]["default"].editor;
-    originalPrefs = currentPreferences[currentName]["original"].editor;
-    currentPrefs = currentPreferences[currentName]["current"].editor;
+    defaultEditorPrefs = currentPreferences[currentName]["default"].editor;
+    defaultDocPrefs = currentPreferences[currentName]["default"].document;
+    originalEditorPrefs = currentPreferences[currentName]["original"].editor;
+    originalDocPrefs = currentPreferences[currentName]["original"].document;
+    currentEditorPrefs = currentPreferences[currentName]["current"].editor;
+    currentDocPrefs = currentPreferences[currentName]["current"].document;
     Common = currentWindow.ru.akman.znotes.Common;
     stringBundle = currentDocument.getElementById(
       "znotes_editor_stringbundle" );

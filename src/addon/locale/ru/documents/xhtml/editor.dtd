@@ -254,6 +254,10 @@
 
 <!-- OPTIONS -->
 
+<!ENTITY docCaption.xhtml.label "Документ">
+<!ENTITY author.xhtml.label "Автор:">
+<!ENTITY author.xhtml.placeholder "Введите имя автора здесь ...">
+
 <!ENTITY mainCaption.xhtml.label "Основные">
 <!ENTITY isSpellcheckEnabled.xhtml.label "Включить проверку орфографии по умолчанию">
 <!ENTITY isTagsModeActive.xhtml.label "Показывать теги по умолчанию">

@@ -43,6 +43,8 @@ var EXPORTED_SYMBOLS = ["Category"];
 
 var Category = function( aBook, anEntry, aParent ) {
 
+  var Utils = ru.akman.znotes.Utils;
+
   /*
    * aProcessor
    *
@@ -115,14 +117,22 @@ var Category = function( aBook, anEntry, aParent ) {
     return this.parent;
   };
 
-  this.noteExists = function( name ) {
-    return this.entry.exists( name, true );
+  this.noteExists = function( name, aType ) {
+    return this.entry.exists( name, aType );
   };
 
+  this.canCreateNote = function( name, aType ) {
+    return this.entry.canCreate( name, aType );
+  };
+  
   this.categoryExists = function( name ) {
-    return this.entry.exists( name, false );
+    return this.entry.exists( name );
   };
 
+  this.canCreateCategory = function( name ) {
+    return this.entry.canCreate( name );
+  };
+  
   this.depth = function() {
     var result = this.categories.length;
     for ( var i = 0; i < this.categories.length; i++ )
@@ -136,6 +146,10 @@ var Category = function( aBook, anEntry, aParent ) {
     return this.openState;
   };
 
+  this.getOpenState = function() {
+    return this.openState;
+  };
+  
   this.setOpenState = function( aState ) {
     if ( this.isRoot() ) {
       return;
@@ -185,6 +199,10 @@ var Category = function( aBook, anEntry, aParent ) {
     return this.exists;
   };
 
+  this.getId = function() {
+    return this.id;
+  };
+  
   this.getName = function() {
     if ( this.isRoot() ) {
       return this.getBook().getName();
@@ -198,6 +216,15 @@ var Category = function( aBook, anEntry, aParent ) {
 
   this.getNotes = function() {
     return this.notes.slice(0);
+  };
+  
+  this.getNoteByName = function( aName ) {
+    for ( var i = 0; i < this.notes.length; i++ ) {
+      if ( this.notes[i].getName() === aName ) {
+        return this.notes[i];
+      }
+    }
+    return null;
   };
 
   this.getNotesCount = function() {
@@ -232,8 +259,10 @@ var Category = function( aBook, anEntry, aParent ) {
   };
 
   this.remove = function() {
-    if ( this.isRoot() )
+    if ( this.isRoot() ) {
       return;
+    }
+    var parent = this.getParent();
     var categories = this.getCategories();
     for ( var i = 0; i < categories.length; i++ ) {
       categories[i].remove();
@@ -242,18 +271,15 @@ var Category = function( aBook, anEntry, aParent ) {
     for ( var i = 0; i < notes.length; i++ ) {
       notes[i].remove();
     }
-
     this.entry.remove();
     this.exists = false;
-    this.getParent().removeCategory( this );
-
-    this.notifyStateListener(
+    parent.removeCategory( this );
+    parent.notifyStateListener(
       new ru.akman.znotes.core.Event(
         "CategoryDeleted",
-        { parentCategory: this.getParent(), deletedCategory: this }
+        { parentCategory: parent, deletedCategory: this }
       )
     );
-
   };
 
   this.rename = function( aNewName ) {
@@ -278,18 +304,21 @@ var Category = function( aBook, anEntry, aParent ) {
     this.getParent().removeCategory( this );
     aNewRoot.appendCategory( this );
     this.refresh();
+    return this;
   };
 
   this.moveTo = function( anIndex ) {
-    var aParent = this.getParent();
-    if ( aParent.removeCategory( this ) ) {
-      return aParent.insertCategory( this, anIndex );
-    }
-    return null;
+    this.getParent().removeCategory( this );
+    this.getParent().insertCategory( this, anIndex );
+    return this;
   };
 
   this.createCategory = function( aName ) {
-    var aCategory = new Category( this.book, this.entry.createCategory( aName ), this );
+    var aCategory = new Category(
+      this.book,
+      this.entry.createCategory( aName ),
+      this
+    );
     this.notifyStateListener(
       new ru.akman.znotes.core.Event(
         "CategoryCreated",
@@ -303,14 +332,12 @@ var Category = function( aBook, anEntry, aParent ) {
     this.categories.push( aCategory );
     aCategory.parent = this;
     aCategory.setIndex( this.categories.length - 1 );
-
     this.notifyStateListener(
       new ru.akman.znotes.core.Event(
         "CategoryAppended",
         { parentCategory: this, appendedCategory: aCategory }
       )
     );
-
     return aCategory;
   };
 
@@ -323,36 +350,31 @@ var Category = function( aBook, anEntry, aParent ) {
     for ( var i = anIndex; i < this.categories.length; i++ ) {
       this.categories[i].setIndex( i );
     }
-
     this.notifyStateListener(
       new ru.akman.znotes.core.Event(
         "CategoryInserted",
         { parentCategory: this, insertedCategory: aCategory, insertedIndex: anIndex }
       )
     );
-
     return aCategory;
   };
 
   this.removeCategory = function( aCategory ) {
     this.categories.splice( aCategory.getIndex(), 1 );
-    aCategory.parent = null;
     for ( var i = 0; i < this.categories.length; i++ ) {
       if ( this.categories[i].getIndex() != i ) {
         this.categories[i].setIndex( i );
       }
     }
-
     this.notifyStateListener(
       new ru.akman.znotes.core.Event(
         "CategoryRemoved",
         { parentCategory: this, removedCategory: aCategory }
       )
     );
-
     return aCategory;
   };
-
+  
   this.deleteCategory = function( aCategory ) {
     aCategory.remove();
   };
@@ -360,7 +382,7 @@ var Category = function( aBook, anEntry, aParent ) {
   this.createNote = function( aName, aType, aTag ) {
     var aNote = new ru.akman.znotes.core.Note(
       this.book,
-      this.entry.createNote( aName ),
+      this.entry.createNote( aName, aType ),
       this,
       aType,
       aTag
@@ -415,20 +437,17 @@ var Category = function( aBook, anEntry, aParent ) {
       return;
     }
     this.notes.splice( anIndex, 1 );
-    aNote.parent = null;
     for ( var i = 0; i < this.notes.length; i++ ) {
       if ( this.notes[i].getIndex() != i ) {
         this.notes[i].setIndex( i );
       }
     }
-
     this.notifyStateListener(
       new ru.akman.znotes.core.Event(
         "NoteRemoved",
         { parentCategory: this, removedNote: aNote }
       )
     );
-
     return aNote;
   };
 
@@ -467,10 +486,7 @@ var Category = function( aBook, anEntry, aParent ) {
 
   this.toString = function() {
     var parent = this.getParent();
-    var parentName = "*NULL*";
-    if ( parent ) {
-      parentName = parent.getName();
-    }
+    var parentName = parent ? parent.getName() : "*NULL*";
     return "{ " +
       "'" + this.getName() + "', " +
       "'" + parentName + "', " +
@@ -492,13 +508,14 @@ var Category = function( aBook, anEntry, aParent ) {
   this.notes = [];
   this.parent = aParent;
   this.entry = anEntry;
+  this.id = this.parent ? this.entry.getId() : this.book.getId();
   this.name = this.entry.getName();
   this.index = this.entry.getIndex();
   this.openState = this.entry.getOpenState();
   this.selectedIndex = this.entry.getSelectedIndex();
-  if ( aParent ) {
-    aParent.appendCategory( this );
+  if ( this.parent ) {
+    this.parent.appendCategory( this );
   }
   this.locked = false;
-
+  
 };

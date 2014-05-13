@@ -30,3 +30,16 @@
   -
   - ***** END LICENSE BLOCK ***** -->
 
+<!ENTITY znotes_clippersave_label "Save">
+<!ENTITY znotes_clippersave_tooltip "Save document">
+<!ENTITY znotes_clippersave_accesskey "S">
+<!ENTITY znotes_clippersave_key "">
+<!ENTITY znotes_clippersave_key_modifiers "">
+<!ENTITY znotes_clippersave_keycode "">
+
+<!ENTITY znotes_clippersaveall_label "Full">
+<!ENTITY znotes_clippersaveall_tooltip "Save full document">
+<!ENTITY znotes_clippersaveall_accesskey "F">
+<!ENTITY znotes_clippersaveall_key "s">
+<!ENTITY znotes_clippersaveall_key_modifiers "accel">
+<!ENTITY znotes_clippersaveall_keycode "">

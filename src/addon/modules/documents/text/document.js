@@ -57,21 +57,59 @@ var Document = function() {
   
   var observers = [];
 
+  // HELPERS
+  
+  function getErrorDocument( anURI, aBaseURI, aTitle, errorText, sourceText ) {
+    var dom = pub.getBlankDocument( anURI, aBaseURI, aTitle );
+    if ( errorText ) {
+      dom += "\n" + errorText + "\n";
+    }
+    if ( sourceText ) {
+      dom += "\n" + sourceText + "\n";
+    }
+    return dom;
+  };
+  
+  function checkDocument( aDOM, anURI, aBaseURI, aTitle ) {
+    return null;
+  };
+
+  function sanitizeDocument( aDOM, anURI, aBaseURI ) {
+  };
+  
+  function markupDocument( aDOM ) {
+    return {};
+  };
+  
+  function fixupDocument( aDOM, anURI, aBaseURI, aTitle, aMarkup ) {
+    return false;
+  };
+  
+  // PUBLIC
+  
   var pub = {};
 
   pub.getInfo = function() {
     return {
       url: "chrome://znotes_documents/content/text/",
       iconURL: "chrome://znotes_images/skin/documents/text/icon-16x16.png",
-      type: "text/plain",
-      defaultNS: "",
-      errorNS: "",
+      types: {
+        "text/plain": {
+          extension: ".txt"
+        }
+      },
+      // !!! DO NOT CHANGE NAME !!!
+      // The name used as suffix for ids in options.xul
       name: "TEXT",
       version: "1.0",
       description: "TEXT Document",
     };
   };
 
+  pub.getType = function() {
+    return "text/plain";
+  };
+  
   pub.addObserver = function( aObserver ) {
     if ( observers.indexOf( aObserver ) < 0 ) {
       observers.push( aObserver );
@@ -107,18 +145,20 @@ var Document = function() {
     return pub.getInfo().iconURL;
   };
   
-  pub.getType = function() {
-    return pub.getInfo().type;
+  pub.getTypes = function() {
+    return Object.keys( pub.getInfo().types );
+  }
+  
+  pub.supportsType = function( aType ) {
+    return ( aType in pub.getInfo().types );
   };
 
-  pub.getDefaultNS = function() {
-    return pub.getInfo().defaultNS;
+  pub.getExtension = function( aType ) {
+    var contentType = ( aType && pub.supportsType( aType ) ) ?
+      aType : pub.getType();
+    return pub.getInfo().types[ contentType ].extension;
   };
-
-  pub.getErrorNS = function() {
-    return pub.getInfo().errorNS;
-  };
-
+  
   pub.getName = function() {
     return pub.getInfo().name;
   };
@@ -131,7 +171,12 @@ var Document = function() {
     return pub.getInfo().description;
   };
   
-  pub.getBlankDocument = function( aBaseURI, aTitle, aCommentFlag ) {
+  pub.getDefaultPreferences = function() {
+    return {
+    };
+  };
+  
+  pub.getBlankDocument = function( anURI, aBaseURI, aTitle, aCommentFlag, aParams ) {
     var dom = "";
     if ( aTitle ) {
       dom += aTitle + "\n";
@@ -139,49 +184,50 @@ var Document = function() {
     return dom;
   };
   
-  pub.getErrorDocument = function( aBaseURI, aTitle, errorText, sourceText ) {
-    var dom = pub.getBlankDocument( aBaseURI, aTitle );
-    if ( errorText ) {
-      dom += "\n" + errorText + "\n";
-    }
-    if ( sourceText ) {
-      dom += "\n" + sourceText + "\n";
-    }
-    return dom;
-  };
-  
-  pub.parseFromString = function( aData, anURI, aBaseURI, aTitle ) {
-    return { result: true, dom: aData, changed: false };
-  };
-
-  pub.checkDocument = function( aDOM, anURI, aBaseURI, aTitle ) {
-    return null;
-  };
-  
-  pub.sanitizeDocument = function( aDOM, aBaseURI ) {
-  };
-  
-  pub.serializeToString = function( aDOM ) {
+  pub.serializeToString = function( aDOM, anURI, aBaseURI ) {
     return aDOM;
   };
   
-  pub.fixupDocument = function( aDOM, aBaseURI, aTitle ) {
-    return false;
-  };
-  
-  pub.importDocument = function( aDOM, aBaseURI, aTitle ) {
-    var dom = pub.getBlankDocument( aBaseURI, aTitle );
-    /*
-    var serializer = Components.classes["@mozilla.org/xmlextras/xmlserializer;1"]
-                               .createInstance( Components.interfaces.nsIDOMSerializer );
-    dom += serializer.serializeToString( aDOM );
-    */
-    dom += aDOM.documentElement.textContent;
-    return dom;
+  pub.parseFromString = function( aData, anURI, aBaseURI, aTitle ) {
+    var tmp, err, markup;
+    tmp = aData;
+    err = checkDocument( tmp, anURI, aBaseURI, aTitle );
+    if ( err ) {
+      return { result: false, dom: err, changed: false };
+    }
+    markup = markupDocument( tmp );
+    sanitizeDocument( tmp, anURI, aBaseURI );
+    fixupDocument( tmp, anURI, aBaseURI, aTitle, markup );
+    return {
+      result: true,
+      dom: tmp,
+      changed: ( aData !== pub.serializeToString( tmp, anURI, aBaseURI ) )
+    };
   };
 
-  pub.getDefaultPreferences = function() {
-    return {};
+  pub.importDocument = function( aDOM, anURI, aBaseURI, aTitle, aParams ) {
+    var dom = pub.getBlankDocument( anURI, aBaseURI, aTitle, false, aParams );
+    // TODO: How to encode html to text ?!
+    /*
+    // DOES NOT WORK !
+    var nsIDocumentEncoder = Components.interfaces.nsIDocumentEncoder;
+    var documentEncoder =
+      Components.classes["@mozilla.org/layout/documentEncoder;1?type=text/plain"]
+                .createInstance( nsIDocumentEncoder );
+    documentEncoder.init( aDOM, "text/plain",
+      nsIDocumentEncoder.OutputLFLineBreak |
+      nsIDocumentEncoder.OutputPersistNBSP |
+      nsIDocumentEncoder.OutputBodyOnly |
+      nsIDocumentEncoder.SkipInvisibleContent |
+      nsIDocumentEncoder.OutputNoScriptContent
+    );
+    dom += documentEncoder.encodeToString();
+    */
+    var body = aDOM.querySelector( "body" );
+    if ( body ) {
+      dom += body.textContent;
+    }
+    return dom;
   };
   
   return pub;

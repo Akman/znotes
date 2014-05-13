@@ -30,3 +30,16 @@
   -
   - ***** END LICENSE BLOCK ***** -->
 
+<!ENTITY znotes_clippersave_label "Сохранить">
+<!ENTITY znotes_clippersave_tooltip "Сохранить документ">
+<!ENTITY znotes_clippersave_accesskey "С">
+<!ENTITY znotes_clippersave_key "">
+<!ENTITY znotes_clippersave_key_modifiers "">
+<!ENTITY znotes_clippersave_keycode "">
+
+<!ENTITY znotes_clippersaveall_label "Полностью">
+<!ENTITY znotes_clippersaveall_tooltip "Сохранить документ полностью">
+<!ENTITY znotes_clippersaveall_accesskey "П">
+<!ENTITY znotes_clippersaveall_key "s">
+<!ENTITY znotes_clippersaveall_key_modifiers "accel">
+<!ENTITY znotes_clippersaveall_keycode "">

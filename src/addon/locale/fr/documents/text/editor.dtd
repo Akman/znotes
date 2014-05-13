@@ -114,6 +114,8 @@
 
 <!-- OPTIONS -->
 
+<!ENTITY docCaption.text.label "Document">
+
 <!ENTITY mainCaption.text.label "Général">
 <!ENTITY isSpellcheckEnabled.text.label "Activer la correction orthographique par défaut">
 <!ENTITY keysCaption.text.label "Raccourcis clavier">

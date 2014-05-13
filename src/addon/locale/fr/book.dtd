@@ -30,12 +30,14 @@
   -
   - ***** END LICENSE BLOCK ***** -->
 
-<!ENTITY book_dialog_title "Bloc-notes">
-<!ENTITY book_dialog_accept "Oui">
-<!ENTITY book_dialog_cancel "Non">
-<!ENTITY label_header "Communn">
-<!ENTITY label_book_name "Nom">
-<!ENTITY label_book_description "Description">
-<!ENTITY text_book_description_placeholder "Entrez la description du bloc-notes ici ...">
-<!ENTITY label_book_driver "Pilote">
-<!ENTITY label_footer "Pilote">
+<!ENTITY dialog.title "Bloc-notes">
+<!ENTITY dialog.accept "Oui">
+<!ENTITY dialog.cancel "Non">
+
+<!ENTITY common.caption "Bloc-notes">
+<!ENTITY name.label "Nom">
+<!ENTITY name.placeholder "Entrez la nom du bloc-notes ici ...">
+<!ENTITY description.label "Description">
+<!ENTITY description.placeholder "Entrez la description du bloc-notes ici ...">
+<!ENTITY driver.caption "Pilote">
+<!ENTITY params.caption "Parameters">

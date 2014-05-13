@@ -32,3 +32,32 @@
 
 /* ***** classic/1.0 common **** */
 
+.znotes_clippersave_class {
+  list-style-image: url("chrome://znotes_images/skin/import-note-24x24.png");
+}
+.znotes_clippersave_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/import-note-disabled-24x24.png");
+}
+toolbar[iconsize="small"] .znotes_clippersave_class,
+menuitem.znotes_clippersave_class  {
+  list-style-image: url("chrome://znotes_images/skin/import-note-16x16.png");
+}
+toolbar[iconsize="small"] .znotes_clippersave_class[disabled="true"],
+menuitem.znotes_clippersave_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/import-note-disabled-16x16.png");
+}
+
+.znotes_clippersaveall_class {
+  list-style-image: url("chrome://znotes_images/skin/clipper-saveall-24x24.png");
+}
+.znotes_clippersaveall_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/clipper-saveall-disabled-24x24.png");
+}
+toolbar[iconsize="small"] .znotes_clippersaveall_class,
+menuitem.znotes_clippersaveall_class  {
+  list-style-image: url("chrome://znotes_images/skin/clipper-saveall-16x16.png");
+}
+toolbar[iconsize="small"] .znotes_clippersaveall_class[disabled="true"],
+menuitem.znotes_clippersaveall_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/clipper-saveall-disabled-16x16.png");
+}

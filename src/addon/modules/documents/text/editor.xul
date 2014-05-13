@@ -295,9 +295,16 @@
   </vbox>
 
   <vbox id="optionsView">
+    <!-- document -->
+    <!--
+    <groupbox id="docGroupBox:text">
+      <caption id="docCaption:text" label="&docCaption.text.label;" />
+    </groupbox>
+    -->
+    <!-- editor -->
     <groupbox id="mainGroupBox:text">
       <caption id="mainCaption:text" label="&mainCaption.text.label;" />
-      <vbox id="mainVBox:text" align="start">
+      <vbox id="mainVBox:text" align="start" flex="1">
         <checkbox id="isSpellcheckEnabled:text"
           label="&isSpellcheckEnabled.text.label;" flex="1" />
       </vbox>

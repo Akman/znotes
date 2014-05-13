@@ -1,0 +1,76 @@
+﻿/* ***** BEGIN LICENSE BLOCK *****
+ *
+ * Version: GPL 3.0
+ *
+ * ZNotes
+ * Copyright (C) 2012 Alexander Kapitman
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * The Original Code is ZNotes.
+ *
+ * Initial Developer(s):
+ *   Alexander Kapitman <akman.ru@gmail.com>
+ *
+ * Portions created by the Initial Developer are Copyright (C) 2012
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+/* ***** classic/1.0 common **** */
+
+dialog {
+  padding: 2px 0px 3px 0px;
+}
+#progressBox {
+  padding: 2px;
+}
+#btnCancel {
+  list-style-image: url("chrome://znotes_images/skin/cancel-16x16.png");
+}
+#btnClose {
+  list-style-image: url("chrome://znotes_images/skin/accept-16x16.png");
+}
+.item {
+}
+.image_box {
+  padding-left: 3px;
+  padding-right: 3px;
+  border-right: 1px solid #828790;
+}
+.label_box {
+}
+.name {
+  font-weight: bold;
+}
+.url {
+  font-size: 80%;
+  font-style: italic;
+}
+.progress {
+}
+.error {
+  color: red;
+}
+.spinner {
+  list-style-image: url("chrome://znotes_images/skin/spinner-24x24.gif");
+}
+.ok {
+  list-style-image: url("chrome://znotes_images/skin/message-24x24.png");
+}
+.fail {
+  list-style-image: url("chrome://znotes_images/skin/warning-24x24.png");
+}

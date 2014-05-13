@@ -63,6 +63,7 @@ var Editor = function() {
 
     var Utils = ru.akman.znotes.Utils;
     var DOMUtils = ru.akman.znotes.DOMUtils;
+    var Node = Components.interfaces.nsIDOMNode;
     var Module = this.getDocument().getNamespace().Module;
 
     // can't be initialized at once
@@ -107,6 +108,7 @@ var Editor = function() {
     var isEditorDirty = false;
     var isParseError = false;
     var isParseModified = false;
+    var isEditorReady = false;
     
     var isTagsModeActive = false;
     var tagsSheetURL = "chrome://znotes/skin/documents/xhtml/tags.css";
@@ -206,11 +208,15 @@ var Editor = function() {
         var prefService =
           Components.classes["@mozilla.org/preferences-service;1"]
                     .getService( Components.interfaces.nsIPrefService );
-        this.branch = prefService.getBranch( "extensions.znotes.");
-        this.branch.addObserver( "", this, false );
+        this.branch = prefService.getBranch( "extensions.znotes." );
+        if ( this.branch ) {
+          this.branch.addObserver( "", this, false );
+        }
       },
       unregister: function() {
-        this.branch.removeObserver( "", this );
+        if ( this.branch ) {
+          this.branch.removeObserver( "", this );
+        }
       }
     };
     
@@ -951,6 +957,10 @@ var Editor = function() {
         try {
           currentWindow.controllers.removeController( this );
         } catch ( e ) {
+          Components.utils.reportError(
+            "An error occurred unregistering '" + this.getName() +
+            "' controller: " + e
+          );
         }
       }
     };
@@ -962,8 +972,9 @@ var Editor = function() {
     // COMMON COMMANDS
     
     function doClose() {
-      stop();
-      switchMode( "viewer" );
+      if ( stop() ) {
+        switchMode( "viewer" );
+      }
     };
     
     // DESIGN COMMANDS
@@ -1228,7 +1239,7 @@ var Editor = function() {
               removeCSSInlineProperty( node, "background-color" );
               element = node;
               while ( element &&
-                      element.nodeType == DOMUtils.NODE.ELEMENT_NODE ) {
+                      element.nodeType == Node.ELEMENT_NODE ) {
                 color = getComputedStyle( element ).backgroundColor;
                 if ( color !== "transparent" ) {
                   break;
@@ -2079,7 +2090,10 @@ var Editor = function() {
       var tagColor = currentBookTagList.getNoTag().getColor();
       var tagID = currentNote.getMainTag();
       if ( tagID ) {
-        tagColor = currentBookTagList.getTagById( tagID ).getColor();
+        var tag = currentBookTagList.getTagById( tagID );
+        if ( tag ) {
+          tagColor = tag.getColor();
+        }
       }
       var body = designFrame.contentDocument.body;
       var color = body && body.style ?
@@ -2107,6 +2121,9 @@ var Editor = function() {
           }
         }
       }
+    };
+    
+    function setDisplayStyle() {
     };
     
     // EDITOR HELPERS
@@ -2335,7 +2352,7 @@ var Editor = function() {
       }
       var range = designEditor.selection.getRangeAt( 0 );
       var node = range.startContainer;
-      while ( node && node.nodeType != DOMUtils.NODE.ELEMENT_NODE ) {
+      while ( node && node.nodeType != Node.ELEMENT_NODE ) {
         node = node.parentNode;
       }
       node.scrollIntoView();
@@ -2347,7 +2364,7 @@ var Editor = function() {
       }
       // begin
       var processSelectionNode = function( range, root, chunks ) {
-        if ( root.nodeType == DOMUtils.NODE.ELEMENT_NODE &&
+        if ( root.nodeType == Node.ELEMENT_NODE &&
              root == range.startContainer &&
              range.startContainer == range.endContainer &&
              range.startOffset == range.endOffset ) {
@@ -2372,19 +2389,19 @@ var Editor = function() {
           return;
         }
         switch ( root.nodeType ) {
-          case DOMUtils.NODE.ELEMENT_NODE:
+          case Node.ELEMENT_NODE:
             chunks.push( {
               element: root,
               info: []
             } );
             break;
-          case DOMUtils.NODE.TEXT_NODE:
+          case Node.TEXT_NODE:
             startOffset = ( root == range.startContainer ) ?
               range.startOffset : 0;
             endOffset = ( root == range.endContainer ) ?
               range.endOffset : root.length;
             node = root;
-            while ( node && node.nodeType != DOMUtils.NODE.ELEMENT_NODE ) {
+            while ( node && node.nodeType != Node.ELEMENT_NODE ) {
               node = node.parentNode;
             }
             while ( node &&
@@ -2544,11 +2561,11 @@ var Editor = function() {
     };
 
     function joinNodesSuppressTransaction( leftNode, rightNode ) {
-      if ( leftNode.nodeType == DOMUtils.NODE.TEXT_NODE &&
-           rightNode.nodeType == DOMUtils.NODE.TEXT_NODE ) {
+      if ( leftNode.nodeType == Node.TEXT_NODE &&
+           rightNode.nodeType == Node.TEXT_NODE ) {
         rightNode.textContent = leftNode.textContent + rightNode.textContent;
-      } else if ( leftNode.nodeType == DOMUtils.NODE.ELEMENT_NODE &&
-           rightNode.nodeType == DOMUtils.NODE.ELEMENT_NODE ) {
+      } else if ( leftNode.nodeType == Node.ELEMENT_NODE &&
+           rightNode.nodeType == Node.ELEMENT_NODE ) {
         var next, node = leftNode.firstChild, child = rightNode.firstChild;
         while ( node ) {
           next = node.nextSibling;
@@ -2561,7 +2578,7 @@ var Editor = function() {
     
     function splitNodeSuppressTransaction( rightNode, offset ) {
       var leftNode;
-      if ( rightNode.nodeType == DOMUtils.NODE.ELEMENT_NODE ) {
+      if ( rightNode.nodeType == Node.ELEMENT_NODE ) {
         leftNode = rightNode.cloneNode( false );
         leftNode.removeAttribute( "id" );
       } else {
@@ -2570,7 +2587,7 @@ var Editor = function() {
         );
       }
       rightNode.parentNode.insertBefore( leftNode, rightNode );
-      if ( rightNode.nodeType == DOMUtils.NODE.ELEMENT_NODE ) {
+      if ( rightNode.nodeType == Node.ELEMENT_NODE ) {
         var i = 0, next, child = rightNode.firstChild;
         while ( child && i < offset ) {
           next = child.nextSibling;
@@ -2624,7 +2641,7 @@ var Editor = function() {
       doTransaction: function() {
         if ( !this.mLeftNode ) {
           if ( this.mRightNode.nodeType ==
-            DOMUtils.NODE.ELEMENT_NODE ) {
+            Node.ELEMENT_NODE ) {
             this.mLeftNode = this.mRightNode.cloneNode( false );
             this.mLeftNode.removeAttribute( "id" );
           } else {
@@ -2641,7 +2658,7 @@ var Editor = function() {
         this.mRightNode.parentNode.insertBefore(
           this.mLeftNode, this.mRightNode );
         if ( this.mRightNode.nodeType ==
-          DOMUtils.NODE.ELEMENT_NODE ) {
+          Node.ELEMENT_NODE ) {
           var i = 0, next, child = this.mRightNode.firstChild;
           while ( child && i < this.mOffset ) {
             next = child.nextSibling;
@@ -2663,7 +2680,7 @@ var Editor = function() {
           startOffset = range.startOffset;
           endContainer = range.endContainer;
           endOffset = range.endOffset;
-          if ( startContainer.nodeType == DOMUtils.NODE.ELEMENT_NODE &&
+          if ( startContainer.nodeType == Node.ELEMENT_NODE &&
                this.mRightNode.parentNode == startContainer ) {
             // !!! not [startOffset] but [startOffset + 1] !!!
             node = startContainer.childNodes[startOffset + 1];
@@ -2671,7 +2688,7 @@ var Editor = function() {
               range.startOffset++;
             }
           }
-          if ( endContainer.nodeType == DOMUtils.NODE.ELEMENT_NODE &&
+          if ( endContainer.nodeType == Node.ELEMENT_NODE &&
                this.mRightNode.parentNode == endContainer ) {
             // !!! not [endOffset - 1] but [endOffset] !!!
             node = endContainer.childNodes[endOffset];
@@ -2721,14 +2738,14 @@ var Editor = function() {
           startOffset = range.startOffset;
           endContainer = range.endContainer;
           endOffset = range.endOffset;
-          if ( startContainer.nodeType == DOMUtils.NODE.ELEMENT_NODE &&
+          if ( startContainer.nodeType == Node.ELEMENT_NODE &&
                this.mRightNode.parentNode == startContainer ) {
             node = startContainer.childNodes[startOffset];
             if ( DOMUtils.isRightSibling( this.mRightNode, node ) ) {
               range.startOffset--;
             }
           }
-          if ( endContainer.nodeType == DOMUtils.NODE.ELEMENT_NODE &&
+          if ( endContainer.nodeType == Node.ELEMENT_NODE &&
                this.mRightNode.parentNode == endContainer ) {
             node = endContainer.childNodes[endOffset - 1];
             if ( DOMUtils.isRightSibling( this.mRightNode, node ) ) {
@@ -2763,7 +2780,7 @@ var Editor = function() {
           }
         }
         if ( this.mRightNode.nodeType ==
-          DOMUtils.NODE.ELEMENT_NODE ) {
+          Node.ELEMENT_NODE ) {
           var prev, child = this.mLeftNode.lastChild;
           while ( child ) {
             prev = child.previousSibling;
@@ -2829,12 +2846,12 @@ var Editor = function() {
           startOffset = range.startOffset;
           endContainer = range.endContainer;
           endOffset = range.endOffset;
-          if ( startContainer.nodeType == DOMUtils.NODE.ELEMENT_NODE &&
+          if ( startContainer.nodeType == Node.ELEMENT_NODE &&
                startContainer.childNodes[startOffset] == this.mSurround ) {
             range.startContainer = this.mSurround;
             range.startOffset = 0;
           }
-          if ( endContainer.nodeType == DOMUtils.NODE.ELEMENT_NODE &&
+          if ( endContainer.nodeType == Node.ELEMENT_NODE &&
                endContainer.childNodes[endOffset - 1] == this.mSurround ) {
             range.endContainer = this.mSurround;
             range.endOffset = 1;
@@ -3096,7 +3113,7 @@ var Editor = function() {
         Utils.log( i + ") ancestor => " + ( commonAncestorContainer.id ? commonAncestorContainer.id : commonAncestorContainer.nodeName ) );
         Utils.log( i + ") start => " + ( startContainer.id ? startContainer.id : startContainer.nodeName ) +
           " : " + startOffset );
-        if ( startContainer.nodeType == DOMUtils.NODE.TEXT_NODE ) {
+        if ( startContainer.nodeType == Node.TEXT_NODE ) {
           text = startContainer.textContent
                                .substring( startOffset, ( startContainer == endContainer ? endOffset : undefined ) )
                                .replace( /\n/img, "\\n" );
@@ -3104,7 +3121,7 @@ var Editor = function() {
         }
         Utils.log( i + ") end => " + ( endContainer.id ? endContainer.id : endContainer.nodeName ) +
           " : " + endOffset );
-        if ( endContainer.nodeType == DOMUtils.NODE.TEXT_NODE ) {
+        if ( endContainer.nodeType == Node.TEXT_NODE ) {
           text = endContainer.textContent
                                .substring( ( startContainer == endContainer ? startOffset : 0 ), endOffset )
                                .replace( /\n/img, "\\n" );
@@ -3175,10 +3192,12 @@ var Editor = function() {
     };
     
     function doDebug() {
+      /*
       Module.run();
       dumpSelection();
       dumpSelectionChunks();
       dumpSelectionElements(); doUndo();
+      */
       /*
       try {
         designEditor.beginTransaction();
@@ -3240,8 +3259,8 @@ var Editor = function() {
         if ( !value ) {
           value = fontMapping.defaultName;
           if ( value === null ) {
-            Utils.log( "value === null ");
-            Utils.log( fontMapping.defaultName );
+            Utils.log( "fontMapping.defaultName: [" + fontMapping.defaultName +
+                       "] is null!" );
           }
         }
         if ( result === null ) {
@@ -3348,7 +3367,7 @@ var Editor = function() {
       for ( var i = 0; i < selectionChunks.length; i++ ) {
         element = selectionChunks[i].element;
         value = [];
-        while ( element && element.nodeType == DOMUtils.NODE.ELEMENT_NODE ) {
+        while ( element && element.nodeType == Node.ELEMENT_NODE ) {
           computedStyle = getComputedStyle( element );
           value = value.concat(
             computedStyle.textDecoration.split( /\s+/ )
@@ -3445,7 +3464,7 @@ var Editor = function() {
       mixed.value = false;
       for ( var i = 0; i < selectionChunks.length; i++ ) {
         element = selectionChunks[i].element;
-        while ( element && element.nodeType == DOMUtils.NODE.ELEMENT_NODE ) {
+        while ( element && element.nodeType == Node.ELEMENT_NODE ) {
           computedStyle = getComputedStyle( element );
           value = computedStyle.backgroundColor;
           if ( value != "transparent" ) {
@@ -3535,7 +3554,7 @@ var Editor = function() {
       for ( var i = 0; i < selectionChunks.length; i++ ) {
         element = selectionChunks[i].element;
         value = "";
-        while ( element && element.nodeType == DOMUtils.NODE.ELEMENT_NODE &&
+        while ( element && element.nodeType == Node.ELEMENT_NODE &&
                 element != element.ownerDocument.body ) {
           computedStyle = getComputedStyle( element );
           if ( computedStyle.display == "block" ) {
@@ -3579,7 +3598,7 @@ var Editor = function() {
       for ( var i = 0; i < selectionChunks.length; i++ ) {
         element = selectionChunks[i].element;
         value = 0;
-        while ( element && element.nodeType == DOMUtils.NODE.ELEMENT_NODE ) {
+        while ( element && element.nodeType == Node.ELEMENT_NODE ) {
           computedStyle = getComputedStyle( element );
           if ( computedStyle.display == "block" ) {
             value = computedStyle.marginLeft;
@@ -3615,7 +3634,7 @@ var Editor = function() {
       for ( var i = 0; i < selectionChunks.length; i++ ) {
         element = selectionChunks[i].element;
         value = false;
-        while ( element && element.nodeType == DOMUtils.NODE.ELEMENT_NODE &&
+        while ( element && element.nodeType == Node.ELEMENT_NODE &&
                 element != element.ownerDocument.body ) {
           if ( element.nodeName == "sup" ) {
             value = true;
@@ -3641,7 +3660,7 @@ var Editor = function() {
       for ( var i = 0; i < selectionChunks.length; i++ ) {
         element = selectionChunks[i].element;
         value = false;
-        while ( element && element.nodeType == DOMUtils.NODE.ELEMENT_NODE &&
+        while ( element && element.nodeType == Node.ELEMENT_NODE &&
                 element != element.ownerDocument.body ) {
           if ( element.nodeName == "sub" ) {
             value = true;
@@ -3671,7 +3690,7 @@ var Editor = function() {
         ul.value = false;
         dl.value = false;
         value = 0;
-        while ( element && element.nodeType == DOMUtils.NODE.ELEMENT_NODE &&
+        while ( element && element.nodeType == Node.ELEMENT_NODE &&
                 element != element.ownerDocument.body ) {
           switch ( element.nodeName ) {
             case "ol":
@@ -3724,7 +3743,7 @@ var Editor = function() {
         dt.value = false;
         dd.value = false;
         value = 0;
-        while ( element && element.nodeType == DOMUtils.NODE.ELEMENT_NODE &&
+        while ( element && element.nodeType == Node.ELEMENT_NODE &&
                 element != element.ownerDocument.body ) {
           switch ( element.nodeName ) {
             case "li":
@@ -3996,6 +4015,13 @@ var Editor = function() {
           } else if ( isDesignEditingActive ) {
             updateDesignEditorDirtyState();
             designFrame.contentWindow.focus();
+            // BUG: Ctrl+Home does not scroll selection into view
+            var selection = designFrame.contentWindow.getSelection();
+            var body = designFrame.contentDocument.querySelector( "body" );
+            if ( selection.isCollapsed &&
+                 body && body === selection.focusNode ) {
+              scrollSelectionIntoView();
+            }
           } else {
             designFrame.focus();
           }
@@ -4039,34 +4065,22 @@ var Editor = function() {
       }
     };
     
-    function onNoteDeleted( e ) {
-      var aCategory = e.data.parentCategory;
-      var aNote = e.data.deletedNote;
-      if ( currentNote && currentNote == aNote ) {
-        done();
-        currentNote = null;
-        currentDocument = null;
-        currentWindow = null;
-      }
-    };
-    
     // @@@@ 1 onNoteMainContentChanged
     function onNoteMainContentChanged( e ) {
       var aCategory = e.data.parentCategory;
       var aNote = e.data.changedNote;
       var oldContent = e.data.oldValue;
       var newContent = e.data.newValue;
-      var status = {};
+      var params, reloadFlag = true;
       if ( currentNote && aNote == currentNote ) {
         if ( !isDesignEditingActive && !isSourceEditingActive ) {
           load();
           setBackgroundColor();
           return;
         }
-        var reloadFlag = true;
         if ( isEditorDirty ) {
           reloadFlag = false;
-          var params = {
+          params = {
             input: {
               title: getString( "editor.confirmReload.title" ),
               message1: getFormattedString( "editor.confirmReload.message1", [ currentNote.getName() ] ),
@@ -4077,16 +4091,24 @@ var Editor = function() {
           currentWindow.openDialog(
             "chrome://znotes/content/confirmdialog.xul",
             "",
-            "chrome,dialog=yes,modal=yes,centerscreen,resizable=yes",
+            "chrome,dialog=yes,modal=yes,centerscreen,resizable=no",
             params
           ).focus();
-          if ( params.output ) {
+          if ( params.output && params.output.result ) {
             reloadFlag = true;
           }
         }
         if ( reloadFlag ) {
           cancel( true );
         }
+      }
+    };
+ 
+    function onNoteDataChanged( e ) {
+      var aCategory = e.data.parentCategory;
+      var aNote = e.data.changedNote;
+      if ( currentNote && currentNote == aNote ) {
+        setDisplayStyle();
       }
     };
  
@@ -4240,8 +4262,8 @@ var Editor = function() {
     // DESIGN & SOURCE
     
     function loadDesign() {
-      var data = sourceEditor.getValue();
       var doc = self.getDocument();
+      var data = sourceEditor.getValue();
       var obj = doc.parseFromString(
         data,
         currentNote.getURI(),
@@ -4305,7 +4327,13 @@ var Editor = function() {
       }
       isParseModified = false;
       // TODO: diff/patch must be applied
-      sourceEditor.setValue( doc.serializeToString( dom ) );
+      sourceEditor.setValue(
+        doc.serializeToString(
+          dom,
+          currentNote.getURI(),
+          currentNote.getBaseURI()
+        )
+      );
       if ( currentMode == "editor" ) {
         undoState.push();
       }
@@ -4405,7 +4433,7 @@ var Editor = function() {
         startSplit = null;
         endSplit = null;
         switch ( startContainer.nodeType ) {
-          case DOMUtils.NODE.TEXT_NODE:
+          case Node.TEXT_NODE:
             if ( startOffset > 0 &&
                  startOffset < startContainer.textContent.length ) {
               startSplit = splitNode( startContainer, startOffset, true );
@@ -4422,7 +4450,7 @@ var Editor = function() {
                 startMarker, startContainer.nextSibling );
             }
             break;
-          case DOMUtils.NODE.ELEMENT_NODE:
+          case Node.ELEMENT_NODE:
             startContainer.insertBefore(
               startMarker, startContainer.childNodes[startOffset] );
             if ( endContainer == startContainer ) {
@@ -4431,7 +4459,7 @@ var Editor = function() {
             break;
         }
         switch ( endContainer.nodeType ) {
-          case DOMUtils.NODE.TEXT_NODE:
+          case Node.TEXT_NODE:
             if ( endOffset > 0 &&
                  endOffset < endContainer.textContent.length ) {
               endSplit = splitNode( endContainer, endOffset, true );
@@ -4451,7 +4479,7 @@ var Editor = function() {
               }
             }
             break;
-          case DOMUtils.NODE.ELEMENT_NODE:
+          case Node.ELEMENT_NODE:
             if ( endContainer == startContainer &&
                  endOffset == startOffset ) {
               endContainer.insertBefore(
@@ -4495,7 +4523,11 @@ var Editor = function() {
     function calcMarkersIndexies( markers ) {
       var result = [];
       try {
-        var data = self.getDocument().serializeToString( designEditor.document );
+        var data = self.getDocument().serializeToString(
+          designEditor.document,
+          currentNote.getURI(),
+          currentNote.getBaseURI()
+        );
         var uuid, startMarker, endMarker, startIndex, endIndex;
         for ( var i = 0; i < markers.length; i++ ) {
           uuid = markers[i].id;
@@ -4585,7 +4617,7 @@ var Editor = function() {
           };
         }
         if ( !node.hasChildNodes() ) {
-          if ( node.nodeType == DOMUtils.NODE.TEXT_NODE ) {
+          if ( node.nodeType == Node.TEXT_NODE ) {
             offset = index - startIndex;
             data = data.substring( 0, offset );
             // fix up offset taking into consideration entities presence
@@ -4612,7 +4644,8 @@ var Editor = function() {
         child = node.firstChild;
         while ( child ) {
           result = findMarkerPosition( child, index, flag );
-          if ( result.place == IN_NODE || result.place == BEFORE_FIRST_CHILD ||
+          if ( result.place == IN_NODE ||
+               result.place == BEFORE_FIRST_CHILD ||
                result.place == AFTER_LAST_CHILD ) {
             return result;
           }
@@ -4682,7 +4715,8 @@ var Editor = function() {
       var editorStartIndex = doc.indexFromPos( doc.getCursor( "start" ) );
       var editorEndIndex = doc.indexFromPos( doc.getCursor( "end" ) );
       clearNodeIndexiesCache();
-      var endPosition, startPosition = getMarkerPosition( editorStartIndex, 0 );
+      var endPosition;
+      var startPosition = getMarkerPosition( editorStartIndex, 0 );
       if ( editorStartIndex == editorEndIndex ) {
         endPosition = {
           container: startPosition.container,
@@ -4818,7 +4852,8 @@ var Editor = function() {
     
     function init( callback, wait ) {
       var initProgress = 0;
-      var onCallback = function() {
+      
+      function onCallback() {
         if ( initProgress == 10 ) {
           loadPrefs();
           prefsMozillaObserver.register();          
@@ -4836,17 +4871,18 @@ var Editor = function() {
           callback();
         }
       };
-      var onInitDone = function() {
+      
+      function onInitDone() {
         initProgress += 4;
         onCallback();
       };
-      //
+      
       currentBookTagList = currentNote.getBook().getTagList();
       noteStateListener = {
         name: "EDITOR:XHTML",
-        onNoteDeleted: onNoteDeleted,
         onNoteMainTagChanged: onNoteMainTagChanged,
         onNoteMainContentChanged: onNoteMainContentChanged,
+        onNoteDataChanged: onNoteDataChanged
       };
       tagListStateListener = {
         onTagChanged: onTagChanged,
@@ -4935,6 +4971,12 @@ var Editor = function() {
     };
     
     function done() {
+      if ( currentMode == "editor" ) {
+        if ( !stop() ) {
+          cancel();
+        }
+        // switchMode( "viewer" );
+      }
       prefsMozillaObserver.unregister();      
       self.getDocument().removeObserver( docPrefObserver );
       prefsBundle.removeObserver( prefObserver );
@@ -4943,12 +4985,12 @@ var Editor = function() {
       spellEditController.unregister();
       editController.unregister();
       editorController.unregister();
-      if ( currentMode == "editor" ) {
-        stop();
-      }
       if ( designFrame.hasAttribute( "body.backgroundColor" ) ) {
         designFrame.removeAttribute( "body.backgroundColor" );
       }
+      currentNote = null;
+      currentDocument = null;
+      currentWindow = null;
     };
 
     // PRIVATE
@@ -4993,7 +5035,23 @@ var Editor = function() {
     
     function load() {
       // @@@@ 1 getMainContent
-      sourceEditor.setValue( currentNote.getMainContent() );
+      // @@@@ 1 setMainContent
+      var data = currentNote.getMainContent();
+      var res = currentNote.getDocument();
+      if ( res.result && res.changed ) {
+        // TODO: ? is it really necessary
+        // if document changed (fixed up)
+        // save changes before load it the first time
+        data = self.getDocument().serializeToString(
+          res.dom,
+          currentNote.getURI(),
+          currentNote.getBaseURI()
+        );
+        currentNote.removeStateListener( noteStateListener );
+        currentNote.setMainContent( data );
+        currentNote.addStateListener( noteStateListener );
+      }
+      sourceEditor.setValue( data );
       sourceEditor.clearHistory();
       loadDesign();
     };
@@ -5038,7 +5096,12 @@ var Editor = function() {
       designFrame.contentDocument.execCommand(
         'insertBrOnReturn', false, null );
       designEditor =
-        designFrame.getEditor( designFrame.contentWindow )
+        designFrame.contentWindow
+                   .QueryInterface( Components.interfaces.nsIInterfaceRequestor )
+                   .getInterface( Components.interfaces.nsIWebNavigation )
+                   .QueryInterface( Components.interfaces.nsIInterfaceRequestor )
+                   .getInterface( Components.interfaces.nsIEditingSession )
+                   .getEditorForWindow( designFrame.contentWindow )
                    .QueryInterface( Components.interfaces.nsIHTMLEditor )
                    .QueryInterface( Components.interfaces.nsIEditorStyleSheets );
       designEditor.addOverrideStyleSheet( tagsSheetURL );
@@ -5062,9 +5125,17 @@ var Editor = function() {
     };
     
     function stop() {
-      if ( currentNote && currentNote.isExists() &&
-           isEditorDirty && confirm() ) {
-        save();
+      var res;
+      if ( currentNote && currentNote.isExists() && isEditorDirty ) {
+        res = confirm();
+        if ( res === -1 ) {
+          return false;
+        }
+        if ( res ) {
+          save();
+        } else {
+          cancel();
+        }
       } else {
         cancel();
       }
@@ -5098,6 +5169,7 @@ var Editor = function() {
       designEditor = null;
       designEditorTM = null;
       spellCheckerUI = null;
+      return true;
     };
     
     function save() {
@@ -5141,6 +5213,7 @@ var Editor = function() {
     function confirm() {
       var params = {
         input: {
+          kind: 2,
           title: getString(
             "body.confirmSave.title"
           ),
@@ -5157,13 +5230,13 @@ var Editor = function() {
       currentWindow.openDialog(
         "chrome://znotes/content/confirmdialog.xul",
         "",
-        "chrome,dialog,modal,centerscreen,resizable",
+        "chrome,dialog,modal,centerscreen,resizable=no",
         params
       ).focus();
       if ( params.output ) {
-        return true;
+        return ( params.output.result ? 1 : 0 );
       }
-      return false;
+      return -1;
     };
     
     function print() {
@@ -5291,11 +5364,26 @@ var Editor = function() {
           )
         );
         switchMode( "viewer" );
+        isEditorReady = true;
       }, wait );
     };
 
     // PUBLIC
 
+    /**
+     * Check editor ready state ( UI loaded )
+     */
+    this.isReady = function() {
+      return isEditorReady;
+    };
+    
+    /**
+     * Check editor dirty state
+     */
+    this.isDirty = function() {
+      return isEditorDirty;
+    };
+    
     /**
      * Open editor for a note
      * @param win Window in which Document live
@@ -5304,6 +5392,7 @@ var Editor = function() {
      * @param style Style that will be applied to the editor
      */
     this.open = function( win, doc, note, style ) {
+      isEditorReady = false;
       var editorView = doc.getElementById( "editorView" );
       var noteType = note.getType();
       var editorType = editorView.hasAttribute( "type" ) ?
@@ -5359,11 +5448,8 @@ var Editor = function() {
         )
       );
       done();
-      currentNote = null;
-      currentDocument = null;
-      currentWindow = null;
     };
-    
+
     /**
      * Switch to editor mode
      */

@@ -43,7 +43,7 @@
 <!ENTITY tag_tree_color "Kolor">
 
 <!ENTITY note_tree_attachments "Załączniki">
-<!ENTITY note_tree_name "Notatki">
+<!ENTITY note_tree_name "Nazwa">
 <!ENTITY note_tree_category "Kategoria">
 <!ENTITY note_tree_tag "Tag">
 <!ENTITY note_tree_type "Typ">

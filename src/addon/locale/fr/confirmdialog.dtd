@@ -32,3 +32,4 @@
 
 <!ENTITY confirmdialog_accept "Oui">
 <!ENTITY confirmdialog_cancel "Non">
+<!ENTITY confirmdialog_reject "Cancel">

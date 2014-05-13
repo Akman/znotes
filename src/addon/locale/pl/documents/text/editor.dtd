@@ -115,6 +115,8 @@
 
 <!-- OPTIONS -->
 
+<!ENTITY docCaption.text.label "Document">
+
 <!ENTITY mainCaption.text.label "Główny">
 <!ENTITY isSpellcheckEnabled.text.label "Włącz sprawdź pisownię domyślnie">
 <!ENTITY keysCaption.text.label "Skróty klawiaturowe">

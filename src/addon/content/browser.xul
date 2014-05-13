@@ -35,12 +35,9 @@
 <?xml-stylesheet type="text/css" href="chrome://platform/skin/platform.css" ?>
 <?xml-stylesheet type="text/css" href="chrome://znotes/skin/browser.css" ?>
 
-<?xul-overlay href="chrome://znotes/content/clipper.xul" ?>
-
 <!DOCTYPE window SYSTEM "chrome://znotes/locale/browser.dtd">
 
-<window xmlns:html="http://www.w3.org/1999/xhtml"
-  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   id="znotes"
   windowtype="znotes:browser"
   title="&browserWindowTitle;"
@@ -151,9 +148,10 @@
   </toolbox>
   
   <vbox id="browserView" flex="1" class="browserView">
-    <browser id="gBrowser"
-      flex="1"
-      type="content" />
+    <browser id="gBrowser" flex="1"
+      src="about:blank"
+      class="gBrowser"
+      type="content-primary" />
   </vbox>
 
   <statusbar id="browserStatusBar" class="chromeclass-status browserStatusBar">

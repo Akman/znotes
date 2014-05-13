@@ -37,15 +37,15 @@
 <!ENTITY znotes_prev_tooltip "Вернуться на предыдущую страницу">
 <!ENTITY znotes_prev_accesskey "Н">
 <!ENTITY znotes_prev_key "">
-<!ENTITY znotes_prev_key_modifiers "">
-<!ENTITY znotes_prev_keycode "">
+<!ENTITY znotes_prev_key_modifiers "accel">
+<!ENTITY znotes_prev_keycode "VK_LEFT">
 
 <!ENTITY znotes_next_label "Вперед">
 <!ENTITY znotes_next_tooltip "Вернуться на следующую страницу">
 <!ENTITY znotes_next_accesskey "В">
 <!ENTITY znotes_next_key "">
-<!ENTITY znotes_next_key_modifiers "">
-<!ENTITY znotes_next_keycode "">
+<!ENTITY znotes_next_key_modifiers "accel">
+<!ENTITY znotes_next_keycode "VK_RIGHT">
 
 <!ENTITY url.placeholder "Введите адрес">
 
@@ -54,13 +54,13 @@
 <!ENTITY znotes_stop_accesskey "С">
 <!ENTITY znotes_stop_key "">
 <!ENTITY znotes_stop_key_modifiers "">
-<!ENTITY znotes_stop_keycode "">
+<!ENTITY znotes_stop_keycode "VK_ESCAPE">
 
 <!ENTITY znotes_reload_label "Перезагрузить">
 <!ENTITY znotes_reload_tooltip "Перезагрузить текущую страницу">
 <!ENTITY znotes_reload_accesskey "П">
-<!ENTITY znotes_reload_key "">
-<!ENTITY znotes_reload_key_modifiers "">
+<!ENTITY znotes_reload_key "R">
+<!ENTITY znotes_reload_key_modifiers "accel">
 <!ENTITY znotes_reload_keycode "">
 
 <!ENTITY znotes_customizetoolbar_label "Настроить">

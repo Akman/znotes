@@ -38,7 +38,9 @@ ru.akman.znotes.ConfirmDialog = function() {
 
   var args = null;
   var kind = 0;
-
+  var btnReject = null;
+  var btnCancel = null;
+  
   var pub = {};
 
   pub.onLoad = function() {
@@ -49,18 +51,42 @@ ru.akman.znotes.ConfirmDialog = function() {
     document.getElementById("message2").value = args.input.message2 ?
       args.input.message2 : "";
     kind = args.input.kind ? args.input.kind : 0;
-    if ( kind == 1 ) {
-      // question
-      document.getElementById("imgWarning1").removeAttribute( "hidden" );
-    } else {
-      // warning
-      document.getElementById("imgWarning0").removeAttribute( "hidden" );
+    btnCancel = document.getElementById("btnCancel");
+    btnReject = document.getElementById("btnReject");
+    switch ( kind ) {
+      case 2: // question+reject
+        btnReject.removeAttribute( "hidden" );
+        btnReject.addEventListener( "command", pub.onDialogReject, false );
+        // no break
+      case 1: // question
+        btnCancel.addEventListener( "command", pub.onDialogCancel, false );
+        document.getElementById("imgWarning1").removeAttribute( "hidden" );
+        break;
+      case 0: // warning
+        document.getElementById("imgWarning0").removeAttribute( "hidden" );
+        break;
     }
+    window.sizeToContent();
+    window.centerWindowOnScreen();
   };
 
   pub.onDialogAccept = function() {
     args.output = {
+      result: true
     };
+    return true;
+  };
+
+  pub.onDialogCancel = function() {
+    args.output = {
+      result: false
+    };
+    window.close();
+    return true;
+  };
+  
+  pub.onDialogReject = function() {
+    window.close();
     return true;
   };
 

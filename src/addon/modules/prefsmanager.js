@@ -198,24 +198,44 @@ var PrefsManager = function() {
 
   pub.loadPrefs = function() {
     if ( prefsMozilla.prefHasUserValue( "extensions.znotes.debug" ) ) {
-      Utils.IS_DEBUG_ENABLED =
-        prefsMozilla.getBoolPref( "extensions.znotes.debug" );
+      try {
+        Utils.IS_DEBUG_ENABLED =
+          prefsMozilla.getBoolPref( "extensions.znotes.debug" );
+      } catch ( e ) {
+        prefsMozilla.deleteBranch( "extensions.znotes.debug" );
+      }
     }
     if ( prefsMozilla.prefHasUserValue( "extensions.znotes.test.active" ) ) {
-      Utils.IS_TEST_ACTIVE =
-        prefsMozilla.getBoolPref( "extensions.znotes.test.active" );
+      try {
+        Utils.IS_TEST_ACTIVE =
+          prefsMozilla.getBoolPref( "extensions.znotes.test.active" );
+      } catch ( e ) {
+        prefsMozilla.deleteBranch( "extensions.znotes.test.active" );
+      }
     }
     if ( prefsMozilla.prefHasUserValue( "extensions.znotes.test.raised" ) ) {
-      Utils.IS_TEST_RAISED =
-        prefsMozilla.getBoolPref( "extensions.znotes.test.raised" );
+      try {
+        Utils.IS_TEST_RAISED =
+          prefsMozilla.getBoolPref( "extensions.znotes.test.raised" );
+      } catch ( e ) {
+        prefsMozilla.deleteBranch( "extensions.znotes.test.raised" );
+      }
     }
     if ( prefsMozilla.prefHasUserValue( "extensions.znotes.sanitize" ) ) {
-      Utils.IS_SANITIZE_ENABLED =
-        prefsMozilla.getBoolPref( "extensions.znotes.sanitize" );
+      try {
+        Utils.IS_SANITIZE_ENABLED =
+          prefsMozilla.getBoolPref( "extensions.znotes.sanitize" );
+      } catch ( e ) {
+        prefsMozilla.deleteBranch( "extensions.znotes.sanitize" );
+      }
     }
     if ( prefsMozilla.prefHasUserValue( "extensions.znotes.ad" ) ) {
-      Utils.IS_AD_ENABLED =
-        prefsMozilla.getBoolPref( "extensions.znotes.ad" );
+      try {
+        Utils.IS_AD_ENABLED =
+          prefsMozilla.getBoolPref( "extensions.znotes.ad" );
+      } catch ( e ) {
+        prefsMozilla.deleteBranch( "extensions.znotes.ad" );
+      }
     }
     try {
       if ( !pub.hasPref( "isFirstRun" ) ) {
@@ -257,6 +277,20 @@ var PrefsManager = function() {
       }
       Utils.IS_HIGHLIGHT_ROW =
         pub.getBoolPref( "isHighlightRow" );
+      //
+      if ( !pub.hasPref( "isCloseBrowserAfterImport" ) ) {
+        pub.setBoolPref( "isCloseBrowserAfterImport",
+          Utils.IS_CLOSE_BROWSER_AFTER_IMPORT );
+      }
+      Utils.IS_CLOSE_BROWSER_AFTER_IMPORT =
+        pub.getBoolPref( "isCloseBrowserAfterImport" );
+      //
+      if ( !pub.hasPref( "isSelectNoteAfterImport" ) ) {
+        pub.setBoolPref( "isSelectNoteAfterImport",
+          Utils.IS_SELECT_NOTE_AFTER_IMPORT );
+      }
+      Utils.IS_SELECT_NOTE_AFTER_IMPORT =
+        pub.getBoolPref( "isSelectNoteAfterImport" );
       //
       if ( !pub.hasPref( "isReplaceBackground" ) ) {
         pub.setBoolPref( "isReplaceBackground",

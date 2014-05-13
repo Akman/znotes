@@ -378,10 +378,9 @@
       <tabpanels id="editorPanels" flex="1">
         <tabpanel id="designPanel" flex="1">
           <vbox id="designBox" flex="1">
-            <editor id="designEditor"
+            <browser id="designEditor"
               type="content-primary"
               src="chrome://znotes_documents/content/xhtml/design.xhtml"
-              editortype="html"
               disablehistory="true"
               context="znotes_edit_menupopup"
               flex="1" />
@@ -630,6 +629,16 @@
   </vbox>
 
   <vbox id="optionsView">
+    <!-- document -->
+    <groupbox id="docGroupBox:xhtml">
+      <caption id="docCaption:xhtml" label="&docCaption.xhtml.label;" />
+        <hbox id="authorHBox:xhtml" align="center">
+          <label value="&author.xhtml.label;" control="author:xhtml" />
+          <textbox id="author:xhtml" placeholder="&author.xhtml.placeholder;"
+            flex="1" />
+        </hbox>
+    </groupbox>
+    <!-- editor -->
     <groupbox id="mainGroupBox:xhtml">
       <caption id="mainCaption:xhtml" label="&mainCaption.xhtml.label;" />
       <vbox id="mainVBox:xhtml" align="start">

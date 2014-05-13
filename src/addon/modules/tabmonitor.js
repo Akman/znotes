@@ -45,6 +45,15 @@ var TabMonitor = function() {
   var Utils = ru.akman.znotes.Utils;
   var sessionManager = ru.akman.znotes.SessionManager.getInstance();
   var prefsManager = ru.akman.znotes.PrefsManager.getInstance();
+  var prefsMozilla =
+    Components.classes["@mozilla.org/preferences-service;1"]
+              .getService( Components.interfaces.nsIPrefBranch );
+  var browserChromeURLPrefValue;
+  try {
+    browserChromeURLPrefValue = prefsMozilla.getCharPref( "browser.chromeURL" );
+  } catch ( e ) {
+    browserChromeURLPrefValue = null;
+  }
   
   var pub = {
 
@@ -64,6 +73,8 @@ var TabMonitor = function() {
     onTabOpened: function( aTab ) {
       if ( aTab.mode.name == "znotesMainTab" ) {
         prefsManager.setBoolPref( "isOpened", true );
+        prefsMozilla.setCharPref( "browser.chromeURL",
+          "chrome://znotes/content/browser.xul" );
       } else if ( aTab.mode.name == "znotesContentTab" ) {
         sessionManager.updateState(
           aTab, { opened: true, background: true } );
@@ -79,6 +90,10 @@ var TabMonitor = function() {
     onTabClosing: function( aTab ) {
       if ( aTab.mode.name == "znotesMainTab" && pub.mIsActive ) {
         prefsManager.setBoolPref( "isOpened", false );
+        if ( browserChromeURLPrefValue ) {
+          prefsMozilla.setCharPref( "browser.chromeURL",
+            browserChromeURLPrefValue );
+        }
       } else if ( aTab.mode.name == "znotesContentTab" && pub.mIsActive ) {
         sessionManager.updateState( aTab, { opened: false } );
       }
@@ -93,12 +108,18 @@ var TabMonitor = function() {
     onTabSwitched: function( aNewTab, anOldTab ) {
       if ( anOldTab.mode.name == "znotesMainTab" && pub.mIsActive ) {
         prefsManager.setBoolPref( "isActive", false );
+        if ( browserChromeURLPrefValue ) {
+          prefsMozilla.setCharPref( "browser.chromeURL",
+            browserChromeURLPrefValue );
+        }
       }
       if ( anOldTab.mode.name == "znotesContentTab" && pub.mIsActive ) {
         sessionManager.updateState( anOldTab, { background: true } );
       }
       if ( aNewTab.mode.name == "znotesMainTab" && pub.mIsActive ) {
         prefsManager.setBoolPref( "isActive", true );
+        prefsMozilla.setCharPref( "browser.chromeURL",
+          "chrome://znotes/content/browser.xul" );
       }
       if ( aNewTab.mode.name == "znotesContentTab" && pub.mIsActive ) {
         sessionManager.updateState( aNewTab, { background: false } );

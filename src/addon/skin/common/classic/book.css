@@ -34,10 +34,13 @@
 
 #btnAccept {
   list-style-image: url("chrome://znotes_images/skin/accept-16x16.png");
+  margin-top: 9px;
+  margin-right: 2px;
 }
 #btnCancel {
   list-style-image: url("chrome://znotes_images/skin/cancel-16x16.png");
+  margin-top: 9px;
 }
-#labelHeader, #labelFooter {
+#commonBoxCaption, #driverBoxCaption, #paramsBoxCaption {
   font-weight: bold;
 }

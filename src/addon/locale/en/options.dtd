@@ -42,6 +42,8 @@
 <!ENTITY isConfirmExit.label "Confirm exit when closing application">
 <!ENTITY isExitQuitTB.label "Exiting application leads to closing TB">
 <!ENTITY isHighlightRow.label "Highlight row in the note list using the main tag color">
+<!ENTITY isCloseBrowserAfterImport.label "Close browser window after note import">
+<!ENTITY isSelectNoteAfterImport.label "Select imported note after note import">
 <!ENTITY isPlaySound.label "Play sound at startup">
 <!ENTITY keysPlatformCaption.label "Keyboard shortcuts">
 <!ENTITY keysCaption.label "Keyboard shortcuts">

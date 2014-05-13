@@ -46,9 +46,11 @@ skin      znotes_sounds     classic/1.0 jar:chrome/znotes.jar!/skin/sounds/class
 skin      znotes_common     classic/1.0 jar:chrome/znotes.jar!/skin/common/classic/
 overlay   chrome://messenger/content/messenger.xul chrome://znotes/content/overlay-tb.xul
 overlay   chrome://messenger/content/msgAccountCentral.xul chrome://znotes/content/msgAccountCentral.xul
+overlay   chrome://znotes/content/browser.xul chrome://znotes/content/clipper.xul
 style     chrome://global/content/customizeToolbar.xul chrome://znotes/skin/overlay-tb.css
 style     chrome://global/content/customizeToolbar.xul chrome://znotes/skin/common-tb.css
 style     chrome://global/content/customizeToolbar.xul chrome://znotes/skin/common.css
+style     chrome://global/content/customizeToolbar.xul chrome://znotes/skin/clipper.css
 style     chrome://global/content/customizeToolbar.xul chrome://znotes/skin/documents/text/editor.css
 style     chrome://global/content/customizeToolbar.xul chrome://znotes/skin/documents/xhtml/editor.css
 manifest  locale/localized.manifest

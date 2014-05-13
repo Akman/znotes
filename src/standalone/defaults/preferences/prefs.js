@@ -36,10 +36,10 @@ pref("toolkit.defaultChromeURI", "chrome://znotes/content/znotes.xul");
 pref("toolkit.singletonWindowType", true);
 pref("toolkit.defaultChromeFeatures", "chrome=yes,dialog=no,resizable=yes,centerscreen=yes,menubar=yes,toolbar=yes,status=yes");
 pref("intl.locale.matchOS", false);
+pref("browser.chromeURL", "chrome://znotes/content/browser.xul");
 pref("accessibility.typeaheadfind.flashBar", 0);
 pref("print.use_global_printsettings", true);
 pref("print.save_print_settings", true);
-
 /* debug mode */
 
 /*

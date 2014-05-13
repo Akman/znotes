@@ -83,5 +83,6 @@
     rows="25"
     cols="80"
     value="" />
+  <box id="hiddenBox" collapsed="true" />
 
 </window>

@@ -42,6 +42,8 @@
 <!ENTITY isExitQuitTB.label "Выход из приложения закрывает TB">
 <!ENTITY isReplaceBackground.label "Заменять цвет фона заметки используя цвет основного тега">
 <!ENTITY isHighlightRow.label "Подсвечивать строки в списке заметок используя цвет основного тега">
+<!ENTITY isCloseBrowserAfterImport.label "Закрывать окно браузера после импорта заметки">
+<!ENTITY isSelectNoteAfterImport.label "Выбирать импортированную заметку после импорта">
 <!ENTITY isPlaySound.label "Воспроизводить звук при запуске">
 <!ENTITY keysPlatformCaption.label "Сочетания клавиш">
 <!ENTITY keysCaption.label "Сочетания клавиш">

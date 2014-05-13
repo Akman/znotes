@@ -42,7 +42,7 @@
 <!ENTITY tag_tree_color "Цвет">
 
 <!ENTITY note_tree_attachments "Вложения">
-<!ENTITY note_tree_name "Заметка">
+<!ENTITY note_tree_name "Название">
 <!ENTITY note_tree_category "Категория">
 <!ENTITY note_tree_tag "Тег">
 <!ENTITY note_tree_type "Тип">

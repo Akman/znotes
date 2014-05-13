@@ -215,29 +215,29 @@ var Note = function( aBook, anEntry, aCategory, aType, aTagID ) {
     if ( !doc ) {
       return false;
     }
-    this.setMainContent( doc.serializeToString( dom ) );
+    this.setMainContent(
+      doc.serializeToString( dom, this.getURI(), this.getBaseURI() ) );
     return true;
   };
 
   this.updateDocument = function() {
-    var status = this.getDocument();
-    if ( !status || !status.result ) {
+    var res = this.getDocument();
+    if ( !res || !res.result ) {
       return;
     }
-    if ( status.changed ) {
-      this.setDocument( status.dom );
+    if ( res.changed ) {
+      this.setDocument( res.dom );
     }
   };
 
-  this.importDocument = function( dom ) {
+  this.importDocument = function( dom, params ) {
     var doc = ru.akman.znotes.DocumentManager.getInstance()
                                              .getDocument( this.getType() );
     if ( !doc ) {
       return;
     }
     this.setDocument(
-      doc.importDocument( dom, this.getBaseURI(), this.getName() )
-    );
+      doc.importDocument( dom, this.getURI(), this.getBaseURI(), this.getName(), params ) );
     this.updateDocument();
   };
   
@@ -412,7 +412,7 @@ var Note = function( aBook, anEntry, aCategory, aType, aTagID ) {
 
   this.moveInto = function( aCategory ) {
     this.entry.moveTo( aCategory.entry );
-    // @@@@ 1 What if document in editing mode ?
+    // @@@@ 1 What if the note is in editing mode ?
     this.updateDocument();
     this.getParent().removeNote( this );
     aCategory.appendNote( this );
@@ -662,17 +662,19 @@ var Note = function( aBook, anEntry, aCategory, aType, aTagID ) {
   this.id = this.entry.getId();
   this.index = this.entry.getIndex();
   this.data = JSON.parse( this.entry.getData() );
+  //
   this.type = this.entry.getType();
   if ( aType && aType != this.type ) {
     this.setType( aType );
   }
   if ( this.type === "unknown" ) {
-    if ( this.getMainContent().indexOf( "<?xml" ) == 0 ) {
+    if ( this.getMainContent().match( /<html/i ) ) {
       this.setType( "application/xhtml+xml" );
     } else {
       this.setType( "text/plain" );
     }
   }
+  //
   this.tags = this.entry.getTags();
   var arrIDs = this.getTags();
   if ( aTagID && arrIDs.indexOf( aTagID ) < 0 ) {
@@ -687,7 +689,12 @@ var Note = function( aBook, anEntry, aCategory, aType, aTagID ) {
       this.setType( doc.getType() );
     }
     if ( doc ) {
-      var dom = doc.getBlankDocument( this.getBaseURI(), this.getName(), true );
+      var dom = doc.getBlankDocument(
+        this.getURI(),
+        this.getBaseURI(),
+        this.getName(),
+        true /* comments */
+      );
       if ( dom ) {
         this.setDocument( dom );
       }

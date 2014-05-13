@@ -186,7 +186,7 @@ var Keyset = function() {
             event.preventDefault();
             return false;
           default:
-            Utils.log( "command: '" + command + "', keyCode: " + keyCode );
+            // Utils.log( "command: '" + command + "', keyCode: " + eventKeyCode );
         }
       }
       return true;

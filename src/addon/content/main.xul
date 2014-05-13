@@ -457,7 +457,7 @@
               class="treecol-image"/>
             <splitter id="noteTreeAttachmentsSplitter" class="tree-splitter"/>
             <treecol id="noteTreeName" label="&note_tree_name;" flex="1"
-              primary="true" crop="center" persist="width ordinal hidden"
+              crop="center" persist="width ordinal hidden"
               sortActive="true" sortDirection="ascending"/>
             <splitter id="noteTreeNameSplitter" class="tree-splitter"/>
             <treecol id="noteTreeCategory" label="&note_tree_category;"

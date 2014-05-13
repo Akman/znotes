@@ -46,6 +46,8 @@ ru.akman.znotes.Browser = function() {
   var Utils = ru.akman.znotes.Utils;
   var Common = ru.akman.znotes.Common;
 
+  var context = null;
+  
   var browserToolBox = null;
   var browserToolBar = null
   var browserURLTextBox = null;
@@ -57,11 +59,6 @@ ru.akman.znotes.Browser = function() {
   var statusBarImage = null;
   var statusBarLabel = null;
 
-  var aNote = null;
-  var aURL = "about:blank";
-  var isSilent = false;
-  var anIconSize = "small";
-
   var nsIWebNavigation = Components.interfaces.nsIWebNavigation;
   var nsIWebProgress = Components.interfaces.nsIWebProgress;
   var nsIWebProgressListener = Components.interfaces.nsIWebProgressListener;
@@ -71,10 +68,15 @@ ru.akman.znotes.Browser = function() {
   
   var ioService = Components.classes["@mozilla.org/network/io-service;1"]
                             .getService( Components.interfaces.nsIIOService );
-                            
-  var welcomeURL = "chrome://znotes_welcome/content/index_" +
-                   Utils.getSiteLanguage() + ".xhtml";
-  
+
+  var windowWatcher =
+    Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
+              .getService( Components.interfaces.nsIWindowWatcher );
+
+  var observerService =
+    Components.classes["@mozilla.org/observer-service;1"]
+              .getService( Components.interfaces.nsIObserverService );
+
   // KEYSET
   
   var browserKeyset = {
@@ -160,7 +162,17 @@ ru.akman.znotes.Browser = function() {
       }
       switch ( cmd ) {
         case "znotes_load_command":
-          loadURL( browserURLTextBox.value );
+          try {
+            gBrowser.webNavigation.loadURI(
+              browserURLTextBox.value,
+              nsIWebNavigation.LOAD_FLAGS_NONE,
+              null,
+              null,
+              null
+            );
+          } catch ( e ) {
+            //
+          }
           break;
         case "znotes_prev_command":
           gBrowser.webNavigation.goBack();
@@ -230,7 +242,39 @@ ru.akman.znotes.Browser = function() {
     }
   };
   
-  // PROGRESS
+  function updateCommands() {
+    browserController.updateCommands();
+  };
+  
+  // HTTP OBSERVER
+  var HTTPObserver = {
+    observe: function( aSubject, aTopic, aData ) {
+      aSubject.QueryInterface( Components.interfaces.nsIHttpChannel );
+      var url = aSubject.URI.spec;
+      switch ( aTopic ) {
+        case "http-on-modify-request":
+          // aSubject.setRequestHeader(
+          //   "Referer", "http://referer.com", false );
+          // aSubject.cancel( Components.results.NS_BINDING_ABORTED );
+          break;
+        case "http-on-examine-response":
+          // aSubject.setRequestHeader(
+          //   "Referer", "http://referer.com", false );
+          // aSubject.cancel( Components.results.NS_BINDING_ABORTED );
+          break;
+      }
+    },
+    register: function() {
+      observerService.addObserver( this, "http-on-modify-request", false );
+      observerService.addObserver( this, "http-on-examine-response", false );
+    },
+    unregister: function() {
+      observerService.removeObserver( this, "http-on-modify-request" );
+      observerService.removeObserver( this, "http-on-examine-response" );
+    }
+  };
+
+  // PROGRESS LISTENER
   
   var progressListener = {
     QueryInterface: function( aIID ) {
@@ -244,27 +288,45 @@ ru.akman.znotes.Browser = function() {
     },
     onLocationChange: function( aWebProgress, aRequest, aLocation,
                                 aFlags ) {
+      // if ( aRequest && !Components.isSuccessCode( aRequest.status ) ) {
+      //   load failure
+      // }
+      // if ( aRequest instanceof Components.interfaces.nsHTTPChannel ) {
+      //   test aRequest.responseStatus ( HTTP STATUS )
+      // }
+      // if ( aFlags & nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT ) {
+      //   anchor clicked!
+      // }
       var location = Utils.getURLFromURI( aLocation );
       if ( location ) {
         browserURLTextBox.value = location;
         browserURLTextBox.select();
-        browserController.updateCommands();
+        updateCommands();
       }
     },
     onProgressChange: function( aWebProgress, aRequest, aCurSelfProgress,
                                 aMaxSelfProgress, aCurTotalProgress,
                                 aMaxTotalProgress ) {
-      return this.onProgressChange64(
-                                aWebProgress, aRequest, aCurSelfProgress,
-                                aMaxSelfProgress, aCurTotalProgress,
-                                aMaxTotalProgress );
+      this.onProgressChange64( aWebProgress, aRequest, aCurSelfProgress,
+                               aMaxSelfProgress, aCurTotalProgress,
+                               aMaxTotalProgress );
     },
     onProgressChange64: function( aWebProgress, aRequest, aCurSelfProgress,
                                   aMaxSelfProgress, aCurTotalProgress,
                                   aMaxTotalProgress ) {
+      //if ( aCurTotalProgress !== aMaxTotalProgress ) {
+      //  statusBarLabel.value = aCurTotalProgress + " bytes";
+      //}
     },
     onRefreshAttempted: function( aWebProgress, aRefreshURI, aMillis,
                                   aSameURI ) {
+      aWebProgress.DOMWindow.location.assign( aRefreshURI.spec );
+      // BUG: return PR_TRUE still cancel redirect
+      // var aResult =
+      //   Components.classes["@mozilla.org/supports-PRBool;1"]
+      //             .createInstance( Components.interfaces.nsISupportsPRBool );
+      // aResult.data = 1; // PR_TRUE
+      // return aResult;
     },
     onSecurityChange: function( aWebProgress, aRequest, aState ) {
     },
@@ -275,14 +337,14 @@ ru.akman.znotes.Browser = function() {
     onStateChange: function( aWebProgress, aRequest, aStateFlags,
                              aStatus ) {
       if ( aStateFlags & nsIWebProgressListener.STATE_STOP ) {
-        if ( aStateFlags & nsIWebProgressListener.STATE_IS_WINDOW ||
-             aStateFlags & nsIWebProgressListener.STATE_IS_DOCUMENT ) {
-          statusBarLabel.value = "";
+        if ( aStateFlags & nsIWebProgressListener.STATE_IS_DOCUMENT ) {
           browserSpinner.setAttribute( "src", getFavoriteIconURL() );
+          gBrowser.contentWindow.scrollbars.visible = true;
         }
         statusBarImage.className = "browserBlack";
+        statusBarLabel.value = "";
       } else if ( aStateFlags & nsIWebProgressListener.STATE_START ) {
-        if ( aStateFlags & nsIWebProgressListener.STATE_IS_NETWORK ) {
+        if ( aStateFlags & nsIWebProgressListener.STATE_IS_DOCUMENT ) {
           browserSpinner.setAttribute( "src",
             "chrome://znotes_images/skin/spinner-16x16.gif" );
         }
@@ -294,30 +356,44 @@ ru.akman.znotes.Browser = function() {
   // EVENTS
   
   function onBrowserLoad( event ) {
-    if ( isSilent ) {
-      window.close();
+    var doc = event.originalTarget;
+    if ( doc instanceof HTMLDocument ) {
+      if ( doc.defaultView.frameElement ) {
+        // frame within a browser was loaded
+        while ( doc.defaultView.frameElement ) {
+          doc = doc.defaultView.frameElement.ownerDocument;
+        }
+      }
+      // doc processing
     }
   };
   
   function onURLChanged( event ) {
+    browserURLTextBox.value = browserURLTextBox.value.trim();
     browserURLTextBox.select();
+    var uri;
+    try {
+      uri = ioService.newURI( browserURLTextBox.value, null, null );
+    } catch ( e ) {
+      uri = null;
+    }
+    if ( !Utils.IS_DEBUG_ENABLED &&
+        uri && ( uri.schemeIs( "chrome" ) || uri.schemeIs( "about" ) ) ) {
+      return;
+    }
     Common.goDoCommand( 'znotes_load_command', browserURLTextBox );
   };
   
   function mouseOverHandler( event ) {
-    var href = "", element = event.target;
-    while ( element ) {
-      if ( element.nodeName.toLowerCase() === "a" ) {
-        href = element.href;
-        break;
-      }
-      element = element.parentNode;
-    }
-    statusBarLabel.value = href;
+    var href = Utils.getHREFForClickEvent( event, true );
+    statusBarLabel.value = href ? href : "";
   };
   
   function mouseClickHandler( event ) {
-    if ( !event.isTrusted || event.defaultPrevented || event.button ) {
+    if ( event.defaultPrevented || event.button ) {
+      return true;
+    }
+    if ( !event.isTrusted ) {
       return true;
     }
     var href = Utils.getHREFForClickEvent( event, true );
@@ -325,15 +401,48 @@ ru.akman.znotes.Browser = function() {
       return true;
     }
     var uri = ioService.newURI( href, null, null );
-    if ( uri.schemeIs( "chrome" ) && uri.spec !== welcomeURL ) {
-      event.stopPropagation();
-      event.preventDefault();
-      return false;
+    if ( !uri.schemeIs( "chrome" ) ) {
+      browserURLTextBox.value = href;
+      browserURLTextBox.select();
+      return true;
     }
-    return true;
+    event.stopPropagation();
+    event.preventDefault();
+    return false;
   };
   
   // HELPERS
+  
+  function getString( name ) {
+    return Utils.STRINGS_BUNDLE.getString( name );
+  };
+  
+  function setupUI() {
+    browserView = document.getElementById( "browserView" );
+    browserURLTextBox = document.getElementById( "znotes_url_textbox" );
+    browserURLTextBox.value = "about:blank";
+    browserURLTextBox.select();
+    browserSpinner = document.createElement( "image" );
+    browserSpinner.setAttribute( "id", "browserSpinner" );
+    browserSpinner.setAttribute( "src",
+      "chrome://znotes_images/skin/ready-16x16.png" );
+    browserSpinner.className = "browserSpinner";
+    browserURLTextBox.insertBefore( browserSpinner, browserURLTextBox.firstChild );
+    gBrowser = document.getElementById( "gBrowser" );
+    gBrowser.webNavigation.allowAuth = true;
+    gBrowser.webNavigation.allowImages = true;
+    gBrowser.webNavigation.allowJavascript = true;
+    gBrowser.webNavigation.allowMetaRedirects = true;
+    gBrowser.webNavigation.allowPlugins = true;
+    gBrowser.webNavigation.allowSubframes = true;
+    browserToolBox = document.getElementById( "browserToolBox" );
+    browserToolBox.customizeDone = browserToolBoxCustomizeDone;
+    browserToolBar = document.getElementById( "browserToolBar" );
+    statusBar = document.getElementById( "browserStatusBar" );
+    statusBarPanel = document.getElementById( "browserStatusBarPanel" );
+    statusBarImage = document.getElementById( "browserStatusBarImage" );
+    statusBarLabel = document.getElementById( "browserStatusBarLabel" );
+  };
   
   function getFavoriteIconURL() {
     var result = null;
@@ -357,7 +466,7 @@ ru.akman.znotes.Browser = function() {
   };
   
   function browserToolBoxCustomizeDone( isChanged ) {
-    browserController.updateCommands();
+    updateCommands();
   };
   
   function addEventListeners() {
@@ -378,70 +487,25 @@ ru.akman.znotes.Browser = function() {
     browserURLTextBox.removeEventListener( "change", onURLChanged, false );
   };
   
-  function loadURL( url ) {
-    try {
-      gBrowser.webNavigation.loadURI(
-        url,
-        nsIWebNavigation.LOAD_FLAGS_NONE,
-        null,
-        null,
-        null
-      );
-    } catch ( e ) {
-      Utils.log( e );
-    }
-  };
-  
   // PUBLIC
   
   var pub = {};
 
   pub.onLoad = function() {
-    aNote = window.arguments[0].note;
-    aURL = window.arguments[0].url;
-    isSilent = window.arguments[0].silent;
-    anIconSize = window.arguments[0].iconsize;
-    browserView = document.getElementById( "browserView" );
-    browserURLTextBox = document.getElementById( "znotes_url_textbox" );
-    browserSpinner = document.createElement( "image" );
-    browserSpinner.setAttribute( "id", "browserSpinner" );
-    browserSpinner.setAttribute( "src",
-      "chrome://znotes_images/skin/ready-16x16.png" );
-    browserSpinner.className = "browserSpinner";
-    browserURLTextBox.insertBefore( browserSpinner, browserURLTextBox.firstChild );
-    gBrowser = document.getElementById( "gBrowser" );
-    gBrowser.webNavigation.allowAuth = true;
-    gBrowser.webNavigation.allowImages = true;
-    gBrowser.webNavigation.allowJavascript = true;
-    gBrowser.webNavigation.allowMetaRedirects = true;
-    gBrowser.webNavigation.allowPlugins = true;
-    gBrowser.webNavigation.allowSubframes = true;
-    browserToolBox = document.getElementById( "browserToolBox" );
-    browserToolBox.customizeDone = browserToolBoxCustomizeDone;
-    browserToolBar = document.getElementById( "browserToolBar" );
-    browserToolBar.setAttribute( "iconsize", anIconSize );
-    statusBar = document.getElementById( "browserStatusBar" );
-    statusBarPanel = document.getElementById( "browserStatusBarPanel" );
-    statusBarImage = document.getElementById( "browserStatusBarImage" );
-    statusBarLabel = document.getElementById( "browserStatusBarLabel" );
+    setupUI();
+    addEventListeners();
     browserKeyset.setup();
     browserKeyset.update();
     browserKeyset.activate();
     browserController.register();
-    browserController.updateCommands();
-    addEventListeners();
-    if ( !aURL ) {
-      aURL = "about:blank";
-    } else {
-      loadURL( aURL );
-    }
-    browserURLTextBox.value = aURL;
-    browserURLTextBox.select();
+    HTTPObserver.register();
+    updateCommands();
   };
 
   pub.onClose = function() {
     removeEventListeners();
     browserKeyset.deactivate();
+    HTTPObserver.unregister();
     browserController.unregister();
     return true;
   };
@@ -451,4 +515,4 @@ ru.akman.znotes.Browser = function() {
 }();
 
 window.addEventListener( "load", ru.akman.znotes.Browser.onLoad, false );
-window.addEventListener( "close", ru.akman.znotes.Browser.onClose, false );
+window.addEventListener( "close", ru.akman.znotes.Browser.onClose, true );

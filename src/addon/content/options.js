@@ -64,6 +64,8 @@ ru.akman.znotes.Options = function() {
   var isEditSourceEnabled = null;
   var isPlaySound = null;
   var isHighlightRow = null;
+  var isCloseBrowserAfterImport = null;
+  var isSelectNoteAfterImport = null;
   var isReplaceBackground = null;
   var isConfirmExit = null;
   var isExitQuitTB = null;
@@ -432,34 +434,37 @@ ru.akman.znotes.Options = function() {
   
   function populateDocumentTypePopup() {
     var docs = ru.akman.znotes.DocumentManager.getInstance().getDocuments();
+    var doc, types, contentType, tooltiptext, menuItem, style;
     docTypeMenuList.selectedItem = null;
     while ( docTypeMenuPopup.firstChild ) {
       docTypeMenuPopup.removeChild( docTypeMenuPopup.firstChild );
     }
     for ( var name in docs ) {
-      var doc = docs[ name ];
-      var doctype = doc.getType();
-      var tooltiptext = doc.getName() + "-" + doc.getVersion() +
-        " : " + doctype;
-      var menuItem = document.createElement( "menuitem" );
-      menuItem.className = "menuitem-iconic";
-      menuItem.setAttribute( "id", "menuitem_" + doc.getName() );
-      menuItem.setAttribute( "label", doc.getDescription() );
-      menuItem.setAttribute( "tooltiptext", tooltiptext );
-      menuItem.setAttribute( "image", doc.getIconURL() );
-      menuItem.setAttribute( "value", doctype );
-      menuItem.addEventListener( "command", onDocTypeSelect, false );
-      var style = menuItem.style;
-      // BUG: DOES NOT WORK!
-      // style.setProperty( "list-style-image", "url( '" + doc.getIconURL() + "' )" , "important" );
-      style.setProperty( "background-image", "url( '" + doc.getIconURL() + "' )" );
-      style.setProperty( "background-repeat", "no-repeat" );
-      style.setProperty( "background-position", "0 50%" );
-      style.setProperty( "padding-left", "20px" );
-      docTypeMenuPopup.appendChild( menuItem );
-      if ( doctype == defaultDocumentType ) {
-        docTypeMenuList.selectedItem = menuItem;
-        docTypeMenuList.setAttribute( "tooltiptext", tooltiptext );
+      doc = docs[ name ];
+      types = doc.getTypes();
+      for ( var i = 0; i < types.length; i++ ) {
+        contentType = types[i];
+        tooltiptext = contentType;
+        menuItem = document.createElement( "menuitem" );
+        menuItem.className = "menuitem-iconic";
+        menuItem.setAttribute( "id", "menuitem_" + doc.getName() + "_" + i );
+        menuItem.setAttribute( "label", doc.getDescription() );
+        menuItem.setAttribute( "tooltiptext", tooltiptext );
+        menuItem.setAttribute( "image", doc.getIconURL() );
+        menuItem.setAttribute( "value", contentType );
+        menuItem.addEventListener( "command", onDocTypeSelect, false );
+        style = menuItem.style;
+        // BUG: DOES NOT WORK!
+        // style.setProperty( "list-style-image", "url( '" + doc.getIconURL() + "' )" , "important" );
+        style.setProperty( "background-image", "url( '" + doc.getIconURL() + "' )" );
+        style.setProperty( "background-repeat", "no-repeat" );
+        style.setProperty( "background-position", "0 50%" );
+        style.setProperty( "padding-left", "20px" );
+        docTypeMenuPopup.appendChild( menuItem );
+        if ( contentType == defaultDocumentType ) {
+          docTypeMenuList.selectedItem = menuItem;
+          docTypeMenuList.setAttribute( "tooltiptext", tooltiptext );
+        }
       }
     }
   };
@@ -544,6 +549,8 @@ ru.akman.znotes.Options = function() {
     isConfirmExit.checked = optionsPrefs["main"]["default"].isConfirmExit;
     isExitQuitTB.checked = optionsPrefs["main"]["default"].isExitQuitTB;
     isHighlightRow.checked = optionsPrefs["main"]["default"].isHighlightRow;
+    isCloseBrowserAfterImport.checked = optionsPrefs["main"]["default"].isCloseBrowserAfterImport;
+    isSelectNoteAfterImport.checked = optionsPrefs["main"]["default"].isSelectNoteAfterImport;
     defaultDocumentType = optionsPrefs["main"]["default"].defaultDocumentType;
     populateDocumentTypePopup();
     var doc = event.target.ownerDocument;
@@ -664,6 +671,12 @@ ru.akman.znotes.Options = function() {
     currentPrefs.isHighlightRow = isHighlightRow.checked;
     isChanged = isChanged ||
       ( currentPrefs.isHighlightRow !== originalPrefs.isHighlightRow );
+    currentPrefs.isCloseBrowserAfterImport = isCloseBrowserAfterImport.checked;
+    isChanged = isChanged ||
+      ( currentPrefs.isCloseBrowserAfterImport !== originalPrefs.isCloseBrowserAfterImport );
+    currentPrefs.isSelectNoteAfterImport = isSelectNoteAfterImport.checked;
+    isChanged = isChanged ||
+      ( currentPrefs.isSelectNoteAfterImport !== originalPrefs.isSelectNoteAfterImport );
     currentPrefs.defaultDocumentType = defaultDocumentType;
     isChanged = isChanged ||
       ( currentPrefs.defaultDocumentType !== originalPrefs.defaultDocumentType );
@@ -735,7 +748,9 @@ ru.akman.znotes.Options = function() {
       "isReplaceBackground": true,
       "isConfirmExit": true,
       "isExitQuitTB": true,
-      "isHighlightRow": false
+      "isHighlightRow": false,
+      "isCloseBrowserAfterImport": true,
+      "isSelectNoteAfterImport": true
     };
     result.shortcuts = {};
     var id, name, command;
@@ -778,7 +793,9 @@ ru.akman.znotes.Options = function() {
       "isReplaceBackground": Utils.IS_REPLACE_BACKGROUND,
       "isConfirmExit": Utils.IS_CONFIRM_EXIT,
       "isExitQuitTB": Utils.IS_EXIT_QUIT_TB,
-      "isHighlightRow": Utils.IS_HIGHLIGHT_ROW
+      "isHighlightRow": Utils.IS_HIGHLIGHT_ROW,
+      "isCloseBrowserAfterImport": Utils.IS_CLOSE_BROWSER_AFTER_IMPORT,
+      "isSelectNoteAfterImport": Utils.IS_SELECT_NOTE_AFTER_IMPORT
     };
     try {
       result.shortcuts = JSON.parse( Utils.MAIN_SHORTCUTS );
@@ -801,6 +818,8 @@ ru.akman.znotes.Options = function() {
     prefsBundle.setBoolPref( "isConfirmExit", prefs.isConfirmExit );
     prefsBundle.setBoolPref( "isExitQuitTB", prefs.isExitQuitTB );
     prefsBundle.setBoolPref( "isHighlightRow", prefs.isHighlightRow );
+    prefsBundle.setBoolPref( "isCloseBrowserAfterImport", prefs.isCloseBrowserAfterImport );
+    prefsBundle.setBoolPref( "isSelectNoteAfterImport", prefs.isSelectNoteAfterImport );
     prefsBundle.setCharPref( "defaultDocumentType", prefs.defaultDocumentType );
     prefsBundle.setCharPref( "main_shortcuts", JSON.stringify( prefs.shortcuts ) );
   };
@@ -877,6 +896,8 @@ ru.akman.znotes.Options = function() {
     isConfirmExit.checked = currentPrefs.isConfirmExit;
     isExitQuitTB.checked = currentPrefs.isExitQuitTB;
     isHighlightRow.checked = currentPrefs.isHighlightRow;
+    isCloseBrowserAfterImport.checked = currentPrefs.isCloseBrowserAfterImport;
+    isSelectNoteAfterImport.checked = currentPrefs.isSelectNoteAfterImport;
     defaultDocumentType = currentPrefs.defaultDocumentType;
     populateDocumentTypePopup();
     loadShortcuts( mainKeyset, mainShortcuts, originalPrefs, currentPrefs );
@@ -949,6 +970,8 @@ ru.akman.znotes.Options = function() {
       isExitQuitTB.setAttribute( "hidden", true );
     }
     isHighlightRow = document.getElementById( "isHighlightRow" );
+    isCloseBrowserAfterImport = document.getElementById( "isCloseBrowserAfterImport" );
+    isSelectNoteAfterImport = document.getElementById( "isSelectNoteAfterImport" );
     docTypeMenuList = document.getElementById( "docTypeMenuList" );
     docTypeMenuPopup = document.getElementById( "docTypeMenuPopup" );
     keysListBox = document.getElementById( "keysListBox" );

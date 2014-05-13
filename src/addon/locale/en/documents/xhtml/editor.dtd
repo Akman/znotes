@@ -254,6 +254,10 @@
 
 <!-- OPTIONS -->
 
+<!ENTITY docCaption.xhtml.label "Document">
+<!ENTITY author.xhtml.label "Author:">
+<!ENTITY author.xhtml.placeholder "Enter author name here ...">
+
 <!ENTITY mainCaption.xhtml.label "Main">
 <!ENTITY isSpellcheckEnabled.xhtml.label "Enable spellcheker by default">
 <!ENTITY isTagsModeActive.xhtml.label "Show tags by default">

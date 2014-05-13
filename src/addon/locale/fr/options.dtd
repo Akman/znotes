@@ -42,6 +42,8 @@
 <!ENTITY isExitQuitTB.label "Exiting application leads to closing TB">
 <!ENTITY isReplaceBackground.label "Remplacer la couleur de fond de la note en utilisant la couleur de l'étiquette principale">
 <!ENTITY isHighlightRow.label "Mettre en surbrillance la ligne dans la liste des notes en utilisant la couleur de l'étiquette principale">
+<!ENTITY isCloseBrowserAfterImport.label "Close browser window after note import">
+<!ENTITY isSelectNoteAfterImport.label "Select imported note after note import">
 <!ENTITY isPlaySound.label "Jouer un son au démarrage">
 <!ENTITY keysPlatformCaption.label "Raccourcis clavier">
 <!ENTITY keysCaption.label "Raccourcis clavier">

@@ -36,67 +36,45 @@
 
 <!DOCTYPE window SYSTEM "chrome://znotes/locale/book.dtd">
 
-<dialog
-  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-  id="znotes_book"
-  title="&book_dialog_title;"
-  windowtype="znotes">
+<dialog xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  id="book" title="&dialog.title;" minwidth="600" windowtype="znotes">
+  
+  <script type="application/javascript" src="chrome://znotes/content/book.js" />
 
-  <script type="application/javascript"
-    src="chrome://znotes/content/book.js" />
-
+  <stringbundleset id="bookStringBundleset" />
+  
   <vbox id="bookBox" flex="1">
+    
+    <groupbox id="commonBox" flex="1">
+      <caption id="commonBoxCaption" label="&common.caption;" />
+      <label id="labelBookName" value="&name.label;"
+        control="textBookName" />
+      <textbox id="textBookName" type="text"
+        placeholder="&name.placeholder;" />
+      <label id="labelBookDescription" value="&description.label;"
+        control="textBookDescription" />
+      <textbox id="textBookDescription" flex="1" type="text" multiline="true"
+        rows="5" size="80" wrap="true" newlines="pasteintact" minheight="100"
+        placeholder="&description.placeholder;" />
+    </groupbox>
+    
+    <groupbox id="driverBox">
+      <caption id="driverBoxCaption" label="&driver.caption;" />
+      <menulist id="menuBookDriver" />
+    </groupbox>
 
-  <hbox width="600" minwidth="300">
-    <label id="labelHeader" value="&label_header;" crop="center" />
-  </hbox>
-
-  <groupbox flex="1">
-    <vbox id="commonBox">
-      <label value="&label_book_name;" />
-      <textbox id="textBookName"
-        type="text"
-      />
-      <label value="&label_book_description;" />
-      <textbox id="textBookDescription"
-        type="text"
-        multiline="true"
-        rows="5"
-        size="80"
-        wrap="true"
-        newlines="pasteintact"
-        placeholder="&text_book_description_placeholder;"
-      />
-      <label value="&label_book_driver;" />
-      <menulist id="menuBookDriver">
-        <menupopup />
-      </menulist>
-    </vbox>
-  </groupbox>
-
-  <hbox width="600" minwidth="300">
-    <label id="labelFooter" value="&label_footer;" crop="center" />
-  </hbox>
-
-  <groupbox flex="1">
-    <vbox id="driverBox" flex="1"/>
-  </groupbox>
-
-  <spacer flex="1" style="height: 20px; min-height: 20px; max-height: 20px;"/>
-
-  <hbox dir="rtl" flex="1" align="end">
-    <button id="btnAccept"
-      dlgtype="accept"
-      minwidth="90"
-      label=" &book_dialog_accept;"
-      pack="start"/>
-    <button id="btnCancel"
-      dlgtype="cancel"
-      minwidth="90"
-      label=" &book_dialog_cancel;"
-      pack="start"/>
-  </hbox>
-
+    <groupbox id="paramsBox">
+      <caption id="paramsBoxCaption" label="&params.caption;" />
+      <vbox id="paramsView" />
+    </groupbox>
+    
+    <hbox id="hboxButtons" dir="rtl" pack="start">
+      <button id="btnAccept" dlgtype="accept" minwidth="90"
+        label=" &dialog.accept;" pack="start"/>
+      <button id="btnCancel" dlgtype="cancel" minwidth="90"
+        label=" &dialog.cancel;" pack="start"/>
+    </hbox>
+    
   </vbox>
 
 </dialog>

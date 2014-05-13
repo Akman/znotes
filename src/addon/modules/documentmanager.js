@@ -295,6 +295,7 @@ var DocumentManager = function() {
 
   // CONSTRUCTOR
   
+  // TODO: check registry for validity of registering docs and clean it up
   function init() {
     if ( docs ) {
       return;
@@ -372,7 +373,7 @@ var DocumentManager = function() {
     var value;
     for ( var name in docs ) {
       value = docs[ name ];
-      if ( value.getType() == aType ) {
+      if ( value.supportsType( aType ) ) {
         return value;
       }
     }

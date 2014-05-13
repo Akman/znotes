@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- ***** BEGIN LICENSE BLOCK *****
+  -
+  - Version: GPL 3.0
+  -
+  - ZNotes
+  - Copyright (C) 2012 Alexander Kapitman
+  -
+  - This program is free software: you can redistribute it and/or modify
+  - it under the terms of the GNU General Public License as published by
+  - the Free Software Foundation, either version 3 of the License, or
+  - (at your option) any later version.
+  -
+  - This program is distributed in the hope that it will be useful,
+  - but WITHOUT ANY WARRANTY; without even the implied warranty of
+  - MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  - GNU General Public License for more details.
+  -
+  - You should have received a copy of the GNU General Public License
+  - along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -
+  - The Original Code is ZNotes.
+  -
+  - Initial Developer(s):
+  -   Alexander Kapitman <akman.ru@gmail.com>
+  -
+  - Portions created by the Initial Developer are Copyright (C) 2012
+  - the Initial Developer. All Rights Reserved.
+  -
+  - Contributor(s):
+  -
+  - ***** END LICENSE BLOCK ***** -->
+
+<?xml-stylesheet type="text/css" href="chrome://global/skin/" ?>
+<?xml-stylesheet type="text/css" href="chrome://znotes/skin/clipperdialog.css" ?>
+
+<!DOCTYPE window SYSTEM "chrome://znotes/locale/clipperdialog.dtd">
+
+<dialog xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  id="znotes" title="&dialog.title;" buttons="accept,cancel" windowtype="znotes"
+  minwidth="350" persist="width height screenX screenY sizemode">
+
+  <script type="application/javascript"
+    src="chrome://znotes/content/clipperdialog.js" />
+
+  <vbox id="progressBox" width="384" height="512" flex="1">
+    <richlistbox id="jobList" flex="1" seltype="single" />
+  </vbox>
+
+  <hbox id="btnBox">
+    <spacer id="btnLeftSpacer" flex="1" />
+    <button id="btnClose" dlgtype="accept" collapsed="true"
+      minwidth="90" label=" &btnClose.label;" />
+    <button id="btnCancel" dlgtype="cancel"
+      minwidth="90" label=" &btnCancel.label;" />
+    <spacer id="btnRightSpacer" flex="1" />
+  </hbox>
+
+</dialog>

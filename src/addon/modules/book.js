@@ -35,20 +35,31 @@ if ( !ru.akman ) ru.akman = {};
 if ( !ru.akman.znotes ) ru.akman.znotes = {};
 if ( !ru.akman.znotes.core ) ru.akman.znotes.core = {};
 
-Components.utils.import( "resource://znotes/utils.js"          , ru.akman.znotes );
-Components.utils.import( "resource://znotes/event.js"          , ru.akman.znotes.core );
-Components.utils.import( "resource://znotes/drivermanager.js"  , ru.akman.znotes );
-Components.utils.import( "resource://znotes/contenttree.js"    , ru.akman.znotes.core );
-Components.utils.import( "resource://znotes/taglist.js"        , ru.akman.znotes.core );
+Components.utils.import( "resource://znotes/utils.js",
+  ru.akman.znotes
+);
+Components.utils.import( "resource://znotes/event.js",
+  ru.akman.znotes.core
+);
+Components.utils.import( "resource://znotes/drivermanager.js",
+  ru.akman.znotes
+);
+Components.utils.import( "resource://znotes/contenttree.js",
+  ru.akman.znotes.core
+);
+Components.utils.import( "resource://znotes/taglist.js",
+  ru.akman.znotes.core
+);
 
 var EXPORTED_SYMBOLS = ["Book"];
 
-var Book = function( aList, anId, aName, aDescription, aDriver, aConnection, aPreferences, anIndex, anOpened ) {
+var Book = function( aManager, anId, aName, aDescription, aDriver, aConnection,
+                     aPreferences, anIndex, anOpened ) {
 
   var Utils = ru.akman.znotes.Utils;
 
   this.updateRegistryObject = function() {
-    this.list.updateRegistryObject();
+    this.manager.updateRegistryObject();
   };
 
   this.getPlaces = function() {
@@ -126,7 +137,7 @@ var Book = function( aList, anId, aName, aDescription, aDriver, aConnection, aPr
 
   this.getConnection = function() {
     var result = {};
-    ru.akman.znotes.Utils.cloneObject( this.connection, result );
+    Utils.cloneObject( this.connection, result );
     return result;
   };
 
@@ -134,7 +145,7 @@ var Book = function( aList, anId, aName, aDescription, aDriver, aConnection, aPr
     if ( this.isOpen() ) {
       return;
     }
-    if ( !ru.akman.znotes.Utils.cloneObject( connection, this.connection ) ) {
+    if ( !Utils.cloneObject( connection, this.connection ) ) {
       return;
     }
     this.updateRegistryObject();
@@ -148,12 +159,12 @@ var Book = function( aList, anId, aName, aDescription, aDriver, aConnection, aPr
 
   this.getPreferences = function() {
     var result = {};
-    ru.akman.znotes.Utils.cloneObject( this.preferences, result );
+    Utils.cloneObject( this.preferences, result );
     return result;
   };
 
   this.setPreferences = function( preferences ) {
-    if ( !ru.akman.znotes.Utils.cloneObject( preferences, this.preferences ) ) {
+    if ( !Utils.cloneObject( preferences, this.preferences ) ) {
       return;
     }
     this.updateRegistryObject();
@@ -291,12 +302,12 @@ var Book = function( aList, anId, aName, aDescription, aDriver, aConnection, aPr
     if ( this.isOpen() ) {
       return ALREADY_OPENED;
     }
-    var driver = ru.akman.znotes.DriverManager.getInstance().getDriver( this.getDriver() );
+    var driver = ru.akman.znotes.DriverManager.getInstance()
+                                              .getDriver( this.getDriver() );
     if ( !driver ) {
       return DRIVER_ERROR;
     }
-    var parameters = this.getConnection();
-    var connection = driver.getConnection( parameters );
+    var connection = driver.getConnection( this.getConnection() );
     if ( connection == null ) {
       return CONNECTION_ERROR;
     }
@@ -387,7 +398,7 @@ var Book = function( aList, anId, aName, aDescription, aDriver, aConnection, aPr
         }
       }
     }
-    this.list.notifyStateListener( event );
+    this.manager.notifyStateListener( event );
   };
 
   /*
@@ -398,12 +409,12 @@ var Book = function( aList, anId, aName, aDescription, aDriver, aConnection, aPr
   */
 
   this.toString = function() {
-    return "{ '" +
-      this.id + "', '" +
+    return "{ id='" +
+      this.id + "', name='" +
       this.name + "', '" +
-      this.description + "', '" +
-      this.driver + "', '" +
-      this.index +
+      this.description + "', driver='" +
+      this.driver + "', index=" +
+      this.index + ", opened=" + this.opened + 
       " }\n" +
       "{ locked = " + this.locked + ", " +
       " listeners = " + this.listeners.length +
@@ -411,14 +422,26 @@ var Book = function( aList, anId, aName, aDescription, aDriver, aConnection, aPr
   };
 
   this.locked = true;
-  this.list = aList;
+  this.manager = aManager;
   this.listeners = [];
   this.id = anId;
   this.name = aName;
   this.description = aDescription;
-  this.driver = aDriver;
   this.places = {};
-  this.connection = aConnection;
+  this.driver = aDriver;
+  // set up value as merge with given parameters and default driver parameters
+  try {
+    this.connection =
+      ru.akman.znotes.DriverManager.getInstance()
+                                   .getDriver( this.getDriver() )
+                                   .getParameters();
+    if ( Utils.fillObject( aConnection, this.connection ) ) {
+      this.updateRegistryObject();
+    }
+  } catch ( e ) {
+    this.connection = aConnection;
+  }
+  //
   this.preferences = aPreferences;
   this.index = anIndex;
   this.tagList = null;
