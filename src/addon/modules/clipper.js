@@ -998,7 +998,7 @@ function fixupElement( anElement, aChanges, aFlags ) {
     }
   }
   if ( namespaceURI === NAMESPACES["html"] && ( localName in TAGS ) &&
-       aFlags && ( aFlags & 0x00000010 /* REPLACE_HTML5_TAGS */ ) ) {
+       !( aFlags & 0x00001000 /* PRESERVE_HTML5_TAGS */ ) ) {
     localName = TAGS[localName];
   }
   nodeName = ( prefix.length ? prefix + ":" : "" ) + localName;
@@ -1052,32 +1052,36 @@ function inspectElement( aRules, aChanges, anElement, aDocumentURL, aBaseURL,
         return anElement.parentNode.removeChild( anElement );
       case "script":
       case "noscript":
-        if ( anElement.src ) {
-          if ( anElement.hasAttribute( "type" ) ) {
-            aContentType = anElement.getAttribute( "type" ).trim();
-          } else {
-            aContentType = "";
+        if ( aFlags & 0x00000001 /* SAVE_SCRIPTS */ ) {
+          if ( anElement.src ) {
+            if ( anElement.hasAttribute( "type" ) ) {
+              aContentType = anElement.getAttribute( "type" ).trim();
+            } else {
+              aContentType = "";
+            }
+            if ( !aContentType.length ) {
+              aContentType = "text/javascript";
+            }
+            anURL = resolveURL( anElement.src, aBaseURL );
+            if ( checkURL( anURL ) ) {
+              addJobObserver(
+                aLoader.createJob( aDirectory, anURL, aDocumentURL, aContentType,
+                                   aDocumentURL ),
+                function( job ) {
+                  setElementAttribute(
+                    anElement,
+                    "src",
+                    encodeURI( job.getEntry().leafName )
+                  );
+                }
+              );
+              setElementAttribute( anElement, "src", anURL );
+            }
           }
-          if ( !aContentType.length ) {
-            aContentType = "text/javascript";
-          }
-          anURL = resolveURL( anElement.src, aBaseURL );
-          if ( checkURL( anURL ) ) {
-            addJobObserver(
-              aLoader.createJob( aDirectory, anURL, aDocumentURL, aContentType,
-                                 aDocumentURL ),
-              function( job ) {
-                setElementAttribute(
-                  anElement,
-                  "src",
-                  encodeURI( job.getEntry().leafName )
-                );
-              }
-            );
-            setElementAttribute( anElement, "src", anURL );
-          }
+          return anElement;
+        } else {
+          return anElement.parentNode.removeChild( anElement );
         }
-        return anElement;
       case "link":
         if ( anElement.hasAttribute( "rel" ) ) {
           if ( anElement.hasAttribute( "type" ) ) {
@@ -1263,28 +1267,32 @@ function inspectElement( aRules, aChanges, anElement, aDocumentURL, aBaseURL,
       case "frame":
       case "iframe":
         aDocument = aFrames.shift();
-        if ( anElement.src ) {
-          anURL = resolveURL( anElement.src, aBaseURL );
-          fileNameObj = getSuitableFileName( anURL, aDocument.contentType );
-          if ( aFlags & 0x00000001 /* FRAMES_IN_SEPARATE_DIRECTORY */ ) {
-            frameEntries = createEntriesToSaveFrame(
-              aDirectory,
-              fileNameObj.name,
-              fileNameObj.ext,
-              "_files"
-            );
-            aFile = frameEntries.fileEntry;
-            saveDocument( aDocument, aResultObj, aFile, frameEntries.dirEntry,
-              aLoader, aFlags );
-          } else {
-            aFile = createFileEntry(
-              aDirectory,
-              fileNameObj.name + ( fileNameObj.ext ? "." + fileNameObj.ext : "" )
-            );
-            saveDocument( aDocument, aResultObj, aFile, aDirectory, aLoader,
-              aFlags );
+        if ( aFlags & 0x00000010 /* SAVE_FRAMES */ ) {
+          if ( anElement.src ) {
+            anURL = resolveURL( anElement.src, aBaseURL );
+            fileNameObj = getSuitableFileName( anURL, aDocument.contentType );
+            if ( aFlags & 0x00000100 /* SAVE_FRAMES_IN_SEPARATE_DIRECTORY */ ) {
+              frameEntries = createEntriesToSaveFrame(
+                aDirectory,
+                fileNameObj.name,
+                fileNameObj.ext,
+                "_files"
+              );
+              aFile = frameEntries.fileEntry;
+              saveDocument( aDocument, aResultObj, aFile, frameEntries.dirEntry,
+                aLoader, aFlags );
+            } else {
+              aFile = createFileEntry(
+                aDirectory,
+                fileNameObj.name + ( fileNameObj.ext ? "." + fileNameObj.ext : "" )
+              );
+              saveDocument( aDocument, aResultObj, aFile, aDirectory, aLoader,
+                aFlags );
+            }
+            setElementAttribute( anElement, "src", encodeURI( aFile.leafName ) );
           }
-          setElementAttribute( anElement, "src", encodeURI( aFile.leafName ) );
+        } else {
+          return anElement.parentNode.removeChild( anElement );
         }
       	break;
     }

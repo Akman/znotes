@@ -75,6 +75,8 @@ var Utils = function() {
   var isHighlightRow = false;
   var isCloseBrowserAfterImport = true;
   var isSelectNoteAfterImport = true;
+  var isClipperPlaySound = true;
+  var clipperFlags = 0x00000000;
   var defaultDocumentType = "application/xhtml+xml";
   var placeName = "";
   var mainShortCuts = "{}";
@@ -355,6 +357,22 @@ var Utils = function() {
       isHighlightRow = value;
     },
 
+    get CLIPPER_FLAGS() {
+      return clipperFlags;
+    },
+
+    set CLIPPER_FLAGS( value ) {
+      clipperFlags = value;
+    },
+    
+    get IS_CLIPPER_PLAY_SOUND() {
+      return isClipperPlaySound;
+    },
+
+    set IS_CLIPPER_PLAY_SOUND( value ) {
+      isClipperPlaySound = value;
+    },
+    
     get IS_CLOSE_BROWSER_AFTER_IMPORT() {
       return isCloseBrowserAfterImport;
     },

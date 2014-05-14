@@ -135,6 +135,11 @@ ru.akman.znotes.Body = function() {
         if ( !( cmd in bodyCommands ) ) {
           return false;
         }
+        switch ( cmd ) {
+          case "znotes_bodytypesmenu_command":
+            return ( currentNote && currentNote.isExists() &&
+                     !currentNote.isLoading() && currentNote.getMode() !== "editor" );
+        }
         return ( currentNote && currentNote.isExists() && !currentNote.isLoading() );
       },
       doCommand: function( cmd ) {
@@ -710,6 +715,11 @@ ru.akman.znotes.Body = function() {
       }
     };
     
+    function onNoteModeChanged( e ) {
+      var id = bodyController.getId( currentWindow );
+      Common.goUpdateCommand( "znotes_bodytypesmenu_command", id, currentWindow );
+    };
+    
     // TAG LIST EVENTS
 
     function onTagChanged( e ) {
@@ -984,7 +994,8 @@ ru.akman.znotes.Body = function() {
       onNoteTagsChanged: onNoteTagsChanged,
       onNoteTypeChanged: onNoteTypeChanged,
       onNoteMainTagChanged: onNoteMainTagChanged,
-      onNotePrefChanged: onNotePrefChanged
+      onNotePrefChanged: onNotePrefChanged,
+      onNoteModeChanged: onNoteModeChanged
     };
     tagListStateListener = {
       onTagCreated: onTagCreated,

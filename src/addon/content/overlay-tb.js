@@ -179,11 +179,8 @@ ru.akman.znotes.ZNotes = function() {
       switch ( data ) {
         case "debug":
           Utils.IS_DEBUG_ENABLED = this.branch.getBoolPref( "debug" );
-          Common.goSetCommandHidden( "znotes_tbtestsuite_command",
-            !Utils.IS_DEBUG_ENABLED, window );
+          updateCommandsVisibility();
           Common.goUpdateCommand( "znotes_tbtestsuite_command", platformController.getId(), window );
-          Common.goSetCommandHidden( "znotes_tbconsole_command",
-            !Utils.IS_DEBUG_ENABLED, window );
           Common.goUpdateCommand( "znotes_tbconsole_command", platformController.getId(), window );
           break;
         case "sanitize":
@@ -377,8 +374,10 @@ ru.akman.znotes.ZNotes = function() {
   };
 
   function updateCommandsVisibility() {
-    Common.goSetCommandHidden( "znotes_tbtestsuite_command", !Utils.IS_DEBUG_ENABLED, window );
-    Common.goSetCommandHidden( "znotes_tbconsole_command", !Utils.IS_DEBUG_ENABLED, window );
+    Common.goSetCommandHidden( "znotes_tbtestsuite_command",
+      !Utils.IS_DEBUG_ENABLED, window );
+    Common.goSetCommandHidden( "znotes_tbconsole_command",
+      !Utils.IS_DEBUG_ENABLED, window );
   };
 
   function doNewBook() {

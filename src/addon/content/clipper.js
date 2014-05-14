@@ -279,6 +279,7 @@ ru.akman.znotes.Clipper = function() {
           doc: aDocument,
           file: contentFile,
           dir: contentDirectory,
+          flags: Utils.CLIPPER_FLAGS,
           callback: function( aStatus ) {
             if ( aStatus ) {
               playFail();
@@ -322,11 +323,15 @@ ru.akman.znotes.Clipper = function() {
   // HELPERS
 
   function playFail() {
-    ( new Audio( "chrome://znotes_sounds/skin/fail.wav" ) ).play();
+    if ( Utils.IS_CLIPPER_PLAY_SOUND ) {
+      ( new Audio( "chrome://znotes_sounds/skin/fail.wav" ) ).play();
+    }
   };
 
   function playSuccess() {
-    ( new Audio( "chrome://znotes_sounds/skin/success.wav" ) ).play();
+    if ( Utils.IS_CLIPPER_PLAY_SOUND ) {
+      ( new Audio( "chrome://znotes_sounds/skin/success.wav" ) ).play();
+    }
   };
 
   function getString( name ) {

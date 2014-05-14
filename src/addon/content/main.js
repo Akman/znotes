@@ -341,6 +341,37 @@ ru.akman.znotes.Main = function() {
         case "isPlaySound":
           Utils.IS_PLAY_SOUND = event.data.newValue;
           break;
+        case "isClipperPlaySound":
+          Utils.IS_CLIPPER_PLAY_SOUND = event.data.newValue;
+          break;
+        case "clipperSaveScripts":
+          if ( event.data.newValue ) {
+            Utils.CLIPPER_FLAGS |= 0x00000001;
+          } else {
+            Utils.CLIPPER_FLAGS &= 0x11111110;
+          }
+          break;
+        case "clipperSaveFrames":
+          if ( event.data.newValue ) {
+            Utils.CLIPPER_FLAGS |= 0x00000010;
+          } else {
+            Utils.CLIPPER_FLAGS &= 0x11111101;
+          }
+          break;
+        case "clipperSeparateFrames":
+          if ( event.data.newValue ) {
+            Utils.CLIPPER_FLAGS |= 0x00000100;
+          } else {
+            Utils.CLIPPER_FLAGS &= 0x11111011;
+          }
+          break;
+        case "clipperPreserveHTML5Tags":
+          if ( event.data.newValue ) {
+            Utils.CLIPPER_FLAGS |= 0x00001000;
+          } else {
+            Utils.CLIPPER_FLAGS &= 0x11110111;
+          }
+          break;
         case "isReplaceBackground":
           Utils.IS_REPLACE_BACKGROUND = event.data.newValue;
           break;
@@ -398,17 +429,10 @@ ru.akman.znotes.Main = function() {
       switch ( data ) {
         case "debug":
           Utils.IS_DEBUG_ENABLED = this.branch.getBoolPref( "debug" );
-          Common.goSetCommandHidden( "znotes_testsuite_command",
-            !Utils.IS_DEBUG_ENABLED, window );
+          updateCommandsVisibility();
           Common.goUpdateCommand( "znotes_testsuite_command", mainController.getId(), window );
-          Common.goSetCommandHidden( "znotes_console_command",
-            !Utils.IS_DEBUG_ENABLED, window );
           Common.goUpdateCommand( "znotes_console_command", mainController.getId(), window );
-          Common.goSetCommandHidden( "znotes_debugger_command",
-            !( Utils.IS_DEBUG_ENABLED && Utils.IS_STANDALONE && Utils.IS_DEBUGGER_INSTALLED ), window );
           Common.goUpdateCommand( "znotes_debugger_command", mainController.getId(), window );
-          Common.goSetCommandHidden( "znotes_inspector_command",
-            !( Utils.IS_DEBUG_ENABLED && Utils.IS_STANDALONE && Utils.IS_INSPECTOR_INSTALLED ), window );
           Common.goUpdateCommand( "znotes_inspector_command", mainController.getId(), window );
           break;
         case "sanitize":
@@ -1117,6 +1141,13 @@ ru.akman.znotes.Main = function() {
   };
   
   function updateCommandsVisibility() {
+    var debugSeparator =
+      document.getElementById( "znotes_appmenu_debug_separator" );
+    if ( Utils.IS_DEBUG_ENABLED ) {
+      debugSeparator.removeAttribute( "hidden" );
+    } else {
+      debugSeparator.setAttribute( "hidden", "true" );
+    }
     Common.goSetCommandHidden( "znotes_addons_command", !Utils.IS_STANDALONE, window );
     Common.goSetCommandHidden( "znotes_update_command", !Utils.IS_STANDALONE, window );
     Common.goSetCommandHidden( "znotes_testsuite_command", !Utils.IS_DEBUG_ENABLED, window );
@@ -2983,8 +3014,10 @@ ru.akman.znotes.Main = function() {
           aFile,
           aDirectory,
           /*
-          0x00000001 FRAMES_IN_SEPARATE_DIRECTORY
-          0x00000010 REPLACE_HTML5_TAGS
+          0x00000001 SAVE_SCRIPTS
+          0x00000010 SAVE_FRAMES
+          0x00000100 SAVE_FRAMES_IN_SEPARATE_DIRECTORY
+          0x00001000 PRESERVE_HTML5_TAGS
           */
           0x00000000,
           anObserver

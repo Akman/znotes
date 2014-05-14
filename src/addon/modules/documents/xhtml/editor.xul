@@ -651,7 +651,7 @@
     <groupbox id="keysGroupBox:xhtml" flex="1">
       <caption id="keysCaption:xhtml" label="&keysCaption.xhtml.label;" />
       <richlistbox id="keysListBox:xhtml" class="key_list"
-        seltype="single" flex="1" minheight="81"/>
+        seltype="single" flex="1" />
     </groupbox>
   </vbox>
   

@@ -312,7 +312,7 @@
     <groupbox id="keysGroupBox:text" flex="1">
       <caption id="keysCaption:text" label="&keysCaption.text.label;" />
       <richlistbox id="keysListBox:text" class="key_list"
-        seltype="single" flex="1" minheight="81"/>
+        seltype="single" flex="1" />
     </groupbox>
   </vbox>
   

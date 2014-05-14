@@ -76,7 +76,7 @@ var Options = function() {
   function isShortcutChanged( shortcuts, name ) {
     var value = ( shortcuts[name]["original"] === null ) ?
       shortcuts[name]["default"] : shortcuts[name]["original"];
-    return shortcuts[name]["current"] !== value;
+    return ( shortcuts[name]["current"] !== value );
   };
   
   function getTabShortcuts( defaultShortcuts, currentShortcuts ) {
@@ -193,12 +193,12 @@ var Options = function() {
   // SHORTCUTS
   
   function loadShortcuts( shortcuts, deftPrefs, origPrefs, currPrefs ) {
-    var defaultShortcuts = ( "shortcuts" in deftPrefs ) ?
-      deftPrefs.shortcuts : {};
-    var originalShortcuts = ( "shortcuts" in origPrefs ) ?
-      origPrefs.shortcuts : {};
-    var currentShortcuts = ( "shortcuts" in currPrefs ) ?
-      currPrefs.shortcuts : {};
+    var defaultShortcuts = ( ( "shortcuts" in deftPrefs ) ?
+      deftPrefs.shortcuts : {} );
+    var originalShortcuts = ( ( "shortcuts" in origPrefs ) ?
+      origPrefs.shortcuts : {} );
+    var currentShortcuts = ( ( "shortcuts" in currPrefs ) ?
+      currPrefs.shortcuts : {} );
     var name;
     for ( name in shortcuts ) {
       delete shortcuts[name];
@@ -404,8 +404,8 @@ var Options = function() {
     var isChanged = false;
     for ( var name in shortcuts ) {
       shortcut = shortcuts[name]["current"];
-      shortcut = ( shortcuts[name]["default"] === shortcut ) ?
-        null : shortcut;
+      shortcut = ( ( shortcuts[name]["default"] === shortcut ) ?
+        null : shortcut );
       if ( shortcut !== shortcuts[name]["original"] ) {
         shortcuts[name]["original"] = shortcut;
         isChanged = true;

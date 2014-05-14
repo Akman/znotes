@@ -45,6 +45,9 @@
 #tab-main {
   list-style-image: url("chrome://znotes_images/skin/options-16x16.png");
 }
+#tab-mainshortcuts {
+  list-style-image: url("chrome://znotes_images/skin/shortcuts-16x16.png");
+}
 
 #buttonsHBox {
   margin-top: 9px;
@@ -62,8 +65,6 @@
 }
 
 .key_list {
-  -moz-appearance: none;
-  border: none;
 }
 .key_item {
 }

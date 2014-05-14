@@ -348,6 +348,26 @@ ru.akman.znotes.TestSuite = function() {
     }
   );
   
+  
+  tests.push(
+    {
+      name: "Chrome URI to path",
+      description: "Get chrome URI as file path",
+      code: function () {
+        var chromeURL = "chrome://global/locale/viewSource.dtd";
+        var ios = Components.classes["@mozilla.org/network/io-service;1"]
+                            .getService( Components.interfaces.nsIIOService );
+        var fph = ios.getProtocolHandler( "file" )
+                     .QueryInterface( Components.interfaces.nsIFileProtocolHandler );
+        var chr = Components.classes["@mozilla.org/chrome/chrome-registry;1"]
+                            .getService(Components.interfaces.nsIChromeRegistry);
+        var uri = ios.newURI( chromeURL, null, null );
+        var file = fph.getFileFromURLSpec( chr.convertChromeURL( uri ).spec ).clone();
+        Utils.log( chromeURL + "\n" + file.path );
+      }
+    }
+  );
+  
   tests.push(
     {
       name: "Driver path",

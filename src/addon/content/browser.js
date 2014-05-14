@@ -377,8 +377,9 @@ ru.akman.znotes.Browser = function() {
     } catch ( e ) {
       uri = null;
     }
-    if ( !Utils.IS_DEBUG_ENABLED &&
-        uri && ( uri.schemeIs( "chrome" ) || uri.schemeIs( "about" ) ) ) {
+    if ( !Utils.IS_DEBUG_ENABLED && uri &&
+         ( uri.schemeIs( "chrome" ) ||
+           uri.schemeIs( "about" ) && uri.spec !== "about:config" ) ) {
       return;
     }
     Common.goDoCommand( 'znotes_load_command', browserURLTextBox );

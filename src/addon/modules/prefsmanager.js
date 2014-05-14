@@ -271,6 +271,53 @@ var PrefsManager = function() {
       Utils.IS_PLAY_SOUND =
         pub.getBoolPref( "isPlaySound" );
       //
+      if ( !pub.hasPref( "isClipperPlaySound" ) ) {
+        pub.setBoolPref( "isClipperPlaySound",
+          Utils.IS_CLIPPER_PLAY_SOUND );
+      }
+      Utils.IS_CLIPPER_PLAY_SOUND =
+        pub.getBoolPref( "isClipperPlaySound" );
+      //
+      if ( !pub.hasPref( "clipperSaveScripts" ) ) {
+        pub.setBoolPref( "clipperSaveScripts",
+          !!( Utils.CLIPPER_FLAGS & 0x00000001 ) );
+      }
+      if ( pub.getBoolPref( "clipperSaveScripts" ) ) {
+        Utils.CLIPPER_FLAGS |= 0x00000001;
+      } else {
+        Utils.CLIPPER_FLAGS &= 0x11111110;
+      }
+      //
+      if ( !pub.hasPref( "clipperSaveFrames" ) ) {
+        pub.setBoolPref( "clipperSaveFrames",
+          !!( Utils.CLIPPER_FLAGS & 0x00000010 ) );
+      }
+      if ( pub.getBoolPref( "clipperSaveFrames" ) ) {
+        Utils.CLIPPER_FLAGS |= 0x00000010;
+      } else {
+        Utils.CLIPPER_FLAGS &= 0x11111101;
+      }
+      //
+      if ( !pub.hasPref( "clipperSeparateFrames" ) ) {
+        pub.setBoolPref( "clipperSeparateFrames",
+          !!( Utils.CLIPPER_FLAGS & 0x00000100 ) );
+      }
+      if ( pub.getBoolPref( "clipperSeparateFrames" ) ) {
+        Utils.CLIPPER_FLAGS |= 0x00000100;
+      } else {
+        Utils.CLIPPER_FLAGS &= 0x11111011;
+      }
+      //
+      if ( !pub.hasPref( "clipperPreserveHTML5Tags" ) ) {
+        pub.setBoolPref( "clipperPreserveHTML5Tags",
+          !!( Utils.CLIPPER_FLAGS & 0x00001000 ) );
+      }
+      if ( pub.getBoolPref( "clipperPreserveHTML5Tags" ) ) {
+        Utils.CLIPPER_FLAGS |= 0x00001000;
+      } else {
+        Utils.CLIPPER_FLAGS &= 0x11110111;
+      }
+      //
       if ( !pub.hasPref( "isHighlightRow" ) ) {
         pub.setBoolPref( "isHighlightRow",
           Utils.IS_HIGHLIGHT_ROW );

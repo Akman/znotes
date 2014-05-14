@@ -50,7 +50,7 @@ ru.akman.znotes.ClipperDialog = function() {
     Components.classes["@mozilla.org/network/io-service;1"]
               .getService( Components.interfaces.nsIIOService );
 
-  var aNote, aDocument, aFile, aDirectory, aCallback;
+  var aNote, aDocument, aFile, aDirectory, aFlags, aCallback;
   var aResultObj, aClipper, anObserver;
   var btnClose, btnCancel;
   var canClose = false;
@@ -257,11 +257,7 @@ ru.akman.znotes.ClipperDialog = function() {
         aResultObj,
         aFile,
         aDirectory,
-        /*
-        0x00000001 FRAMES_IN_SEPARATE_DIRECTORY
-        0x00000010 REPLACE_HTML5_TAGS
-        */
-        0x00000000, 
+        aFlags,
         anObserver
       );
     } catch ( e ) {
@@ -279,6 +275,7 @@ ru.akman.znotes.ClipperDialog = function() {
     aDocument = window.arguments[0].doc;
     aFile = window.arguments[0].file;
     aDirectory = window.arguments[0].dir;
+    aFlags = window.arguments[0].flags;
     aCallback = window.arguments[0].callback;
     btnCancel = document.getElementById( "btnCancel" );
     btnClose = document.getElementById( "btnClose" );

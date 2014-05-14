@@ -32,18 +32,25 @@
 
 <!ENTITY window.title "Options">
 <!ENTITY tab-main.label " Main ">
+<!ENTITY tab-mainshortcuts.label " Shortcuts ">
 <!ENTITY placeNameCaption.label " This workplace ">
 <!ENTITY placeName.placeholder "Enter this workplace name ...">
 <!ENTITY isSavePosition.label "Remember the selected note for each category/tag">
 <!ENTITY isEditSourceEnabled.label "Allow editing the note's source code">
 <!ENTITY docTypeCaption.label "Default document type">
+<!ENTITY clipperCaption.label "Web-clipper">
+<!ENTITY clipperSaveScripts.label "Save scripts">
+<!ENTITY clipperSaveFrames.label "Save frames">
+<!ENTITY clipperSeparateFrames.label "Save frames in the separate folders">
+<!ENTITY clipperPreserveHTML5Tags.label "Preserve HTML5 tags">
+<!ENTITY isCloseBrowserAfterImport.label "Close browser window when download completes">
+<!ENTITY isSelectNoteAfterImport.label "Select created note when download completes">
+<!ENTITY isClipperPlaySound.label "Play sound when download completes">
 <!ENTITY additionCaption.label "Additionally">
 <!ENTITY isReplaceBackground.label "Replace the background color of note using the main tag color">
 <!ENTITY isConfirmExit.label "Confirm exit when closing application">
 <!ENTITY isExitQuitTB.label "Exiting application leads to closing TB">
 <!ENTITY isHighlightRow.label "Highlight row in the note list using the main tag color">
-<!ENTITY isCloseBrowserAfterImport.label "Close browser window after note import">
-<!ENTITY isSelectNoteAfterImport.label "Select imported note after note import">
 <!ENTITY isPlaySound.label "Play sound at startup">
 <!ENTITY keysPlatformCaption.label "Keyboard shortcuts">
 <!ENTITY keysCaption.label "Keyboard shortcuts">

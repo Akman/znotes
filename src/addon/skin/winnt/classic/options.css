@@ -33,3 +33,8 @@
 /* ***** classic/1.0 winnt **** */
 
 @import url("chrome://znotes_common/skin/options.css");
+
+.key_list {
+  -moz-appearance: none;
+  border: none;
+}
