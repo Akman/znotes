@@ -94,19 +94,64 @@ menuitem.znotes_openoptionsdialog_class[disabled="true"] {
   list-style-image: url("chrome://znotes_images/skin/options-disabled-16x16.png");
 }
 
-.znotes_debug_class {
+.znotes_testsuite_class {
+  list-style-image: url("chrome://znotes_images/skin/test-24x24.png");
+}
+.znotes_testsuite_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/test-disabled-24x24.png");
+}
+toolbar[iconsize="small"] .znotes_testsuite_class,
+menuitem.znotes_testsuite_class  {
+  list-style-image: url("chrome://znotes_images/skin/test-16x16.png");
+}
+toolbar[iconsize="small"] .znotes_testsuite_class[disabled="true"],
+menuitem.znotes_testsuite_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/test-disabled-16x16.png");
+}
+
+.znotes_console_class {
+  list-style-image: url("chrome://znotes_images/skin/console-24x24.png");
+}
+.znotes_console_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/console-disabled-24x24.png");
+}
+toolbar[iconsize="small"] .znotes_console_class,
+menuitem.znotes_console_class  {
+  list-style-image: url("chrome://znotes_images/skin/console-16x16.png");
+}
+toolbar[iconsize="small"] .znotes_console_class[disabled="true"],
+menuitem.znotes_console_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/console-disabled-16x16.png");
+}
+
+.znotes_debugger_class {
   list-style-image: url("chrome://znotes_images/skin/debug-24x24.png");
 }
-.znotes_debug_class[disabled="true"] {
+.znotes_debugger_class[disabled="true"] {
   list-style-image: url("chrome://znotes_images/skin/debug-disabled-24x24.png");
 }
-toolbar[iconsize="small"] .znotes_debug_class,
-menuitem.znotes_debug_class  {
+toolbar[iconsize="small"] .znotes_debugger_class,
+menuitem.znotes_debugger_class  {
   list-style-image: url("chrome://znotes_images/skin/debug-16x16.png");
 }
-toolbar[iconsize="small"] .znotes_debug_class[disabled="true"],
-menuitem.znotes_debug_class[disabled="true"] {
+toolbar[iconsize="small"] .znotes_debugger_class[disabled="true"],
+menuitem.znotes_debugger_class[disabled="true"] {
   list-style-image: url("chrome://znotes_images/skin/debug-disabled-16x16.png");
+}
+
+.znotes_inspector_class {
+  list-style-image: url("chrome://znotes_images/skin/inspector-24x24.png");
+}
+.znotes_inspector_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/inspector-disabled-24x24.png");
+}
+toolbar[iconsize="small"] .znotes_inspector_class,
+menuitem.znotes_inspector_class  {
+  list-style-image: url("chrome://znotes_images/skin/inspector-16x16.png");
+}
+toolbar[iconsize="small"] .znotes_inspector_class[disabled="true"],
+menuitem.znotes_inspector_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/inspector-disabled-16x16.png");
 }
 
 .znotes_addons_class {
@@ -698,10 +743,6 @@ toolbar[mode="text"] .znotes_showappmenu_class .toolbarbutton-icon {
   display: -moz-box;
 }
 
-#znotes_statusbarpanellogo {
-  list-style-image: url("chrome://znotes_images/skin/znotes-16x16.png");
-}
-
 /* body */
 
 .znotes_bodydeletenote_class {
@@ -762,6 +803,21 @@ menuitem.znotes_bodytagsmenu_class  {
 toolbar[iconsize="small"] .znotes_bodytagsmenu_class[disabled="true"],
 menuitem.znotes_bodytagsmenu_class[disabled="true"] {
   list-style-image: url("chrome://znotes_images/skin/tags-disabled-16x16.png");
+}
+
+.znotes_bodytypesmenu_class {
+  list-style-image: url("chrome://znotes_images/skin/type-24x24.png");
+}
+.znotes_bodytypesmenu_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/type-disabled-24x24.png");
+}
+toolbar[iconsize="small"] .znotes_bodytypesmenu_class,
+menuitem.znotes_bodytypesmenu_class  {
+  list-style-image: url("chrome://znotes_images/skin/type-16x16.png");
+}
+toolbar[iconsize="small"] .znotes_bodytypesmenu_class[disabled="true"],
+menuitem.znotes_bodytypesmenu_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/type-disabled-16x16.png");
 }
 
 .znotes_bodyaddonspanel_class {
@@ -948,23 +1004,6 @@ menuitem.znotes_contentdelete_class[disabled="true"] {
   list-style-image: url("chrome://znotes_images/skin/delete-disabled-16x16.png");
 }
 
-/* loader */
-
-.znotes_loaderabort_class {
-  list-style-image: url("chrome://znotes_images/skin/cancel-24x24.png");
-}
-.znotes_loaderabort_class[disabled="true"] {
-  list-style-image: url("chrome://znotes_images/skin/cancel-disabled-24x24.png");
-}
-toolbar[iconsize="small"] .znotes_loaderabort_class,
-menuitem.znotes_loaderabort_class  {
-  list-style-image: url("chrome://znotes_images/skin/cancel-16x16.png");
-}
-toolbar[iconsize="small"] .znotes_loaderabort_class[disabled="true"],
-menuitem.znotes_loaderabort_class[disabled="true"] {
-  list-style-image: url("chrome://znotes_images/skin/cancel-disabled-16x16.png");
-}
-
 /* editor */
 
 .znotes_editoredit_class {
@@ -1057,4 +1096,19 @@ menuitem.znotes_spellcheckenabled_class  {
 toolbar[iconsize="small"] .znotes_spellcheckenabled_class[disabled="true"],
 menuitem.znotes_spellcheckenabled_class[disabled="true"] {
   list-style-image: url("chrome://znotes_images/skin/spellcheck-disabled-16x16.png");
+}
+
+.znotes_toggletagsmode_class {
+  list-style-image: url("chrome://znotes_images/skin/tagstoggle-24x24.png");
+}
+.znotes_toggletagsmode_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/tagstoggle-disabled-24x24.png");
+}
+toolbar[iconsize="small"] .znotes_toggletagsmode_class,
+menuitem.znotes_toggletagsmode_class  {
+  list-style-image: url("chrome://znotes_images/skin/tagstoggle-16x16.png");
+}
+toolbar[iconsize="small"] .znotes_toggletagsmode_class[disabled="true"],
+menuitem.znotes_toggletagsmode_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/tagstoggle-disabled-16x16.png");
 }

@@ -114,6 +114,8 @@
 
 <!-- OPTIONS -->
 
+<!ENTITY docCaption.text.label "Document">
+
 <!ENTITY mainCaption.text.label "Main">
 <!ENTITY isSpellcheckEnabled.text.label "Enable spellcheker by default">
 <!ENTITY keysCaption.text.label "Keyboard shortcuts">

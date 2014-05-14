@@ -35,13 +35,21 @@ if ( !ru.akman ) ru.akman = {};
 if ( !ru.akman.znotes ) ru.akman.znotes = {};
 if ( !ru.akman.znotes.core ) ru.akman.znotes.core = {};
 
-Components.utils.import( "resource://znotes/utils.js"  , ru.akman.znotes );
-Components.utils.import( "resource://znotes/event.js"  , ru.akman.znotes.core );
-Components.utils.import( "resource://znotes/documentmanager.js" , ru.akman.znotes );
+Components.utils.import( "resource://znotes/utils.js",
+  ru.akman.znotes
+);
+Components.utils.import( "resource://znotes/event.js",
+  ru.akman.znotes.core
+);
+Components.utils.import( "resource://znotes/documentmanager.js",
+  ru.akman.znotes
+);
 
 var EXPORTED_SYMBOLS = ["Note"];
 
 var Note = function( aBook, anEntry, aCategory, aType, aTagID ) {
+
+  var Utils = ru.akman.znotes.Utils;
 
   this.getBook = function() {
     return this.book;
@@ -120,6 +128,11 @@ var Note = function( aBook, anEntry, aCategory, aType, aTagID ) {
     }
     this.type = type;
     this.entry.setType( type );
+    this.notifyStateListener(
+      new ru.akman.znotes.core.Event(
+        "NoteTypeChanged",
+        { parentCategory: this.getParent(), changedNote: this } )
+    );
   };
 
   this.getData = function() {
@@ -164,7 +177,8 @@ var Note = function( aBook, anEntry, aCategory, aType, aTagID ) {
     if ( name in this.data.prefs && this.data.prefs[name] == value ) {
       return;
     }
-    var oldValue = ( name in this.data.prefs ) ? this.data.prefs[name] : undefined;
+    var oldValue = ( name in this.data.prefs ) ?
+      this.data.prefs[name] : undefined;
     this.data.prefs[name] = value;
     this.entry.setData( JSON.stringify( this.data ) );
     this.notifyStateListener(
@@ -182,40 +196,48 @@ var Note = function( aBook, anEntry, aCategory, aType, aTagID ) {
   };
   
   this.getDocument = function() {
-    var doc = ru.akman.znotes.DocumentManager.getInstance().getDocument( this.getType() );
+    var doc = ru.akman.znotes.DocumentManager.getInstance()
+                                             .getDocument( this.getType() );
     if ( !doc ) {
       return null;
     }
-    return doc.parseFromString( this.getMainContent(), this.getURI(), this.getBaseURI(), this.getName() );
+    return doc.parseFromString(
+      this.getMainContent(),
+      this.getURI(),
+      this.getBaseURI(),
+      this.getName()
+    );
   };
   
   this.setDocument = function( dom ) {
-    var doc = ru.akman.znotes.DocumentManager.getInstance().getDocument( this.getType() );
+    var doc = ru.akman.znotes.DocumentManager.getInstance()
+                                             .getDocument( this.getType() );
     if ( !doc ) {
       return false;
     }
-    this.setMainContent( doc.serializeToString( dom ) );
+    this.setMainContent(
+      doc.serializeToString( dom, this.getURI(), this.getBaseURI() ) );
     return true;
   };
 
   this.updateDocument = function() {
-    var status = this.getDocument();
-    if ( !status || !status.result ) {
+    var res = this.getDocument();
+    if ( !res || !res.result ) {
       return;
     }
-    if ( status.changed ) {
-      this.setDocument( status.dom );
+    if ( res.changed ) {
+      this.setDocument( res.dom );
     }
   };
 
-  this.importDocument = function( dom ) {
-    var doc = ru.akman.znotes.DocumentManager.getInstance().getDocument( this.getType() );
+  this.importDocument = function( dom, params ) {
+    var doc = ru.akman.znotes.DocumentManager.getInstance()
+                                             .getDocument( this.getType() );
     if ( !doc ) {
       return;
     }
     this.setDocument(
-      doc.importDocument( dom, this.getBaseURI(), this.getName() )
-    );
+      doc.importDocument( dom, this.getURI(), this.getBaseURI(), this.getName(), params ) );
     this.updateDocument();
   };
   
@@ -229,7 +251,13 @@ var Note = function( aBook, anEntry, aCategory, aType, aTagID ) {
     this.notifyStateListener(
       new ru.akman.znotes.core.Event(
         "NoteMainContentChanged",
-        { parentCategory: this.getParent(), changedNote: this, oldValue: oldContent, newValue: data } )
+        {
+          parentCategory: this.getParent(),
+          changedNote: this,
+          oldValue: oldContent,
+          newValue: data
+        }
+      )
     );
   };
   
@@ -265,7 +293,11 @@ var Note = function( aBook, anEntry, aCategory, aType, aTagID ) {
       this.notifyStateListener(
         new ru.akman.znotes.core.Event(
           "NoteContentAppended",
-          { parentCategory: this.getParent(), changedNote: this, contentInfo: info }
+          {
+            parentCategory: this.getParent(),
+            changedNote: this,
+            contentInfo: info
+          }
         )
       );
     }
@@ -278,7 +310,11 @@ var Note = function( aBook, anEntry, aCategory, aType, aTagID ) {
       this.notifyStateListener(
         new ru.akman.znotes.core.Event(
           "NoteContentRemoved",
-          { parentCategory: this.getParent(), changedNote: this, contentInfo: info }
+          {
+            parentCategory: this.getParent(),
+            changedNote: this,
+            contentInfo: info
+          }
         )
       );
     }
@@ -307,7 +343,11 @@ var Note = function( aBook, anEntry, aCategory, aType, aTagID ) {
       this.notifyStateListener(
         new ru.akman.znotes.core.Event(
           "NoteAttachmentAppended",
-          { parentCategory: this.getParent(), changedNote: this, attachmentInfo: info }
+          {
+            parentCategory: this.getParent(),
+            changedNote: this,
+            attachmentInfo: info
+          }
         )
       );
     }
@@ -320,7 +360,11 @@ var Note = function( aBook, anEntry, aCategory, aType, aTagID ) {
       this.notifyStateListener(
         new ru.akman.znotes.core.Event(
           "NoteAttachmentRemoved",
-          { parentCategory: this.getParent(), changedNote: this, attachmentInfo: info }
+          {
+            parentCategory: this.getParent(),
+            changedNote: this,
+            attachmentInfo: info
+          }
         )
       );
     }
@@ -368,7 +412,7 @@ var Note = function( aBook, anEntry, aCategory, aType, aTagID ) {
 
   this.moveInto = function( aCategory ) {
     this.entry.moveTo( aCategory.entry );
-    // @@@@ 1 What if document in editing mode ?
+    // @@@@ 1 What if the note is in editing mode ?
     this.updateDocument();
     this.getParent().removeNote( this );
     aCategory.appendNote( this );
@@ -422,7 +466,12 @@ var Note = function( aBook, anEntry, aCategory, aType, aTagID ) {
         this.notifyStateListener(
           new ru.akman.znotes.core.Event(
             "NoteTagsChanged",
-            { parentCategory: this.getParent(), changedNote: this, oldValue: tagIDs, newValue: ids }
+            {
+              parentCategory: this.getParent(),
+              changedNote: this,
+              oldValue: tagIDs,
+              newValue: ids
+            }
           )
         );
 
@@ -442,7 +491,12 @@ var Note = function( aBook, anEntry, aCategory, aType, aTagID ) {
       this.notifyStateListener(
         new ru.akman.znotes.core.Event(
           "NoteMainTagChanged",
-          { parentCategory: this.getParent(), changedNote: this, oldValue: oldTag, newValue: ids[0] }
+          {
+            parentCategory: this.getParent(),
+            changedNote: this,
+            oldValue: oldTag,
+            newValue: ids[0]
+          }
         )
       );
 
@@ -489,6 +543,26 @@ var Note = function( aBook, anEntry, aCategory, aType, aTagID ) {
     this.origin = url;
   };
 
+  this.getMode = function() {
+    return this.mode;
+  };
+  
+  this.setMode = function( mode ) {
+    var oldValue = this.mode;
+    this.mode = mode;
+    this.notifyStateListener(
+      new ru.akman.znotes.core.Event(
+        "NoteModeChanged",
+        {
+          parentCategory: this.getParent(),
+          changedNote: this,
+          oldValue: oldValue,
+          newValue: mode
+        }
+      )
+    );
+  };
+  
   this.isLoading = function() {
     return this.loading;
   };
@@ -496,263 +570,17 @@ var Note = function( aBook, anEntry, aCategory, aType, aTagID ) {
   this.setLoading = function( loading ) {
     var oldValue = this.loading;
     this.loading = loading;
-    if ( loading ) {
-      this.loadingFrame = null;
-      this.loadingProgressListener = null;
-      this.loadingProgress = [];
-    } else {
-      delete this.loadingFrame;
-      delete this.loadingProgressListener;
-      delete this.loadingProgress;
-    }
     this.notifyStateListener(
       new ru.akman.znotes.core.Event(
         "NoteLoadingChanged",
-        { parentCategory: this.getParent(), changedNote: this, oldValue: oldValue, newValue: loading }
+        {
+          parentCategory: this.getParent(),
+          changedNote: this,
+          oldValue: oldValue,
+          newValue: loading
+        }
       )
     );
-  };
-  
-  this.getStatus = function() {
-    return this.status;
-  };
-
-  this.setStatus = function( status ) {
-    if ( !this.isLoading() ) {
-      return;
-    }
-    var oldStatus = {};
-    ru.akman.znotes.Utils.cloneObject( this.status, oldStatus );
-    ru.akman.znotes.Utils.cloneObject( status, this.status );
-    this.loadingProgress.push( status );
-    if ( !this.isLocked() ) {
-      this.notifyStateListener(
-        new ru.akman.znotes.core.Event(
-          "NoteStatusChanged",
-          { parentCategory: this.getParent(), changedNote: this, oldValue: oldStatus, newValue: status }
-        )
-      );
-    }
-  };
-
-  this.loadAbort = function() {
-    if ( this.isLoading() && this.loadingFrame && this.loadingProgressListener ) {
-      try {
-        this.loadingFrame.webNavigation.stop( 3 /* STOP_ALL */ );
-        this.loadingFrame.docShell.removeProgressListener(
-          this.loadingProgressListener
-        );
-      } catch ( e ) {
-      }
-    }
-    this.setStatus( {
-      timestamp: new Date(),
-      type: "abort"
-    } );
-    if ( this.loadingFrame ) {
-      this.loadingFrame.parentNode.removeChild( this.loadingFrame );
-    }
-    this.setLoading( false );
-  };
-  
-  this.load = function( aURL ) {
-    this.setOrigin( aURL );
-    this.setLoading( true );
-    var aNote = this;
-    var aDocument = ru.akman.znotes.Utils.MAIN_WINDOW.document;
-    var aParent = aDocument.getElementById( "znotes_maintabpanel" );
-    var frame = aDocument.createElement( "iframe" );
-    frame.setAttribute( "id", "import_" + ru.akman.znotes.Utils.createUUID() );
-    frame.setAttribute( "type", "content-primary" );
-    frame.setAttribute( "disablehistory", "true" );
-    frame.setAttribute( "disableglobalhistory", "true" );
-    frame.setAttribute( "collapsed", "true" );
-    frame.setAttribute( "src", "about:blank" );
-    aParent.appendChild( frame );
-    //
-    var onErrorCallback = function( errorMessage ) {
-      if ( errorMessage == "NS_BINDING_ABORTED" ) {
-        // We may get NS_BINDING_ABORTED when a load is interrupted
-        // by something else, typically a page navigation.
-        // We may return FALSE to continue download.
-        return false;
-      }
-      if ( errorMessage == "2153578529" ) {
-        // We may get NS_ERROR_PARSED_DATA_CACHED
-        // We may return FALSE to continue download.
-        return false;
-      }
-      frame.parentNode.removeChild( frame );
-      aNote.setStatus( {
-        timestamp: new Date(),
-        type: "error",
-        message: errorMessage
-      } );
-      aNote.setLoading( false );
-      return true;
-    };
-    //
-    var onLoadCallback = function() {
-      frame.removeEventListener( "load", onLoadCallback, true );
-      if ( !aNote.isLoading() ) {
-        return;
-      }
-      // prepare to save document localy
-      var tmpName = ru.akman.znotes.Utils.createUUID();
-      var directoryService = Components.classes["@mozilla.org/file/directory_service;1"]
-                                       .getService( Components.interfaces.nsIProperties );
-      var contentDirectory = directoryService.get( "TmpD", Components.interfaces.nsIFile );
-      var contentFile = contentDirectory.clone();
-      contentDirectory.append( tmpName + "_files" );
-      contentFile.append( tmpName + ".xhtml" );
-      if ( !contentDirectory.exists() || !contentDirectory.isDirectory() ) {
-        contentDirectory.create( Components.interfaces.nsIFile.DIRECTORY_TYPE, parseInt( "0774", 8 ) );
-      }
-      var contentType = aNote.getType();
-      //
-      var onSaveCallback = function() {
-        ru.akman.znotes.Utils.fixupContent( frame.contentDocument, contentDirectory );
-        aNote.loadContentDirectory( contentDirectory, true );
-        if ( contentFile.exists() ) {
-          contentFile.remove( false );
-        }
-        aNote.importDocument( frame.contentDocument );
-        frame.parentNode.removeChild( frame );
-        aNote.setStatus( {
-          timestamp: new Date(),
-          type: "success"
-        } );
-        aNote.setLoading( false );
-      };
-      //
-      var onStylesSaveCallback = function() {
-        ru.akman.znotes.Utils.saveContent(
-          frame.contentDocument,
-          contentFile,
-          contentDirectory,
-          contentType,
-          onSaveCallback,
-          onErrorCallback
-        );
-      };
-      // https://bugzilla.mozilla.org/show_bug.cgi?id=115107
-      // Bug 115107 - CSS not fixed up by webbrowserpersist.
-      ru.akman.znotes.Utils.inlineStyles(
-        frame.contentDocument,
-        contentDirectory,
-        onStylesSaveCallback
-      );
-    };
-    /*
-     * The xul:iframe automatically loads about:blank when it is added into the tree.
-     * We need to wait for the document to be loaded before doing things.
-     * Why do we do that ?
-     * Basically because we want the iframe to have a docShell and a webNavigation !
-     * If we don't do that, and we set directly src="about:blank", sometimes we are
-     * too fast and the docShell isn't ready by the time we get there.
-     */
-    var process = function( event ) {
-      frame.removeEventListener( "load", process, true );
-      var ioService = Components.classes["@mozilla.org/network/io-service;1"]
-                                .getService( Components.interfaces.nsIIOService );
-      try {
-        var uri = ioService.newURI( aURL, null, null );
-      } catch ( e ) {
-        onErrorCallback( e.name );
-        return;
-      }
-      var ciWN = Components.interfaces.nsIWebNavigation;
-      var ciWPL = Components.interfaces.nsIWebProgressListener;
-      var ciSWR = Components.interfaces.nsISupportsWeakReference;
-      var ciS = Components.interfaces.nsISupports;
-      var ciHC = Components.interfaces.nsIHttpChannel;
-      frame.addEventListener( "load", onLoadCallback, true );
-      frame.webNavigation.allowAuth = true;
-      frame.webNavigation.allowImages = true;
-      frame.webNavigation.allowJavascript = true;
-      frame.webNavigation.allowMetaRedirects = true;
-      frame.webNavigation.allowPlugins = true;
-      frame.webNavigation.allowSubframes = true;
-      var progressListener = {
-        QueryInterface: function( aIID ) {
-          if ( aIID.equals( ciWPL ) || aIID.equals( ciSWR ) || aIID.equals( ciS ) ) {
-            return this;
-          }
-          throw Components.results.NS_NOINTERFACE;
-        },
-        onLocationChange: function( aWebProgress, aRequest, aLocation, aFlags ) {
-          aNote.setStatus( {
-            timestamp: new Date(),
-            type: "location",
-            location: aLocation,
-            flags: aFlags
-          } );
-          return 0;
-        },
-        onProgressChange: function( aWebProgress, aRequest, aCurSelfProgress, aMaxSelfProgress, aCurTotalProgress, aMaxTotalProgress ) {
-          aNote.setStatus( {
-            timestamp: new Date(),
-            type: "progress",
-            currentSelfProgress: aCurSelfProgress,
-            maximumSelfProgress: aMaxSelfProgress,
-            currentTotalProgress: aCurTotalProgress,
-            maximumTotalProgress: aMaxTotalProgress
-          } );
-          return 0;
-        },
-        onSecurityChange: function( aWebProgress, aRequest, aState ) {
-          aNote.setStatus( {
-            timestamp: new Date(),
-            type: "security",
-            state: aState
-          } );
-          return 0;
-        },
-        onStatusChange: function( aWebProgress, aRequest, aStatus, aMessage ) {
-          aNote.setStatus( {
-            timestamp: new Date(),
-            type: "status",
-            status: aStatus,
-            message: aMessage
-          } );
-          return 0;
-        },
-        onStateChange: function( aWebProgress, aRequest, aStateFlags, aStatus ) {
-          if ( aStateFlags & ciWPL.STATE_STOP && aStateFlags & ciWPL.STATE_IS_NETWORK ||
-               aStateFlags & ciWPL.STATE_STOP && aStateFlags & ciWPL.STATE_IS_DOCUMENT ) {
-            if ( !Components.isSuccessCode( aStatus ) ) {
-              onErrorCallback( ru.akman.znotes.Utils.getErrorName( aStatus ) );
-              return 0;
-            }
-          }
-          aNote.setStatus( {
-            timestamp: new Date(),
-            type: "state",
-            state: aStateFlags,
-            status: aStatus
-          } );
-          return 0;
-        }
-      };
-      //
-      var ciWP = Components.interfaces.nsIWebProgress;
-      frame.docShell.QueryInterface( ciWP );
-      aNote.loadingFrame = frame;
-      aNote.loadingProgressListener = progressListener;
-      frame.docShell.addProgressListener( progressListener, ciWP.NOTIFY_ALL );
-      try {
-        frame.webNavigation.loadURI(
-          aURL,
-          ciWN.LOAD_FLAGS_BYPASS_CACHE | ciWN.LOAD_FLAGS_BYPASS_PROXY,
-          null,
-          null,
-          null
-        );
-      } catch ( e ) {
-        onErrorCallback( e.name );
-      }
-    };
-    frame.addEventListener( "load", process, true );
   };
   
   this.addStateListener = function( stateListener ) {
@@ -819,10 +647,10 @@ var Note = function( aBook, anEntry, aCategory, aType, aTagID ) {
   // C O N S T R U C T O R
   
   // for debug purpose
-  this.instanceId = ru.akman.znotes.Utils.createUUID();
+  this.instanceId = Utils.createUUID();
 
   this.loading = false;
-  this.status = {};
+  this.mode = "viewer";
   this.origin = "";
   this.locked = true;
   this.exists = true;
@@ -834,10 +662,19 @@ var Note = function( aBook, anEntry, aCategory, aType, aTagID ) {
   this.id = this.entry.getId();
   this.index = this.entry.getIndex();
   this.data = JSON.parse( this.entry.getData() );
+  //
   this.type = this.entry.getType();
   if ( aType && aType != this.type ) {
     this.setType( aType );
   }
+  if ( this.type === "unknown" ) {
+    if ( this.getMainContent().match( /<html/i ) ) {
+      this.setType( "application/xhtml+xml" );
+    } else {
+      this.setType( "text/plain" );
+    }
+  }
+  //
   this.tags = this.entry.getTags();
   var arrIDs = this.getTags();
   if ( aTagID && arrIDs.indexOf( aTagID ) < 0 ) {
@@ -845,13 +682,19 @@ var Note = function( aBook, anEntry, aCategory, aType, aTagID ) {
     this.setTags( arrIDs );
   }
   if ( this.entry.getSize() == 0 ) {
-    var doc = ru.akman.znotes.DocumentManager.getInstance().getDocument( this.getType() );
+    var doc = ru.akman.znotes.DocumentManager.getInstance()
+                                             .getDocument( this.getType() );
     if ( !doc ) {
       doc = ru.akman.znotes.DocumentManager.getInstance().getDefaultDocument();
       this.setType( doc.getType() );
     }
     if ( doc ) {
-      var dom = doc.getBlankDocument( this.getBaseURI(), this.getName(), true );
+      var dom = doc.getBlankDocument(
+        this.getURI(),
+        this.getBaseURI(),
+        this.getName(),
+        true /* comments */
+      );
       if ( dom ) {
         this.setDocument( dom );
       }

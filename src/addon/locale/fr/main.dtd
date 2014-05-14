@@ -42,9 +42,10 @@
 <!ENTITY tag_tree_color "Couleur">
 
 <!ENTITY note_tree_attachments "Pièces jointes">
-<!ENTITY note_tree_name "Note">
+<!ENTITY note_tree_name "Nom">
 <!ENTITY note_tree_category "Catégorie">
 <!ENTITY note_tree_tag "Étiquette">
+<!ENTITY note_tree_type "Type">
 <!ENTITY note_tree_create_datetime "Créé le">
 <!ENTITY note_tree_update_datetime "Modifié le">
 

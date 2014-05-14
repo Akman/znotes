@@ -262,11 +262,8 @@
         <menupopup id="znotes_newnote_button_menupopup" />
       </toolbarbutton>
       <toolbarbutton id="znotes_importnote_button"
-        type="menu-button"
         class="toolbarbutton-1 znotes_importnote_class"
-        command="znotes_importnote_command">
-        <menupopup id="znotes_importnote_button_menupopup" />
-      </toolbarbutton>
+        command="znotes_importnote_command"/>
       <toolbarbutton id="znotes_deletenote_button"
         class="toolbarbutton-1 znotes_deletenote_class"
         command="znotes_deletenote_command"/>
@@ -286,9 +283,18 @@
       <toolbarbutton id="znotes_openoptionsdialog_button"
         class="toolbarbutton-1 znotes_openoptionsdialog_class"
         command="znotes_openoptionsdialog_command"/>
-      <toolbarbutton id="znotes_debug_button"
-        class="toolbarbutton-1 znotes_debug_class"
-        command="znotes_debug_command"/>
+      <toolbarbutton id="znotes_testsuite_button"
+        class="toolbarbutton-1 znotes_testsuite_class"
+        command="znotes_testsuite_command"/>
+      <toolbarbutton id="znotes_console_button"
+        class="toolbarbutton-1 znotes_console_class"
+        command="znotes_console_command"/>
+      <toolbarbutton id="znotes_debugger_button"
+        class="toolbarbutton-1 znotes_debugger_class"
+        command="znotes_debugger_command"/>
+      <toolbarbutton id="znotes_inspector_button"
+        class="toolbarbutton-1 znotes_inspector_class"
+        command="znotes_inspector_command"/>
       <toolbarbutton id="znotes_addons_button"
         class="toolbarbutton-1 znotes_addons_class"
         command="znotes_addons_command"/>
@@ -353,7 +359,7 @@
       iconsize="small"
       customizable="true"
       context="znotes_maintoolbar_menupopup"
-      defaultset="znotes_appendbook_button,separator,znotes_newcategory_button,znotes_deletecategory_button,separator,znotes_newtag_button,znotes_deletetag_button,separator,znotes_importnote_button,znotes_newnote_button,znotes_deletenote_button,separator,znotes_openoptionsdialog_button,znotes_openabout_button,znotes_openhelp_button,spring,znotes_edit_undo_button,znotes_edit_redo_button,separator,znotes_edit_cut_button,znotes_edit_copy_button,znotes_edit_paste_button,znotes_edit_delete_button,separator,znotes_edit_selectall_button,spring,znotes_showfilterbar_button,znotes_debug_button,znotes_addons_button,znotes_update_button,znotes_showappmenu_button" />
+      defaultset="znotes_appendbook_button,separator,znotes_newcategory_button,znotes_deletecategory_button,separator,znotes_newtag_button,znotes_deletetag_button,separator,znotes_importnote_button,znotes_newnote_button,znotes_deletenote_button,separator,znotes_openoptionsdialog_button,znotes_openabout_button,znotes_openhelp_button,spring,znotes_edit_undo_button,znotes_edit_redo_button,separator,znotes_edit_cut_button,znotes_edit_copy_button,znotes_edit_paste_button,znotes_edit_delete_button,separator,znotes_edit_selectall_button,spring,znotes_showfilterbar_button,znotes_testsuite_button,znotes_console_button,znotes_debugger_button,znotes_inspector_button,znotes_addons_button,znotes_update_button,znotes_showappmenu_button" />
     <toolbarset id="znotes_maintoolbarset"
       context="znotes_maintoolbar_menupopup" />
   </toolbox>
@@ -365,13 +371,12 @@
         <tree id="bookTree" class="plain bookTree" flex="1"
           seltype="single" context="bookTreeMenu"
           pack="start" align="stretch" minwidth="50"
-          hidecolumnpicker="true" keepcurrentinview="true"
-          disableKeyNavigation="true" enableColumnDrag="true">
+          keepcurrentinview="true" enableColumnDrag="true">
           <treecols id="bookTreeCols">
             <treecol id="bookTreeName" label="&book_tree_name;"
               width="150" flex="1" crop="center" 
-              persist="width ordinal hidden" ignoreincolumnpicker="true"
-              primary="true" sortActive="true" sortDirection="ascending"/>
+              persist="width ordinal hidden" primary="true"
+              sortActive="true" sortDirection="ascending"/>
           </treecols>
           <treechildren id="bookTreeChildren"/>
         </tree>
@@ -384,18 +389,17 @@
         <vbox id="folderTreeView" class="folderTreeView" flex="1">
           <tree id="folderTree" class="plain folderTree" flex="1"
             seltype="single" context="folderTreeMenu"
-            pack="start" align="stretch" minwidth="50" hidecolumnpicker="true"
-            keepcurrentinview="true" disableKeyNavigation="true"
-            enableColumnDrag="true">
+            pack="start" align="stretch" minwidth="50"
+            keepcurrentinview="true" enableColumnDrag="true">
             <treecols id="folderTreeCols">
               <treecol id="folderTreeName" label="&folder_tree_name;"
                 width="150" flex="1" crop="center"
-                persist="width ordinal hidden" ignoreincolumnpicker="true"
-                primary="true" sortActive="true" sortDirection="ascending"/>
+                persist="width ordinal hidden" primary="true"
+                sortActive="true" sortDirection="ascending"/>
               <splitter id="folderTreeNameSplitter" class="tree-splitter"/>
               <treecol id="folderTreeCount" label="&folder_tree_count;"
                 width="80" flex="1" crop="center"
-                persist="width ordinal hidden" ignoreincolumnpicker="true"
+                persist="width ordinal hidden"
                 sortActive="true" sortDirection="ascending"/>
             </treecols>
             <treechildren id="folderTreeChildren"/>
@@ -408,19 +412,17 @@
         <vbox id="tagTreeView" class="tagTreeView" flex="1">
           <tree id="tagTree" class="plain tagTree" flex="1"
             seltype="single" context="tagTreeMenu"
-            pack="start" align="stretch" minwidth="50" hidecolumnpicker="true"
-            keepcurrentinview="true" disableKeyNavigation="true"
-            enableColumnDrag="true">
+            pack="start" align="stretch" minwidth="50"
+            keepcurrentinview="true" enableColumnDrag="true">
             <treecols id="tagTreeCols">
               <treecol id="tagTreeName" label="&tag_tree_name;"
-                 width="150" flex="1"
+                width="150" flex="1" primary="true"
                 crop="center" persist="width ordinal hidden"
-                ignoreincolumnpicker="true" primary="true"
                 sortActive="true" sortDirection="ascending"/>
               <splitter id="tagTreeNameSplitter" class="tree-splitter"/>
               <treecol id="tagTreeColor" label="&tag_tree_color;"
-                 flex="1" width="80" crop="center"
-                persist="width ordinal hidden" ignoreincolumnpicker="true"
+                flex="1" width="80" crop="center"
+                persist="width ordinal hidden"
                 sortActive="true" sortDirection="ascending"/>
             </treecols>
             <treechildren id="tagTreeChildren"/>
@@ -445,38 +447,39 @@
       <vbox id="noteTreeView" class="noteTreeView" flex="1">
         <tree id="noteTree" class="plain noteTree" flex="1"
           seltype="single" context="noteTreeMenu"
-          height="150" hidecolumnpicker="true" keepcurrentinview="true"
-          disableKeyNavigation="true" enableColumnDrag="true">
+          height="150" keepcurrentinview="true"
+          enableColumnDrag="true">
           <treecols id="noteTreeCols">
             <treecol id="noteTreeAttachments" label="&note_tree_attachments;"
               flex="1" crop="center" persist="width ordinal hidden"
-              hideheader="false" ignoreincolumnpicker="true" primary="true"
-              sortActive="true" fixed="true" sortDirection="ascending"
-              width="16" maxwidth="16" minwidth="16" class="treecol-image"/>
+              primary="true" fixed="true" width="16" maxwidth="16" minwidth="16"
+              sortActive="true" sortDirection="ascending"
+              class="treecol-image"/>
             <splitter id="noteTreeAttachmentsSplitter" class="tree-splitter"/>
             <treecol id="noteTreeName" label="&note_tree_name;" flex="1"
-              crop="center" persist="width ordinal hidden" hideheader="false"
-              ignoreincolumnpicker="true" primary="true" sortActive="true"
-              sortDirection="ascending"/>
+              crop="center" persist="width ordinal hidden"
+              sortActive="true" sortDirection="ascending"/>
             <splitter id="noteTreeNameSplitter" class="tree-splitter"/>
             <treecol id="noteTreeCategory" label="&note_tree_category;"
               flex="1" crop="center" persist="width ordinal hidden"
-              hideheader="false" ignoreincolumnpicker="true"
               sortActive="true" sortDirection="ascending"/>
             <splitter id="noteTreeCategorySplitter" class="tree-splitter"/>
             <treecol id="noteTreeTag" label="&note_tree_tag;" flex="1"
-              crop="center" persist="width ordinal hidden" hideheader="false"
-              ignoreincolumnpicker="true" sortActive="true"
-              sortDirection="ascending"/>
+              crop="center" persist="width ordinal hidden"
+              sortActive="true" sortDirection="ascending"/>
             <splitter id="noteTreeTagSplitter" class="tree-splitter"/>
+            <treecol id="noteTreeType" label="&note_tree_type;" flex="1"
+              crop="center" persist="width ordinal hidden"
+              sortActive="true" sortDirection="ascending"/>
+            <splitter id="noteTreeTypeSplitter" class="tree-splitter"/>
             <treecol id="noteTreeCreateDateTime" flex="1" crop="center"
-              label="&note_tree_create_datetime;" hideheader="false"
-              persist="width ordinal hidden" ignoreincolumnpicker="true"
+              label="&note_tree_create_datetime;"
+              persist="width ordinal hidden"
               sortActive="true" sortDirection="ascending"/>
             <splitter id="noteTreeCreateDateTimeSplitter" class="tree-splitter"/>
             <treecol id="noteTreeUpdateDateTime" flex="1" crop="center"
-              label="&note_tree_update_datetime;" hideheader="false"
-              persist="width ordinal hidden" ignoreincolumnpicker="true"
+              label="&note_tree_update_datetime;" 
+              persist="width ordinal hidden"
               sortActive="true" sortDirection="ascending"/>
           </treecols>
           <treechildren id="noteTreeChildren"/>

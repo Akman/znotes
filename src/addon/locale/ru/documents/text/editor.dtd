@@ -114,6 +114,8 @@
 
 <!-- OPTIONS -->
 
+<!ENTITY docCaption.text.label "Документ">
+
 <!ENTITY mainCaption.text.label "Основные">
 <!ENTITY isSpellcheckEnabled.text.label "Включить проверку орфографии по умолчанию">
 <!ENTITY keysCaption.text.label "Сочетания клавиш">

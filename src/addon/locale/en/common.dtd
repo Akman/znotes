@@ -60,12 +60,33 @@
 <!ENTITY znotes_openoptionsdialog_key_modifiers "">
 <!ENTITY znotes_openoptionsdialog_keycode "">
 
-<!ENTITY znotes_debug_label "Debug">
-<!ENTITY znotes_debug_tooltip "Open debug window">
-<!ENTITY znotes_debug_accesskey "D">
-<!ENTITY znotes_debug_key "D">
-<!ENTITY znotes_debug_key_modifiers "accel,alt">
-<!ENTITY znotes_debug_keycode "">
+<!ENTITY znotes_testsuite_label "Tests">
+<!ENTITY znotes_testsuite_tooltip "Open test suite">
+<!ENTITY znotes_testsuite_accesskey "T">
+<!ENTITY znotes_testsuite_key "T">
+<!ENTITY znotes_testsuite_key_modifiers "accel,alt">
+<!ENTITY znotes_testsuite_keycode "">
+
+<!ENTITY znotes_debugger_label "Debug">
+<!ENTITY znotes_debugger_tooltip "Start debugger">
+<!ENTITY znotes_debugger_accesskey "D">
+<!ENTITY znotes_debugger_key "D">
+<!ENTITY znotes_debugger_key_modifiers "accel,alt">
+<!ENTITY znotes_debugger_keycode "">
+
+<!ENTITY znotes_console_label "Console">
+<!ENTITY znotes_console_tooltip "Open error console">
+<!ENTITY znotes_console_accesskey "E">
+<!ENTITY znotes_console_key "">
+<!ENTITY znotes_console_key_modifiers "">
+<!ENTITY znotes_console_keycode "">
+
+<!ENTITY znotes_inspector_label "Inspector">
+<!ENTITY znotes_inspector_tooltip "Start inspector">
+<!ENTITY znotes_inspector_accesskey "I">
+<!ENTITY znotes_inspector_key "">
+<!ENTITY znotes_inspector_key_modifiers "">
+<!ENTITY znotes_inspector_keycode "">
 
 <!ENTITY znotes_addons_label "Addons">
 <!ENTITY znotes_addons_tooltip "Manage add-ons">
@@ -372,6 +393,13 @@
 <!ENTITY znotes_bodytagsmenu_key_modifiers "accel">
 <!ENTITY znotes_bodytagsmenu_keycode "">
 
+<!ENTITY znotes_bodytypesmenu_label "Type">
+<!ENTITY znotes_bodytypesmenu_tooltip "Type">
+<!ENTITY znotes_bodytypesmenu_accesskey "e">
+<!ENTITY znotes_bodytypesmenu_key "">
+<!ENTITY znotes_bodytypesmenu_key_modifiers "">
+<!ENTITY znotes_bodytypesmenu_keycode "">
+
 <!ENTITY znotes_bodyaddonspanel_label "Addons">
 <!ENTITY znotes_bodyaddonspanel_tooltip "Show/hide addons panel">
 <!ENTITY znotes_bodyaddonspanel_accesskey "A">
@@ -459,15 +487,6 @@
 <!ENTITY znotes_contentdelete_key "">
 <!ENTITY znotes_contentdelete_key_modifiers "">
 <!ENTITY znotes_contentdelete_keycode "">
-
-<!-- loader -->
-
-<!ENTITY znotes_loaderabort_label "">
-<!ENTITY znotes_loaderabort_tooltip "Abort import">
-<!ENTITY znotes_loaderabort_accesskey "">
-<!ENTITY znotes_loaderabort_key "">
-<!ENTITY znotes_loaderabort_key_modifiers "">
-<!ENTITY znotes_loaderabort_keycode "">
 
 <!-- editor -->
 

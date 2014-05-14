@@ -64,11 +64,11 @@
   </vbox>
   
   <statusbar id="znotes_statusbar">
-    <statusbarpanel id="znotes_statusbarpanel" hidden="true">
+    <statusbarpanel id="znotes_statusbarpanel" flex="1">
       <image id="znotes_statusbarpanellogo" />
       <label id="znotes_statusbarpanellabel" />
-  </statusbarpanel>
-    
+      <spacer id="znotes_statusbar_spacer" flex="1"/>      
+    </statusbarpanel>
   </statusbar>
     
 </overlay>

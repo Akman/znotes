@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- ***** BEGIN LICENSE BLOCK *****
+  -
+  - Version: GPL 3.0
+  -
+  - ZNotes
+  - Copyright (C) 2012 Alexander Kapitman
+  -
+  - This program is free software: you can redistribute it and/or modify
+  - it under the terms of the GNU General Public License as published by
+  - the Free Software Foundation, either version 3 of the License, or
+  - (at your option) any later version.
+  -
+  - This program is distributed in the hope that it will be useful,
+  - but WITHOUT ANY WARRANTY; without even the implied warranty of
+  - MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  - GNU General Public License for more details.
+  -
+  - You should have received a copy of the GNU General Public License
+  - along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -
+  - The Original Code is ZNotes.
+  -
+  - Initial Developer(s):
+  -   Alexander Kapitman <akman.ru@gmail.com>
+  -
+  - Portions created by the Initial Developer are Copyright (C) 2012
+  - the Initial Developer. All Rights Reserved.
+  -
+  - Contributor(s):
+  -
+  - ***** END LICENSE BLOCK ***** -->
+
+<?xml-stylesheet type="text/css" href="chrome://global/skin/" ?>
+<?xml-stylesheet type="text/css" href="chrome://znotes/skin/testsuite.css" ?>
+
+<!DOCTYPE window SYSTEM "chrome://znotes/locale/testsuite.dtd">
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  id="znotes"
+  title="&title;"
+  windowtype="znotes:test"
+  persist="width height screenX screenY sizemode">
+  
+  <script type="application/javascript" src="chrome://znotes/content/testsuite.js"/>
+
+  <menupopup id="testMenu" />
+  
+  <toolbox id="testToolBox"
+    orient="horizontal"
+    pack="start"
+    align="stretch"
+    mode="icons"
+    iconsize="small">
+    <toolbar id="testToolbar"
+      pack="start"
+      align="stretch"
+      flex="1"
+      mode="icons">
+      <toolbarbutton id="clearTestViewButton"
+        tooltiptext="&clear_test_view_button_tooltip;"
+        oncommand="ru.akman.znotes.TestSuite.clearTestView( event );"
+        pack="start"/>
+      <toolbarbutton id="execTestButton"
+        tooltiptext="&exec_test_button_tooltip;"
+        oncommand="ru.akman.znotes.TestSuite.execTest( event );"
+        pack="start"/>
+      <toolbarspring id="testToolbarSpring" flex="1" />
+      <toolbarbutton id="alwaysRaisedButton"
+        type="checkbox" autocheck="true"
+        tooltiptext="&always_raised_button_tooltip;"
+        oncommand="ru.akman.znotes.TestSuite.alwaysRaised( event );"
+        align="end"/>
+    </toolbar>
+  </toolbox>
+  <textbox id="testTextBox"
+    orient="horizontal"
+    flex="1"
+    pack="start"
+    align="stretch"
+    multiline="true"
+    newlines="pasteintact"
+    rows="25"
+    cols="80"
+    value="" />
+  <box id="hiddenBox" collapsed="true" />
+
+</window>

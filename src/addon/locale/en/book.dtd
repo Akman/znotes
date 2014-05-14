@@ -30,12 +30,14 @@
   -
   - ***** END LICENSE BLOCK ***** -->
 
-<!ENTITY book_dialog_title "Notebook">
-<!ENTITY book_dialog_accept "Yes">
-<!ENTITY book_dialog_cancel "No">
-<!ENTITY label_header "Common">
-<!ENTITY label_book_name "Name">
-<!ENTITY label_book_description "Description">
-<!ENTITY text_book_description_placeholder "Enter description of notebook here ...">
-<!ENTITY label_book_driver "Driver">
-<!ENTITY label_footer "Driver">
+<!ENTITY dialog.title "Notebook">
+<!ENTITY dialog.accept "Yes">
+<!ENTITY dialog.cancel "No">
+
+<!ENTITY common.caption "Notebook">
+<!ENTITY name.label "Name">
+<!ENTITY name.placeholder "Enter name of notebook here ...">
+<!ENTITY description.label "Description">
+<!ENTITY description.placeholder "Enter description of notebook here ...">
+<!ENTITY driver.caption "Driver">
+<!ENTITY params.caption "Parameters">

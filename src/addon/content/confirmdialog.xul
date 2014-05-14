@@ -40,30 +40,35 @@
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   id="znotes"
   minwidth="350"
+  maxwidth="640"
   windowtype="znotes">
 
   <script type="application/javascript"
     src="chrome://znotes/content/confirmdialog.js" />
 
   <hbox>
-    <image id="imgWarning0" hidden="true"/>
-    <image id="imgWarning1" hidden="true"/>
+    <image id="imgWarning0" class="image" hidden="true"/>
+    <image id="imgWarning1" class="image" hidden="true"/>
     <vbox>
-      <label id="message1" maxwidth="300" crop="center" value=""/>
-      <label id="message2" maxwidth="300" crop="center" value=""/>
+      <label id="message1" class="label" maxwidth="300" crop="center" value=""/>
+      <label id="message2" class="label" maxwidth="300" crop="center" value=""/>
     </vbox>
   </hbox>
-  <spacer flex="1"/>
-  <hbox dir="rtl">
-    <button id="btnAccept"
-      dlgtype="accept"
+  <hbox id="btnBox" dir="rtl">
+    <button id="btnReject"
       minwidth="90"
-      label=" &confirmdialog_accept;"
-      pack="start"/>
+      label=" &confirmdialog_reject;"
+      pack="start"
+      hidden="true"/>
     <button id="btnCancel"
       dlgtype="cancel"
       minwidth="90"
       label=" &confirmdialog_cancel;"
+      pack="start"/>
+    <button id="btnAccept"
+      dlgtype="accept"
+      minwidth="90"
+      label=" &confirmdialog_accept;"
       pack="start"/>
   </hbox>
 

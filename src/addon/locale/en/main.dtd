@@ -42,9 +42,10 @@
 <!ENTITY tag_tree_color "Color">
 
 <!ENTITY note_tree_attachments "Attachments">
-<!ENTITY note_tree_name "Note">
+<!ENTITY note_tree_name "Name">
 <!ENTITY note_tree_category "Category">
 <!ENTITY note_tree_tag "Tag">
+<!ENTITY note_tree_type "Type">
 <!ENTITY note_tree_create_datetime "Created">
 <!ENTITY note_tree_update_datetime "Updated">
 

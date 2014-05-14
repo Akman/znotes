@@ -91,6 +91,7 @@ var Editor = function() {
     var designEditor = null;
     var isEditorDirty = false;
     var isDesignEditingActive = false;
+    var isEditorReady = false;
     
     var editorKeyset = null;
     var editorTabs = null;
@@ -592,9 +593,10 @@ var Editor = function() {
 
     // COMMANDS
     
-    function doClose() {    
-      stop();
-      switchMode( "viewer" );
+    function doClose() {
+      if ( stop() ) {
+        switchMode( "viewer" );
+      }
     };
     
     function doBold() {
@@ -720,10 +722,10 @@ var Editor = function() {
     function doForeColor() {
       var params = {
         input: {
-          title: Utils.STRINGS_BUNDLE.getString(
+          title: getString(
             "body.colorselectdialog.title"
           ),
-          message: Utils.STRINGS_BUNDLE.getString(
+          message: getString(
             "body.forecolorselectdialog.message"
           ),
           color: "#000000"
@@ -750,10 +752,10 @@ var Editor = function() {
     function doBackColor() {
       var params = {
         input: {
-          title: Utils.STRINGS_BUNDLE.getString(
+          title: getString(
             "body.colorselectdialog.title"
           ),
-          message: Utils.STRINGS_BUNDLE.getString(
+          message: getString(
             "body.backcolorselectdialog.message"
           ),
           color: "#FFFFFF"
@@ -1077,6 +1079,14 @@ var Editor = function() {
       }
     };
 
+    function getString( name ) {
+      return Utils.STRINGS_BUNDLE.getString( name );
+    };
+    
+    function getFormattedString( name, values ) {
+      return Utils.STRINGS_BUNDLE.getFormattedString( name, values );
+    };
+    
     // TOOLBAR
     
     function restoreToolbarCurrentSet() {
@@ -1143,30 +1153,40 @@ var Editor = function() {
       }
     };
     
-    function onNoteDeleted( e ) {
-      var aCategory = e.data.parentCategory;
-      var aNote = e.data.deletedNote;
-      if ( currentNote && currentNote == aNote ) {
-        done();
-        currentNote = null;
-        currentDocument = null;
-        currentWindow = null;
-      }
-    };
-    
     // @@@@ 1 onNoteMainContentChanged
     function onNoteMainContentChanged( e ) {
       var aCategory = e.data.parentCategory;
       var aNote = e.data.changedNote;
       var oldContent = e.data.oldValue;
       var newContent = e.data.newValue;
-      var status = {};
+      var params, reloadFlag = true;
       if ( currentNote && currentNote == aNote ) {
-        doneDesignEditing();
-        setDesignFrameContent( newContent );
-        if ( currentMode == "editor" ) {
-          switchState( false );
-          initDesignEditing();
+        if ( !isDesignEditingActive ) {
+          load();
+          return;
+        }
+        if ( isEditorDirty ) {
+          reloadFlag = false;
+          params = {
+            input: {
+              title: getString( "editor.confirmReload.title" ),
+              message1: getFormattedString( "editor.confirmReload.message1", [ currentNote.getName() ] ),
+              message2: getString( "editor.confirmReload.message2" )
+            },
+            output: null
+          };
+          currentWindow.openDialog(
+            "chrome://znotes/content/confirmdialog.xul",
+            "",
+            "chrome,dialog=yes,modal=yes,centerscreen,resizable=no",
+            params
+          ).focus();
+          if ( params.output && params.output.result ) {
+            reloadFlag = true;
+          }
+        }
+        if ( reloadFlag ) {
+          cancel( true );
         }
       }
     };
@@ -1269,24 +1289,6 @@ var Editor = function() {
       updateEditCommands();
     };
     
-    function editorModeInit() {
-      editorTabs.removeAttribute( "hidden" );
-      Common.goSetCommandHidden( "znotes_close_command", false, currentWindow );
-      viewerFrame.setAttribute( "hidden", "true" );
-      designFrame.removeAttribute( "hidden" );
-      switchState( false );
-      initDesignEditing();
-    };
-    
-    function viewerModeInit() {
-      editorTabs.setAttribute( "hidden", "true" );
-      designToolBox.setAttribute( "collapsed", "true" );
-      designFrame.setAttribute( "hidden", "true" );
-      viewerFrame.removeAttribute( "hidden" );
-      Common.goSetCommandHidden( "znotes_close_command", true, currentWindow );
-      doneDesignEditing();
-    };
-
     function addEventListeners() {
       viewerFrame.addEventListener( "keyup", onViewerFrameKeyup, false );
       viewerFrame.addEventListener( "mouseup", onViewerFrameMouseup, false );
@@ -1339,8 +1341,7 @@ var Editor = function() {
       var onCallback = function() {
         if ( initProgress == 6 ) {
           loadPrefs();
-          // @@@@ 1 getMainContent
-          setDesignFrameContent( currentNote.getMainContent() );
+          load();
           setDisplayStyle();
           prefsBundle.addObserver( prefObserver );
           self.getDocument().addObserver( docPrefObserver );
@@ -1364,7 +1365,6 @@ var Editor = function() {
       currentBookTagList = currentNote.getBook().getTagList();
       noteStateListener = {
         name: "EDITOR:TEXT",
-        onNoteDeleted: onNoteDeleted,
         onNoteMainTagChanged: onNoteMainTagChanged,
         onNoteMainContentChanged: onNoteMainContentChanged,
         onNoteDataChanged: onNoteDataChanged
@@ -1421,6 +1421,12 @@ var Editor = function() {
     };
     
     function done() {
+      if ( currentMode == "editor" ) {
+        if ( !stop() ) {
+          cancel();
+        }
+        // switchMode( "viewer" );
+      }
       deactivateKeyset();
       removeEventListeners();
       self.getDocument().removeObserver( docPrefObserver );
@@ -1428,12 +1434,9 @@ var Editor = function() {
       spellEditController.unregister();
       editController.unregister();
       editorController.unregister();
-      if ( currentMode == "editor" ) {
-        if ( currentNote.isExists() ) {
-          stop();
-          // switchMode( "viewer" );
-        }
-      }
+      currentNote = null;
+      currentDocument = null;
+      currentWindow = null;
     };
     
     function switchMode( mode ) {
@@ -1441,10 +1444,10 @@ var Editor = function() {
         return;
       }
       currentMode = mode;
-      if ( currentMode == "viewer" ) {
-        viewerModeInit();
+      if ( currentMode == "editor" ) {
+        start();
       } else {
-        editorModeInit();
+        load();
       }
       notifyStateListener(
         new ru.akman.znotes.core.Event(
@@ -1455,7 +1458,7 @@ var Editor = function() {
     };
 
     function switchState( value ) {
-      if ( isEditorDirty == value ) {
+      if ( isEditorDirty === value ) {
         return;
       }
       isEditorDirty = value;
@@ -1467,32 +1470,85 @@ var Editor = function() {
       );
     };
 
-    function save() {
-      // @@@@ 1 setMainContent
-      currentNote.setMainContent( getDesignFrameContent() );
-      switchState( false );
-    };
-    
-    function cancel() {
+    function load() {
       // @@@@ 1 getMainContent
       setDesignFrameContent( currentNote.getMainContent() );
+    };
+    
+    function save() {
+      if ( isEditorDirty ) {
+        currentNote.removeStateListener( noteStateListener );
+        // @@@@ 1 setMainContent
+        currentNote.setMainContent( getDesignFrameContent() );
+        currentNote.addStateListener( noteStateListener );
+        designEditor.enableUndo( false );
+        designEditor.resetModificationCount();
+        designEditor.enableUndo( true );
+        switchState( false );
+      }
+    };
+    
+    function cancel( force ) {
+      if ( isEditorDirty || force ) {
+        if ( currentNote && currentNote.isExists() ) {
+          load();
+        }
+        designEditor.enableUndo( false );
+        designEditor.resetModificationCount();
+        designEditor.enableUndo( true );
+        if ( currentNote && currentNote.isExists() ) {
+          switchState( false );
+        }
+      }
+    };
+    
+    function start() {
+      editorTabs.removeAttribute( "hidden" );
+      Common.goSetCommandHidden( "znotes_close_command", false, currentWindow );
+      viewerFrame.setAttribute( "hidden", "true" );
+      designFrame.removeAttribute( "hidden" );
       switchState( false );
+      initDesignEditing();
     };
     
     function stop() {
-      isEditorDirty && confirm() ? save() : cancel();
+      var res;
+      if ( currentNote && currentNote.isExists() && isEditorDirty ) {
+        res = confirm();
+        if ( res === -1 ) {
+          return false;
+        }
+        if ( res ) {
+          save();
+        } else {
+          cancel();
+        }
+      } else {
+        cancel();
+      }
+      if ( isDesignEditingActive ) {
+        doneDesignEditing();
+      }
+      editorTabs.setAttribute( "hidden", "true" );
+      designToolBox.setAttribute( "collapsed", "true" );
+      designFrame.setAttribute( "hidden", "true" );
+      viewerFrame.removeAttribute( "hidden" );
+      Common.goSetCommandHidden( "znotes_close_command", true, currentWindow );
+      return true;
     };
 
     function confirm() {
       var params = {
         input: {
-          title: Utils.STRINGS_BUNDLE.getString(
+          kind: 2,
+          title: getString(
             "body.confirmSave.title"
           ),
-          message1: Utils.STRINGS_BUNDLE.getFormattedString(
-            "body.confirmSave.message1", [ currentNote.getName() ]
+          message1: getFormattedString(
+            "body.confirmSave.message1",
+            [ currentNote.getName() ]
           ),
-          message2: Utils.STRINGS_BUNDLE.getString(
+          message2: getString(
             "body.confirmSave.message2"
           )
         },
@@ -1501,13 +1557,13 @@ var Editor = function() {
       currentWindow.openDialog(
         "chrome://znotes/content/confirmdialog.xul",
         "",
-        "chrome,dialog,modal,centerscreen,resizable",
+        "chrome,dialog,modal,centerscreen,resizable=no",
         params
       ).focus();
       if ( params.output ) {
-        return true;
+        return ( params.output.result ? 1 : 0 );
       }
-      return false;
+      return -1;
     };
 
     function print() {
@@ -1588,6 +1644,7 @@ var Editor = function() {
           )
         );
         switchMode( "viewer" );
+        isEditorReady = true;
       }, wait );
     };
 
@@ -1604,6 +1661,20 @@ var Editor = function() {
     // PUBLIC
     
     /**
+     * Check editor ready state ( UI loaded )
+     */
+    this.isReady = function() {
+      return isEditorReady;
+    };
+
+    /**
+     * Check editor dirty state
+     */
+    this.isDirty = function() {
+      return isEditorDirty;
+    };
+    
+    /**
      * Open editor for a note
      * @param win Window in which Document live
      * @param doc Document in which will be loaded the editor
@@ -1611,6 +1682,7 @@ var Editor = function() {
      * @param style Style that will be applied to the editor
      */
     this.open = function( win, doc, note, style ) {
+      isEditorReady = false;
       var editorView = doc.getElementById( "editorView" );
       var noteType = note.getType();
       var editorType = editorView.hasAttribute( "type" ) ?
@@ -1666,9 +1738,6 @@ var Editor = function() {
         )
       );
       done();
-      currentNote = null;
-      currentDocument = null;
-      currentWindow = null;
     };
     
     /**

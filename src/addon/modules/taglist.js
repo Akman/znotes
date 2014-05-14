@@ -351,7 +351,6 @@ var TagList = function( aBook, aDescriptor ) {
   */
 
   this.locked = true;
-  this.isListenersActive = true;
   this.listeners = [];
   this.book = aBook;
   this.descriptor = aDescriptor;

@@ -32,13 +32,23 @@
 
 <!ENTITY window.title "Параметры">
 <!ENTITY tab-main.label " Основные ">
+<!ENTITY tab-mainshortcuts.label " Сочетания ">
 <!ENTITY placeNameCaption.label " Рабочее место ">
 <!ENTITY placeName.placeholder "Введите название этого рабочего места ...">
 <!ENTITY isSavePosition.label "Запоминать выбранную заметку для каждой категории/тега">
 <!ENTITY isEditSourceEnabled.label "Разрешить редактирование исходного кода заметки">
 <!ENTITY docTypeCaption.label "Тип документа по умолчанию">
+<!ENTITY clipperCaption.label "Веб-клиппер">
+<!ENTITY clipperSaveScripts.label "Сохранять скрипты">
+<!ENTITY clipperSaveFrames.label "Сохранять фреймы">
+<!ENTITY clipperSeparateFrames.label "Сохранять фреймы в отдельных директориях">
+<!ENTITY clipperPreserveHTML5Tags.label "Сохранять теги HTML5">
+<!ENTITY isCloseBrowserAfterImport.label "Закрывать окно браузера когда загрузка завершена">
+<!ENTITY isSelectNoteAfterImport.label "Выбирать созданную заметку когда загрузка завершена">
+<!ENTITY isClipperPlaySound.label "Воспроизводить звук когда загрузка завершена">
 <!ENTITY additionCaption.label "Дополнительно">
 <!ENTITY isConfirmExit.label "Запрашивать подтверждение при закрытии приложения">
+<!ENTITY isExitQuitTB.label "Выход из приложения закрывает TB">
 <!ENTITY isReplaceBackground.label "Заменять цвет фона заметки используя цвет основного тега">
 <!ENTITY isHighlightRow.label "Подсвечивать строки в списке заметок используя цвет основного тега">
 <!ENTITY isPlaySound.label "Воспроизводить звук при запуске">

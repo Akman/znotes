@@ -234,6 +234,13 @@
       accesskey="&znotes_insertparagraph_accesskey;"
       key="znotes_insertparagraph_key"
       oncommand="ru.akman.znotes.Common.goDoCommand( 'znotes_insertparagraph_command', event.explicitOriginalTarget );"/>
+    <command id="znotes_toggletagsmode_command" disabled="true"
+      label="&znotes_toggletagsmode_label;"
+      title="&znotes_toggletagsmode_label;"
+      tooltiptext="&znotes_toggletagsmode_tooltip;"
+      accesskey="&znotes_toggletagsmode_accesskey;"
+      key="znotes_toggletagsmode_key"
+      oncommand="ru.akman.znotes.Common.goDoCommand( 'znotes_toggletagsmode_command', event.explicitOriginalTarget );"/>
     <command id="znotes_editordebug_command" disabled="true" hidden="true"
       label="&znotes_editordebug_label;"
       title="&znotes_editordebug_label;"
@@ -333,6 +340,9 @@
     <key id="znotes_editorcustomizetoolbar_key" command="znotes_editorcustomizetoolbar_command"
       key="&znotes_editorcustomizetoolbar_key;" modifiers="&znotes_editorcustomizetoolbar_key_modifiers;"
       keycode="&znotes_editorcustomizetoolbar_keycode;"/>
+    <key id="znotes_toggletagsmode_key" command="znotes_toggletagsmode_command"
+      key="&znotes_toggletagsmode_key;" modifiers="&znotes_toggletagsmode_key_modifiers;"
+      keycode="&znotes_toggletagsmode_keycode;"/>
     <key id="znotes_editordebug_key" command="znotes_editordebug_command"
       key="&znotes_editordebug_key;" modifiers="&znotes_editordebug_key_modifiers;"
       keycode="&znotes_editordebug_keycode;"/>
@@ -368,10 +378,9 @@
       <tabpanels id="editorPanels" flex="1">
         <tabpanel id="designPanel" flex="1">
           <vbox id="designBox" flex="1">
-            <editor id="designEditor"
+            <browser id="designEditor"
               type="content-primary"
               src="chrome://znotes_documents/content/xhtml/design.xhtml"
-              editortype="html"
               disablehistory="true"
               context="znotes_edit_menupopup"
               flex="1" />
@@ -535,6 +544,11 @@
                   type="checkbox"
                   class="menuitem-iconic toolbarbutton-1 znotes_spellcheckenabled_class"
                   command="znotes_spellcheckenabled_command" />
+                <!-- tags -->
+                <toolbarbutton id="znotes_toggletagsmode_button"
+                  type="checkbox"
+                  class="menuitem-iconic toolbarbutton-1 znotes_toggletagsmode_class"
+                  command="znotes_toggletagsmode_command" />
               </toolbarpalette>
               <toolbar id="designToolBar1" class="inline-toolbar"
                 toolbarname="&designToolBar1;" fullscreentoolbar="true"
@@ -545,7 +559,7 @@
                 toolbarname="&designToolBar2;" fullscreentoolbar="true"
                 mode="icons" iconsize="small" customizable="true"
                 context="znotes_editortoolbar_menupopup"
-                defaultset="formatBlockMenuList,separator,znotes_insertparagraph_button,separator,znotes_indent_button,znotes_outdent_button,separator,znotes_link_button,znotes_unlink_button,separator,znotes_insertorderedlist_button,znotes_insertunorderedlist_button,separator,znotes_inserthorizontalrule_button,znotes_inserttable_button,znotes_insertimage_button,separator,znotes_removeformat_button,spacer,znotes_spellcheckenabled_button,spring,znotes_editordebug_button" />
+                defaultset="formatBlockMenuList,separator,znotes_insertparagraph_button,separator,znotes_indent_button,znotes_outdent_button,separator,znotes_link_button,znotes_unlink_button,separator,znotes_insertorderedlist_button,znotes_insertunorderedlist_button,separator,znotes_inserthorizontalrule_button,znotes_inserttable_button,znotes_insertimage_button,separator,znotes_removeformat_button,spacer,znotes_spellcheckenabled_button,znotes_toggletagsmode_button,spring,znotes_editordebug_button" />
               <toolbarset id="designToolBarSet"
                 context="znotes_editortoolbar_menupopup" />
             </toolbox>
@@ -615,17 +629,29 @@
   </vbox>
 
   <vbox id="optionsView">
+    <!-- document -->
+    <groupbox id="docGroupBox:xhtml">
+      <caption id="docCaption:xhtml" label="&docCaption.xhtml.label;" />
+        <hbox id="authorHBox:xhtml" align="center">
+          <label value="&author.xhtml.label;" control="author:xhtml" />
+          <textbox id="author:xhtml" placeholder="&author.xhtml.placeholder;"
+            flex="1" />
+        </hbox>
+    </groupbox>
+    <!-- editor -->
     <groupbox id="mainGroupBox:xhtml">
       <caption id="mainCaption:xhtml" label="&mainCaption.xhtml.label;" />
       <vbox id="mainVBox:xhtml" align="start">
         <checkbox id="isSpellcheckEnabled:xhtml"
           label="&isSpellcheckEnabled.xhtml.label;" flex="1" />
+        <checkbox id="isTagsModeActive:xhtml"
+          label="&isTagsModeActive.xhtml.label;" flex="1" />
       </vbox>
     </groupbox>
     <groupbox id="keysGroupBox:xhtml" flex="1">
       <caption id="keysCaption:xhtml" label="&keysCaption.xhtml.label;" />
       <richlistbox id="keysListBox:xhtml" class="key_list"
-        seltype="single" flex="1" minheight="81"/>
+        seltype="single" flex="1" />
     </groupbox>
   </vbox>
   

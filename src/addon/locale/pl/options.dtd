@@ -33,13 +33,23 @@
 
 <!ENTITY window.title "Ustawienia">
 <!ENTITY tab-main.label " Główny ">
+<!ENTITY tab-mainshortcuts.label " Skróty ">
 <!ENTITY placeNameCaption.label " Obszar roboczy ">
 <!ENTITY placeName.placeholder "Nazwij ten obszar roboczy ...">
 <!ENTITY isSavePosition.label "Zapamiętaj wybraną notatkę dla każdej kategorii/tagu">
 <!ENTITY isEditSourceEnabled.label "Pozwól edytować kod źródłowy notatki">
 <!ENTITY docTypeCaption.label "Domyślny typ dokumentu">
+<!ENTITY clipperCaption.label "Web-clipper">
+<!ENTITY clipperSaveScripts.label "Save scripts">
+<!ENTITY clipperSaveFrames.label "Save frames">
+<!ENTITY clipperSeparateFrames.label "Save frames in the separate folders">
+<!ENTITY clipperPreserveHTML5Tags.label "Preserve HTML5 tags">
+<!ENTITY isCloseBrowserAfterImport.label "Close browser window when download completes">
+<!ENTITY isSelectNoteAfterImport.label "Select created note when download completes">
+<!ENTITY isClipperPlaySound.label "Play sound when download completes">
 <!ENTITY additionCaption.label "Dodatkowo">
 <!ENTITY isConfirmExit.label "Potwierdź wyjście po zamknięciu aplikacji">
+<!ENTITY isExitQuitTB.label "Exiting application leads to closing TB">
 <!ENTITY isReplaceBackground.label "Zastąp kolor tła notatkę, za pomocą głównego koloru znacznika">
 <!ENTITY isHighlightRow.label "Zaznacz wiersz w liście notatkę przy wykorzystaniu głównego koloru znacznika">
 <!ENTITY isPlaySound.label "Odtwórz dźwięk przy starcie">

@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- ***** BEGIN LICENSE BLOCK *****
+  -
+  - Version: GPL 3.0
+  -
+  - ZNotes
+  - Copyright (C) 2012 Alexander Kapitman
+  -
+  - This program is free software: you can redistribute it and/or modify
+  - it under the terms of the GNU General Public License as published by
+  - the Free Software Foundation, either version 3 of the License, or
+  - (at your option) any later version.
+  -
+  - This program is distributed in the hope that it will be useful,
+  - but WITHOUT ANY WARRANTY; without even the implied warranty of
+  - MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  - GNU General Public License for more details.
+  -
+  - You should have received a copy of the GNU General Public License
+  - along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -
+  - The Original Code is ZNotes.
+  -
+  - Initial Developer(s):
+  -   Alexander Kapitman <akman.ru@gmail.com>
+  -
+  - Portions created by the Initial Developer are Copyright (C) 2012
+  - the Initial Developer. All Rights Reserved.
+  -
+  - Contributor(s):
+  -
+  - ***** END LICENSE BLOCK ***** -->
+
+<?xml-stylesheet type="text/css" href="chrome://global/skin/" ?>
+<?xml-stylesheet type="text/css" href="chrome://platform/skin/platform.css" ?>
+<?xml-stylesheet type="text/css" href="chrome://znotes/skin/browser.css" ?>
+
+<!DOCTYPE window SYSTEM "chrome://znotes/locale/browser.dtd">
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  id="znotes"
+  windowtype="znotes:browser"
+  title="&browserWindowTitle;"
+  orient="vertical"
+  persist="width height screenX screenY sizemode">
+  
+  <script type="application/javascript"
+    src="chrome://znotes/content/common.js" />
+  <script type="application/javascript"
+    src="chrome://znotes/content/browser.js" />
+
+  <stringbundleset id="znotes_stringbundleset">
+    <stringbundle id="znotes_stringbundle"
+      src="chrome://znotes/locale/browser.properties" />
+  </stringbundleset>
+  
+  <commandset id="znotes_commandset">
+    <command id="znotes_prev_command" disabled="true"
+      label="&znotes_prev_label;"
+      title="&znotes_prev_label;"
+      tooltiptext="&znotes_prev_tooltip;"
+      accesskey="&znotes_prev_accesskey;"
+      key="znotes_prev_key"
+      oncommand="ru.akman.znotes.Common.goDoCommand( 'znotes_prev_command', event.explicitOriginalTarget );"/>
+    <command id="znotes_next_command" disabled="true"
+      label="&znotes_next_label;"
+      title="&znotes_next_label;"
+      tooltiptext="&znotes_next_tooltip;"
+      accesskey="&znotes_next_accesskey;"
+      key="znotes_next_key"
+      oncommand="ru.akman.znotes.Common.goDoCommand( 'znotes_next_command', event.explicitOriginalTarget );"/>
+    <command id="znotes_stop_command" disabled="true"
+      label="&znotes_stop_label;"
+      title="&znotes_stop_label;"
+      tooltiptext="&znotes_stop_tooltip;"
+      accesskey="&znotes_stop_accesskey;"
+      key="znotes_stop_key"
+      oncommand="ru.akman.znotes.Common.goDoCommand( 'znotes_stop_command', event.explicitOriginalTarget );"/>
+    <command id="znotes_reload_command" disabled="true"
+      label="&znotes_reload_label;"
+      title="&znotes_reload_label;"
+      tooltiptext="&znotes_reload_tooltip;"
+      accesskey="&znotes_reload_accesskey;"
+      key="znotes_reload_key"
+      oncommand="ru.akman.znotes.Common.goDoCommand( 'znotes_reload_command', event.explicitOriginalTarget );"/>
+    <command id="znotes_customizetoolbar_command" disabled="true"
+      label="&znotes_customizetoolbar_label;"
+      title="&znotes_customizetoolbar_label;"
+      tooltiptext="&znotes_customizetoolbar_tooltip;"
+      accesskey="&znotes_customizetoolbar_accesskey;"
+      key="znotes_customizetoolbar_key"
+      oncommand="ru.akman.znotes.Common.goDoCommand( 'znotes_customizetoolbar_command', event.explicitOriginalTarget );"/>
+  </commandset>
+  
+  <keyset id="znotes_keyset">
+    <key id="znotes_prev_key" command="znotes_prev_command"
+      key="&znotes_prev_key;" modifiers="&znotes_prev_key_modifiers;"
+      keycode="&znotes_prev_keycode;"/>
+    <key id="znotes_next_key" command="znotes_next_command"
+      key="&znotes_next_key;" modifiers="&znotes_next_key_modifiers;"
+      keycode="&znotes_next_keycode;"/>
+    <key id="znotes_stop_key" command="znotes_stop_command"
+      key="&znotes_stop_key;" modifiers="&znotes_stop_key_modifiers;"
+      keycode="&znotes_stop_keycode;"/>
+    <key id="znotes_reload_key" command="znotes_reload_command"
+      key="&znotes_reload_key;" modifiers="&znotes_reload_key_modifiers;"
+      keycode="&znotes_reload_keycode;"/>
+    <key id="znotes_customizetoolbar_key" command="znotes_customizetoolbar_command"
+      key="&znotes_customizetoolbar_key;" modifiers="&znotes_customizetoolbar_key_modifiers;"
+      keycode="&znotes_customizetoolbar_keycode;"/>
+  </keyset>
+  
+  <popupset id="znotes_popupset">
+    <menupopup id="browserToolBarContext">
+      <menuitem id="znotes_customizetoolbar_menuitem"
+        class="menuitem-iconic znotes_customizetoolbar_class"
+        command="znotes_customizetoolbar_command"
+        key="znotes_customizetoolbar_key" />
+    </menupopup>
+  </popupset>
+
+  <toolbox id="browserToolBox" class="mail-toolbox browserToolBox"
+    mode="icons" defaultmode="full" labelalign="bottom"
+    defaultlabelalign="end" iconsize="small">
+    <toolbarpalette id="browserToolBarPalette" />
+    <toolbar id="browserToolBar"
+      class="inline-toolbar chromeclass-toolbar browserToolBar"
+      toolbarname="&browserToolBarName;" customizable="true"
+      fullscreentoolbar="true" mode="icons" iconsize="small"
+      context="browserToolBarContext"
+      defaultset="">
+      <toolbarbutton id="znotes_prev_button"
+        class="toolbarbutton-1 znotes_prev_class"
+        command="znotes_prev_command"/>
+      <toolbarbutton id="znotes_next_button"
+        class="toolbarbutton-1 znotes_next_class"
+        command="znotes_next_command"/>
+      <textbox id="znotes_url_textbox" class="znotes_url_class"
+        placeholder="&url.placeholder;" flex="1" />
+      <toolbarbutton id="znotes_stop_button"
+        class="toolbarbutton-1 znotes_stop_class"
+        command="znotes_stop_command"/>
+      <toolbarbutton id="znotes_reload_button"
+        class="toolbarbutton-1 znotes_reload_class"
+        command="znotes_reload_command"/>
+    </toolbar>
+    <toolbarset id="browserToolBarSet" context="browserToolBarContext" />
+  </toolbox>
+  
+  <vbox id="browserView" flex="1" class="browserView">
+    <browser id="gBrowser" flex="1"
+      src="about:blank"
+      class="gBrowser"
+      type="content-primary" />
+  </vbox>
+
+  <statusbar id="browserStatusBar" class="chromeclass-status browserStatusBar">
+    <statusbarpanel id="browserStatusBarPanel" flex="1">
+      <image id="browserStatusBarImage" class="browserBlack" />
+      <label id="browserStatusBarLabel" />
+      <spacer id="browserStatusBarSpacer" flex="1"/>      
+    </statusbarpanel>
+  </statusbar>
+  
+</window>

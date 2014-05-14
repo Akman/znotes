@@ -1,0 +1,120 @@
+/* ***** BEGIN LICENSE BLOCK *****
+ *
+ * Version: GPL 3.0
+ *
+ * ZNotes
+ * Copyright (C) 2012 Alexander Kapitman
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * The Original Code is ZNotes.
+ *
+ * Initial Developer(s):
+ *   Alexander Kapitman <akman.ru@gmail.com>
+ *
+ * Portions created by the Initial Developer are Copyright (C) 2012
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+/* ***** classic/1.0 common **** */
+
+dialog {
+  padding: 0px;
+}
+
+#btnAccept {
+  list-style-image: url("chrome://znotes_images/skin/accept-16x16.png");
+  margin-right: 2px;
+}
+#btnCancel {
+  list-style-image: url("chrome://znotes_images/skin/cancel-16x16.png");
+  margin-left: 2px;
+}
+
+#bookMenuList {
+  list-style-image: url("chrome://znotes_images/skin/open-book-16x16.png");
+}
+
+#hbMain {
+}
+#vbLeft {
+  border-right: 1px solid #AABCCF;
+}
+#booksSplitter {
+  border: none;
+  margin-bottom: -5px;
+}
+.vbBooksNotes {
+  border-bottom: 1px solid #AABCCF;
+}
+.vbBooksCategories {
+  border-bottom: none;
+}
+.vbFoldersOpen {
+  border-bottom: 1px solid #AABCCF;
+}
+.vbFoldersSave {
+  border-bottom: none;
+}
+#tagsSplitter {
+  border: none;
+  margin-bottom: -5px;
+}
+#vbTags {
+}
+#rightSplitter {
+  border: none;
+  margin-right: -5px;
+}
+#vbRight {
+}
+#vbNotes {
+  border-bottom: 1px solid #AABCCF;
+}
+#vbInfo {
+  padding-right: 1px;
+  padding-bottom: 3px;
+}
+#hbTags {
+  padding-left: 3px;
+  padding-right: 3px;
+}
+#btnTags {
+  list-style-image: url("chrome://znotes_images/skin/tags-16x16.png");
+}
+.tagbutton {
+  min-width: 0px !important;
+  padding: 0px;
+  margin: 0px;
+}
+menulist > hbox {
+  padding-left: 4px !important;
+}
+#hbButtons {
+  border-top: 1px solid #AABCCF;
+  padding-top: 3px;
+  padding-right: 2px;
+  padding-bottom: 2px;
+  padding-left: 1px;
+}
+
+treechildren::-moz-tree-checkbox {
+  list-style-image: none;
+}
+treechildren::-moz-tree-checkbox( checked ) {
+  list-style-image: url("chrome://global/skin/checkbox/cbox-check.gif");
+}

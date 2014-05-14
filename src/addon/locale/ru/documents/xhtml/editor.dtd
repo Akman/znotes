@@ -245,8 +245,20 @@
 <!ENTITY znotes_editordebug_key_modifiers "">
 <!ENTITY znotes_editordebug_keycode "">
 
+<!ENTITY znotes_toggletagsmode_label "Показать теги">
+<!ENTITY znotes_toggletagsmode_tooltip "Показать теги">
+<!ENTITY znotes_toggletagsmode_accesskey "">
+<!ENTITY znotes_toggletagsmode_key "">
+<!ENTITY znotes_toggletagsmode_key_modifiers "">
+<!ENTITY znotes_toggletagsmode_keycode "">
+
 <!-- OPTIONS -->
+
+<!ENTITY docCaption.xhtml.label "Документ">
+<!ENTITY author.xhtml.label "Автор:">
+<!ENTITY author.xhtml.placeholder "Введите имя автора здесь ...">
 
 <!ENTITY mainCaption.xhtml.label "Основные">
 <!ENTITY isSpellcheckEnabled.xhtml.label "Включить проверку орфографии по умолчанию">
+<!ENTITY isTagsModeActive.xhtml.label "Показывать теги по умолчанию">
 <!ENTITY keysCaption.xhtml.label "Сочетания клавиш">

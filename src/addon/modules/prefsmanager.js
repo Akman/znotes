@@ -198,24 +198,44 @@ var PrefsManager = function() {
 
   pub.loadPrefs = function() {
     if ( prefsMozilla.prefHasUserValue( "extensions.znotes.debug" ) ) {
-      Utils.IS_DEBUG_ENABLED =
-        prefsMozilla.getBoolPref( "extensions.znotes.debug" );
+      try {
+        Utils.IS_DEBUG_ENABLED =
+          prefsMozilla.getBoolPref( "extensions.znotes.debug" );
+      } catch ( e ) {
+        prefsMozilla.deleteBranch( "extensions.znotes.debug" );
+      }
     }
-    if ( prefsMozilla.prefHasUserValue( "extensions.znotes.debug.active" ) ) {
-      Utils.IS_DEBUG_ACTIVE =
-        prefsMozilla.getBoolPref( "extensions.znotes.debug.active" );
+    if ( prefsMozilla.prefHasUserValue( "extensions.znotes.test.active" ) ) {
+      try {
+        Utils.IS_TEST_ACTIVE =
+          prefsMozilla.getBoolPref( "extensions.znotes.test.active" );
+      } catch ( e ) {
+        prefsMozilla.deleteBranch( "extensions.znotes.test.active" );
+      }
     }
-    if ( prefsMozilla.prefHasUserValue( "extensions.znotes.debug.raised" ) ) {
-      Utils.IS_DEBUG_RAISED =
-        prefsMozilla.getBoolPref( "extensions.znotes.debug.raised" );
+    if ( prefsMozilla.prefHasUserValue( "extensions.znotes.test.raised" ) ) {
+      try {
+        Utils.IS_TEST_RAISED =
+          prefsMozilla.getBoolPref( "extensions.znotes.test.raised" );
+      } catch ( e ) {
+        prefsMozilla.deleteBranch( "extensions.znotes.test.raised" );
+      }
     }
     if ( prefsMozilla.prefHasUserValue( "extensions.znotes.sanitize" ) ) {
-      Utils.IS_SANITIZE_ENABLED =
-        prefsMozilla.getBoolPref( "extensions.znotes.sanitize" );
+      try {
+        Utils.IS_SANITIZE_ENABLED =
+          prefsMozilla.getBoolPref( "extensions.znotes.sanitize" );
+      } catch ( e ) {
+        prefsMozilla.deleteBranch( "extensions.znotes.sanitize" );
+      }
     }
     if ( prefsMozilla.prefHasUserValue( "extensions.znotes.ad" ) ) {
-      Utils.IS_AD_ENABLED =
-        prefsMozilla.getBoolPref( "extensions.znotes.ad" );
+      try {
+        Utils.IS_AD_ENABLED =
+          prefsMozilla.getBoolPref( "extensions.znotes.ad" );
+      } catch ( e ) {
+        prefsMozilla.deleteBranch( "extensions.znotes.ad" );
+      }
     }
     try {
       if ( !pub.hasPref( "isFirstRun" ) ) {
@@ -251,12 +271,73 @@ var PrefsManager = function() {
       Utils.IS_PLAY_SOUND =
         pub.getBoolPref( "isPlaySound" );
       //
+      if ( !pub.hasPref( "isClipperPlaySound" ) ) {
+        pub.setBoolPref( "isClipperPlaySound",
+          Utils.IS_CLIPPER_PLAY_SOUND );
+      }
+      Utils.IS_CLIPPER_PLAY_SOUND =
+        pub.getBoolPref( "isClipperPlaySound" );
+      //
+      if ( !pub.hasPref( "clipperSaveScripts" ) ) {
+        pub.setBoolPref( "clipperSaveScripts",
+          !!( Utils.CLIPPER_FLAGS & 0x00000001 ) );
+      }
+      if ( pub.getBoolPref( "clipperSaveScripts" ) ) {
+        Utils.CLIPPER_FLAGS |= 0x00000001;
+      } else {
+        Utils.CLIPPER_FLAGS &= 0x11111110;
+      }
+      //
+      if ( !pub.hasPref( "clipperSaveFrames" ) ) {
+        pub.setBoolPref( "clipperSaveFrames",
+          !!( Utils.CLIPPER_FLAGS & 0x00000010 ) );
+      }
+      if ( pub.getBoolPref( "clipperSaveFrames" ) ) {
+        Utils.CLIPPER_FLAGS |= 0x00000010;
+      } else {
+        Utils.CLIPPER_FLAGS &= 0x11111101;
+      }
+      //
+      if ( !pub.hasPref( "clipperSeparateFrames" ) ) {
+        pub.setBoolPref( "clipperSeparateFrames",
+          !!( Utils.CLIPPER_FLAGS & 0x00000100 ) );
+      }
+      if ( pub.getBoolPref( "clipperSeparateFrames" ) ) {
+        Utils.CLIPPER_FLAGS |= 0x00000100;
+      } else {
+        Utils.CLIPPER_FLAGS &= 0x11111011;
+      }
+      //
+      if ( !pub.hasPref( "clipperPreserveHTML5Tags" ) ) {
+        pub.setBoolPref( "clipperPreserveHTML5Tags",
+          !!( Utils.CLIPPER_FLAGS & 0x00001000 ) );
+      }
+      if ( pub.getBoolPref( "clipperPreserveHTML5Tags" ) ) {
+        Utils.CLIPPER_FLAGS |= 0x00001000;
+      } else {
+        Utils.CLIPPER_FLAGS &= 0x11110111;
+      }
+      //
       if ( !pub.hasPref( "isHighlightRow" ) ) {
         pub.setBoolPref( "isHighlightRow",
           Utils.IS_HIGHLIGHT_ROW );
       }
       Utils.IS_HIGHLIGHT_ROW =
         pub.getBoolPref( "isHighlightRow" );
+      //
+      if ( !pub.hasPref( "isCloseBrowserAfterImport" ) ) {
+        pub.setBoolPref( "isCloseBrowserAfterImport",
+          Utils.IS_CLOSE_BROWSER_AFTER_IMPORT );
+      }
+      Utils.IS_CLOSE_BROWSER_AFTER_IMPORT =
+        pub.getBoolPref( "isCloseBrowserAfterImport" );
+      //
+      if ( !pub.hasPref( "isSelectNoteAfterImport" ) ) {
+        pub.setBoolPref( "isSelectNoteAfterImport",
+          Utils.IS_SELECT_NOTE_AFTER_IMPORT );
+      }
+      Utils.IS_SELECT_NOTE_AFTER_IMPORT =
+        pub.getBoolPref( "isSelectNoteAfterImport" );
       //
       if ( !pub.hasPref( "isReplaceBackground" ) ) {
         pub.setBoolPref( "isReplaceBackground",
@@ -271,6 +352,13 @@ var PrefsManager = function() {
       }
       Utils.IS_CONFIRM_EXIT =
         pub.getBoolPref( "isConfirmExit" );
+      //
+      if ( !pub.hasPref( "isExitQuitTB" ) ) {
+        pub.setBoolPref( "isExitQuitTB",
+          Utils.IS_EXIT_QUIT_TB );
+      }
+      Utils.IS_EXIT_QUIT_TB =
+        pub.getBoolPref( "isExitQuitTB" );
       //
       if ( !pub.hasPref( "isMainMenubarVisible" ) ) {
         pub.setBoolPref( "isMainMenubarVisible",

@@ -45,11 +45,15 @@ skin      znotes            classic/1.0 jar:chrome/znotes.jar!/skin/linux/classi
 skin      znotes_images     classic/1.0 jar:chrome/znotes.jar!/skin/images/classic/
 skin      znotes_sounds     classic/1.0 jar:chrome/znotes.jar!/skin/sounds/classic/
 skin      znotes_common     classic/1.0 jar:chrome/znotes.jar!/skin/common/classic/
+overlay   chrome://znotes/content/browser.xul chrome://znotes/content/clipper.xul
 style     chrome://global/content/customizeToolbar.xul    chrome://znotes/skin/overlay-xr.css
 style     chrome://global/content/customizeToolbar.xul    chrome://znotes/skin/common-xr.css
 style     chrome://global/content/customizeToolbar.xul    chrome://znotes/skin/common.css
+style     chrome://global/content/customizeToolbar.xul    chrome://znotes/skin/clipper.css
 style     chrome://global/content/customizeToolbar.xul    chrome://znotes/skin/documents/text/editor.css
 style     chrome://global/content/customizeToolbar.xul    chrome://znotes/skin/documents/xhtml/editor.css
 manifest  platform/locale/localized.manifest
 manifest  branding/locale/localized.manifest
 manifest  locale/localized.manifest
+# venkman
+skin      communicator      classic/1.0 chrome/platform.jar!/skin/communicator/

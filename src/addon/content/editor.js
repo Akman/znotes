@@ -48,26 +48,26 @@ ru.akman.znotes.Editor = function() {
     var Utils = ru.akman.znotes.Utils;
     var Common = ru.akman.znotes.Common;
 
+    var observerService =
+      Components.classes["@mozilla.org/observer-service;1"]
+                .getService( Components.interfaces.nsIObserverService );
+
     var currentWindow = null;
     var currentMode = "viewer";
     var currentStyle = {
       iconsize: "small"
     };
-
-    var currentNote = null;
-    var noteStateListener = null;
     
     var currentEditor = null;
-    var isEditorDirty = false;
+    var editorStateListener = null;
     
     var editorView = null;
     
-    var editorStateListener = null;
-    
-    //
+    var currentNote = null;
+    var noteStateListener = null;
+
     // COMMANDS
-    //
-    
+
     var editorCommands = {
       "znotes_editoredit_command": null,
       "znotes_editorsave_command": null,
@@ -94,7 +94,7 @@ ru.akman.znotes.Editor = function() {
           case "znotes_editorprint_command":
             return true;
           case "znotes_editorsave_command":
-            return isEditorDirty;
+            return ( currentEditor && currentEditor.isDirty() );
         }
         return false;
       },
@@ -162,6 +162,63 @@ ru.akman.znotes.Editor = function() {
       Common.goUpdateCommand( "znotes_editorprint_command", id, currentWindow );
     };
     
+    // HELPERS
+    
+    function confirm() {
+      var params = {
+        input: {
+          kind: 2,
+          title: Utils.STRINGS_BUNDLE.getString(
+            "body.confirmSave.title"
+          ),
+          message1: Utils.STRINGS_BUNDLE.getFormattedString(
+            "body.confirmSave.message1",
+            [ currentNote.getName() ]
+          ),
+          message2: Utils.STRINGS_BUNDLE.getString(
+            "body.confirmSave.message2"
+          )
+        },
+        output: null
+      };
+      currentWindow.openDialog(
+        "chrome://znotes/content/confirmdialog.xul",
+        "",
+        "chrome,dialog,modal,centerscreen,resizable=no",
+        params
+      ).focus();
+      if ( params.output ) {
+        return ( params.output.result ? 1 : 0 );
+      }
+      return -1;
+    };
+
+    // LISTENERS
+    
+    function addEventListeners() {
+      if ( currentNote ) {
+        currentNote.addStateListener( noteStateListener );
+      }
+    };
+
+    function removeEventListeners() {
+      if ( currentNote ) {
+        currentNote.removeStateListener( noteStateListener );
+      }
+    };
+
+    function addEditorEventListeners() {
+      if ( currentEditor ) {
+        currentEditor.addStateListener( editorStateListener );
+      }
+    };
+    
+    function removeEditorEventListeners() {
+      if ( currentEditor ) {
+        currentEditor.removeStateListener( editorStateListener );
+      }
+    };
+
     // NOTE EVENTS
 
     function onNoteDeleted( e ) {
@@ -192,6 +249,7 @@ ru.akman.znotes.Editor = function() {
     function onEditorModeChanged( e ) {
       var aNote = e.data.note;
       var aMode = e.data.mode;
+      aNote.setMode( aMode );
       var aFlag = ( aMode == "editor" );
       if ( currentNote && currentNote == aNote && currentEditor ) {
         Common.goSetCommandHidden( "znotes_editoredit_command", aFlag, currentWindow );
@@ -203,28 +261,37 @@ ru.akman.znotes.Editor = function() {
       var aNote = e.data.note;
       var isDirty = e.data.dirty;
       if ( currentNote && currentNote == aNote && currentEditor ) {
-        isEditorDirty = isDirty;
-        Common.goUpdateCommand( "znotes_editorsave_command", editorController.getId(), currentWindow );
+        Common.goUpdateCommand( "znotes_editorsave_command",
+          editorController.getId(), currentWindow );
       }
     };
     
-    // VIEW
+    // PUBLIC EVENTS
 
-    function showCurrentView() {
-      if ( editorView.hasAttribute( "hidden" ) ) {
-        editorView.removeAttribute( "hidden" );
-      }
-      if ( currentEditor ) {
-        currentEditor.open( currentWindow, currentWindow.document, currentNote, currentStyle );
+    this.onBeforeCurrentNoteChange = function( event ) {
+      if ( currentNote && currentNote.isExists() &&
+           currentEditor && currentEditor.isDirty() ) {
+        var res = confirm();
+        if ( res === -1 ) {
+          event.data.canChange = false;
+          return;
+        }
+        if ( res ) {
+          currentEditor.save();
+        } else {
+          currentEditor.cancel();
+        }
       }
     };
-    
-    function hideCurrentView() {
-      editorView.setAttribute( "hidden", true );
-    };
-    
-    function show( aNote, aForced ) {
+
+    this.onNoteChanged = function( event ) {
+      var aNote = event.data.note;
+      var aForced = event.data.forced;
       if ( currentNote && currentNote == aNote && !aForced ) {
+        return;
+      }
+      if ( currentEditor && !currentEditor.isReady() ) {
+        // This possible when welcome note created only
         return;
       }
       if ( currentEditor ) {
@@ -234,64 +301,34 @@ ru.akman.znotes.Editor = function() {
       removeEventListeners();
       currentNote = aNote;
       if ( currentNote && currentNote.isExists() && !currentNote.isLoading() ) {
+        // currentEditor is always new instance of Editor
+        // @see documentmanager.js, line: 217
         currentEditor = ru.akman.znotes.DocumentManager
                                        .getInstance()
                                        .getDocument( currentNote.getType() )
                                        .getEditor();
         addEventListeners();
         addEditorEventListeners();
-        showCurrentView();
+        if ( editorView.hasAttribute( "hidden" ) ) {
+          editorView.removeAttribute( "hidden" );
+        }
+        if ( currentEditor ) {
+          currentEditor.open( currentWindow, currentWindow.document,
+            currentNote, currentStyle );
+        }
       } else {
         currentEditor = null;
-        hideCurrentView();
+        editorView.setAttribute( "hidden", true );
       }
       updateCommands();
     };
     
-    // LISTENERS
-    
-    function addEventListeners() {
-      if ( !currentNote ) {
-        return;
-      }
-      currentNote.addStateListener( noteStateListener );
-    };
-
-    function removeEventListeners() {
-      if ( !currentNote ) {
-        return;
-      }
-      currentNote.removeStateListener( noteStateListener );
-    };
-
-    function addEditorEventListeners() {
-      if ( !currentEditor ) {
-        return;
-      }
-      currentEditor.addStateListener( editorStateListener );
-    };
-    
-    function removeEditorEventListeners() {
-      if ( !currentEditor ) {
-        return;
-      }
-      currentEditor.removeStateListener( editorStateListener );
-    };
-    
-    // PUBLIC
-
     this.onStyleChanged = function( event ) {
       var style = event.data.style;
       Utils.cloneObject( style, currentStyle );
       if ( currentEditor ) {
         currentEditor.updateStyle( style );
       }
-    };
-    
-    this.onNoteChanged = function( event ) {
-      var note = event.data.note;
-      var forced = event.data.forced;
-      show( note, forced );
     };
     
     this.onRelease = function( event ) {

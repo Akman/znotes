@@ -31,12 +31,14 @@
   -
   - ***** END LICENSE BLOCK ***** -->
 
-<!ENTITY book_dialog_title "Notatnik">
-<!ENTITY book_dialog_accept "Tak">
-<!ENTITY book_dialog_cancel "Nie">
-<!ENTITY label_header "Ustawienia podstawowe">
-<!ENTITY label_book_name "Nazwa">
-<!ENTITY label_book_description "Opis">
-<!ENTITY text_book_description_placeholder "Wpisz opis notatnika tutaj ...">
-<!ENTITY label_book_driver "Sterownik">
-<!ENTITY label_footer "Sterownik">
+<!ENTITY dialog.title "Notatnik">
+<!ENTITY dialog.accept "Tak">
+<!ENTITY dialog.cancel "Nie">
+
+<!ENTITY common.caption "Notatnik">
+<!ENTITY name.label "Nazwa">
+<!ENTITY name.placeholder "Wpisz nazwa notatnika tutaj ...">
+<!ENTITY description.label "Opis">
+<!ENTITY description.placeholder "Wpisz opis notatnika tutaj ...">
+<!ENTITY driver.caption "Sterownik">
+<!ENTITY params.caption "Parameters">

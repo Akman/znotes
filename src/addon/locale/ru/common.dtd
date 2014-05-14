@@ -60,12 +60,33 @@
 <!ENTITY znotes_openoptionsdialog_key_modifiers "">
 <!ENTITY znotes_openoptionsdialog_keycode "">
 
-<!ENTITY znotes_debug_label "Отладка">
-<!ENTITY znotes_debug_tooltip "Открыть окно отладки">
-<!ENTITY znotes_debug_accesskey "л">
-<!ENTITY znotes_debug_key "D">
-<!ENTITY znotes_debug_key_modifiers "accel,alt">
-<!ENTITY znotes_debug_keycode "">
+<!ENTITY znotes_debugger_label "Отладка">
+<!ENTITY znotes_debugger_tooltip "Запустить отладчик">
+<!ENTITY znotes_debugger_accesskey "о">
+<!ENTITY znotes_debugger_key "D">
+<!ENTITY znotes_debugger_key_modifiers "accel,alt">
+<!ENTITY znotes_debugger_keycode "">
+
+<!ENTITY znotes_testsuite_label "Тесты">
+<!ENTITY znotes_testsuite_tooltip "Открыть набор тестов">
+<!ENTITY znotes_testsuite_accesskey "т">
+<!ENTITY znotes_testsuite_key "Т">
+<!ENTITY znotes_testsuite_key_modifiers "accel,alt">
+<!ENTITY znotes_testsuite_keycode "">
+
+<!ENTITY znotes_console_label "Консоль">
+<!ENTITY znotes_console_tooltip "Открыть консоль ошибок">
+<!ENTITY znotes_console_accesskey "К">
+<!ENTITY znotes_console_key "">
+<!ENTITY znotes_console_key_modifiers "">
+<!ENTITY znotes_console_keycode "">
+
+<!ENTITY znotes_inspector_label "Инспектор">
+<!ENTITY znotes_inspector_tooltip "Запустить инспектор">
+<!ENTITY znotes_inspector_accesskey "и">
+<!ENTITY znotes_inspector_key "">
+<!ENTITY znotes_inspector_key_modifiers "">
+<!ENTITY znotes_inspector_keycode "">
 
 <!ENTITY znotes_addons_label "Дополнения">
 <!ENTITY znotes_addons_tooltip "Управление дополнениями">
@@ -372,6 +393,13 @@
 <!ENTITY znotes_bodytagsmenu_key_modifiers "accel">
 <!ENTITY znotes_bodytagsmenu_keycode "">
 
+<!ENTITY znotes_bodytypesmenu_label "Тип">
+<!ENTITY znotes_bodytypesmenu_tooltip "Тип">
+<!ENTITY znotes_bodytypesmenu_accesskey "и">
+<!ENTITY znotes_bodytypesmenu_key "">
+<!ENTITY znotes_bodytypesmenu_key_modifiers "">
+<!ENTITY znotes_bodytypesmenu_keycode "">
+
 <!ENTITY znotes_bodyaddonspanel_label "Дополнения">
 <!ENTITY znotes_bodyaddonspanel_tooltip "Показать/скрыть панель дополнений">
 <!ENTITY znotes_bodyaddonspanel_accesskey "Д">
@@ -459,15 +487,6 @@
 <!ENTITY znotes_contentdelete_key "">
 <!ENTITY znotes_contentdelete_key_modifiers "">
 <!ENTITY znotes_contentdelete_keycode "">
-
-<!-- loader -->
-
-<!ENTITY znotes_loaderabort_label "">
-<!ENTITY znotes_loaderabort_tooltip "Прервать импорт">
-<!ENTITY znotes_loaderabort_accesskey "">
-<!ENTITY znotes_loaderabort_key "">
-<!ENTITY znotes_loaderabort_key_modifiers "">
-<!ENTITY znotes_loaderabort_keycode "">
 
 <!-- editor -->
 

@@ -58,7 +58,7 @@
         newline="pasteintact"/>
     </hbox>
   </groupbox>
-  <hbox dir="rtl">
+  <hbox id="btnBox" dir="rtl">
     <button id="btnAccept"
       dlgtype="accept"
       minwidth="90"

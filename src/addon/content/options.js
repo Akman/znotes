@@ -64,8 +64,16 @@ ru.akman.znotes.Options = function() {
   var isEditSourceEnabled = null;
   var isPlaySound = null;
   var isHighlightRow = null;
+  var isCloseBrowserAfterImport = null;
+  var isSelectNoteAfterImport = null;
   var isReplaceBackground = null;
   var isConfirmExit = null;
+  var isExitQuitTB = null;
+  var isClipperPlaySound = null;
+  var clipperSaveScripts = null;
+  var clipperSaveFrames = null;
+  var clipperSeparateFrames = null;
+  var clipperPreserveHTML5Tags = null;
   var docTypeMenuList = null;
   var docTypeMenuPopup = null;
   var keysPlatformGroupBox = null;
@@ -73,7 +81,7 @@ ru.akman.znotes.Options = function() {
   var keysListBox = null;
   var defaultsButton = null;
   var defaultDocumentType = null;
-  
+
   var platformAssignedKeys = null;
   var platformKeyset = null;
   var platformShortcuts = {};
@@ -431,34 +439,37 @@ ru.akman.znotes.Options = function() {
   
   function populateDocumentTypePopup() {
     var docs = ru.akman.znotes.DocumentManager.getInstance().getDocuments();
+    var doc, types, contentType, tooltiptext, menuItem, style;
     docTypeMenuList.selectedItem = null;
     while ( docTypeMenuPopup.firstChild ) {
       docTypeMenuPopup.removeChild( docTypeMenuPopup.firstChild );
     }
     for ( var name in docs ) {
-      var doc = docs[ name ];
-      var doctype = doc.getType();
-      var tooltiptext = doc.getName() + "-" + doc.getVersion() +
-        " : " + doctype;
-      var menuItem = document.createElement( "menuitem" );
-      menuItem.className = "menuitem-iconic";
-      menuItem.setAttribute( "id", "menuitem_" + doc.getName() );
-      menuItem.setAttribute( "label", doc.getDescription() );
-      menuItem.setAttribute( "tooltiptext", tooltiptext );
-      menuItem.setAttribute( "image", doc.getIconURL() );
-      menuItem.setAttribute( "value", doctype );
-      menuItem.addEventListener( "command", onDocTypeSelect, false );
-      var style = menuItem.style;
-      // BUG: DOES NOT WORK!
-      // style.setProperty( "list-style-image", "url( '" + doc.getIconURL() + "' )" , "important" );
-      style.setProperty( "background-image", "url( '" + doc.getIconURL() + "' )" );
-      style.setProperty( "background-repeat", "no-repeat" );
-      style.setProperty( "background-position", "0 50%" );
-      style.setProperty( "padding-left", "20px" );
-      docTypeMenuPopup.appendChild( menuItem );
-      if ( doctype == defaultDocumentType ) {
-        docTypeMenuList.selectedItem = menuItem;
-        docTypeMenuList.setAttribute( "tooltiptext", tooltiptext );
+      doc = docs[ name ];
+      types = doc.getTypes();
+      for ( var i = 0; i < types.length; i++ ) {
+        contentType = types[i];
+        tooltiptext = contentType;
+        menuItem = document.createElement( "menuitem" );
+        menuItem.className = "menuitem-iconic";
+        menuItem.setAttribute( "id", "menuitem_" + doc.getName() + "_" + i );
+        menuItem.setAttribute( "label", doc.getDescription() );
+        menuItem.setAttribute( "tooltiptext", tooltiptext );
+        menuItem.setAttribute( "image", doc.getIconURL() );
+        menuItem.setAttribute( "value", contentType );
+        menuItem.addEventListener( "command", onDocTypeSelect, false );
+        style = menuItem.style;
+        // BUG: DOES NOT WORK!
+        // style.setProperty( "list-style-image", "url( '" + doc.getIconURL() + "' )" , "important" );
+        style.setProperty( "background-image", "url( '" + doc.getIconURL() + "' )" );
+        style.setProperty( "background-repeat", "no-repeat" );
+        style.setProperty( "background-position", "0 50%" );
+        style.setProperty( "padding-left", "20px" );
+        docTypeMenuPopup.appendChild( menuItem );
+        if ( contentType == defaultDocumentType ) {
+          docTypeMenuList.selectedItem = menuItem;
+          docTypeMenuList.setAttribute( "tooltiptext", tooltiptext );
+        }
       }
     }
   };
@@ -541,7 +552,15 @@ ru.akman.znotes.Options = function() {
     isPlaySound.checked = optionsPrefs["main"]["default"].isPlaySound;
     isReplaceBackground.checked = optionsPrefs["main"]["default"].isReplaceBackground;
     isConfirmExit.checked = optionsPrefs["main"]["default"].isConfirmExit;
+    isExitQuitTB.checked = optionsPrefs["main"]["default"].isExitQuitTB;
     isHighlightRow.checked = optionsPrefs["main"]["default"].isHighlightRow;
+    isCloseBrowserAfterImport.checked = optionsPrefs["main"]["default"].isCloseBrowserAfterImport;
+    isSelectNoteAfterImport.checked = optionsPrefs["main"]["default"].isSelectNoteAfterImport;
+    isClipperPlaySound.checked = optionsPrefs["main"]["default"].isClipperPlaySound;
+    clipperSaveScripts.checked = optionsPrefs["main"]["default"].clipperSaveScripts;
+    clipperSaveFrames.checked = optionsPrefs["main"]["default"].clipperSaveFrames;
+    clipperSeparateFrames.checked = optionsPrefs["main"]["default"].clipperSeparateFrames;
+    clipperPreserveHTML5Tags.checked = optionsPrefs["main"]["default"].clipperPreserveHTML5Tags;
     defaultDocumentType = optionsPrefs["main"]["default"].defaultDocumentType;
     populateDocumentTypePopup();
     var doc = event.target.ownerDocument;
@@ -574,7 +593,7 @@ ru.akman.znotes.Options = function() {
     }
     var id = optionsTabs.selectedItem.getAttribute( "id" );
     var name = id.substr( 4 );
-    if ( name == "main" ) {
+    if ( name === "main" || name === "mainshortcuts" ) {
       currentOptions = null;
       openMainTab();
       return;
@@ -656,9 +675,33 @@ ru.akman.znotes.Options = function() {
     currentPrefs.isConfirmExit = isConfirmExit.checked;
     isChanged = isChanged ||
       ( currentPrefs.isConfirmExit !== originalPrefs.isConfirmExit );
+    currentPrefs.isExitQuitTB = isExitQuitTB.checked;
+    isChanged = isChanged ||
+      ( currentPrefs.isExitQuitTB !== originalPrefs.isExitQuitTB );
     currentPrefs.isHighlightRow = isHighlightRow.checked;
     isChanged = isChanged ||
       ( currentPrefs.isHighlightRow !== originalPrefs.isHighlightRow );
+    currentPrefs.isCloseBrowserAfterImport = isCloseBrowserAfterImport.checked;
+    isChanged = isChanged ||
+      ( currentPrefs.isCloseBrowserAfterImport !== originalPrefs.isCloseBrowserAfterImport );
+    currentPrefs.isSelectNoteAfterImport = isSelectNoteAfterImport.checked;
+    isChanged = isChanged ||
+      ( currentPrefs.isSelectNoteAfterImport !== originalPrefs.isSelectNoteAfterImport );
+    currentPrefs.isClipperPlaySound = isClipperPlaySound.checked;
+    isChanged = isChanged ||
+      ( currentPrefs.isClipperPlaySound !== originalPrefs.isClipperPlaySound );
+    currentPrefs.clipperSaveScripts = clipperSaveScripts.checked;
+    isChanged = isChanged ||
+      ( currentPrefs.clipperSaveScripts !== originalPrefs.clipperSaveScripts );
+    currentPrefs.clipperSaveFrames = clipperSaveFrames.checked;
+    isChanged = isChanged ||
+      ( currentPrefs.clipperSaveFrames !== originalPrefs.clipperSaveFrames );
+    currentPrefs.clipperSeparateFrames = clipperSeparateFrames.checked;
+    isChanged = isChanged ||
+      ( currentPrefs.clipperSeparateFrames !== originalPrefs.clipperSeparateFrames );
+    currentPrefs.clipperPreserveHTML5Tags = clipperPreserveHTML5Tags.checked;
+    isChanged = isChanged ||
+      ( currentPrefs.clipperPreserveHTML5Tags !== originalPrefs.clipperPreserveHTML5Tags );
     currentPrefs.defaultDocumentType = defaultDocumentType;
     isChanged = isChanged ||
       ( currentPrefs.defaultDocumentType !== originalPrefs.defaultDocumentType );
@@ -729,7 +772,15 @@ ru.akman.znotes.Options = function() {
       "isPlaySound": true,
       "isReplaceBackground": true,
       "isConfirmExit": true,
-      "isHighlightRow": false
+      "isExitQuitTB": true,
+      "isHighlightRow": false,
+      "isCloseBrowserAfterImport": true,
+      "isSelectNoteAfterImport": true,
+      "isClipperPlaySound": true,
+      "clipperSaveScripts": false,
+      "clipperSaveFrames": false,
+      "clipperSeparateFrames": false,
+      "clipperPreserveHTML5Tags": false
     };
     result.shortcuts = {};
     var id, name, command;
@@ -771,7 +822,15 @@ ru.akman.znotes.Options = function() {
       "isPlaySound": Utils.IS_PLAY_SOUND,
       "isReplaceBackground": Utils.IS_REPLACE_BACKGROUND,
       "isConfirmExit": Utils.IS_CONFIRM_EXIT,
-      "isHighlightRow": Utils.IS_HIGHLIGHT_ROW
+      "isExitQuitTB": Utils.IS_EXIT_QUIT_TB,
+      "isHighlightRow": Utils.IS_HIGHLIGHT_ROW,
+      "isCloseBrowserAfterImport": Utils.IS_CLOSE_BROWSER_AFTER_IMPORT,
+      "isSelectNoteAfterImport": Utils.IS_SELECT_NOTE_AFTER_IMPORT,
+      "isClipperPlaySound":       Utils.IS_CLIPPER_PLAY_SOUND,
+      "clipperSaveScripts":       !!( Utils.CLIPPER_FLAGS & 0x00000001 ),
+      "clipperSaveFrames":        !!( Utils.CLIPPER_FLAGS & 0x00000010 ),
+      "clipperSeparateFrames":    !!( Utils.CLIPPER_FLAGS & 0x00000100 ),
+      "clipperPreserveHTML5Tags": !!( Utils.CLIPPER_FLAGS & 0x00001000 )
     };
     try {
       result.shortcuts = JSON.parse( Utils.MAIN_SHORTCUTS );
@@ -792,9 +851,17 @@ ru.akman.znotes.Options = function() {
     prefsBundle.setBoolPref( "isPlaySound", prefs.isPlaySound );
     prefsBundle.setBoolPref( "isReplaceBackground", prefs.isReplaceBackground );
     prefsBundle.setBoolPref( "isConfirmExit", prefs.isConfirmExit );
+    prefsBundle.setBoolPref( "isExitQuitTB", prefs.isExitQuitTB );
     prefsBundle.setBoolPref( "isHighlightRow", prefs.isHighlightRow );
+    prefsBundle.setBoolPref( "isCloseBrowserAfterImport", prefs.isCloseBrowserAfterImport );
+    prefsBundle.setBoolPref( "isSelectNoteAfterImport", prefs.isSelectNoteAfterImport );
     prefsBundle.setCharPref( "defaultDocumentType", prefs.defaultDocumentType );
     prefsBundle.setCharPref( "main_shortcuts", JSON.stringify( prefs.shortcuts ) );
+    prefsBundle.setBoolPref( "isClipperPlaySound", prefs.isClipperPlaySound );
+    prefsBundle.setBoolPref( "clipperSaveScripts", prefs.clipperSaveScripts );
+    prefsBundle.setBoolPref( "clipperSaveFrames", prefs.clipperSaveFrames );
+    prefsBundle.setBoolPref( "clipperSeparateFrames", prefs.clipperSeparateFrames );
+    prefsBundle.setBoolPref( "clipperPreserveHTML5Tags", prefs.clipperPreserveHTML5Tags );
   };
   
   // TABS
@@ -802,16 +869,22 @@ ru.akman.znotes.Options = function() {
   function createTabs() {
     platformKeyset = document.getElementById( "znotes_platform_keyset" );
     platformPrefs = {
-      "default": getPlatformDefaultPreferences(),
-      "original": getPlatformPreferences(),
-      "current": getPlatformPreferences(),
+      "default": {},
+      "original": {},
+      "current": {},
     };
+    Utils.cloneObject( getPlatformDefaultPreferences(), platformPrefs["default"] );
+    Utils.cloneObject( getPlatformPreferences(), platformPrefs["original"] );
+    Utils.cloneObject( getPlatformPreferences(), platformPrefs["current"] );
     optionsPrefs["main"] = {
-      "default": getMainDefaultPreferences(),
-      "original": getMainPreferences(),
-      "current": getMainPreferences(),
+      "default": {},
+      "original": {},
+      "current": {},
       activeElement: null
     };
+    Utils.cloneObject( getMainDefaultPreferences(), optionsPrefs["main"]["default"] );
+    Utils.cloneObject( getMainPreferences(), optionsPrefs["main"]["original"] );
+    Utils.cloneObject( getMainPreferences(), optionsPrefs["main"]["current"] );
     var docs = ru.akman.znotes.DocumentManager.getInstance().getDocuments();
     var doc, opt, tab, panel;
     var editorDefaults, documentDefaults;
@@ -842,19 +915,25 @@ ru.akman.znotes.Options = function() {
       }
       optionsPrefs[name] = {
         "default": {
-          editor: opt.getEditorDefaultPreferences(),
-          document: opt.getDocumentDefaultPreferences()
+          editor: {},
+          document: {}
         },
         "original": {
-          editor: editorPrefs,
-          document: documentPrefs
+          editor: {},
+          document: {}
         },
         "current": {
-          editor: editorPrefs,
-          document: documentPrefs
+          editor: {},
+          document: {}
         },
         activeElement: null
       };
+      Utils.cloneObject( opt.getEditorDefaultPreferences(), optionsPrefs[name]["default"].editor );
+      Utils.cloneObject( editorPrefs, optionsPrefs[name]["original"].editor );
+      Utils.cloneObject( editorPrefs, optionsPrefs[name]["current"].editor );
+      Utils.cloneObject( opt.getDocumentDefaultPreferences(), optionsPrefs[name]["default"].document );
+      Utils.cloneObject( documentPrefs, optionsPrefs[name]["original"].document );
+      Utils.cloneObject( documentPrefs, optionsPrefs[name]["current"].document );
     }
   };
 
@@ -867,7 +946,15 @@ ru.akman.znotes.Options = function() {
     isPlaySound.checked = currentPrefs.isPlaySound;
     isReplaceBackground.checked = currentPrefs.isReplaceBackground;
     isConfirmExit.checked = currentPrefs.isConfirmExit;
+    isExitQuitTB.checked = currentPrefs.isExitQuitTB;
     isHighlightRow.checked = currentPrefs.isHighlightRow;
+    isCloseBrowserAfterImport.checked = currentPrefs.isCloseBrowserAfterImport;
+    isSelectNoteAfterImport.checked = currentPrefs.isSelectNoteAfterImport;
+    isClipperPlaySound.checked = currentPrefs.isClipperPlaySound;
+    clipperSaveScripts.checked = currentPrefs.clipperSaveScripts;
+    clipperSaveFrames.checked = currentPrefs.clipperSaveFrames;
+    clipperSeparateFrames.checked = currentPrefs.clipperSeparateFrames;
+    clipperPreserveHTML5Tags.checked = currentPrefs.clipperPreserveHTML5Tags;
     defaultDocumentType = currentPrefs.defaultDocumentType;
     populateDocumentTypePopup();
     loadShortcuts( mainKeyset, mainShortcuts, originalPrefs, currentPrefs );
@@ -935,7 +1022,23 @@ ru.akman.znotes.Options = function() {
     isPlaySound = document.getElementById( "isPlaySound" );
     isReplaceBackground = document.getElementById( "isReplaceBackground" );
     isConfirmExit = document.getElementById( "isConfirmExit" );
+    isExitQuitTB = document.getElementById( "isExitQuitTB" );
+    if ( Utils.IS_STANDALONE ) {
+      isExitQuitTB.setAttribute( "hidden", true );
+    }
     isHighlightRow = document.getElementById( "isHighlightRow" );
+    isCloseBrowserAfterImport = document.getElementById( "isCloseBrowserAfterImport" );
+    isSelectNoteAfterImport = document.getElementById( "isSelectNoteAfterImport" );
+    isClipperPlaySound = document.getElementById( "isClipperPlaySound" );
+    clipperSaveScripts = document.getElementById( "clipperSaveScripts" );
+    clipperSaveFrames = document.getElementById( "clipperSaveFrames" );
+    clipperSeparateFrames = document.getElementById( "clipperSeparateFrames" );
+    clipperPreserveHTML5Tags = document.getElementById( "clipperPreserveHTML5Tags" );
+    clipperSeparateFrames.setAttribute( "hidden", "true" );
+    if ( !Utils.IS_STANDALONE ) {
+      clipperSaveScripts.setAttribute( "hidden", "true" );
+      clipperSaveFrames.setAttribute( "hidden", "true" );
+    }
     docTypeMenuList = document.getElementById( "docTypeMenuList" );
     docTypeMenuPopup = document.getElementById( "docTypeMenuPopup" );
     keysListBox = document.getElementById( "keysListBox" );
@@ -960,7 +1063,6 @@ ru.akman.znotes.Options = function() {
         }
       }
     );
-    window.sizeToContent();
     window.centerWindowOnScreen();
   };
   

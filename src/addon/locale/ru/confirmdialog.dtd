@@ -32,3 +32,4 @@
 
 <!ENTITY confirmdialog_accept "Да">
 <!ENTITY confirmdialog_cancel "Нет">
+<!ENTITY confirmdialog_reject "Отмена">

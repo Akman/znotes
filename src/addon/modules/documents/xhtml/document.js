@@ -36,13 +36,44 @@ if ( !ru.akman.znotes ) ru.akman.znotes = {};
 if ( !ru.akman.znotes.doc ) ru.akman.znotes.doc = {};
 
 Components.utils.import( "resource://znotes/utils.js", ru.akman.znotes );
+Components.utils.import( "resource://znotes/domutils.js", ru.akman.znotes );
 
 var EXPORTED_SYMBOLS = ["Document"];
 
 var Document = function() {
 
-  var Utils = ru.akman.znotes.Utils;
+  // PUBLIC
+  
+  var pub = {};
+  
+  pub["default"] = true;
+  
+  pub.getInfo = function() {
+    return {
+      url: "chrome://znotes_documents/content/xhtml/",
+      iconURL: "chrome://znotes_images/skin/documents/xhtml/icon-16x16.png",
+      types: {
+        "application/xhtml+xml": {
+          extension: ".xhtml"
+        }
+      },
+      // !!! DO NOT CHANGE NAME !!!
+      // The name used as suffix for ids in options.xul
+      name: "XHTML",
+      version: "1.0",
+      description: "XHTML Document"
+    };
+  };
 
+  pub.getType = function() {
+    return "application/xhtml+xml";
+  };
+
+  var Utils = ru.akman.znotes.Utils;
+  var DOMUtils = ru.akman.znotes.DOMUtils;
+  var Node = Components.interfaces.nsIDOMNode;
+  
+  
   var DocumentException = function( message ) {
     this.name = "DocumentException";
     this.message = message;
@@ -52,24 +83,380 @@ var Document = function() {
   };
 
   var observers = [];
-  
-  var pub = {};
 
-  pub["default"] = true;
+  // HELPERS
   
-  pub.getInfo = function() {
-    return {
-      url: "chrome://znotes_documents/content/xhtml/",
-      iconURL: "chrome://znotes_images/skin/documents/xhtml/icon-16x16.png",
-      type: "application/xhtml+xml",
-      defaultNS: "http://www.w3.org/1999/xhtml",
-      errorNS: "http://www.mozilla.org/newlayout/xml/parsererror.xml",
-      name: "XHTML",
-      version: "1.0",
-      description: "XHTML Document",
-    };
+  function getErrorNS() {
+    return "http://www.mozilla.org/newlayout/xml/parsererror.xml";
+  };
+  
+  function getDefaultNS() {
+    return "http://www.w3.org/1999/xhtml";
+  };
+  
+  function getMeta( metas, name, value, ignorecase ) {
+    var meta;
+    if ( metas ) {
+      for ( var i = 0; i < metas.length; i++ ) {
+        meta = metas[i];
+        if ( meta.hasAttribute( name ) ) {
+          if ( value !== undefined ) {
+            if ( ignorecase ) {
+              if ( meta.getAttribute( name ).toLowerCase() ===
+                   value.toLowerCase() ) {
+                return meta;
+              }
+            } else {
+              if ( meta.getAttribute( name ) === value ) {
+                return meta;
+              }
+            }
+          } else {
+            return meta;
+          }
+        }
+      }
+    }
+    return null;
   };
 
+  function fixupAttribute( element, name, value ) {
+    if ( value !== null ) {
+      if ( value !== element.getAttribute( name ) ) {
+        element.setAttribute( name, value );
+        return true;
+      } 
+    } else {
+      if ( element.hasAttribute( name ) ) {
+        element.removeAttribute( name );
+        return true;
+      }
+    }
+    return false;
+  };
+  
+  function fixupTextContent( element, value ) {
+    if ( value !== null ) {
+      if ( value !== element.textContent ) {
+        element.textContent = value;
+        return true;
+      }
+    } else {
+      if ( element.textContent ) {
+        element.textContent = "";
+        return true;
+      }
+    }
+    return false;
+  };
+  
+  function markupDocument( aDOM ) {
+    var head, element, mark, index;
+    var result = {
+      mark: null,
+      lang: null,
+      charset: null,
+      characterset: aDOM.characterSet,
+      author: null,
+      base: null,
+      title: null
+    };
+    var namespaceURI = aDOM.documentElement.namespaceURI;
+    if ( aDOM.documentElement.hasAttribute( "lang" ) ) {
+      result.lang = { value: aDOM.documentElement.getAttribute( "lang" ) };
+    }
+    head = aDOM.getElementsByTagNameNS( namespaceURI, "head" )[0];
+    mark = Utils.createUUID();
+    result.mark = mark;
+    index = 0;
+    element = head.firstElementChild;
+    while ( element ) {
+      head.insertBefore( aDOM.createComment( mark + ":" + index ), element );
+      switch ( element.tagName.toLowerCase() ) {
+        case "meta":
+          if ( element.hasAttribute( "charset" ) ) {
+            result.charset = {
+              value: element.getAttribute( "charset" ),
+              index: index
+            };
+            break;
+          }
+          if ( element.hasAttribute( "name" ) &&
+               element.getAttribute( "name" ) === "author" ) {
+            result.author = {
+              value: element.getAttribute( "content" ),
+              index: index
+            }
+            break;
+          }
+          break;
+        case "base":
+          result.base = {
+            href: element.getAttribute( "href" ),
+            target: element.getAttribute( "target" ),
+            index: index
+          }
+          break;
+        case "title":
+          result.title = {
+            value: element.textContent,
+            index: index
+          }
+          break;
+      }
+      index++;
+      element = element.nextElementSibling;
+    }
+    return result;
+  };
+  
+  function fixupDocument( aDOM, anURI, aBaseURI, aTitle, aMarkup ) {
+    var elements, element, node, next, index;
+    var result = false;
+    var mark = aMarkup.mark + ":";
+    var namespaceURI = aDOM.documentElement.namespaceURI;
+    var head = aDOM.getElementsByTagNameNS( namespaceURI, "head" )[0];
+    var metas = aDOM.getElementsByTagNameNS( namespaceURI, "meta" );
+    if ( fixupAttribute( aDOM.documentElement, "lang",
+      aMarkup.lang ? aMarkup.lang.value : null ) ) {
+      result = true;
+    }
+    node = head.firstChild;
+    while ( node ) {
+      next = node.nextSibling;
+      if ( node.nodeType === Node.COMMENT_NODE &&
+           node.nodeValue.indexOf( mark ) === 0 ) {
+        index = parseInt( node.nodeValue.substr( mark.length ) );
+        if ( aMarkup.charset && aMarkup.charset.index === index ) {
+          // charset
+          element = ( ( next &&
+                        next.nodeType === Node.ELEMENT_NODE ) ?
+            next : null );
+          if ( !element ) {
+            element = node.parentNode.insertBefore(
+              aDOM.createElementNS( namespaceURI, "meta" ), node );
+            result = true;
+          }
+          if ( fixupAttribute( element, "charset", aMarkup.charset.value ) ) {
+            result = true;
+          }
+        } else if ( aMarkup.author && aMarkup.author.index === index ) {
+          // author
+          element = ( ( next &&
+                        next.nodeType === Node.ELEMENT_NODE ) ?
+            next : null );
+          if ( !element ) {
+            element = node.parentNode.insertBefore(
+              aDOM.createElementNS( namespaceURI, "meta" ), node );
+            element.setAttribute( "name", "author" );
+            result = true;
+          }
+          if ( fixupAttribute( element, "content", aMarkup.author.value ) ) {
+            result = true;
+          }
+        } else if ( aMarkup.base && aMarkup.base.index === index ) {
+          // base
+          element = ( ( next &&
+                        next.nodeType === Node.ELEMENT_NODE ) ?
+            next : null );
+          if ( !element ) {
+            element = node.parentNode.insertBefore(
+              aDOM.createElementNS( namespaceURI, "base" ), node );
+            result = true;
+          }
+          if ( fixupAttribute( element, "href", aMarkup.base.href ) ) {
+            result = true;
+          }
+          if ( fixupAttribute( element, "target", aMarkup.base.target ) ) {
+            result = true;
+          }
+        } else if ( aMarkup.title && aMarkup.title.index === index ) {
+          // title
+          element = ( ( next &&
+                        next.nodeType === Node.ELEMENT_NODE ) ?
+            next : null );
+          if ( !element ) {
+            element = node.parentNode.insertBefore(
+              aDOM.createElementNS( namespaceURI, "title" ), node );
+            result = true;
+          }
+          if ( fixupTextContent( element, aTitle ) ) {
+            result = true;
+          }
+        }
+        node.parentNode.removeChild( node );
+      }
+      node = next;
+    }
+    // charset
+    element = head.firstElementChild;
+    node = getMeta( metas, "charset" );
+    if ( !node ) {
+      node = aDOM.createElementNS( namespaceURI, "meta" );
+      node.setAttribute( "charset", aMarkup.characterset );
+      head.insertBefore( aDOM.createTextNode( "\n" ), element );
+      head.insertBefore( node, element );
+      result = true;
+    } else {
+      if ( element !== node ) {
+        head.insertBefore( node.parentNode.removeChild( node ), element );
+        head.insertBefore( aDOM.createTextNode( "\n" ), element );
+        result = true;
+      } else {
+        element = element.nextElementSibling;
+      }
+    }
+    // remove meta 
+    while ( element && element.tagName.toLowerCase() === "meta" ) {
+      element = element.nextElementSibling;
+    }
+    // base
+    elements = aDOM.getElementsByTagNameNS( namespaceURI, "base" );
+    if ( !elements.length ) {
+      node = aDOM.createElementNS( namespaceURI, "base" );
+      node.setAttribute( "href", aBaseURI.spec );
+      head.insertBefore( aDOM.createTextNode( "\n" ), element );
+      head.insertBefore( node, element );
+      result = true;
+    } else {
+      node = elements[0];
+      if ( element !== node ) {
+        head.insertBefore( node.parentNode.removeChild( node ), element );
+        head.insertBefore( aDOM.createTextNode( "\n" ), element );
+        result = true;
+      } else {
+        element = element.nextElementSibling;
+      }
+    }
+    // title
+    elements = aDOM.getElementsByTagNameNS( namespaceURI, "title" );
+    if ( !elements.length ) {
+      node = aDOM.createElementNS( namespaceURI, "title" );
+      node.textContent = aTitle;
+      head.insertBefore( aDOM.createTextNode( "\n" ), element );
+      head.insertBefore( node, element );
+      result = true;
+    }
+    return result;
+  };
+  
+  function getErrorDocument( anURI, aBaseURI, aTitle, errorText, sourceText ) {
+    var dom = pub.getBlankDocument( anURI, aBaseURI, aTitle );
+    var namespaceURI = dom.documentElement.namespaceURI;
+    var body = dom.getElementsByTagNameNS( namespaceURI, "body" )[0];
+    var parsererror = dom.createElementNS( getErrorNS(), "parsererror" );
+    var sourcetext = dom.createElementNS( getErrorNS(), "sourcetext" );
+    if ( errorText ) {
+      parsererror.textContent = errorText;
+    }
+    if ( sourceText ) {
+      sourcetext.textContent = sourceText;
+    }
+    parsererror.appendChild( sourcetext );
+    body.appendChild( parsererror );
+    return dom;
+  };
+  
+  // !!!! %%%% !!!! STRINGS_BUNDLE
+  function checkDocument( aDOM, anURI, aBaseURI, aTitle ) {
+    var stringsBundle = ru.akman.znotes.Utils.STRINGS_BUNDLE;
+    var errorText = stringsBundle.getFormattedString(
+      "document.driver.parsing.error",
+      [ decodeURIComponent( anURI.spec ) ]
+    );
+    var namespaceURI = aDOM.documentElement.namespaceURI;
+    if ( aDOM.documentElement.tagName.toLowerCase() !== "html" ) {
+      return getErrorDocument(
+        anURI,
+        aBaseURI,
+        aTitle,
+        errorText,
+        stringsBundle.getFormattedString(
+          "document.driver.parsing.error.html",
+          [ namespaceURI ]
+        )
+      );
+    }
+    if ( aDOM.getElementsByTagNameNS( namespaceURI, "head" ).length !== 1 ) {
+      return getErrorDocument(
+        anURI,
+        aBaseURI,
+        aTitle,
+        errorText,
+        stringsBundle.getFormattedString(
+          "document.driver.parsing.error.head",
+          [ namespaceURI ]
+        )
+      );
+    }
+    if ( aDOM.getElementsByTagNameNS( namespaceURI, "body" ).length !== 1 ) {
+      return getErrorDocument(
+        anURI,
+        aBaseURI,
+        aTitle,
+        errorText,
+        stringsBundle.getFormattedString(
+          "document.driver.parsing.error.body",
+          [ namespaceURI ]
+        )
+      );
+    }
+    return null;
+  };
+  
+  function sanitizeDocument( aDOM, anURI, aBaseURI ) {
+    // ALWAYS AND FOREVER
+    // IS_SANITIZE_ENABLED === true
+    if ( !ru.akman.znotes.Utils.IS_SANITIZE_ENABLED ) {
+      return;
+    }
+    // BUG: sanitizer removes valid tags as for example <main>
+    var parserUtils =
+      Components.classes["@mozilla.org/parserutils;1"]
+                .getService( Components.interfaces.nsIParserUtils );
+    var xmlSerializer =
+      Components.classes["@mozilla.org/xmlextras/xmlserializer;1"]
+                .createInstance( Components.interfaces.nsIDOMSerializer );
+    var node, next;
+    var head, headFragment, headString;
+    var body, bodyFragment, bodyString;
+    var namespaceURI = aDOM.documentElement.namespaceURI;
+    // head
+    head = aDOM.getElementsByTagNameNS( namespaceURI, "head" )[0];
+    headString = xmlSerializer.serializeToString( head );
+    while ( head.firstChild ) {
+      head.removeChild( head.firstChild );
+    }
+    headFragment = parserUtils.parseFragment(
+      headString,
+      parserUtils.SanitizerAllowComments + parserUtils.SanitizerAllowStyle,
+      true,
+      aBaseURI,
+      head
+    );
+    if ( headFragment.hasChildNodes ) {
+      head.appendChild( headFragment );
+    }
+    // body
+    body = aDOM.getElementsByTagNameNS( namespaceURI, "body" )[0];
+    bodyString = xmlSerializer.serializeToString( body );
+    while ( body.firstChild ) {
+      body.removeChild( body.firstChild );
+    }
+    bodyFragment = parserUtils.parseFragment(
+      bodyString,
+      parserUtils.SanitizerAllowComments + parserUtils.SanitizerAllowStyle,
+      true,
+      aBaseURI,
+      body
+    );
+    if ( bodyFragment.hasChildNodes ) {
+      body.appendChild( bodyFragment );
+    }
+  };
+  
+  // PUBLIC
+  
   pub.addObserver = function( aObserver ) {
     if ( observers.indexOf( aObserver ) < 0 ) {
       observers.push( aObserver );
@@ -105,16 +492,18 @@ var Document = function() {
     return pub.getInfo().iconURL;
   };
   
-  pub.getType = function() {
-    return pub.getInfo().type;
+  pub.getTypes = function() {
+    return Object.keys( pub.getInfo().types );
+  }
+  
+  pub.supportsType = function( aType ) {
+    return ( aType in pub.getInfo().types );
   };
 
-  pub.getDefaultNS = function() {
-    return pub.getInfo().defaultNS;
-  };
-
-  pub.getErrorNS = function() {
-    return pub.getInfo().errorNS;
+  pub.getExtension = function( aType ) {
+    var contentType = ( aType && pub.supportsType( aType ) ) ?
+      aType : pub.getType();
+    return pub.getInfo().types[ contentType ].extension;
   };
 
   pub.getName = function() {
@@ -129,37 +518,61 @@ var Document = function() {
     return pub.getInfo().description;
   };
 
+  pub.getDefaultPreferences = function() {
+    return {
+      author: "",
+    };
+  };
+
   // !!!! %%%% !!!! MAIN_WINDOW
-  pub.getBlankDocument = function( aBaseURI, aTitle, aCommentFlag ) {
+  pub.getBlankDocument = function( anURI, aBaseURI, aTitle, aCommentFlag, aParams ) {
+    var dom, head, body, meta_charset, meta_author, base, title;
+    var namespaceURI, doctype;
+    var prefs = pub.getPreferences();
     var win = ru.akman.znotes.Utils.MAIN_WINDOW;
-    var impl = win.document.implementation;
-    var dom = impl.createDocument(
-      pub.getDefaultNS(),
-      'html',
-      impl.createDocumentType( 'html', '', '' )
-    );
-    var firstChild = dom.firstChild;
-    dom.insertBefore(
-      dom.createProcessingInstruction(
-        'xml',
-        'version="1.0" encoding="UTF-8"'
-      ), firstChild
-    );
+    var dom, impl = win.document.implementation;
+    if ( aParams && ( "namespaceURI" in aParams ) && aParams.namespaceURI ) {
+      namespaceURI = aParams.namespaceURI;
+    } else {
+      namespaceURI = getDefaultNS();
+    }
+    doctype = impl.createDocumentType( 'html', '', '' );
+    dom = impl.createDocument( namespaceURI, 'html', doctype );
+    dom.insertBefore( dom.createProcessingInstruction(
+      'xml',
+      'version="1.0" encoding="UTF-8"'
+    ), dom.firstChild );
+    if ( !aParams || !( "lang" in aParams ) || aParams.lang ) {
+      dom.documentElement.setAttribute( "lang", Utils.getLanguage() );
+    }
     if ( aCommentFlag ) {
-      dom.insertBefore( dom.createComment( " Created by ZNotes! " ), firstChild );
+      dom.insertBefore( dom.createComment( " Created by ZNotes! " ),
+        dom.documentElement );
     }
     dom.documentElement.appendChild( dom.createTextNode( "\n  " ) );
-    var head = dom.createElementNS( pub.getDefaultNS(), 'head' );
+    head = dom.createElementNS( namespaceURI, "head" );
     dom.documentElement.appendChild( head );
+    meta_charset = dom.createElementNS( namespaceURI, "meta" );
+    meta_charset.setAttribute( "charset", "utf-8" );
+    head.appendChild( dom.createTextNode( "\n    " ) );
+    head.appendChild( meta_charset );
+    if ( prefs.author &&
+         ( !aParams || !( "author" in aParams ) || aParams.author ) ) {
+      meta_author = dom.createElementNS( namespaceURI, "meta" );
+      meta_author.setAttribute( "name", "author" );
+      meta_author.setAttribute( "content", prefs.author );
+      head.appendChild( dom.createTextNode( "\n    " ) );
+      head.appendChild( meta_author );
+    }
     if ( aBaseURI ) {
-      var base = dom.createElementNS( pub.getDefaultNS(), "base" );
+      base = dom.createElementNS( namespaceURI, "base" );
       base.setAttribute( "href", aBaseURI.spec );
       head.appendChild( dom.createTextNode( "\n    " ) );
       head.appendChild( base );
     }
     if ( aTitle ) {
-      var title = dom.createElementNS( pub.getDefaultNS(), "title" );
-      title.textContent = "\n      " + aTitle + "\n    ";
+      title = dom.createElementNS( namespaceURI, "title" );
+      title.textContent = aTitle;
       head.appendChild( dom.createTextNode( "\n    " ) );
       head.appendChild( title );
     }
@@ -169,7 +582,7 @@ var Document = function() {
       head.appendChild( dom.createTextNode( "\n  " ) );
     }
     dom.documentElement.appendChild( dom.createTextNode( "\n  " ) );
-    var body = dom.createElementNS( pub.getDefaultNS(), 'body' );
+    body = dom.createElementNS( namespaceURI, "body" );
     if ( aCommentFlag ) {
       body.appendChild( dom.createTextNode( "\n    " ) );
       body.appendChild( dom.createComment( " Insert your code here ... " ) );
@@ -180,393 +593,122 @@ var Document = function() {
     return dom;
   };
   
-  pub.getErrorDocument = function( aBaseURI, aTitle, errorText, sourceText ) {
-    var dom = pub.getBlankDocument( aBaseURI, aTitle );
-    var body = dom.getElementsByTagNameNS( pub.getDefaultNS(), 'body' )[0];
-    var parsererror = dom.createElementNS( pub.getErrorNS(), 'parsererror' );
-    if ( errorText ) {
-      parsererror.textContent = errorText;
+  pub.serializeToString = function( aDOM, anURI, aBaseURI ) {
+    var result;
+    var elements = aDOM.getElementsByTagNameNS(
+      aDOM.documentElement.namespaceURI, "base" );
+    var base = elements.length ? elements[0] : null;
+    if ( base && base.hasAttribute( "href" ) ) {
+      anURI.QueryInterface( Components.interfaces.nsIURL );
+      aBaseURI.QueryInterface( Components.interfaces.nsIURL );
+      base.setAttribute( "href", anURI.getRelativeSpec( aBaseURI ) );
     }
-    var sourcetext = dom.createElementNS( pub.getErrorNS(), 'sourcetext' );
-    if ( sourceText ) {
-      sourcetext.textContent = sourceText;
-    }
-    parsererror.appendChild( sourcetext );
-    body.appendChild( parsererror );
-    return dom;
-  };
-  
-  pub.parseFromString = function( aData, anURI, aBaseURI, aTitle ) {
-    var domParser = Components.classes["@mozilla.org/xmlextras/domparser;1"]
-                              .createInstance( Components.interfaces.nsIDOMParser );
-    domParser.init( null, anURI, aBaseURI, null );
-    var tmp = domParser.parseFromString( aData, pub.getType() );
-    if ( tmp.documentElement &&
-         tmp.documentElement.localName == "parsererror" &&
-         tmp.documentElement.namespaceURI == pub.getErrorNS() ) {
-      var dom = pub.getBlankDocument( aBaseURI, aTitle );
-      var parsererror = dom.importNode( tmp.documentElement, true );
-      parsererror.firstChild.textContent = decodeURIComponent(
-        parsererror.firstChild.textContent
-      );
-      dom.body.appendChild( parsererror );
-      return { result: false, dom: dom, changed: false };
-    }
-    var err = pub.checkDocument( tmp, anURI, aBaseURI, aTitle );
-    if ( err ) {
-      return { result: false, dom: err, changed: false };
-    }
-    pub.sanitizeDocument( tmp, aBaseURI );
-    pub.fixupDocument( tmp, aBaseURI, aTitle );
-    return {
-      result: true,
-      dom: tmp,
-      changed: ( aData != pub.serializeToString( tmp ) )
-    };
-  };
-
-  // !!!! %%%% !!!! STRINGS_BUNDLE
-  pub.checkDocument = function( aDOM, anURI, aBaseURI, aTitle ) {
-    var stringsBundle = ru.akman.znotes.Utils.STRINGS_BUNDLE;
-    var errorText = stringsBundle.getFormattedString(
-      "document.driver.parsing.error",
-      [ decodeURIComponent( anURI.spec ) ]
-    );
-    if ( aDOM.documentElement.tagName != "html" ||
-         aDOM.documentElement.namespaceURI != pub.getDefaultNS() ) {
-      return pub.getErrorDocument(
-        aBaseURI,
-        aTitle,
-        errorText,
-        stringsBundle.getFormattedString(
-          "document.driver.parsing.error.html",
-          [ pub.getDefaultNS() ]
-        )
-      );
-    }
-    if ( aDOM.getElementsByTagNameNS( pub.getDefaultNS(), "head" ).length != 1 ) {
-      return pub.getErrorDocument(
-        aBaseURI,
-        aTitle,
-        errorText,
-        stringsBundle.getFormattedString(
-          "document.driver.parsing.error.head",
-          [ pub.getDefaultNS() ]
-        )
-      );
-    }
-    if ( aDOM.getElementsByTagNameNS( pub.getDefaultNS(), "body" ).length != 1 ) {
-      return pub.getErrorDocument(
-        aBaseURI,
-        aTitle,
-        errorText,
-        stringsBundle.getFormattedString(
-          "document.driver.parsing.error.body",
-          [ pub.getDefaultNS() ]
-        )
-      );
-    }
-    return null;
-  };
-  
-  pub.sanitizeDocument = function( aDOM, aBaseURI ) {
-    // ALWAYS AND FOREVER
-    // IS_SANITIZE_ENABLED === true
-    if ( !ru.akman.znotes.Utils.IS_SANITIZE_ENABLED ) {
-      return;
-    }
-    var parserUtils =
-      Components.classes["@mozilla.org/parserutils;1"]
-                .getService( Components.interfaces.nsIParserUtils );
-    var xmlSerializer =
-      Components.classes["@mozilla.org/xmlextras/xmlserializer;1"]
-                .createInstance( Components.interfaces.nsIDOMSerializer );
-    // head
-    var head = aDOM.getElementsByTagNameNS( pub.getDefaultNS(), "head" )[0];
-    var headString = xmlSerializer.serializeToString( head );
-    while ( head.firstChild ) {
-      head.removeChild( head.firstChild );
-    }
-    var headFragment = parserUtils.parseFragment(
-      headString,
-      parserUtils.SanitizerAllowComments + parserUtils.SanitizerAllowStyle,
-      true,
-      aBaseURI,
-      head
-    );
-    // clean up head
-    var node = headFragment.firstChild;
-    while ( node ) {
-      var next = node.nextSibling;
-      if ( node.nodeType == 3 ) {
-        headFragment.removeChild( node );
-      }
-      node = next;
-    }
-    // fix up indents
-    if ( headFragment.hasChildNodes ) {
-      head.appendChild( headFragment );
-      node = head.firstChild;
-      while ( node ) {
-        var next = node.nextSibling;
-        head.insertBefore( aDOM.createTextNode( "\n    " ), node );
-        node = next;
-      }
-    }
-    // body
-    var body = aDOM.getElementsByTagNameNS( pub.getDefaultNS(), "body" )[0];
-    var bodyString = xmlSerializer.serializeToString( body );
-    while ( body.firstChild ) {
-      body.removeChild( body.firstChild );
-    }
-    var bodyFragment = parserUtils.parseFragment(
-      bodyString,
-      parserUtils.SanitizerAllowComments + parserUtils.SanitizerAllowStyle,
-      true,
-      aBaseURI,
-      body
-    );
-    if ( bodyFragment.hasChildNodes ) {
-      body.appendChild( bodyFragment );
-    }
-  };
-  
-  pub.serializeToString = function( aDOM ) {
-    var base = aDOM.getElementsByTagName( "base" ).length > 0 ?
-      aDOM.getElementsByTagName( "base" )[0] : null;
-    if ( base ) {
-      var fullHREF = base.getAttribute( "href" );
-      var relativeHREF = fullHREF.substring( 0, fullHREF.length - 1 );
-      relativeHREF =
-        relativeHREF.substring( relativeHREF.lastIndexOf( "/" ) + 1 ) + "/";
-      base.setAttribute( "href", relativeHREF );
-    }
-    var result =
+    result =
       Components.classes["@mozilla.org/xmlextras/xmlserializer;1"]
                 .createInstance( Components.interfaces.nsIDOMSerializer )
                 .serializeToString( aDOM );
-    if ( base ) {
-      base.setAttribute( "href", fullHREF );
+    if ( base && base.hasAttribute( "href" ) ) {
+      base.setAttribute( "href", aBaseURI.spec );
     }
     return result.replace( /\r\n/g, "\n" );
   };
   
-  pub.fixupDocument = function( aDOM, aBaseURI, aTitle ) {
-    var result = false;
-    var head = aDOM.getElementsByTagNameNS( pub.getDefaultNS(), "head" )[0];
-    var body = aDOM.getElementsByTagNameNS( pub.getDefaultNS(), "body" )[0];
-    var firstHeadChild = head.firstChild;
-    var firstChildElementOfHead = head.firstElementChild;
-    var href = aBaseURI.spec;
-    // fix base tag, this one must be in first place in head
-    var base = null;
-    var text = null;
-    if ( aDOM.getElementsByTagNameNS( pub.getDefaultNS(), "base" ).length == 0 ) {
-      base = aDOM.createElementNS( pub.getDefaultNS(), "base" );
-      if ( firstHeadChild ) {
-        text = head.insertBefore(
-          aDOM.createTextNode( "\n    " ),
-          firstHeadChild
-        );
-        head.insertBefore( base, firstHeadChild );
-      } else {
-        text = head.appendChild( aDOM.createTextNode( "\n    " ) );
-        head.appendChild( base );
-      }
-      firstHeadChild = text;
-      firstChildElementOfHead = base;
-      result = true;
-    } else {
-      base = aDOM.getElementsByTagNameNS( pub.getDefaultNS(), "base" )[0];
+  pub.parseFromString = function( aData, anURI, aBaseURI, aTitle ) {
+    var dom, err, tmp, parsererror, principal, markup;
+    var domParser =
+      Components.classes["@mozilla.org/xmlextras/domparser;1"]
+                .createInstance( Components.interfaces.nsIDOMParser );
+    var securityManager =
+      Components.classes["@mozilla.org/scriptsecuritymanager;1"]
+                .getService( Components.interfaces.nsIScriptSecurityManager );
+    // TODO: nsIDOMParser.init()
+    // anURI cause message in error console
+    // principal ?!
+    principal = securityManager.getCodebasePrincipal( anURI );
+    domParser.init( principal, null /* anURI */, aBaseURI, null );
+    tmp = domParser.parseFromString( aData, pub.getType() );
+    if ( tmp.documentElement &&
+         tmp.documentElement.localName.toLowerCase() === "parsererror" &&
+         tmp.documentElement.namespaceURI === getErrorNS() ) {
+      dom = getErrorDocument( anURI, aBaseURI, aTitle,
+        decodeURIComponent( tmp.documentElement.firstChild.textContent ),
+        tmp.documentElement.firstElementChild.textContent
+      );
+      return { result: false, dom: dom, changed: false };
     }
-    if ( firstChildElementOfHead != base ) {
-      base = base.parentNode.removeChild( base );
-      if ( firstHeadChild ) {
-        text = head.insertBefore(
-          aDOM.createTextNode( "\n    " ),
-          firstHeadChild
-        );
-        head.insertBefore( base, firstHeadChild );
-      } else {
-        text = head.appendChild( aDOM.createTextNode( "\n    " ) );
-        head.appendChild( base );
-      }
-      firstHeadChild = text;
-      firstChildElementOfHead = base;
-      result = true;
+    err = checkDocument( tmp, anURI, aBaseURI, aTitle );
+    if ( err ) {
+      return { result: false, dom: err, changed: false };
     }
-    var currHREF = base.getAttribute( "href" );
-    if ( currHREF != href ) {
-      base.setAttribute( "href", href );
-      result = true;
-    }
-    // fix title tag, this one must be in second place in head
-    var title = null;
-    var nextBaseSibling = base.nextSibling;
-    var nextBaseElementSibling = base.nextElementSibling;
-    if ( aDOM.getElementsByTagNameNS( pub.getDefaultNS(), "title" ).length == 0 ) {
-      title = aDOM.createElementNS( pub.getDefaultNS(), "title" );
-      if ( nextBaseSibling ) {
-        text = head.insertBefore( aDOM.createTextNode( "\n    " ), nextBaseSibling );
-        head.insertBefore( title, nextBaseSibling );
-      } else {
-        text = head.appendChild( aDOM.createTextNode( "\n    " ) );
-        head.appendChild( title );
-      }
-      nextBaseSibling = text;
-      nextBaseElementSibling = title;
-      result = true;
-    } else {
-      title = aDOM.getElementsByTagNameNS( pub.getDefaultNS(), "title" )[0];
-      if ( nextBaseElementSibling != title ) {
-        title = title.parentNode.removeChild( title );
-        if ( nextBaseSibling ) {
-          text = head.insertBefore( aDOM.createTextNode( "\n    " ), nextBaseSibling );
-          head.insertBefore( title, nextBaseSibling );
-        } else {
-          text = head.appendChild( aDOM.createTextNode( "\n    " ) );
-          head.appendChild( title );
-        }
-        nextBaseSibling = text;
-        nextBaseElementSibling = title;
-        result = true;
-      }
-    }
-    if ( title.textContent != "\n      " + aTitle + "\n    " ) {
-      title.textContent = "\n      " + aTitle + "\n    ";
-      result = true;
+    markup = markupDocument( tmp );
+    sanitizeDocument( tmp, anURI, aBaseURI );
+    fixupDocument( tmp, anURI, aBaseURI, aTitle, markup );
+    return {
+      result: true,
+      dom: tmp,
+      changed: ( aData !== pub.serializeToString( tmp, anURI, aBaseURI ) )
     };
-    // fix indents with two space
-    var doc = aDOM.documentElement;
-    var node = doc.firstChild;
-    while ( node && node.nodeType == 3 ) {
-      node = node.nextSibling;
-    }
-    while ( node ) {
-      var next = node.nextSibling;
-      while ( next && next.nodeType == 3 ) {
-        next = next.nextSibling;
-      }
-      var prev = node.previousSibling;
-      while ( prev && prev.nodeType == 3 ) {
-        prev = prev.previousSibling;
-      }
-      text = "";
-      var ps = node.previousSibling;
-      while ( ps && ( ps != prev ) ) {
-        text = ps.textContent + text;
-        ps = ps.previousSibling;
-      }
-      if ( text != "\n  " ) {
-        ps = node.previousSibling;
-        while ( ps && ( ps != prev ) ) {
-          var ns = ps.previousSibling;
-          doc.removeChild( ps );
-          ps = ns;
-        }
-        doc.insertBefore( aDOM.createTextNode( "\n  " ), node );
-        result = true;
-      }
-      node = next;
-    }
-    if ( !doc.lastChild || doc.lastChild.nodeType != 3 || doc.lastChild.textContent != "\n" ) {
-      doc.appendChild( aDOM.createTextNode( "\n" ) );
-      result = true;
-    }
-    //
-    if ( !head.lastChild || head.lastChild.nodeType != 3 || head.lastChild.textContent != "\n  " ) {
-      head.appendChild( aDOM.createTextNode( "\n  " ) );
-      result = true;
-    }
-    //
-    text = "";
-    node = body.lastChild;
-    while ( node && node.nodeType == 3 ) {
-      node = node.previousSibling;
-    }
-    node = node ? node.nextSibling : null;
-    while ( node ) {
-      next = node.nextSibling;
-      text += node.textContent;
-      body.removeChild( node );
-      node = next;
-    }
-    node = body.appendChild( aDOM.createTextNode( text ) );
-    var tail = /(\n\u0020*)$/.exec( text );
-    if ( tail ) {
-      var count = 3 - tail[1].length;
-      if ( count != 0 ) {
-        result = true;
-      }
-      if ( count < 0 ) {
-        node.textContent = node.textContent.substr( 0, node.textContent.length + count );
-        count = 0;
-      }
-      while ( count > 0 ) {
-        node.textContent += " ";
-        count--;
-      }
-    } else {
-      node.textContent += "\n  ";
-      result = true;
-    }
-    return result;
   };
   
-  pub.importDocument = function( aDOM, aBaseURI, aTitle ) {
-    var dom = pub.getBlankDocument( aBaseURI, aTitle );
-    // process nodes before documentElement
-    var node = aDOM.firstChild;
+  pub.importDocument = function( aDOM, anURI, aBaseURI, aTitle, aParams ) {
+    var metas, element, next, name, value, namespaceURI;
+    var dom = pub.getBlankDocument( anURI, aBaseURI, aTitle, false, aParams );
+    var node = aDOM.firstChild, namespaceURI = dom.documentElement.namespaceURI;
+    var domHead, domBody, aDOMHead, aDOMBody;
+    // before documentElement
     while ( node && node != aDOM.documentElement ) {
-      // DOCUMENT_TYPE_NODE
-      if ( node.nodeType != 10 ) {
-        dom.insertBefore(
-          dom.importNode( node, true ),
-          dom.documentElement
-        );
+      // skip doctype
+      if ( node.nodeType !== Node.DOCUMENT_TYPE_NODE ) {
+        dom.insertBefore( dom.importNode( node, true ), dom.documentElement );
       }
       node = node.nextSibling;
     }
     // skip documentElement
     node = node.nextSibling;
-    // process nodes after documentElement
+    // after documentElement
     while ( node ) {
-      // DOCUMENT_TYPE_NODE
-      if ( node.nodeType != 10 ) {
-        dom.appendChild(
-          dom.importNode( node, true )
-        );
-      }
+      dom.appendChild( dom.importNode( node, true ) );
       node = node.nextSibling;
     }
-    // process documentElement
-    var element = dom.head;
+    // documentElement itself
+    element = aDOM.documentElement;
+    for ( var i = element.attributes.length - 1; i >= 0; i-- ) {
+      name = element.attributes[i].name;
+      value = element.attributes[i].value;
+      // skip default namespace
+      if ( name !== "xmlns" ) {
+        dom.documentElement.setAttribute( name, value );
+      }
+    }
+    // documentElement content
+    domHead = dom.getElementsByTagNameNS( namespaceURI, "head" )[0];
+    domBody = dom.getElementsByTagNameNS( namespaceURI, "body" )[0];
+    aDOMHead = aDOM.getElementsByTagNameNS( namespaceURI, "head" )[0];
+    aDOMBody = aDOM.getElementsByTagNameNS( namespaceURI, "body" )[0];
+    element = domHead;
     node = aDOM.documentElement.firstChild;
     while ( node ) {
-      var next = node.nextSibling;
-      // DOCUMENT_TYPE_NODE
-      if ( node.nodeType != 10 ) {
-        if ( node == aDOM.head ) {
-          dom.documentElement.replaceChild( node, dom.head );
-          element = dom.body;
-        } else if ( node == aDOM.body ) {
-          dom.documentElement.replaceChild( node, dom.body );
-          element = null;
-        } else {
-          if ( element ) {
-            dom.documentElement.insertBefore( dom.importNode( node, true ), element );
-          } else {
-            dom.documentElement.appendChild( dom.importNode( node, true ) );
-          }
-        }
+      next = node.nextSibling;
+      if ( node == aDOMHead ) {
+        dom.documentElement.replaceChild(
+          dom.importNode( node, true ), domHead );
+        element = domBody;
+      } else if ( node == aDOMBody ) {
+        dom.documentElement.replaceChild(
+          dom.importNode( node, true ), domBody );
+        element = null;
+      } else {
+        dom.documentElement.insertBefore(
+          dom.importNode( node, true ), element );
       }
       node = next;
     };
+    metas = dom.getElementsByTagNameNS( namespaceURI, "meta" );
+    node = getMeta( metas, "http-equiv", "Content-Type", true );
+    if ( node ) {
+      node.parentNode.removeChild( node );
+    }
     return dom;
-  };
-
-  pub.getDefaultPreferences = function() {
-    return {};
   };
   
   return pub;

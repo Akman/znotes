@@ -164,10 +164,10 @@ ru.akman.znotes.Content = function() {
             currentWindow.openDialog(
               "chrome://znotes/content/confirmdialog.xul",
               "",
-              "chrome,dialog=yes,modal=yes,centerscreen,resizable=yes",
+              "chrome,dialog=yes,modal=yes,centerscreen,resizable=no",
               params
             ).focus();
-            if ( params.output ) {
+            if ( params.output && params.output.result ) {
               deleteContent( currentContent );
             }
             break;

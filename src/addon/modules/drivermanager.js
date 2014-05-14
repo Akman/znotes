@@ -33,6 +33,7 @@
 if ( !ru ) var ru = {};
 if ( !ru.akman ) ru.akman = {};
 if ( !ru.akman.znotes ) ru.akman.znotes = {};
+if ( !ru.akman.znotes.data ) ru.akman.znotes.data = {};
 
 Components.utils.import( "resource://znotes/utils.js" , ru.akman.znotes );
 
@@ -46,36 +47,48 @@ var DriverManager = function() {
 
   var drivers = null;
 
-  function registerDriver( directoryName ) {
-    var url = "chrome://znotes_drivers/content/" +
-              directoryName + "/driver.js";
-    unregisterDriver( directoryName );
-    if ( !ru ) var ru = {};
-    if ( !ru.akman ) ru.akman = {};
-    if ( !ru.akman.znotes ) ru.akman.znotes = {};
-    if ( !ru.akman.znotes.data ) ru.akman.znotes.data = {};
+  /**
+   * name - driver directory name
+   */
+  function registerDriver( name ) {
+    var driver, params, bundle;
+    var driverURL = "chrome://znotes_drivers/content/" + name + "/";
+    var bundleURL = "chrome://znotes/locale/drivers/" + name + "/";
+    var bundleID = "znotes_driver_" + name + "_stringbundle";
+    unregisterDriver( name );
     try {
-      ru.akman.znotes.data[ directoryName ] = {};
-      Components.utils.import( url, ru.akman.znotes.data[ directoryName ] );
-      var driver = ru.akman.znotes.data[ directoryName ].Driver;
-      drivers[ directoryName ] = driver;
+      ru.akman.znotes.data[ name ] = {};
+      Components.utils.import( driverURL + "driver.js", ru.akman.znotes.data[ name ] );
+      Components.utils.import( driverURL + "params.js", ru.akman.znotes.data[ name ] );
+      driver = ru.akman.znotes.data[ name ].Driver;
+      params = ru.akman.znotes.data[ name ].Params;
+      driver.getParams = function() {
+        return params;
+      };
+      bundle = Utils.STRINGS_BUNDLE.ownerDocument.getElementById( bundleID );
+      if ( !bundle ) {
+        bundle = Utils.STRINGS_BUNDLE.ownerDocument.createElement( "stringbundle" );
+        bundle.setAttribute( "id", bundleID );
+        Utils.STRINGS_BUNDLE.parentNode.appendChild( bundle );
+      }
+      bundle.setAttribute( "src", bundleURL + "driver.properties" );
+      driver.getBundle = function() {
+        return bundle;
+      };
+      drivers[ name ] = driver;
     } catch ( e ) {
-      delete ru.akman.znotes.data[ directoryName ];
+      delete ru.akman.znotes.data[ name ];
       throw e;
     }
     return driver;
   };
 
-  function unregisterDriver( directoryName ) {
-    if ( !ru ) var ru = {};
-    if ( !ru.akman ) ru.akman = {};
-    if ( !ru.akman.znotes ) ru.akman.znotes = {};
-    if ( !ru.akman.znotes.data ) ru.akman.znotes.data = {};
-    if ( ru.akman.znotes.data[ directoryName ] ) {
-      delete ru.akman.znotes.data[ directoryName ];
+  function unregisterDriver( name ) {
+    if ( ru.akman.znotes.data[ name ] ) {
+      delete ru.akman.znotes.data[ name ];
     }
-    if ( drivers[ directoryName ] ) {
-      delete drivers[ directoryName ];
+    if ( drivers[ name ] ) {
+      delete drivers[ name ];
     }
   };
 

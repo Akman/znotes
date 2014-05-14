@@ -46,8 +46,8 @@ var EXPORTED_SYMBOLS = ["Utils"];
 var Utils = function() {
 
   var isDebugEnabled = false;
-  var isDebugActive = false;
-  var isDebugRaised = false;
+  var isTestActive = false;
+  var isTestRaised = false;
   var isSanitizeEnabled = true;
   var isAdEnabled = false;
   var isFirstRun = true;
@@ -57,9 +57,10 @@ var Utils = function() {
   var systemInfo = null;
 
   var mainWindow = null;
+  var mainContext = null;
   var stringsBundle = null;
   var isStandalone = true;
-
+  
   var isQuitEnabled = true;
   var debugTextBox = null;
 
@@ -69,8 +70,13 @@ var Utils = function() {
   var isMainMenubarVisible = false;
   var isMainToolbarVisible = true;
   var isConfirmExit = true;
+  var isExitQuitTB = true;
   var isReplaceBackground = true;
   var isHighlightRow = false;
+  var isCloseBrowserAfterImport = true;
+  var isSelectNoteAfterImport = true;
+  var isClipperPlaySound = true;
+  var clipperFlags = 0x00000000;
   var defaultDocumentType = "application/xhtml+xml";
   var placeName = "";
   var mainShortCuts = "{}";
@@ -102,20 +108,20 @@ var Utils = function() {
       isDebugEnabled = value;
     },
 
-    get IS_DEBUG_ACTIVE() {
-      return isDebugActive;
+    get IS_TEST_ACTIVE() {
+      return isTestActive;
     },
     
-    set IS_DEBUG_ACTIVE( value ) {
-      isDebugActive = value;
+    set IS_TEST_ACTIVE( value ) {
+      isTestActive = value;
     },
     
-    get IS_DEBUG_RAISED() {
-      return isDebugRaised;
+    get IS_TEST_RAISED() {
+      return isTestRaised;
     },
     
-    set IS_DEBUG_RAISED( value ) {
-      isDebugRaised = value;
+    set IS_TEST_RAISED( value ) {
+      isTestRaised = value;
     },
     
     get IS_SANITIZE_ENABLED() {
@@ -229,6 +235,14 @@ var Utils = function() {
       mainWindow = value;
     },
 
+    get MAIN_CONTEXT() {
+      return mainContext;
+    },
+
+    set MAIN_CONTEXT( value ) {
+      mainContext = value;
+    },
+    
     get STRINGS_BUNDLE() {
       return stringsBundle;
     },
@@ -293,6 +307,14 @@ var Utils = function() {
       isQuitEnabled = value;
     },
     
+    get IS_DEBUGGER_INSTALLED() {
+      return pub.convertChromeURL( "chrome://venkman/content/" );
+    },
+    
+    get IS_INSPECTOR_INSTALLED() {
+      return pub.convertChromeURL( "chrome://inspector/content/" );
+    },
+    
     // C O M M O N  P R E F E R E N S E S
 
     get IS_SAVE_POSITION() {
@@ -335,6 +357,38 @@ var Utils = function() {
       isHighlightRow = value;
     },
 
+    get CLIPPER_FLAGS() {
+      return clipperFlags;
+    },
+
+    set CLIPPER_FLAGS( value ) {
+      clipperFlags = value;
+    },
+    
+    get IS_CLIPPER_PLAY_SOUND() {
+      return isClipperPlaySound;
+    },
+
+    set IS_CLIPPER_PLAY_SOUND( value ) {
+      isClipperPlaySound = value;
+    },
+    
+    get IS_CLOSE_BROWSER_AFTER_IMPORT() {
+      return isCloseBrowserAfterImport;
+    },
+
+    set IS_CLOSE_BROWSER_AFTER_IMPORT( value ) {
+      isCloseBrowserAfterImport = value;
+    },
+
+    get IS_SELECT_NOTE_AFTER_IMPORT() {
+      return isSelectNoteAfterImport;
+    },
+
+    set IS_SELECT_NOTE_AFTER_IMPORT( value ) {
+      isSelectNoteAfterImport = value;
+    },
+    
     get IS_MAINMENUBAR_VISIBLE() {
       return isMainMenubarVisible;
     },
@@ -357,13 +411,21 @@ var Utils = function() {
     
     set IS_CONFIRM_EXIT( value ) {
       isConfirmExit = value;
+    },
+    
+    get IS_EXIT_QUIT_TB() {
+      return isExitQuitTB;
+    },
+    
+    set IS_EXIT_QUIT_TB( value ) {
+      isExitQuitTB = value;
     }
 
   };
 
   var fontNameArray = null;
 
-  pub.showPopup = function( img, title, text ) {
+  pub.showPopup = function( img, title, text, clickable ) {
     try {
       Components.classes['@mozilla.org/alerts-service;1']
                 .getService( Components.interfaces.nsIAlertsService )
@@ -371,7 +433,7 @@ var Utils = function() {
         img,
         title,
         text,
-        false,
+        clickable,
         '',
         null
       );
@@ -461,6 +523,42 @@ var Utils = function() {
     return fph.getFileFromURLSpec( chr.convertChromeURL( uri ).spec ).parent.clone();
   };
   
+  pub.getURLSpecFromFile = function( entry ) {
+    var ios = Components.classes["@mozilla.org/network/io-service;1"]
+                        .getService( Components.interfaces.nsIIOService );
+    var fph = ios.getProtocolHandler( "file" )
+                 .QueryInterface( Components.interfaces.nsIFileProtocolHandler );
+    return fph.getURLSpecFromFile( entry );
+  };
+  
+  pub.getFileFromURLSpec = function( url ) {
+    var ios = Components.classes["@mozilla.org/network/io-service;1"]
+                        .getService( Components.interfaces.nsIIOService );
+    var fph = ios.getProtocolHandler( "file" )
+                 .QueryInterface( Components.interfaces.nsIFileProtocolHandler );
+    var chr = Components.classes["@mozilla.org/chrome/chrome-registry;1"]
+                        .getService(Components.interfaces.nsIChromeRegistry);
+    var uri = ios.newURI( url, null, null );
+    return fph.getFileFromURLSpec( chr.convertChromeURL( uri ).spec ).clone();
+  };
+
+  pub.convertChromeURL = function( url ) {
+    var ios = Components.classes["@mozilla.org/network/io-service;1"]
+                        .getService( Components.interfaces.nsIIOService );
+    var fph = ios.getProtocolHandler( "file" )
+                 .QueryInterface( Components.interfaces.nsIFileProtocolHandler );
+    var chr = Components.classes["@mozilla.org/chrome/chrome-registry;1"]
+                        .getService(Components.interfaces.nsIChromeRegistry);
+    var uri;
+    try {
+      uri = chr.convertChromeURL( ios.newURI( url, null, null ) );
+    } catch ( e ) {
+      pub.log( e );
+      return null;
+    }
+    return uri.spec;
+  };
+  
   pub.getLocale = function() {
     var aLocale = null;
     try {
@@ -524,10 +622,15 @@ var Utils = function() {
   };
 
   pub.switchToMainTab = function() {
-    if ( pub.IS_STANDALONE ) {
-      return;
+    var tabMail = pub.getTabMail();
+    if ( tabMail ) {
+      var mainTab = pub.getMainTab();
+      if ( mainTab ) {
+        tabMail.switchToTab( mainTab );
+      } else {
+        pub.openMainTab( true );
+      }
     }
-    pub.openMainTab( true );
   };
   
   pub.openMainTab = function( isActive, persistedState ) {
@@ -642,6 +745,9 @@ var Utils = function() {
   };
   
   pub.initGlobals = function() {
+    if ( pub.MAIN_WINDOW ) {
+      return;
+    }
     // STANDALONE APPLICATION
     var aWindow = pub.getZNotesPlatformWindow();
     if ( aWindow ) {
@@ -662,12 +768,6 @@ var Utils = function() {
     }
     // UNKNOWN
     throw Components.results.NS_ERROR_UNEXPECTED;
-  };
-
-  pub.getStatusbarPanel = function() {
-    return pub.MAIN_WINDOW.document.getElementById(
-      "znotes_statusbarpanel"
-    );
   };
 
   pub.dumpObject = function( obj, chr, cnt ) {
@@ -743,7 +843,7 @@ var Utils = function() {
             }
           }
         } else {
-  	  	  if( from[p] && "object" === typeof from[p] ) {
+  	  	  if ( from[p] && "object" === typeof from[p] ) {
             to[p] = "function" === typeof from[p].pop ? [] : {};
             if ( pub.cloneObject( from[p], to[p] ) ) {
               modified = true;
@@ -764,6 +864,29 @@ var Utils = function() {
 	  return modified;
   };
 
+  pub.fillObject = function( from, to ) {
+    var modified = false;
+	  for ( var p in from ) {
+	  	if ( from.hasOwnProperty( p ) ) {
+        if ( to.hasOwnProperty( p ) ) {
+  	  	  if ( from[p] && "object" === typeof from[p] ) {
+            if ( to[p] && "object" === typeof to[p] ) {
+              modified = pub.fillObject( from[p], to[p] );
+            }
+          } else {
+            if ( to[p] && "object" !== typeof to[p] ) {
+              if ( to[p] != from[p] ) {
+                to[p] = from[p];
+                modified = true;
+              }
+            }
+          }
+        }
+	  	}
+	  }
+	  return modified;
+  };
+  
   pub.isObjectsEqual = function( from, to ) {
 	  for ( var p in from ) {
 	  	if ( from.hasOwnProperty( p ) ) {
@@ -819,6 +942,13 @@ var Utils = function() {
 
   };
 
+  pub.logDocument = function( aDocument ) {
+    var serializer =
+      Components.classes["@mozilla.org/xmlextras/xmlserializer;1"]
+                .createInstance( Components.interfaces.nsIDOMSerializer );
+    pub.log( serializer.serializeToString( aDocument ) );
+  };
+  
   pub.isURI = function( str ) {
     return str && /^http:\/\/|^https:\/\/|^file:\/\/|^ftp:\/\/|^about:|^mailto:|^news:|^snews:|^telnet:|^ldap:|^ldaps:|^gopher:|^finger:|^javascript:/i.test( str );
   };
@@ -844,6 +974,33 @@ var Utils = function() {
       }
     }
     return result;
+  };
+  
+  pub.copyEntryTo = function( from, to, name, overwrite ) {
+    var entries, entry, parent = to ? to.clone() : from.parent.clone();
+    var flag = ( overwrite === undefined ? false : !!overwrite );
+    if ( from.isDirectory() ) {
+      parent.append( name );
+      if ( !parent.exists() || !parent.isDirectory() ) {
+        parent.create( Components.interfaces.nsIFile.DIRECTORY_TYPE,
+          parseInt( "0755", 8 ) );
+      }
+      entries = from.directoryEntries;
+      while ( entries.hasMoreElements() ) {
+        entry = entries.getNext();
+        entry.QueryInterface( Components.interfaces.nsIFile );
+        pub.copyEntryTo( entry, parent, entry.leafName, flag );
+      }
+    } else {
+      entry = parent.clone();
+      entry.append( name );
+      if ( !entry.exists() || entry.isDirectory() ) {
+        from.copyTo( parent, name );
+      } else if ( flag ) {
+        entry.remove( true );
+        from.copyTo( parent, name );
+      }
+    }
   };
   
   pub.readFileContent = function( entry, encoding ) {
@@ -923,43 +1080,63 @@ var Utils = function() {
     }
   };
 
-  pub.saveToFile = function( fileEntry, fileMode, filePermitions, bufferSize, url, contentType, urlListener ) {
+  pub.saveURLToFile = function( fileEntry, fileMode, filePermitions, bufferSize,
+                                url, contentType, context, urlListener ) {
+    var nsIIOService = Components.interfaces.nsIIOService;
+    var nsIFileOutputStream = Components.interfaces.nsIFileOutputStream;
+    var nsIBufferedOutputStream = Components.interfaces.nsIBufferedOutputStream;
+    var nsISafeOutputStream = Components.interfaces.nsISafeOutputStream;
     var ioService =
       Components.classes["@mozilla.org/network/io-service;1"]
-                .getService( Components.interfaces.nsIIOService );
-    var inputStream =
-      Components.classes["@mozilla.org/scriptableinputstream;1"]
-                .createInstance(
-                  Components.interfaces.nsIScriptableInputStream );
-    var safeFileOutputStream =
+                .getService( nsIIOService );
+    var fileOutputStream =
       Components.classes["@mozilla.org/network/safe-file-output-stream;1"]
-                .createInstance( Components.interfaces.nsIFileOutputStream );
-    safeFileOutputStream.init( fileEntry, fileMode, filePermitions,
-      safeFileOutputStream.DEFER_OPEN );
-    var outputStream =
+                .createInstance( nsIFileOutputStream );
+    var bufferedOutputStream =
         Components.classes["@mozilla.org/network/buffered-output-stream;1"]
-                  .createInstance(
-                    Components.interfaces.nsIBufferedOutputStream );
-    outputStream.init( safeFileOutputStream, bufferSize );
+                  .createInstance( nsIBufferedOutputStream );
     var uri = ioService.newURI( url, null, null );
     var channel = ioService.newChannelFromURI( uri );
-    channel.contentType = contentType;
+    if ( contentType ) {
+      channel.contentType = contentType;
+    }
     channel.asyncOpen(
       {
         onStartRequest: function ( aRequest, aContext ) {
-          urlListener.OnStartRunningUrl( uri );
+          fileOutputStream.init(
+            fileEntry,
+            fileMode,
+            filePermitions,
+            nsIFileOutputStream.DEFER_OPEN
+          );
+          bufferedOutputStream.init( fileOutputStream, bufferSize );
+          if ( urlListener && urlListener.OnStartRunningUrl ) {
+            urlListener.OnStartRunningUrl( uri, channel.contentLength );
+          }
         },
         onStopRequest: function ( aRequest,  aContext,  aStatusCode ) {
-          outputStream.flush();
-          urlListener.OnStopRunningUrl( uri, aStatusCode );
+          bufferedOutputStream.flush();
+          if ( fileOutputStream instanceof nsISafeOutputStream ) {
+            fileOutputStream.finish();
+          } else {
+            fileOutputStream.close();
+          }
+          if ( urlListener && urlListener.OnStopRunningUrl ) {
+            urlListener.OnStopRunningUrl( uri, aStatusCode );
+          }
         },
         onDataAvailable: function ( aRequest, aContext, aStream,
                                     aOffset, aCount ) {
-          outputStream.writeFrom( aStream, aCount );
-          urlListener.OnProgressUrl( uri, aCount );
+          var total = aCount;
+          while ( total > 0 ) {
+            total -= bufferedOutputStream.writeFrom( aStream, total );
+          }
+          if ( urlListener && urlListener.OnProgressUrl ) {
+            urlListener.OnProgressUrl( uri, aCount );
+          }
         }
       },
-      null
+      context ? context : null
     );
   };
   
@@ -980,7 +1157,7 @@ var Utils = function() {
     while ( green.length < 2 ) green = "0" + green;
     var blue = b.toString( 16 );
     while ( blue.length < 2 ) blue = "0" + blue;
-    return "#"+red+green+blue;
+    return ( "#" + red + green + blue ).toUpperCase();
   };
 
   pub.HEX2RGB = function( hex ) {
@@ -1146,6 +1323,10 @@ var Utils = function() {
     return result;
   };
   
+  pub.setProperty = function( node, value ) {
+    node.setAttribute( "properties", value );
+  };
+
   pub.addProperty = function( node, value ) {
     var properties = node.hasAttribute( "properties" ) ?
       node.getAttribute( "properties" ).trim() : "";
@@ -1376,392 +1557,110 @@ var Utils = function() {
     }
   };
 
-  pub.saveContent = function( doc, fileEntry, dirEntry, mime, onsave, onerror ) {
-    var ciWBP = Components.interfaces.nsIWebBrowserPersist;
-    var ciWPL = Components.interfaces.nsIWebProgressListener;
-    var ciSWR = Components.interfaces.nsISupportsWeakReference;
-    var ciS = Components.interfaces.nsISupports;
-    var webBrowserPersist =
-      Components.classes["@mozilla.org/embedding/browser/nsWebBrowserPersist;1"]
-                .createInstance( ciWBP );
-                
-    /*
-    PERSIST_STATE_READY       Persister is ready to save data.
-    PERSIST_STATE_SAVING      Persister is saving data.
-    PERSIST_STATE_FINISHED    Persister has finished saving data.
-    */
-    /*
-    ENCODE_FLAGS_SELECTION_ONLY            Output only the current selection as opposed to the whole document.
-    ENCODE_FLAGS_FORMATTED2                For plain text output. Convert html to plain text that looks like the html. Implies wrap (except inside <pre>), since html wraps. HTML output: always do prettyprinting, ignoring existing formatting.
-    ENCODE_FLAGS_RAW                       Output without formatting or wrapping the content. This flag may be used to preserve the original formatting as much as possible.
-    ENCODE_FLAGS_BODY_ONLY                 Output only the body section, no HTML tags.
-    ENCODE_FLAGS_PREFORMATTED              Wrap even if when not doing formatted output (for example for text fields).
-    ENCODE_FLAGS_WRAP                      Wrap documents at the specified column.
-    ENCODE_FLAGS_FORMAT_FLOWED             For plain text output. Output for format flowed (RFC 2646). This is used when converting to text for mail sending. This differs just slightly but in an important way from normal formatted, and that is that lines are space stuffed. This can't (correctly) be done later.
-    ENCODE_FLAGS_ABSOLUTE_LINKS            Convert links to absolute links where possible.
-    ENCODE_FLAGS_ENCODE_W3C_ENTITIES       Attempt to encode entities standardized at W3C (HTML, MathML, and so on.). This is a catch-all flag for documents with mixed contents. Beware of interoperability issues. See below for other flags which might likely do what you want.
-    ENCODE_FLAGS_CR_LINEBREAKS             Output with carriage return line breaks. May also be combined with ENCODE_FLAGS_LF_LINEBREAKS and if neither is specified, the platform default format is used.
-    ENCODE_FLAGS_LF_LINEBREAKS             Output with linefeed line breaks. May also be combined with ENCODE_FLAGS_CR_LINEBREAKS and if neither is specified, the platform default format is used.
-    ENCODE_FLAGS_NOSCRIPT_CONTENT          For plain text output. Output the content of noscript elements.
-    ENCODE_FLAGS_NOFRAMES_CONTENT          For plain text output. Output the content of noframes elements.
-    ENCODE_FLAGS_ENCODE_BASIC_ENTITIES     Encode basic entities, for example output   instead of character code 0xa0. The basic set is just   & < > " for interoperability with older products that don't support ? and friends.
-    ENCODE_FLAGS_ENCODE_LATIN1_ENTITIES    Encode Latin1 entities. This includes the basic set and accented letters between 128 and 255.
-    ENCODE_FLAGS_ENCODE_HTML_ENTITIES      Encode HTML4 entities. This includes the basic set, accented letters, Greek letters and certain special markup symbols.
-    */
-    /*
-    PERSIST_FLAGS_NONE                           No special persistence behavior.
-    PERSIST_FLAGS_FROM_CACHE                     Only use cached data (could result in failure if data is not cached).
-  + PERSIST_FLAGS_BYPASS_CACHE                   Bypass the cached data.
-    PERSIST_FLAGS_IGNORE_REDIRECTED_DATA         Ignore any redirected data (usually adverts).
-    PERSIST_FLAGS_IGNORE_IFRAMES                 Ignore iframe content (usually adverts).
-    PERSIST_FLAGS_NO_CONVERSION                  Do not run the incoming data through a content converter for example to decompress it.
-  + PERSIST_FLAGS_REPLACE_EXISTING_FILES         Replace existing files on the disk (use with due diligence!)
-    PERSIST_FLAGS_NO_BASE_TAG_MODIFICATIONS      Don't modify or add base tags.
-  + PERSIST_FLAGS_FIXUP_ORIGINAL_DOM             Make changes to original DOM rather than cloning nodes.
-    PERSIST_FLAGS_FIXUP_LINKS_TO_DESTINATION     Fix links relative to destination location (not origin)
-    PERSIST_FLAGS_DONT_FIXUP_LINKS               Do not make any adjustments to links.
-    PERSIST_FLAGS_SERIALIZE_OUTPUT               Force serialization of output (one file at a time; not concurrent)
-    PERSIST_FLAGS_DONT_CHANGE_FILENAMES          Don't make any adjustments to filenames.
-    PERSIST_FLAGS_FAIL_ON_BROKEN_LINKS           Fail on broken in-line links.
-    PERSIST_FLAGS_CLEANUP_ON_FAILURE             Automatically cleanup after a failed or cancelled operation, deleting all created files and directories. This flag does nothing for failed upload operations to remote servers.
-  + PERSIST_FLAGS_AUTODETECT_APPLY_CONVERSION    Let the WebBrowserPersist decide whether the incoming data is encoded and whether it needs to go through a content converter, for example to decompress it. Requires Gecko 1.8
-    PERSIST_FLAGS_APPEND_TO_FILE                 Append the downloaded data to the target file. This can only be used when persisting to a local file. Requires Gecko 1.9
-    PERSIST_FLAGS_FORCE_ALLOW_COOKIES            Force relevant cookies to be sent with this load even if normally they wouldn't be.
-    */
-    var persistFlags =
-      ciWBP.PERSIST_FLAGS_FIXUP_ORIGINAL_DOM |
-      ciWBP.PERSIST_FLAGS_BYPASS_CACHE |
-      ciWBP.PERSIST_FLAGS_REPLACE_EXISTING_FILES |
-      ciWBP.PERSIST_FLAGS_AUTODETECT_APPLY_CONVERSION;
-    var encodingFlags = null;
-    var progressListener = {
-      QueryInterface: function( aIID ) {
-        if ( aIID.equals( ciWPL ) || aIID.equals( ciSWR ) || aIID.equals( ciS ) ) {
-          return this;
-        }
-        throw Components.results.NS_NOINTERFACE;
-      },
-      onStateChange: function( aWebProgress, aRequest, aStateFlags, aStatus ) {
-        if ( aStateFlags & ciWPL.STATE_IS_NETWORK && aStateFlags & ciWPL.STATE_STOP ) {
-          webBrowserPersist.progressListener = null;
-          if ( !Components.isSuccessCode( aStatus ) ) {
-            onerror( pub.getErrorName( aStatus ) );
-          } else {
-            onsave();
-          }
-        }
-        return 0;
-      },
-      onLocationChange: function( aWebProgress, aRequest, aLocation, aFlags ) {
-        return 0;
-      },
-      onProgressChange: function( aWebProgress, aRequest, aCurSelfProgress, aMaxSelfProgress, aCurTotalProgress, aMaxTotalProgress ) {
-        return 0;
-      },
-      onSecurityChange: function( aWebProgress, aRequest, aState ) {
-        return 0;
-      },
-      onStatusChange: function( aWebProgress, aRequest, aStatus, aMessage ) {
-        return 0;
+  pub.getTempFileEntry = function( fileName, fileSuffix ) {
+    var directoryService =
+      Components.classes["@mozilla.org/file/directory_service;1"]
+                .getService( Components.interfaces.nsIProperties );
+    var tempDirectory =
+      directoryService.get( "TmpD", Components.interfaces.nsIFile );
+    var tmpDir, tmpFile;
+    var tmpFileSuffix = fileSuffix ? fileSuffix : ".tmp";
+    var tmpFileName = fileName ? fileName : pub.createUUID().toLowerCase();
+    var tmpName = tmpFileName + tmpFileSuffix;
+    var tmpDirName = "";
+    do {
+      tmpDir = tempDirectory.clone();
+      if ( tmpDirName ) {
+        tmpDir.append( tmpDirName );
       }
-    };
-    webBrowserPersist.persistFlags = persistFlags;
-    webBrowserPersist.progressListener = progressListener;
-    webBrowserPersist.saveDocument(
-      doc,
-      fileEntry,
-      dirEntry,
-      mime,
-      encodingFlags,
-      null
+      tmpFile = tmpDir.clone();
+      tmpFile.append( tmpName );
+      tmpDirName = pub.createUUID();
+    } while (
+      tmpFile.exists() && !tmpFile.isDirectory()
     );
+    if ( !tmpDir.exists() || !tmpDir.isDirectory() ) {
+      tmpDir.create(
+        Components.interfaces.nsIFile.DIRECTORY_TYPE,
+        parseInt( "0774", 8 )
+      );
+    }
+    return tmpFile.clone();
   };
-
-  pub.fixupContent = function( dom, dirEntry ) {
-    pub.fixupLinks( dom, dirEntry );
+  
+  pub.getEntriesToSaveContent = function( fileSuffix, dirSuffix ) {
+    var directoryService =
+      Components.classes["@mozilla.org/file/directory_service;1"]
+                .getService( Components.interfaces.nsIProperties );
+    var tempDirectory =
+      directoryService.get( "TmpD", Components.interfaces.nsIFile );
+    var tmpName, tmpFile, tmpDir;
+    var tmpDirSuffix = dirSuffix ? dirSuffix : "_files";
+    var tmpFileSuffix = fileSuffix ? fileSuffix : ".xhtml";
+    do {
+      tmpName = pub.createUUID();
+      tmpFile = tempDirectory.clone();
+      tmpFile.append( tmpName + tmpFileSuffix );
+      tmpDir = tempDirectory.clone();
+      tmpDir.append( tmpName + tmpDirSuffix );
+    } while (
+      tmpDir.exists() && tmpDir.isDirectory() ||
+      tmpFile.exists() && !tmpFile.isDirectory()
+    );
+    tmpDir.create(
+      Components.interfaces.nsIFile.DIRECTORY_TYPE,
+      parseInt( "0774", 8 )
+    );
+    return {
+      fileEntry: tmpFile.clone(),
+      directoryEntry: tmpDir.clone()
+    };
   };
-
-  pub.fixupLinks = function( dom, dirEntry ) {
-    var href = dirEntry.leafName + "/";
-    var result = false;
-    // <img src="xxx" ... />
-    var tags = dom.getElementsByTagName( "img" );
-    for ( var i = 0; i < tags.length; i++ ) {
-      var tag = tags[i];
-      if ( tag.hasAttribute( "src" ) ) {
-        var source = tag.getAttribute( "src" );
-        var index = source.indexOf( href );
-        if ( index >= 0 ) {
-          source = source.substring( index + href.length );
-          tag.setAttribute( "src", source );
-          result = true;
-        }
-      }
+  
+  pub.getURLFromRequest = function( aRequest ) {
+    if ( !aRequest ) {
+      return "";
     }
-    // <script src="xxx" ... />
-    tags = dom.getElementsByTagName( "script" );
-    for ( var i = 0; i < tags.length; i++ ) {
-      var tag = tags[i];
-      if ( tag.hasAttribute( "src" ) ) {
-        var source = tag.getAttribute( "src" );
-        var index = source.indexOf( href );
-        if ( index >= 0 ) {
-          source = source.substring( index + href.length );
-          tag.setAttribute( "src", source );
-          result = true;
-        }
-      }
+    var aURI;
+    try {
+      aURI = aRequest.QueryInterface( Components.interfaces.nsIChannel ).URI;
+    } catch ( e ) {
+      aURI = null;
     }
-    // <link type="text/css" href="xxx" ... />
-    tags = dom.getElementsByTagName( "link" );
-    for ( var i = 0; i < tags.length; i++ ) {
-      var tag = tags[i];
-      if ( tag.hasAttribute( "type") && tag.getAttribute( "type") == "text/css" ) {
-        if ( tag.hasAttribute( "href" ) ) {
-          var source = tag.getAttribute( "href" );
-          var index = source.indexOf( href );
-          if ( index >= 0 ) {
-            source = source.substring( index + href.length );
-            tag.setAttribute( "href", source );
-            result = true;
-          }
-        }
-      }
+    return pub.getURLFromURI( aURI );
+  };
+  
+  pub.getURLFromURI = function( aURI ) {
+    if ( !aURI ) {
+      return "";
     }
-    // <input type="image" src="xxx" ... />
-    tags = dom.getElementsByTagName( "input" );
-    for ( var i = 0; i < tags.length; i++ ) {
-      var tag = tags[i];
-      if ( tag.hasAttribute( "type") && tag.getAttribute( "type") == "image" ) {
-        if ( tag.hasAttribute( "src" ) ) {
-          var source = tag.getAttribute( "src" );
-          var index = source.indexOf( href );
-          if ( index >= 0 ) {
-            source = source.substring( index + href.length );
-            tag.setAttribute( "src", source );
-            result = true;
-          }
-        }
-      }
-    }
-    // <iframe src="xxx" ... />
-    tags = dom.getElementsByTagName( "iframe" );
-    for ( var i = 0; i < tags.length; i++ ) {
-      var tag = tags[i];
-      if ( tag.hasAttribute( "src" ) ) {
-        var source = tag.getAttribute( "src" );
-        var index = source.indexOf( href );
-        if ( index >= 0 ) {
-          source = source.substring( index + href.length );
-          tag.setAttribute( "src", source );
-          result = true;
-        }
-      }
+    var result, nsIURIFixup;
+    try {
+      nsIURIFixup =
+        Components.classes["@mozilla.org/docshell/urifixup;1"]
+                  .getService( Components.interfaces.nsIURIFixup );
+      result = nsIURIFixup.createExposableURI( aURI ).spec;
+    } catch( e ) {
+      result = aURI.spec;
     }
     return result;
   };
 
-  pub.loadResource = function( url, fileEntry, ondone ) {
-    var XMLHttpRequest = Components.Constructor( "@mozilla.org/xmlextras/xmlhttprequest;1" );
-    var request = XMLHttpRequest();
-    var onError = function() {
-      request.removeEventListener( "load", onLoad, false );
-      request.removeEventListener( "error", onError, false );
-      request.removeEventListener( "abort", onAbort, false );
-      ondone( url, fileEntry, -1 );
-    };
-    var onAbort = function() {
-      request.removeEventListener( "load", onLoad, false );
-      request.removeEventListener( "error", onError, false );
-      request.removeEventListener( "abort", onAbort, false );
-      ondone( url, fileEntry, -2 );
-    };
-    var onLoad = function() {
-      if ( !request.response ) {
-        onError();
-        return;
+  pub.parseQueryString = function( query ) {
+    var key, value, result = {};
+    var part, parts = query.split( "&" );
+    for ( var i = 0; i < parts.length; i++ ) {
+      part = parts[i].split( '=' );
+      key = part[0];
+      if ( key ) {
+        key = decodeURIComponent( key );
+        value = decodeURIComponent( part[1] ? part[1] : "" );
+        result[key] = value;
       }
-      var uint8Array = new Uint8Array( request.response );
-      var data = "";
-      for( var i = 0; i < uint8Array.length; i++ ) {
-        data += String.fromCharCode( uint8Array[i] );
-      }
-      var ostream = Components.classes["@mozilla.org/network/file-output-stream;1"]
-                              .createInstance( Components.interfaces.nsIFileOutputStream );
-      try {
-        ostream.init(
-          fileEntry,
-          // PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE
-          parseInt( "0x02", 16 ) | parseInt( "0x08", 16 ) | parseInt( "0x20", 16 ),
-          parseInt( "0755", 8 ),
-          0
-        );
-        ostream.write( data, data.length );
-        ostream.close();
-      } catch ( e ) {
-        pub.log( e );
-        ostream.close();
-        onError();
-        return;
-      }
-      request.removeEventListener( "load", onLoad, false );
-      request.removeEventListener( "error", onError, false );
-      request.removeEventListener( "abort", onAbort, false );
-      ondone( url, fileEntry, 0 );
-    };
-    request.addEventListener( "load", onLoad, false );
-    request.addEventListener( "error", onError, false );
-    request.addEventListener( "abort", onError, false );
-    try {
-      request.open( "GET", url );
-      request.responseType = "arraybuffer";
-      request.send( null );
-    } catch ( e ) {
-      pub.log( e );
-      onError();
     }
+    return result;
   };
   
-  // https://bugzilla.mozilla.org/show_bug.cgi?id=115107
-  // Bug 115107 - CSS not fixed up by webbrowserpersist.
-  pub.inlineStyles = function( dom, dirEntry, onsave ) {
-    var ioService = Components.classes["@mozilla.org/network/io-service;1"]
-                              .getService( Components.interfaces.nsIIOService );
-    var processStyleSheet = function( sheet, rules, urls, dir, onloadresource ) {
-      var rulesCount = 0;
-      try {
-        rulesCount = sheet.cssRules.length;
-      } catch ( e ) {
-      }
-      var current = sheet;
-      var href = current.href;
-      while ( !href ) {
-        if ( current.parentStyleSheet ) {
-          current = current.parentStyleSheet;
-          href = current.href;
-        } else {
-          href = dom.documentURI;
-        }
-      }
-      var sheetURI = ioService.newURI( href, null, null );
-      var commentFlag = false;
-      for ( var j = 0; j < rulesCount; j++ ) {
-        var rule = sheet.cssRules[j];
-        // NOT IMPORT_RULE
-        if ( !commentFlag && rule.type != 3 ) {
-          commentFlag = true;
-          rules.push( "/* " + sheetURI.spec + " */" );
-        }
-        switch ( rule.type ) {
-          case 3: // IMPORT_RULE
-            if ( rule.styleSheet ) {
-              processStyleSheet( rule.styleSheet, rules, urls, dir, onloadresource );
-            }
-            break;
-          case 4: // MEDIA_RULE
-            rules.push( rule.cssText );
-            break;
-          case 5: // FONT_FACE_RULE
-            rules.push( rule.cssText );
-            break;
-          case 1: // STYLE_RULE
-          case 6: // PAGE_RULE
-            var style = rule.style;
-            var propertiesCount = style.length;
-            var urlFlag = false;
-            var cssText = rule.selectorText + " {";
-            for ( var k = 0; k < propertiesCount; k++ ) {
-              var name = style[k];
-              var value = style.getPropertyValue( name );
-              var priority = style.getPropertyPriority( name );
-              var urlRes = /^(url\(\")(.+)(\"\))$/i.exec( value );
-              if ( urlRes ) {
-                urlFlag = true;
-                var url = sheetURI.resolve( urlRes[2] );
-                if ( ! ( url in urls ) ) {
-                  var uri = ioService.newURI( url, null, null );
-                  var fileName = uri.path.substr( uri.path.lastIndexOf( "/" ) + 1 );
-                  var index = fileName.indexOf( "?" );
-                  fileName = index < 0 ? fileName : fileName.substring( 0, index );
-                  var fileEntry = dirEntry.clone();
-                  fileEntry.append( fileName );
-                  while ( fileEntry.exists() && !fileEntry.isDirectory() ) {
-                    fileName = "_" + fileName;
-                    fileEntry = dirEntry.clone();
-                    fileEntry.append( fileName );                  
-                  }
-                  urls[url] = fileEntry;
-                  urls.length++;
-                  pub.loadResource( url, fileEntry, onloadresource );
-                }
-                value = 'url( "' + urls[url].leafName + '" )';
-              }
-              cssText += " " + name + ": " + value + ( priority == "" ? "" : " " + priority ) + ";"; 
-            }
-            cssText += " }";
-            rules.push( urlFlag ? cssText : rule.cssText );
-            break;
-          default: // UNKNOWN
-            rules.push( rule.cssText );
-            break;
-        }
-      }
-      if ( sheet.ownerNode ) {
-        sheet.ownerNode.parentNode.removeChild( sheet.ownerNode );
-      }
-    };
-    //
-    var saveFlag = false;
-    var urls = {};
-    urls.length = 0;
-    var onLoadResource = function( url, entry, result ) {
-      if ( url in urls ) {
-        delete urls[url];
-        urls.length--;
-        if ( urls.length == 0 ) {
-          if ( !saveFlag ) {
-            saveFlag = true;
-            onsave();
-          }
-        }
-      }
-    };
-    //
-    var rules = [];
-    for ( var i = 0; i < dom.styleSheets.length; i++ ) {
-      processStyleSheet( dom.styleSheets[i], rules, urls, dirEntry, onLoadResource );
-    }
-    if ( rules.length == 0 ) {
-      if ( !saveFlag ) {
-        saveFlag = true;
-        onsave();
-      }
-      return;
-    }
-    var style = dom.createElement( "style" );
-    style.textContent += "\n";
-    for ( var i = 0; i < rules.length; i++ ) {
-      style.textContent += "      " + rules[i] + "\n";
-    }
-    style.textContent += "    ";
-    dom.head.appendChild( style );
-    if ( urls.length == 0 ) {
-      if ( !saveFlag ) {
-        saveFlag = true;
-        onsave();
-      }
-    }
-  };
-  
-  /**
-   * @see /chrome/comm/content/communicator/contentAreaClick.js
-   *
-   * Extract the href from the link click event.
-   * We look for HTMLAnchorElement, HTMLAreaElement, HTMLLinkElement,
-   * HTMLInputElement.form.action, and nested anchor tags.
-   *
-   * @return href for the url being clicked
-   */
   pub.getHREFForClickEvent = function( aEvent, aDontCheckInputElement ) {
     var href = null;
     var target = aEvent.target;
@@ -1775,7 +1674,6 @@ var Utils = function() {
         href = target.form.action;
       }
     } else {
-      // we may be nested inside of a link node
       var linkNode = aEvent.originalTarget;
       while ( linkNode && !( linkNode.nodeName.toLowerCase() == "a" ) ) {
         linkNode = linkNode.parentNode;
@@ -1787,14 +1685,6 @@ var Utils = function() {
     return href;
   };
 
-  /**
-   * @see /chrome/comm/content/communicator/contentAreaClick.js
-   *
-   * Forces a url to open in an external application according to the protocol
-   * service settings.
-   *
-   * @param url  A url string or an nsIURI containing the url to open.
-   */
   pub.openLinkExternally = function( url ) {
     var uri = url;
     if ( !( uri instanceof Components.interfaces.nsIURI ) ) {
@@ -1847,7 +1737,11 @@ var Utils = function() {
         return name;
       }
     }
-    return "" + code;
+    var e = new Components.Exception( "", code );
+    if ( e.name ) {
+      return e.name;
+    }
+    return "0x" + Number( code ).toString( 16 ).toUpperCase();
   };
 
   pub.updateKeyAttribute = function( node ) {
@@ -1987,6 +1881,13 @@ var Utils = function() {
     var sound = Components.classes["@mozilla.org/sound;1"]
                           .createInstance( Components.interfaces.nsISound );
     sound.beep();
+  };
+
+  pub.loadScript = function( url, context, charset ) {
+    var loader =
+      Components.classes["@mozilla.org/moz/jssubscript-loader;1"]
+                .getService( Components.interfaces.mozIJSSubScriptLoader );
+    loader.loadSubScript( url, context, charset ); 
   };
 
   return pub;

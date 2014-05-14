@@ -43,123 +43,321 @@ var EXPORTED_SYMBOLS = ["DOMUtils"];
 var DOMUtils = function() {
 
   var Utils = ru.akman.znotes.Utils;
-
+  var Node = Components.interfaces.nsIDOMNode;
+  
   var pub = {};
 
-  pub.NODE = {
-    ELEMENT_NODE: 1,
-    ATTRIBUTE_NODE: 2,
-    TEXT_NODE: 3,
-    CDATA_SECTION_NODE: 4,
-    ENTITY_REFERENCE_NODE: 5,
-    ENTITY_NODE: 6,
-    PROCESSING_INSTRUCTION_NODE: 7,
-    COMMENT_NODE: 8,
-    DOCUMENT_NODE: 9,
-    DOCUMENT_TYPE_NODE: 10,
-    DOCUMENT_FRAGMENT_NODE: 11,
-    NOTATION_NODE: 12
+  // NODE
+
+  pub.isDocumentHTML5 = function( aDOM ) {
+    if ( aDOM.doctype === null ) {
+      return false;
+    }
+    var doctype = '<!DOCTYPE ' + aDOM.doctype.name;
+    if ( aDOM.doctype.publicId ) {
+      doctype += ' PUBLIC "' + aDOM.doctype.publicId + '"';
+    }
+    if ( !aDOM.doctype.publicId && aDOM.doctype.systemId ) {
+      doctype += ' SYSTEM';
+    }
+    if ( aDOM.doctype.systemId ) {
+      doctype += ' "' + aDOM.doctype.systemId + '"';
+    }
+    doctype += '>';
+    return doctype === '<!DOCTYPE html>' ||
+           doctype === '<!DOCTYPE html SYSTEM "about:legacy-compat">';
+  };
+  
+  pub.serializeHTMLToString = function( aDOM, anEncoding ) {
+    var nsIDocumentEncoder = Components.interfaces.nsIDocumentEncoder;
+    var documentEncoder =
+      Components.classes["@mozilla.org/layout/documentEncoder;1?type=text/html"]
+                .createInstance( nsIDocumentEncoder );
+    documentEncoder.init( aDOM, "text/html", nsIDocumentEncoder.OutputRaw );
+    if ( anEncoding ) {
+      documentEncoder.setCharset( anEncoding );
+    }
+    return documentEncoder.encodeToString();
+  };
+  
+  /*
+  pub.serializeHTMLToString = function( aDOM ) {
+    var result = "";
+    var node = aDOM.firstChild;
+    while ( node ) {
+      switch ( node.nodeType ) {
+        case Node.DOCUMENT_TYPE_NODE:
+          result += '<!DOCTYPE ' + aDOM.doctype.name;
+          if ( aDOM.doctype.publicId ) {
+            result += ' PUBLIC "' + aDOM.doctype.publicId + '"';
+          }
+          if ( !aDOM.doctype.publicId && aDOM.doctype.systemId ) {
+            result += ' SYSTEM';
+          }
+          if ( aDOM.doctype.systemId ) {
+            result += ' "' + aDOM.doctype.systemId + '"';
+          }
+          result += ">\n";
+          break;
+        case Node.TEXT_NODE:
+          result += node.textContent;
+          break;
+        case Node.COMMENT_NODE:
+          result += "<!--" + node.textContent + "-->\n";
+          break;
+        case Node.ELEMENT_NODE:
+        case Node.DOCUMENT_NODE:
+          result += pub.getElementOuterHTML( node );
+          break;
+      }
+      node = node.nextSibling;
+    }
+    return result;
+  };
+  */
+  
+  /*
+  pub.getElementOuterHTML = function( element ) {
+    var name, value;
+    if ( element.nodeType !== Node.ELEMENT_NODE &&
+         element.nodeType !== Node.DOCUMENT_NODE &&
+         element.nodeType !== pub.DOCUMENT_FRAGMENT_NODE ) {
+      throw Components.results.NS_ERROR_UNEXPECTED;
+    }
+    var result = '<' + element.nodeName.toLowerCase();
+    for ( var i = element.attributes.length - 1; i >= 0; i-- ) {
+      name = element.attributes[i].name;
+      value = element.attributes[i].value;
+      result += ' ' + name + '="' + value + '"';
+    }
+    result += '>\n';
+    result += element.innerHTML;
+    result += '\n</' + element.nodeName.toLowerCase() + '>\n';
+    return result;
+  };
+  */
+  
+  pub.getNodeIndexInParent = function( aNode ) {
+    var result = 0;
+    var node = aNode.previousSibling;
+    while ( node ) {
+      node = node.previousSibling;
+      result++;
+    }
+    return result;
+  };
+  
+  pub.isElementDescendantOf = function( element, name ) {
+    var nodeName, result = false;
+    while ( element ) {
+      nodeName = element.nodeName.toLowerCase();
+      if ( nodeName == name.toLowerCase() ) {
+        result = true;
+        break;
+      }
+      element = element.parentElement;
+    }
+    return result;
+  };
+  
+  // is testedNode right sibling of baseNode
+  pub.isRightSibling = function( baseNode, testedNode ) {
+    var node = baseNode.nextSibling;
+    while ( node ) {
+      if ( node == testedNode ) {
+        return true;
+      }
+      node = node.nextSibling;
+    }
+    return false;
+  };
+  
+  pub.getNextTerminalNode = function( node ) {
+    var body = node.ownerDocument.body;
+    var result = node;
+    while ( result && result != body && !result.nextSibling ) {
+      result = result.parentNode;
+    }
+    result = ( result == body ) ? null : result.nextSibling;
+    while ( result && result.firstChild ) {
+      result = result.firstChild;
+    }
+    return result;
+  };
+  
+  pub.getPrevTerminalNode = function( node ) {
+    var body = node.ownerDocument.body;
+    var result = node;
+    while ( result && result != body && !result.previousSibling ) {
+      result = result.parentNode;
+    }
+    result = ( result == body ) ? null : result.previousSibling;
+    while ( result && result.lastChild ) {
+      result = result.lastChild;
+    }
+    return result;
+  };
+  
+  pub.normalizeRangeStart = function( range ) {
+    var startContainer = range.startContainer;
+    var startOffset = range.startOffset;
+    var nextTerm = null;
+    if ( startContainer.nodeType == Node.TEXT_NODE &&
+         startOffset == startContainer.length ) {
+      nextTerm = pub.getNextTerminalNode( startContainer );
+    } else if ( startContainer.nodeType == Node.ELEMENT_NODE ) {
+      if ( startOffset == startContainer.childNodes.length ) {
+        nextTerm = pub.getNextTerminalNode( startContainer );
+      } else if ( startContainer.childNodes.item( startOffset ).hasChildNodes() ) {
+        nextTerm = startContainer.childNodes.item( startOffset ).firstChild;
+        while ( nextTerm.firstChild ) {
+          nextTerm = nextTerm.firstChild;
+        }
+      }
+    } 
+    if ( nextTerm ) {
+      switch ( nextTerm.nodeType ) {
+        case Node.TEXT_NODE:
+          range.setStart( nextTerm, 0 );
+          break;
+        case Node.ELEMENT_NODE:
+          range.setStart(
+            nextTerm.parentNode,
+            pub.getNodeIndexInParent( nextTerm )
+          );
+          break;
+      }
+    }
+  };
+  
+  pub.normalizeRangeEnd = function( range ) {
+    var endContainer = range.endContainer;
+    var endOffset = range.endOffset;
+    var prevTerm = null;
+    if ( endContainer.nodeType == Node.TEXT_NODE &&
+         endOffset == 0 ) {
+      prevTerm = pub.getPrevTerminalNode( endContainer );
+    } else if ( endContainer.nodeType == Node.ELEMENT_NODE ) {
+      if ( endOffset == 0 ) {
+        prevTerm = pub.getPrevTerminalNode( endContainer );
+      } else if ( endContainer.childNodes.item( endOffset - 1 ).hasChildNodes() ) {
+        prevTerm = endContainer.childNodes.item( endOffset - 1 ).lastChild;
+        while ( prevTerm.lastChild ) {
+          prevTerm = prevTerm.lastChild;
+        }
+      }
+    } 
+    if ( prevTerm ) {
+      switch ( prevTerm.nodeType ) {
+        case Node.TEXT_NODE:
+          range.setEnd( prevTerm, prevTerm.length );
+          break;
+        case Node.ELEMENT_NODE:
+          range.setEnd(
+            prevTerm.parentNode,
+            pub.getNodeIndexInParent( prevTerm ) + 1
+          );
+          break;
+      }
+    }
+  };
+  
+  pub.convolveSelection = function( selection ) {
+    if ( !selection || !selection.rangeCount || selection.isCollapsed ) {
+      return;
+    }
+    var prevRange, nextRange, adjacentFlag, removedRanges = [];
+    for ( var i = 0; i < selection.rangeCount; i++ ) {
+      nextRange = selection.getRangeAt( i );
+      pub.normalizeRangeStart( nextRange );
+      pub.normalizeRangeEnd( nextRange );
+      if ( prevRange ) {
+        adjacentFlag = (
+          prevRange.endContainer == nextRange.startContainer &&
+          prevRange.endOffset == nextRange.startOffset
+        ) || (
+          (
+            (
+              prevRange.endContainer.nodeType == Node.TEXT_NODE &&
+              prevRange.endOffset == prevRange.endContainer.length
+            ) || (
+              prevRange.endContainer.nodeType == Node.ELEMENT_NODE
+            )
+          ) && (
+            (
+              nextRange.startContainer.nodeType == Node.TEXT_NODE &&
+              nextRange.startOffset == 0
+            ) || (
+              nextRange.startContainer.nodeType == Node.ELEMENT_NODE
+            )
+          ) && (
+            pub.getNextTerminalNode( prevRange.endContainer ) ==
+              nextRange.startContainer
+          )
+        );
+        if ( adjacentFlag ) {
+          nextRange.setStart( prevRange.startContainer, prevRange.startOffset );
+          removedRanges.push( prevRange );
+        }
+      }
+      prevRange = nextRange;
+    }
+    for ( var i = 0; i < removedRanges.length; i++ ) {
+      selection.removeRange( removedRanges[i] );
+    }
   };
   
   // STYLE
+  
+  pub.ElementStyle = function() {
+  };
+  pub.ElementStyle.prototype = {
+    toString: function() {
+      var name, flag = false, result = "";
+      for ( name in this ) {
+        if ( this.hasOwnProperty( name ) ) {
+          if ( flag ) {
+            result += " ";
+          } else {
+            flag = true;
+          }
+          result += name + ": " + this[name].value;
+          if ( this[name].priority ) {
+            result += " !" + this[name].priority;
+          }
+          result += ";";
+        }
+      }
+      return result;
+    }
+  };
   
   pub.getElementStyle = function( element ) {
     if ( !element || !element.style ) {
       return null;
     }
     var result = null;
-    var elementStyle = element.style;
-    var splitStyle = elementStyle.cssText.split( ";" );
+    var style = element.style;
+    var declarations = style.cssText.split( ";" );
     var index, declaration, name, value, priority;
-    for ( var i = 0; i < splitStyle.length; i++ ) {
-      declaration = splitStyle[i].trim();
+    for ( var i = 0; i < declarations.length; i++ ) {
+      declaration = declarations[i].trim();
       index = declaration.indexOf( ":" );
-      if ( index != -1 ) {
+      if ( index > 1 ) {
         if ( !result ) {
-          result = {};
+          result = new pub.ElementStyle();
         }
         name = declaration.substring( 0, index );
+        // TODO: How about short form ?
+        // "margin: 10px 10px 10px 10px;"
         result[ name ] = {
-          value: elementStyle.getPropertyValue( name ),
-          priority: elementStyle.getPropertyPriority( name )
+          value: style.getPropertyValue( name ),
+          priority: style.getPropertyPriority( name )
         }
       }
     }
     return result;
   };
-  
-  pub.getElementTextDecoration = function( element ) {
-    if ( !element || !element.style ) {
-      return null;
-    }
-    var win = element.ownerDocument.defaultView;
-    var textDecoration = [];
-    var style, computedStyle;
-    try {
-      while ( element && element.nodeType == pub.NODE.ELEMENT_NODE ) {
-        style = element.style;
-        computedStyle = win.getComputedStyle( element, null );
-        if ( style.textDecoration ) {
-          textDecoration = textDecoration.concat(
-            style.textDecoration.split( /\s+/ )
-          );
-        }
-        textDecoration = textDecoration.concat(
-          computedStyle.textDecoration.split( /\s+/ )
-        );
-        element = element.parentNode;
-      }
-    } catch ( e ) {
-      Utils.log( e );
-    }
-    return textDecoration;
-  };
-  
-  pub.getElementColor = function( element ) {
-    if ( !element || !element.style ) {
-      return null;
-    }
-    var win = element.ownerDocument.defaultView;
-    var color, style, computedStyle;
-    try {
-      style = element.style;
-      computedStyle = win.getComputedStyle( element, null );
-      if ( style.color ) {
-        color = style.color;
-      } else {
-        color = computedStyle.color; 
-      }
-    } catch ( e ) {
-      Utils.log( e );
-    }
-    return color;
-  };
-  
-  pub.getElementBackgroundColor = function( element ) {
-    if ( !element || !element.style ) {
-      return null;
-    }
-    var win = element.ownerDocument.defaultView;
-    var style, computedStyle, color;
-    try {
-      while ( element && element.nodeType == pub.NODE.ELEMENT_NODE ) {
-        style = element.style;
-        computedStyle = win.getComputedStyle( element, null );
-        if ( style.backgroundColor ) {
-          color = style.backgroundColor;
-        } else {
-          color = computedStyle.backgroundColor;
-        }
-        if ( color != "transparent" ) {
-          return color;
-        }
-        element = element.parentNode;
-      }
-    } catch ( e ) {
-      Utils.log( e );
-    }
-    return color;
-  };  
   
   // SELECTION
   
@@ -233,7 +431,8 @@ var DOMUtils = function() {
     }
   };
   
-  pub.cloneNode = function( target, root, startContainer, startOffset, endContainer, endOffset, state ) {
+  pub.cloneNode = function( target, root, startContainer, startOffset,
+                            endContainer, endOffset, state ) {
     var doc = root.ownerDocument;
     var textNode;
     var targetNode;
@@ -244,7 +443,7 @@ var DOMUtils = function() {
       root.nodeName.toLowerCase() == "body"
     );
     switch ( root.nodeType ) {
-      case pub.NODE.TEXT_NODE:
+      case Node.TEXT_NODE:
         if ( root == startContainer && root == endContainer ) {
           textNode = root.cloneNode( false );
           textNode.nodeValue =
@@ -277,7 +476,7 @@ var DOMUtils = function() {
           return;
         }
         break;
-      case pub.NODE.ELEMENT_NODE:
+      case Node.ELEMENT_NODE:
         if ( isBody ) {
           targetNode = doc.createElement( "div" );
         } else {
@@ -314,233 +513,6 @@ var DOMUtils = function() {
             endContainer,
             endOffset,
             state
-          );
-          if ( state.breakFlag ) {
-            return;
-          }
-          node = nextSibling;
-        }
-        if ( root == endContainer ) {
-          state.processFlag = false;
-          state.breakFlag = true;
-        }
-        break;
-    }
-  };
-  
-  pub.processSelection = function( selection, processor ) {
-    if ( !selection || selection.rangeCount == 0 || !processor ) {
-      return false;
-    }
-    var offsets = [];
-    var endContainer = null;
-    var endOffset;
-    for ( var i = 0; i < selection.rangeCount; i++ ) {
-      var r = selection.getRangeAt( i );
-      if ( r.startContainer != endContainer &&
-           r.endContainer != endContainer ) {
-        offsets.push( null );
-      } else {
-        offsets.push( {
-          startOffset: r.startContainer == endContainer ?
-            r.startOffset - endOffset : -1,
-          endOffset: r.endContainer == endContainer ?
-            r.endOffset - endOffset : -1
-        } );
-      }
-      endContainer = r.endContainer;
-      endOffset = r.endOffset;
-    }
-    var ranges = [];
-    var result = {
-      tailNode: null
-    };
-    for ( var i = 0; i < selection.rangeCount; i++ ) {
-      if ( result.tailNode ) {
-        for ( var j = i; j < selection.rangeCount; j++ ) {
-          var r = selection.getRangeAt( j );
-          if ( offsets[j] ) {
-            if ( offsets[j].startOffset != -1 ) {
-              r.setStart( result.tailNode, offsets[j].startOffset );
-            }
-            if ( offsets[j].endOffset != -1 ) {
-              r.setEnd( result.tailNode, offsets[j].endOffset );
-            }
-          }
-        }
-      }
-      result.tailNode = null;
-      ranges.push(
-        pub.processRange( selection.getRangeAt( i ), processor, result )
-      );
-    }
-    if ( ranges.length > 0 ) {
-      selection.removeAllRanges();
-      for ( var i = 0; i < ranges.length; i++ ) {
-        selection.addRange( ranges[i] );
-      }
-      return true;
-    }
-    return false;
-  };
-  
-  pub.processRange = function( range, processor, result ) {
-    var state = {
-      processFlag: false,
-      breakFlag: false,
-      singleFlag: false,
-      tailNode: null
-    };
-    var root = range.commonAncestorContainer;
-    var rng = root.ownerDocument.createRange();
-    pub.processNode(
-      root,
-      range.startContainer,
-      range.startOffset,
-      range.endContainer,
-      range.endOffset,
-      state,
-      processor,
-      rng,
-      root.childNodes.length < 2
-    );
-    result.tailNode = state.tailNode;
-    return rng;
-  };
-  
-  pub.processNode = function( root, startContainer, startOffset, endContainer, endOffset, state, processor, range, singleFlag ) {
-    var doc = root.ownerDocument;
-    switch ( root.nodeType ) {
-      case pub.NODE.TEXT_NODE:
-        var parentNode = root.parentNode;
-        var rootValue = root.nodeValue;
-        var rootLength = rootValue.length;
-        var spanElement;
-        var textNode;
-        if ( root == startContainer && root == endContainer ) {
-          if ( singleFlag && startOffset == 0 &&
-               endOffset == rootLength ) {
-            processor( parentNode );
-            range.setStart( startContainer, startOffset );
-            range.setEnd( endContainer, endOffset );
-          } else {
-            if ( startOffset > 0 ) {
-              parentNode.insertBefore(
-                doc.createTextNode(
-                  rootValue.substring( 0, startOffset )
-                ),
-                root
-              );
-            }
-            spanElement =
-              doc.createElement( "span" );
-            textNode = doc.createTextNode(
-              rootValue.substring( startOffset, endOffset )
-            );
-            spanElement.appendChild( textNode );
-            processor( spanElement );
-            parentNode.insertBefore( spanElement, root );
-            if ( endOffset < rootLength ) {
-              state.tailNode = parentNode.insertBefore(
-                doc.createTextNode(
-                  rootValue.substring( endOffset )
-                ),
-                root
-              );
-            }
-            parentNode.removeChild( root );
-            range.setStart( textNode, 0 );
-            range.setEnd( textNode, endOffset - startOffset );
-          }
-          state.breakFlag = true;
-          return;
-        }
-        if ( root == startContainer && root != endContainer ) {
-          if ( startOffset == 0 ) {
-            processor( parentNode );
-            range.setStart( startContainer, startOffset );
-          } else {
-            parentNode.insertBefore(
-              doc.createTextNode(
-                rootValue.substring( 0, startOffset )
-              ),
-              root
-            );
-            spanElement =
-              doc.createElement( "span" );
-            textNode = doc.createTextNode(
-              rootValue.substring( startOffset )
-            );
-            spanElement.appendChild( textNode );
-            parentNode.insertBefore( spanElement, root );
-            parentNode.removeChild( root );
-            processor( spanElement );
-            range.setStart( textNode, 0 );
-          }
-          state.processFlag = true;
-          return;
-        }
-        if ( root != startContainer && root == endContainer ) {
-          if ( endOffset == rootLength ) {
-            processor( parentNode );
-            range.setEnd( endContainer, endOffset );
-          } else {
-            spanElement =
-              doc.createElement( "span" );
-            textNode = doc.createTextNode(
-              rootValue.substring( 0, endOffset )
-            );
-            spanElement.appendChild( textNode );
-            parentNode.insertBefore( spanElement, root );
-            state.tailNode = parentNode.insertBefore(
-              doc.createTextNode(
-                rootValue.substring( endOffset )
-              ),
-              root
-            );
-            parentNode.removeChild( root );
-            processor( spanElement );
-            range.setEnd( textNode, endOffset );
-          }
-          state.processFlag = false;
-          state.breakFlag = true;
-          return;
-        }
-        if ( state.processFlag ) {
-          if ( singleFlag ) {
-            processor( parentNode );
-          } else {
-            spanElement =
-              doc.createElement( "span" );
-            textNode = doc.createTextNode(
-              rootValue
-            );
-            spanElement.appendChild( textNode );
-            parentNode.insertBefore( spanElement, root );
-            parentNode.removeChild( root );
-            processor( spanElement );
-          }
-          return;
-        }
-        break;
-      case pub.NODE.ELEMENT_NODE:
-        if ( root == startContainer ) {
-          state.processFlag = true;
-        }
-        var node = root.firstChild;
-        var flag = ( root.childNodes.length < 2 );
-        while ( node ) {
-          var nextSibling = node.nextSibling;
-          pub.processNode(
-            node,
-            startContainer,
-            startOffset,
-            endContainer,
-            endOffset,
-            state,
-            processor,
-            range,
-            flag
           );
           if ( state.breakFlag ) {
             return;

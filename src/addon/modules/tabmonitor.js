@@ -43,13 +43,27 @@ var EXPORTED_SYMBOLS = ["TabMonitor"];
 var TabMonitor = function() {
 
   var Utils = ru.akman.znotes.Utils;
-  var sessionManager = ru.akman.znotes.SessionManager;
+  var sessionManager = ru.akman.znotes.SessionManager.getInstance();
   var prefsManager = ru.akman.znotes.PrefsManager.getInstance();
+  var prefsMozilla =
+    Components.classes["@mozilla.org/preferences-service;1"]
+              .getService( Components.interfaces.nsIPrefBranch );
+  var browserChromeURLPrefValue;
+  try {
+    browserChromeURLPrefValue = prefsMozilla.getCharPref( "browser.chromeURL" );
+  } catch ( e ) {
+    browserChromeURLPrefValue = null;
+  }
   
   var pub = {
 
     monitorName: "znotesMonitor",
+    mIsActive: true,
 
+    setActive: function( isActive ) {
+      pub.mIsActive = isActive;
+    },
+    
     onTabTitleChanged: function( aTab ) {
       if ( aTab.mode.name == "znotesContentTab" ) {
         sessionManager.updateState( aTab );
@@ -59,25 +73,28 @@ var TabMonitor = function() {
     onTabOpened: function( aTab ) {
       if ( aTab.mode.name == "znotesMainTab" ) {
         prefsManager.setBoolPref( "isOpened", true );
-      }
-      if ( aTab.mode.name == "znotesContentTab" ) {
+        prefsMozilla.setCharPref( "browser.chromeURL",
+          "chrome://znotes/content/browser.xul" );
+      } else if ( aTab.mode.name == "znotesContentTab" ) {
         sessionManager.updateState(
           aTab, { opened: true, background: true } );
       }
       // xr only
-      if ( aTab.mode.name == "znotesMainTab" ||
-           aTab.mode.name == "znotesContentTab" ) {
-        if ( aTab.window ) {
-          aTab.window.focus();
-        }
+      if ( aTab.window && (
+           aTab.mode.name == "znotesMainTab" ||
+           aTab.mode.name == "znotesContentTab" ) ) {
+        aTab.window.focus();
       }
     },
 
     onTabClosing: function( aTab ) {
-      if ( aTab.mode.name == "znotesMainTab" ) {
+      if ( aTab.mode.name == "znotesMainTab" && pub.mIsActive ) {
         prefsManager.setBoolPref( "isOpened", false );
-      }
-      if ( aTab.mode.name == "znotesContentTab" ) {
+        if ( browserChromeURLPrefValue ) {
+          prefsMozilla.setCharPref( "browser.chromeURL",
+            browserChromeURLPrefValue );
+        }
+      } else if ( aTab.mode.name == "znotesContentTab" && pub.mIsActive ) {
         sessionManager.updateState( aTab, { opened: false } );
       }
     },
@@ -89,25 +106,34 @@ var TabMonitor = function() {
     },
 
     onTabSwitched: function( aNewTab, anOldTab ) {
-      if ( anOldTab.mode.name == "znotesMainTab" ) {
+      if ( anOldTab.mode.name == "znotesMainTab" && pub.mIsActive ) {
         prefsManager.setBoolPref( "isActive", false );
+        if ( browserChromeURLPrefValue ) {
+          prefsMozilla.setCharPref( "browser.chromeURL",
+            browserChromeURLPrefValue );
+        }
       }
-      if ( anOldTab.mode.name == "znotesContentTab" ) {
+      if ( anOldTab.mode.name == "znotesContentTab" && pub.mIsActive ) {
         sessionManager.updateState( anOldTab, { background: true } );
       }
-      if ( aNewTab.mode.name == "znotesMainTab" ) {
+      if ( aNewTab.mode.name == "znotesMainTab" && pub.mIsActive ) {
         prefsManager.setBoolPref( "isActive", true );
+        prefsMozilla.setCharPref( "browser.chromeURL",
+          "chrome://znotes/content/browser.xul" );
       }
-      if ( aNewTab.mode.name == "znotesContentTab" ) {
+      if ( aNewTab.mode.name == "znotesContentTab" && pub.mIsActive ) {
         sessionManager.updateState( aNewTab, { background: false } );
       }
       // tb only
-      if ( aNewTab.mode.name == "znotesMainTab" ||
-           aNewTab.mode.name == "znotesContentTab" ) {
-        if ( aNewTab.browser ) {
-          aNewTab.browser.contentWindow.focus();
-        }
+      if ( aNewTab.browser && (
+           aNewTab.mode.name == "znotesMainTab" ||
+           aNewTab.mode.name == "znotesContentTab" ) ) {
+        aNewTab.browser.contentWindow.focus();
       }
+    },
+    
+    getInstance: function() {
+      return this;
     }
 
   };

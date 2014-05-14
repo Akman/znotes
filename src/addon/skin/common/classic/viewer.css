@@ -57,3 +57,6 @@
 .znotes_statusbar {
   background-color: hsl(210, 75%, 92%);
 }
+#znotes_statusbarpanellogo {
+  list-style-image: url("chrome://znotes_images/skin/net-16x16.png");
+}

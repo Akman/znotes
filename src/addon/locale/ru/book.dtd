@@ -30,12 +30,14 @@
   -
   - ***** END LICENSE BLOCK ***** -->
 
-<!ENTITY book_dialog_title "Блокнот">
-<!ENTITY book_dialog_accept "Принять">
-<!ENTITY book_dialog_cancel "Отменить">
-<!ENTITY label_header "Общие">
-<!ENTITY label_book_name "Наименование">
-<!ENTITY label_book_description "Описание">
-<!ENTITY text_book_description_placeholder "Введите описание блокнота здесь ...">
-<!ENTITY label_book_driver "Драйвер">
-<!ENTITY label_footer "Драйвер">
+<!ENTITY dialog.title "Блокнот">
+<!ENTITY dialog.accept "Принять">
+<!ENTITY dialog.cancel "Отменить">
+
+<!ENTITY common.caption "Блокнот">
+<!ENTITY name.label "Название">
+<!ENTITY name.placeholder "Введите название блокнота здесь ...">
+<!ENTITY description.label "Описание">
+<!ENTITY description.placeholder "Введите описание блокнота здесь ...">
+<!ENTITY driver.caption "Драйвер">
+<!ENTITY params.caption "Параметры">
