@@ -4264,12 +4264,13 @@ ru.akman.znotes.Main = function() {
   };
   
   function onBookSelect( event ) {
+    var book, data;
     if ( isDragDropActive ) {
       event.stopPropagation();
       event.preventDefault();
       return false;
     }
-    var book = bookTree.currentIndex >= 0 ?
+    book = bookTree.currentIndex >= 0 ?
       booksList[bookTree.currentIndex] : null;
     if ( currentBook && currentBook == book ) {
       event.stopPropagation();

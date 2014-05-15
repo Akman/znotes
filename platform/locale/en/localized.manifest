@@ -42,4 +42,4 @@
 #locale        pipnss                 en    en/pipnss/
 #locale        pippki                 en    en/pippki/
 #locale        places                 en    en/places/
-#locale        weave                  en    en/weave/
+##locale        weave                  en    en/weave/
