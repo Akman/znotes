@@ -47,6 +47,7 @@ var NAMESPACES = {
   "math"  : "http://www.w3.org/1998/Math/MathML",
   "svg"   : "http://www.w3.org/2000/svg",
   "xlink" : "http://www.w3.org/1999/xlink",
+  "og"    : "http://ogp.me/ns#",
   "fb"    : "http://ogp.me/ns/fb#",
   "g"     : "http://base.google.com/ns/1.0"
 };
@@ -472,7 +473,7 @@ function getDefaultNS( element ) {
 };
 
 function fixupName( anElement, aName ) {
-  var index, prefixies;
+  var prefix, localName, index, prefixies;
   var result = ( new RegExp(
     "^[\:A-Z_a-z" +
     "\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u02FF\u0370-\u037D\u037F-\u1FFF" +
@@ -689,7 +690,6 @@ function processStyleSheet( aRules, aChanges, aDocument, aSheet, aLoader,
           }
         }
         break;
-      case nsIDOMCSSRule.UNKNOWN_RULE:
       case nsIDOMCSSRule.STYLE_RULE:
         if ( rule.cssText &&
              checkSelector( aChanges, aDocument, rule.selectorText ) ) {
@@ -709,133 +709,43 @@ function processStyleSheet( aRules, aChanges, aDocument, aSheet, aLoader,
           rules.lines.push( cssText );
         }
         break;
-      case nsIDOMCSSRule.FONT_FACE_RULE:
-        /**
-        The @font-face CSS at-rule allows authors to specify online fonts to
-        display text on their web pages. By allowing authors to provide their
-        own fonts, @font-face eliminates the need to depend on the limited
-        number of fonts users have installed on their computers. The @font-face
-        at-rule may be used not only at the top level of a CSS, but also inside
-        any CSS conditional-group at-rule.
-        @font-face {
-          [font-family: <family-name>;]?
-          [src: [ <uri> [format(<string>#)]? | <font-face-name> ]#;]?
-          [unicode-range: <urange>#;]?
-          [font-variant: <font-variant>;]?
-          [font-feature-settings: normal|<feature-tag-value>#;]?
-          [font-stretch: <font-stretch>;]?
-          [font-weight: <weight>];
-          [font-style: <style>];
-        }
-        Example:
-        @font-face {
-          font-family: MyHelvetica;
-          src: local("Helvetica Neue Bold"),
-          local("HelveticaNeue-Bold"),
-          url(MgOpenModernaBold.ttf);
-          font-weight: bold;
-        }
-        */
-        if ( rule.cssText ) {
-          cssIndex = rules.lines.length;
-          cssText = inspectRule( aChanges, rule, href, aDocumentURL, aLoader,
-            aDirectory,
-            function( job, lines, index ) {
-              lines[index] = lines[index].replace(
-                job.getURL(),
-                encodeURI( job.getEntry().leafName ),
-                "g"
-              );
-            },
-            rules.lines,
-            cssIndex
-          );
-          rules.lines.push( cssText );
-        }
-        break;
-      case nsIDOMCSSRule.FONT_FEATURE_VALUES_RULE:
-      /**
-      @see FONT_FACE_RULE
-      */
-      case nsIDOMCSSRule.CHARSET_RULE:
-      /**
-      The @charset CSS at-rule specifies the character encoding used in the
-      style sheet. It must be the first element in the style sheet and not
-      be preceded by any character; as it is not a nested statement,
-      it cannot be used inside conditional group at-rules.
-      If several @charset at-rules are defined, only the first one is used,
-      and it cannot be used inside a style attribute on an HTML element
-      or inside the <style> element where the character set of the HTML page
-      is relevant.      
-      @charset charset;
-      Set the encoding of the style sheet to Unicode UTF-8
-      @charset "UTF-8";
-      */
       case nsIDOMCSSRule.NAMESPACE_RULE:
-      /**
-      The @namespace rule is an at-rule that defines the XML namespaces
-      that will be used in the style sheet. The namespaces defined can be used
-      to restrict the universal, type, and attribute selectors to only select
-      elements under that namespace. The @namespace rule is generally only
-      useful when dealing with an XML document containing multiple
-      namespaces - for example, an XHTML document with SVG embedded.      
-      @namespace url(http://www.w3.org/1999/xhtml);
-      @namespace svg url(http://www.w3.org/2000/svg);
-      This matches all XHTML <a> elements, as XHTML is the default namespace
-      a {}
-      This matches all SVG <a> elements
-      svg|a {}
-      This matches both XHTML and SVG <a> elements
-      *|a {}
-      */
-      case nsIDOMCSSRule.KEYFRAMES_RULE:
-      /**
-      The @keyframes CSS at-rule lets authors control the intermediate steps
-      in a CSS animation sequence by establishing keyframes (or waypoints)
-      along the animation sequence that must be reached by certain points
-      during the animation. This gives you more specific control over the
-      intermediate steps of the animation sequence than you get when letting
-      the browser handle everything automatically.      
-      @keyframes <identifier> {
-        [ [ from | to | <percentage> ] [, from | to | <percentage> ]* block ]*
-      }
-      <identifier>
-          A name identifying the keyframe list. This must match the identifier production in CSS syntax.
-      from
-          A starting offset of 0%.
-      to
-          An ending offset of 100%.
-      <percentage>
-          A percentage of the time through the animation sequence at which the specified keyframe should occur.
-      block
-          A KEYFRAME_RULE
-      Example:
-      @keyframes slidein {
-        from {
-          margin-left: 100%;
-          width: 300%; 
-        }
-        to {
-          margin-left: 0%;
-          width: 100%;
-        }
-      }
-      */
-      case nsIDOMCSSRule.KEYFRAME_RULE:
-      /**
-      @see KEYFRAMES_RULE
-      */
-      case nsIDOMCSSRule.SUPPORTS_RULE:
         /**
-        The @supports CSS at-rule associates a set of nested statements,
-        in a CSS block, that is delimited by curly braces, with a condition
-        consisting of testing of CSS declarations, that is property-value pairs,
-        combined with arbitrary conjunctions, disjunctions, and negations of
-        them. Such a condition is called a supports condition.        
-        @supports <supports_condition> {
-          specific rules
-        }
+        The @namespace rule is an at-rule that defines the XML namespaces
+        that will be used in the style sheet. The namespaces defined can be used
+        to restrict the universal, type, and attribute selectors to only select
+        elements under that namespace. The @namespace rule is generally only
+        useful when dealing with an XML document containing multiple
+        namespaces - for example, an XHTML document with SVG embedded.      
+        @namespace url(http://www.w3.org/1999/xhtml);
+        @namespace svg url(http://www.w3.org/2000/svg);
+        This matches all XHTML <a> elements, as XHTML is the default namespace
+        a {}
+        This matches all SVG <a> elements
+        svg|a {}
+        This matches both XHTML and SVG <a> elements
+        *|a {}
         */
+        if ( rule.cssText ) {
+          rules.lines.push( rule.cssText );
+        }
+        break;
+      case nsIDOMCSSRule.CHARSET_RULE:
+        /**
+        The @charset CSS at-rule specifies the character encoding used in the
+        style sheet. It must be the first element in the style sheet and not
+        be preceded by any character; as it is not a nested statement,
+        it cannot be used inside conditional group at-rules.
+        If several @charset at-rules are defined, only the first one is used,
+        and it cannot be used inside a style attribute on an HTML element
+        or inside the <style> element where the character set of the HTML page
+        is relevant.      
+        @charset charset;
+        Set the encoding of the style sheet to Unicode UTF-8
+        @charset "UTF-8";
+        */
+        break;
+      default:
         if ( rule.cssText ) {
           cssIndex = rules.lines.length;
           cssText = inspectRule( aChanges, rule, href, aDocumentURL, aLoader,
@@ -852,18 +762,6 @@ function processStyleSheet( aRules, aChanges, aDocument, aSheet, aLoader,
           );
           rules.lines.push( cssText );
         }
-        break;
-      case nsIDOMCSSRule.PAGE_RULE:
-        /**
-        The @page CSS at-rule is used to modify some CSS properties when
-        printing a document. You can't change all CSS properties with @page.
-        You can only change the margins, orphans, widows, and page breaks of
-        the document. Attempts to change any other CSS properties will be
-        ignored.        
-        @page :pseudo-class {
-          margin:2in;
-        }
-        */
         break;
     }
   }
@@ -1321,14 +1219,32 @@ function inspectElement( aRules, aChanges, anElement, aDocumentURL, aBaseURL,
 };
 
 function createStyles( aDocument, aRules ) {
-  var aURL, aText = "", aStyle = null;
+  var aURL, aText = "", aStyle = null, line, index, anAtLines = [];
   for ( var i = aRules.length - 1; i >= 0 ; i-- ) {
+    aRules[i].atlines = [];
     for ( var j = aRules[i].lines.length - 1; j >= 0 ; j-- ) {
-      if ( !aRules[i].lines[j].trim().length ) {
+      line = aRules[i].lines[j].trim();
+      if ( !line.length ) {
+        aRules[i].lines.splice( j, 1 );
+      } else if ( line.indexOf( "@namespace" ) === 0 ) {
+        aRules[i].atlines.splice( 0, 0, line );
         aRules[i].lines.splice( j, 1 );
       }
     }
   }
+  for ( var i = 0; i < aRules.length; i++ ) {
+    aURL = aRules[i].href;
+    if ( aRules[i].atlines.length ) {
+      for ( var j = 0; j < aRules[i].atlines.length; j++ ) {
+        line = aRules[i].atlines[j];
+        index = anAtLines.indexOf( line );
+        if ( index === -1 ) {
+          anAtLines.push( line );
+        }
+      }
+    }
+  }
+  aText += "\n      " + anAtLines.join( "\n      " );
   for ( var i = 0; i < aRules.length; i++ ) {
     aURL = aRules[i].href;
     if ( aRules[i].lines.length ) {
