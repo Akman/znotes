@@ -183,9 +183,6 @@ ru.akman.znotes.ZNotes = function() {
           Common.goUpdateCommand( "znotes_tbtestsuite_command", platformController.getId(), window );
           Common.goUpdateCommand( "znotes_tbconsole_command", platformController.getId(), window );
           break;
-        case "sanitize":
-          Utils.IS_SANITIZE_ENABLED = this.branch.getBoolPref( "sanitize" );
-          break;
       }
     },
     register: function() {

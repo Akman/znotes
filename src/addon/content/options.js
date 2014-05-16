@@ -1035,9 +1035,10 @@ ru.akman.znotes.Options = function() {
     clipperSeparateFrames = document.getElementById( "clipperSeparateFrames" );
     clipperPreserveHTML5Tags = document.getElementById( "clipperPreserveHTML5Tags" );
     clipperSeparateFrames.setAttribute( "hidden", "true" );
-    if ( !Utils.IS_STANDALONE ) {
+    if ( Utils.IS_SANITIZE_ENABLED ) {
       clipperSaveScripts.setAttribute( "hidden", "true" );
       clipperSaveFrames.setAttribute( "hidden", "true" );
+      clipperPreserveHTML5Tags.setAttribute( "hidden", "true" );
     }
     docTypeMenuList = document.getElementById( "docTypeMenuList" );
     docTypeMenuPopup = document.getElementById( "docTypeMenuPopup" );

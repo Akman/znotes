@@ -437,6 +437,49 @@ ru.akman.znotes.Main = function() {
           break;
         case "sanitize":
           Utils.IS_SANITIZE_ENABLED = this.branch.getBoolPref( "sanitize" );
+          if ( Utils.IS_SANITIZE_ENABLED ) {
+            Utils.CLIPPER_FLAGS = 0x00000000;
+          } else {
+            if ( !prefsBundle.hasPref( "clipperSaveScripts" ) ) {
+              prefsBundle.setBoolPref( "clipperSaveScripts",
+                !!( Utils.CLIPPER_FLAGS & 0x00000001 ) );
+            }
+            if ( prefsBundle.getBoolPref( "clipperSaveScripts" ) ) {
+              Utils.CLIPPER_FLAGS |= 0x00000001;
+            } else {
+              Utils.CLIPPER_FLAGS &= 0x11111110;
+            }
+            //
+            if ( !prefsBundle.hasPref( "clipperSaveFrames" ) ) {
+              prefsBundle.setBoolPref( "clipperSaveFrames",
+                !!( Utils.CLIPPER_FLAGS & 0x00000010 ) );
+            }
+            if ( prefsBundle.getBoolPref( "clipperSaveFrames" ) ) {
+              Utils.CLIPPER_FLAGS |= 0x00000010;
+            } else {
+              Utils.CLIPPER_FLAGS &= 0x11111101;
+            }
+            //
+            if ( !prefsBundle.hasPref( "clipperSeparateFrames" ) ) {
+              prefsBundle.setBoolPref( "clipperSeparateFrames",
+                !!( Utils.CLIPPER_FLAGS & 0x00000100 ) );
+            }
+            if ( prefsBundle.getBoolPref( "clipperSeparateFrames" ) ) {
+              Utils.CLIPPER_FLAGS |= 0x00000100;
+            } else {
+              Utils.CLIPPER_FLAGS &= 0x11111011;
+            }
+            //
+            if ( !prefsBundle.hasPref( "clipperPreserveHTML5Tags" ) ) {
+              prefsBundle.setBoolPref( "clipperPreserveHTML5Tags",
+                !!( Utils.CLIPPER_FLAGS & 0x00001000 ) );
+            }
+            if ( prefsBundle.getBoolPref( "clipperPreserveHTML5Tags" ) ) {
+              Utils.CLIPPER_FLAGS |= 0x00001000;
+            } else {
+              Utils.CLIPPER_FLAGS &= 0x11110111;
+            }
+          }
           break;
       }
     },
