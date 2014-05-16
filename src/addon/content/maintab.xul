@@ -40,6 +40,7 @@
 
   <vbox id="znotes_maintabpanel">
     <browser id="znotes_maintabbrowser"
+      src="about:blank"
       type="chrome"
       class="znotes_maintabbrowser"
       flex="1"

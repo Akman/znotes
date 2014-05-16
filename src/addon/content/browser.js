@@ -53,7 +53,7 @@ ru.akman.znotes.Browser = function() {
   var browserURLTextBox = null;
   var browserSpinner = null;
   var browserView = null;
-  var gBrowser = null;
+  var zBrowser = null;
   var statusBar = null;
   var statusBarPanel = null;
   var statusBarImage = null;
@@ -144,10 +144,10 @@ ru.akman.znotes.Browser = function() {
       }
       switch ( cmd ) {
         case "znotes_prev_command":
-          return gBrowser.webNavigation.canGoBack;
+          return zBrowser.webNavigation.canGoBack;
           break;
         case "znotes_next_command":
-          return gBrowser.webNavigation.canGoForward;
+          return zBrowser.webNavigation.canGoForward;
           break;
         case "znotes_stop_command":
           break;
@@ -163,7 +163,7 @@ ru.akman.znotes.Browser = function() {
       switch ( cmd ) {
         case "znotes_load_command":
           try {
-            gBrowser.webNavigation.loadURI(
+            zBrowser.webNavigation.loadURI(
               browserURLTextBox.value,
               nsIWebNavigation.LOAD_FLAGS_NONE,
               null,
@@ -175,16 +175,16 @@ ru.akman.znotes.Browser = function() {
           }
           break;
         case "znotes_prev_command":
-          gBrowser.webNavigation.goBack();
+          zBrowser.webNavigation.goBack();
           break;
         case "znotes_next_command":
-          gBrowser.webNavigation.goForward();        
+          zBrowser.webNavigation.goForward();        
           break;
         case "znotes_stop_command":
-          gBrowser.webNavigation.stop( nsIWebNavigation.STOP_ALL );
+          zBrowser.webNavigation.stop( nsIWebNavigation.STOP_ALL );
           break;
         case "znotes_reload_command":
-          gBrowser.webNavigation.reload(
+          zBrowser.webNavigation.reload(
             nsIWebNavigation.LOAD_FLAGS_NONE );
           break;
         case "znotes_customizetoolbar_command":
@@ -339,7 +339,7 @@ ru.akman.znotes.Browser = function() {
       if ( aStateFlags & nsIWebProgressListener.STATE_STOP ) {
         if ( aStateFlags & nsIWebProgressListener.STATE_IS_DOCUMENT ) {
           browserSpinner.setAttribute( "src", getFavoriteIconURL() );
-          gBrowser.contentWindow.scrollbars.visible = true;
+          zBrowser.contentWindow.scrollbars.visible = true;
         }
         statusBarImage.className = "browserBlack";
         statusBarLabel.value = "";
@@ -429,13 +429,13 @@ ru.akman.znotes.Browser = function() {
       "chrome://znotes_images/skin/ready-16x16.png" );
     browserSpinner.className = "browserSpinner";
     browserURLTextBox.insertBefore( browserSpinner, browserURLTextBox.firstChild );
-    gBrowser = document.getElementById( "gBrowser" );
-    gBrowser.webNavigation.allowAuth = true;
-    gBrowser.webNavigation.allowImages = true;
-    gBrowser.webNavigation.allowJavascript = true;
-    gBrowser.webNavigation.allowMetaRedirects = true;
-    gBrowser.webNavigation.allowPlugins = true;
-    gBrowser.webNavigation.allowSubframes = true;
+    zBrowser = document.getElementById( "zBrowser" );
+    zBrowser.webNavigation.allowAuth = true;
+    zBrowser.webNavigation.allowImages = true;
+    zBrowser.webNavigation.allowJavascript = true;
+    zBrowser.webNavigation.allowMetaRedirects = true;
+    zBrowser.webNavigation.allowPlugins = true;
+    zBrowser.webNavigation.allowSubframes = true;
     browserToolBox = document.getElementById( "browserToolBox" );
     browserToolBox.customizeDone = browserToolBoxCustomizeDone;
     browserToolBar = document.getElementById( "browserToolBar" );
@@ -447,7 +447,7 @@ ru.akman.znotes.Browser = function() {
   
   function getFavoriteIconURL() {
     var result = null;
-    var nodeList = gBrowser.contentDocument.getElementsByTagName( "link" );
+    var nodeList = zBrowser.contentDocument.getElementsByTagName( "link" );
     for ( var i = 0; i < nodeList.length; i++ ) {
       if ( ( nodeList[i].getAttribute( "rel" ) === "icon" ) ||
            ( nodeList[i].getAttribute( "rel" ) === "shortcut icon" ) ) {
@@ -457,7 +457,7 @@ ru.akman.znotes.Browser = function() {
     }
     if ( result ) {
       var documentURI = ioService.newURI(
-        gBrowser.contentDocument.documentURI,
+        zBrowser.contentDocument.documentURI,
         null,
         null
       );
@@ -472,19 +472,19 @@ ru.akman.znotes.Browser = function() {
   
   function addEventListeners() {
     browserURLTextBox.addEventListener( "change", onURLChanged, false );
-    gBrowser.addEventListener( "mouseover", mouseOverHandler, false );
-    gBrowser.addEventListener( "click", mouseClickHandler, false );
-    gBrowser.addEventListener( "load", onBrowserLoad, true );
-    gBrowser.docShell.QueryInterface( nsIWebProgress );
-    gBrowser.docShell.addProgressListener( progressListener,
+    zBrowser.addEventListener( "mouseover", mouseOverHandler, false );
+    zBrowser.addEventListener( "click", mouseClickHandler, false );
+    zBrowser.addEventListener( "load", onBrowserLoad, true );
+    zBrowser.docShell.QueryInterface( nsIWebProgress );
+    zBrowser.docShell.addProgressListener( progressListener,
       nsIWebProgress.NOTIFY_ALL );
   };
   
   function removeEventListeners() {
-    gBrowser.docShell.removeProgressListener( progressListener );
-    gBrowser.removeEventListener( "load", onBrowserLoad, true );
-    gBrowser.removeEventListener( "click", mouseClickHandler, false );
-    gBrowser.removeEventListener( "mouseover", mouseOverHandler, false );
+    zBrowser.docShell.removeProgressListener( progressListener );
+    zBrowser.removeEventListener( "load", onBrowserLoad, true );
+    zBrowser.removeEventListener( "click", mouseClickHandler, false );
+    zBrowser.removeEventListener( "mouseover", mouseOverHandler, false );
     browserURLTextBox.removeEventListener( "change", onURLChanged, false );
   };
   
