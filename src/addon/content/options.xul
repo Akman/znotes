@@ -76,14 +76,6 @@
               placeholder="&placeName.placeholder;" />
           </hbox>
         </groupbox>
-        <groupbox id="mainGroupBox">
-          <vbox id="mainVBox" align="start">
-            <checkbox id="isSavePosition"
-              label="&isSavePosition.label;" flex="1" />
-            <checkbox id="isEditSourceEnabled"
-              label="&isEditSourceEnabled.label;" flex="1" />
-          </vbox>
-        </groupbox>
         <groupbox id="docTypeGroupBox">
           <caption id="docTypeCaption" label="&docTypeCaption.label;" />
           <hbox id="docTypeHBox" align="center">
@@ -107,6 +99,8 @@
         <groupbox id="additionGroupBox">
           <caption id="additionCaption" label="&additionCaption.label;" />
           <vbox id="additionVBox" align="start">
+            <checkbox id="isSavePosition" label="&isSavePosition.label;" flex="1" />
+            <checkbox id="isEditSourceEnabled" label="&isEditSourceEnabled.label;" flex="1" />
             <checkbox id="isConfirmExit" label="&isConfirmExit.label;" flex="1" />
             <checkbox id="isExitQuitTB" label="&isExitQuitTB.label;" flex="1" />
             <checkbox id="isReplaceBackground" label="&isReplaceBackground.label;" flex="1" />

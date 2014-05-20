@@ -37,3 +37,23 @@
 .key_textbox {
   font-size: 12px;
 }
+.groupbox-title {
+  padding-left: 6px;
+  padding-right: 6px;
+}
+.groupbox-body {
+  padding-left: 0px;
+  padding-right: 0px;
+}
+richlistbox {
+  -moz-appearance: none;
+  border: 1px solid -moz-use-text-color;
+  -moz-border-top-colors: threedshadow threeddarkshadow;
+  -moz-border-right-colors: threedshadow threeddarkshadow;
+  -moz-border-bottom-colors: threedshadow threeddarkshadow;
+  -moz-border-left-colors: threedshadow threeddarkshadow;
+  border-radius: 4px;
+  padding: 2px;
+  margin: 2px;
+  margin: 0px;
+}

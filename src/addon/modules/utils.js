@@ -51,6 +51,7 @@ var Utils = function() {
   var isSanitizeEnabled = true;
   var isAdEnabled = false;
   var isFirstRun = true;
+  var isNewVersion = false;
   
   var app_version = ru.akman.znotes.Product.Version;
 
@@ -148,6 +149,14 @@ var Utils = function() {
       isFirstRun = value;
     },
 
+    get IS_NEW_VERSION() {
+      return isNewVersion;
+    },
+    
+    set IS_NEW_VERSION( value ) {
+      isNewVersion = value;
+    },
+    
     get NAME() {
       return ru.akman.znotes.Product.Name;
     },

@@ -967,6 +967,14 @@ ru.akman.znotes.TestSuite = function() {
       
     }
   } );
+
+  tests.push( {
+    name: "Maximize window",
+    description: "Maximize application window",
+    code: function () {
+      window.maximize();
+    }
+  } );
   
   return pub;
 

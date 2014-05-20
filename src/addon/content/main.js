@@ -101,6 +101,7 @@ ru.akman.znotes.Main = function() {
   var clipper = null;
   
   var consoleWindow = null;
+  var consoleFlag = false;
   
   var windowsList = null;
   
@@ -501,9 +502,8 @@ ru.akman.znotes.Main = function() {
       prefsBundle.setBoolPref( "isFirstRun", false );
     }
     if ( prefsBundle.getCharPref( "version" ) != Utils.VERSION ) {
-      prefsBundle.setCharPref( "version",
-        Utils.VERSION );
-      Utils.IS_FIRST_RUN = true;
+      prefsBundle.setCharPref( "version", Utils.VERSION );
+      Utils.IS_NEW_VERSION = true;
     }
     if ( Utils.IS_FIRST_RUN || Utils.IS_DEBUG_ENABLED ) {
 		  observerService.notifyObservers( null, "startupcache-invalidate", null );
@@ -1184,12 +1184,16 @@ ru.akman.znotes.Main = function() {
   };
   
   function updateCommandsVisibility() {
-    var debugSeparator =
+    var appmenuDebugSeparator =
       document.getElementById( "znotes_appmenu_debug_separator" );
+    var mainmenuDebugSeparator =
+      document.getElementById( "znotes_mainmenubar_debug_separator" );
     if ( Utils.IS_DEBUG_ENABLED ) {
-      debugSeparator.removeAttribute( "hidden" );
+      appmenuDebugSeparator.removeAttribute( "hidden" );
+      mainmenuDebugSeparator.removeAttribute( "hidden" );
     } else {
-      debugSeparator.setAttribute( "hidden", "true" );
+      appmenuDebugSeparator.setAttribute( "hidden", "true" );
+      mainmenuDebugSeparator.setAttribute( "hidden", "true" );
     }
     Common.goSetCommandHidden( "znotes_addons_command", !Utils.IS_STANDALONE, window );
     Common.goSetCommandHidden( "znotes_update_command", !Utils.IS_STANDALONE, window );
@@ -1421,15 +1425,13 @@ ru.akman.znotes.Main = function() {
 
   // znotes_console_command
   function doOpenConsoleWindow() {
-    var windowService = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
-                                  .getService( Components.interfaces.nsIWindowWatcher );
     if ( consoleWindow ) {
-      windowService.activeWindow = consoleWindow;
+      consoleWindow.focus();
     } else {
       consoleWindow = window.open(
         "chrome://global/content/console.xul",
-        "global:console",
-        "chrome,extrachrome,dependent,menubar,resizable,scrollbars,status,toolbar"
+        "_blank",
+        "chrome,extrachrome,menubar,resizable,scrollbars,status,toolbar"
       );
       consoleWindow.addEventListener( "close", onConsoleClose, true );
     }
@@ -5667,12 +5669,13 @@ ru.akman.znotes.Main = function() {
   };
   
   function connectConsoleObserver() {
-    var windowService = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
-                                  .getService( Components.interfaces.nsIWindowWatcher );
-    var windowMediator = Components.classes["@mozilla.org/appshell/window-mediator;1"]
-                                   .getService( Components.interfaces.nsIWindowMediator );
-    consoleWindow = windowMediator.getMostRecentWindow( "global:console" );
+    consoleFlag = false;
+    consoleWindow =
+      Components.classes["@mozilla.org/appshell/window-mediator;1"]
+                .getService( Components.interfaces.nsIWindowMediator )
+                .getMostRecentWindow( "global:console" );
     if ( consoleWindow ) {
+      consoleFlag = true;
       consoleWindow.addEventListener( "close", onConsoleClose, true );
     }
   };
@@ -5764,7 +5767,10 @@ ru.akman.znotes.Main = function() {
       updateWindowSizeAndPosition();
     }
     if ( Utils.IS_TEST_ACTIVE ) {
-      doOpenTestSuiteWindow();
+      showNewVersionInfo();
+    }
+    if ( Utils.IS_NEW_VERSION ) {
+      doOpenNewVersionWindow();
     }
     if ( Utils.IS_PLAY_SOUND ) {
       playSound();
@@ -5887,6 +5893,7 @@ ru.akman.znotes.Main = function() {
     }
     // maximized
     if ( win.windowState == 1 ) {
+      win.maximize();
       return;
     }
     // normal
@@ -5929,10 +5936,14 @@ ru.akman.znotes.Main = function() {
   function closeConsole() {
     if ( consoleWindow ) {
       consoleWindow.removeEventListener( "close", onConsoleClose, true );
-      if ( !Utils.IS_DEBUG_ENABLED ) {
+      if ( !consoleFlag ) {
         consoleWindow.close();
       }
     }
+  };
+  
+  function showNewVersionInfo() {
+    Utils.log( "TODO: showNewVersionInfo()" );
   };
   
   // PUBLIC
