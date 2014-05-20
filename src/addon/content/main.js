@@ -5893,6 +5893,7 @@ ru.akman.znotes.Main = function() {
     }
     // maximized
     if ( win.windowState == 1 ) {
+      Utils.log( "maximize()" );
       win.maximize();
       return;
     }

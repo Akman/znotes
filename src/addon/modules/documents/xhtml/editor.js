@@ -667,7 +667,7 @@ var Editor = function() {
           if ( strData ) {
             var textData = strData.value.QueryInterface(
               Components.interfaces.nsISupportsString ).data;
-            sourceEditor.getDoc().replaceSelection( textData );
+            sourceEditor.getDoc().replaceSelection( textData, "around" );
           }
         } catch ( e ) {
           Utils.log( e );
@@ -2039,6 +2039,7 @@ var Editor = function() {
     // SOURCE COMMANDS
     
     function doSourceBeautify() {
+      // TODO:CM: multi-selection
       sourceEditor.autoFormatRange(
         sourceEditor.getCursor( "start" ),
         sourceEditor.getCursor( "end" )
@@ -4696,48 +4697,43 @@ var Editor = function() {
         } ];
       }
       var doc = sourceEditor.getDoc();
-      var from, to;
+      var from, to, sourceRanges = [];
       for ( var i = 0; i < sourceMarkers.length; i++ ) {
         from = doc.posFromIndex( sourceMarkers[i].startIndex );
         to = doc.posFromIndex( sourceMarkers[i].endIndex );
-        if ( i ) {
-          doc.extendSelection( from, to );
-        } else {
-          doc.setSelection( from, to );
-        }
+        sourceRanges.push( {
+          anchor: from,
+          head: to
+        } );
       }
+      doc.setSelections( sourceRanges );
       sourceEditor.scrollIntoView( { from: from, to: to },
         Math.floor( sourceEditorHeight * 0.8 ) );
     };
     
     function setupDesignEditorMarkers() {
       var doc = sourceEditor.getDoc();
-      var editorStartIndex = doc.indexFromPos( doc.getCursor( "start" ) );
-      var editorEndIndex = doc.indexFromPos( doc.getCursor( "end" ) );
+      var sourceRanges = doc.listSelections();
+      var editorStartIndex, editorEndIndex;
+      var startPosition, endPosition, selectionRanges = [];
       clearNodeIndexiesCache();
-      var endPosition;
-      var startPosition = getMarkerPosition( editorStartIndex, 0 );
-      if ( editorStartIndex == editorEndIndex ) {
-        endPosition = {
-          container: startPosition.container,
-          offset: startPosition.offset
-        };
-      } else {
-        endPosition = getMarkerPosition( editorEndIndex, 1 );
-      }
-      var designMarkers = [ {
-        startContainer: startPosition.container,
-        startOffset: startPosition.offset,
-        endContainer: endPosition.container,
-        endOffset: endPosition.offset
-      } ];
-      var selectionRanges = [];
-      for ( var i = 0; i < designMarkers.length; i++ ) {
+      for ( var i = 0; i < sourceRanges.length; i++ ) {
+        editorStartIndex = doc.indexFromPos( sourceRanges[i].anchor );
+        editorEndIndex = doc.indexFromPos( sourceRanges[i].head );
+        startPosition = getMarkerPosition( editorStartIndex, 0 );
+        if ( editorStartIndex == editorEndIndex ) {
+          endPosition = {
+            container: startPosition.container,
+            offset: startPosition.offset
+          };
+        } else {
+          endPosition = getMarkerPosition( editorEndIndex, 1 );
+        }
         selectionRanges.push( {
-          startContainer: designMarkers[i].startContainer,
-          startOffset: designMarkers[i].startOffset,
-          endContainer: designMarkers[i].endContainer,
-          endOffset: designMarkers[i].endOffset
+          startContainer: startPosition.container,
+          startOffset: startPosition.offset,
+          endContainer: endPosition.container,
+          endOffset: endPosition.offset
         } );
       }
       setSelectionRanges( selectionRanges );
@@ -5244,7 +5240,8 @@ var Editor = function() {
       if ( editorTabs.selectedIndex == 1 ) {
         var sourceText, rowBegin;
         if ( sourceEditor.somethingSelected() ) {
-          sourceText = sourceEditor.getSelection();
+          // TODO:CM: multi-selection
+          sourceText = sourceEditor.getSelection( /* separator */ );
           rowBegin = parseInt( sourceEditor.getCursor( "start" ).line ) + 1;
         } else {
           sourceText = sourceEditor.getValue();
