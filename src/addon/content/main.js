@@ -5767,10 +5767,10 @@ ru.akman.znotes.Main = function() {
       updateWindowSizeAndPosition();
     }
     if ( Utils.IS_TEST_ACTIVE ) {
-      showNewVersionInfo();
+      doOpenTestSuiteWindow();
     }
     if ( Utils.IS_NEW_VERSION ) {
-      doOpenNewVersionWindow();
+      showNewVersionInfo();
     }
     if ( Utils.IS_PLAY_SOUND ) {
       playSound();
@@ -5893,7 +5893,6 @@ ru.akman.znotes.Main = function() {
     }
     // maximized
     if ( win.windowState == 1 ) {
-      Utils.log( "maximize()" );
       win.maximize();
       return;
     }

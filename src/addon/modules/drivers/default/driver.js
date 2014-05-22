@@ -1448,6 +1448,12 @@ var Driver = function() {
     return pub.getInfo().description;
   };
 
+  pub.checkExtension = function( ext ) {
+    return ext &&
+           ext !== ENTRY_DESCRIPTOR_FILENAME &&
+           ext !== TAGS_DESCRIPTOR_FILENAME;
+  };
+  
   pub.getParameters = function() {
     var docs = ru.akman.znotes.DocumentManager.getInstance().getDocuments();
     var doc, types, exts = {};
@@ -1478,7 +1484,7 @@ var Driver = function() {
 
     var path = params.path;
     var encoding = params.encoding;
-    var extensions = params.extensions;
+    var extensions = {};
     var dataPath = Components.classes["@mozilla.org/file/local;1"]
                              .createInstance( Components.interfaces.nsIFile );
     try {
@@ -1486,6 +1492,7 @@ var Driver = function() {
     } catch ( e ) {
       throw new DriverException( "DRIVER_INVALID_PATH", path );
     }
+    Utils.cloneObject( params.extensions, extensions );
 
     // C O N N E C T I O N
 

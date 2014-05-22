@@ -2039,11 +2039,38 @@ var Editor = function() {
     // SOURCE COMMANDS
     
     function doSourceBeautify() {
-      // TODO:CM: multi-selection
-      sourceEditor.autoFormatRange(
-        sourceEditor.getCursor( "start" ),
-        sourceEditor.getCursor( "end" )
-      );
+      var ranges = sourceEditor.listSelections();
+      var delta = 0, indexies = [];
+      var len = sourceEditor.getValue().length;
+      var lIndex, rIndex;
+      for ( var i = 0; i < ranges.length; i++ ) {
+        lIndex = sourceEditor.indexFromPos( ranges[i].anchor );
+        rIndex = sourceEditor.indexFromPos( ranges[i].head );
+        if ( lIndex > rIndex ) {
+          indexies.push( rIndex );
+          indexies.push( lIndex );
+        } else {
+          indexies.push( lIndex );
+          indexies.push( rIndex );
+        }
+      }
+      ranges = [];
+      for ( var i = 0; i < indexies.length; i += 2 ) {
+        sourceEditor.autoFormatRange(
+          sourceEditor.posFromIndex( indexies[i] ),
+          sourceEditor.posFromIndex( indexies[i + 1] )
+        );
+        delta = sourceEditor.getValue().length - len;
+        len += delta;
+        for ( var j = i + 1; j < indexies.length; j++ ) {
+          indexies[j] += delta;
+        }
+        ranges.push( {
+          anchor: sourceEditor.posFromIndex( indexies[i] ),
+          head: sourceEditor.posFromIndex( indexies[i + 1] )
+        } );
+      }
+      sourceEditor.setSelections( ranges );
     };
 
     // COMMON HELPERS
@@ -2125,6 +2152,51 @@ var Editor = function() {
     };
     
     function setDisplayStyle() {
+    };
+    
+    function getCountOfLines( text ) {
+      var result = text.length > 0 ? 1 : 0;
+      var pos = text.indexOf( "\n" );
+      while ( pos !== -1 ) {
+        result++;
+        pos = text.indexOf( "\n", pos + 1 );
+      }
+      return result;
+    };
+    
+    function getCountOfDigits( number ) {
+      return ( "" + number ).length;
+    };
+    
+    function formatNumber( number, width ) {
+      var result = "" + number;
+      while ( result.length < width ) {
+        result = " " + result;
+      }
+      return result;
+    };
+    
+    function replaceTabsWithSpaces( text ) {
+      var col = 0, pos = 0, result = "";
+      var idx, size, tabSize = 8;
+      for ( ; ; ) {
+        idx = text.indexOf( "\t", pos );
+        if ( idx == -1 ) {
+          result += text.slice( pos );
+          col += text.length - pos;
+          break;
+        } else {
+          col += idx - pos;
+          result += text.slice( pos, idx );
+          size = tabSize - col % tabSize;
+          col += size;
+          for ( var i = 0; i < size; ++i ) {
+            result += " ";
+          }
+          pos = idx + 1;
+        }
+      }
+      return result;
     };
     
     // EDITOR HELPERS
@@ -5237,97 +5309,78 @@ var Editor = function() {
     
     function print() {
       var aContentWindow = designFrame.contentWindow;
+      var sourceEditorText, ranges, doc, printView;
+      var sourceText, lineCount, row, lIndex, rIndex;
       if ( editorTabs.selectedIndex == 1 ) {
-        var sourceText, rowBegin;
+        sourceEditorText = sourceEditor.getValue();
         if ( sourceEditor.somethingSelected() ) {
-          // TODO:CM: multi-selection
-          sourceText = sourceEditor.getSelection( /* separator */ );
-          rowBegin = parseInt( sourceEditor.getCursor( "start" ).line ) + 1;
+          ranges = sourceEditor.listSelections();
         } else {
-          sourceText = sourceEditor.getValue();
-          rowBegin = 1;
+          ranges = [{
+            anchor: sourceEditor.posFromIndex( 0 ),
+            head: sourceEditor.posFromIndex( sourceEditorText.length )
+          }];
         }
-        var lineCount = sourceText.length > 0 ? 1 : 0;
-        var pos = sourceText.indexOf( "\n" );
-        while ( pos != -1 ) {
-          lineCount++;
-          pos = sourceText.indexOf( "\n", pos + 1 );
+        doc = sourcePrintFrame.contentWindow.document;
+        printView = doc.getElementById( "printView" );
+        while ( printView.firstChild ) {
+          printView.removeChild( printView.firstChild );
         }
-        var lineFieldWidth = ( "" + lineCount ).length;
-        var node =
-          sourcePrintFrame.contentWindow.document.getElementById( "printView" );
-        while ( node.firstChild ) {
-          node.removeChild( node.firstChild );
-        }
-        var row = rowBegin;
-        var sp = node.appendChild(
-          node.ownerDocument.createElement( "span" )
-        );
-        var lineField = "" + row;
-        while ( lineField.length < lineFieldWidth ) {
-          lineField = " " + lineField;
-        }
-        sp.appendChild(
-          node.ownerDocument.createTextNode( lineField + " " )
-        );
-        var col = 0;
-        var callback = function ( text, style ) {
-          if ( text == "\n" ) {
-            row++;
-            node.appendChild( node.ownerDocument.createElement( "br" ) );
-            var sp = node.appendChild(
-              node.ownerDocument.createElement( "span" )
-            );
-            var lineField = "" + row;
-            while ( lineField.length < lineFieldWidth ) {
-              lineField = " " + lineField;
-            }
-            sp.appendChild(
-              node.ownerDocument.createTextNode( lineField + " " )
-            );
-            col = 0;
-            return;
-          }
-          var content = "";
-          // replace tabs
-          for ( var pos = 0; ; ) {
-            var idx = text.indexOf( "\t", pos );
-            if ( idx == -1 ) {
-              content += text.slice( pos );
-              col += text.length - pos;
-              break;
-            } else {
-              col += idx - pos;
-              content += text.slice( pos, idx );
-              var size = tabSize - col % tabSize;
-              col += size;
-              for ( var i = 0; i < size; ++i ) {
-                content += " ";
-              }
-              pos = idx + 1;
-            }
-          }
-          if ( style ) {
-            var sp = node.appendChild(
-              node.ownerDocument.createElement( "span" )
-            );
-            sp.className = "cm-" + style.replace( / +/g, " cm-" );
-            sp.appendChild( node.ownerDocument.createTextNode( content ) );
+        for ( var i = 0; i < ranges.length; i++ ) {
+          lIndex = sourceEditor.indexFromPos( ranges[i].anchor );
+          rIndex = sourceEditor.indexFromPos( ranges[i].head );
+          if ( lIndex > rIndex ) {
+            sourceText = sourceEditorText.substring( rIndex, lIndex );
+            row = parseInt( ranges[i].head.line ) + 1;
           } else {
-            node.appendChild( node.ownerDocument.createTextNode( content ) );
+            sourceText = sourceEditorText.substring( lIndex, rIndex );
+            row = parseInt( ranges[i].anchor.line ) + 1;
           }
-        };
-        sourceEditorLibrary.runMode( sourceText, "htmlmixed", callback );
+          lineCount = getCountOfLines( sourceText );
+          printView.appendChild( doc.createElement( "span" ) )
+                   .appendChild( doc.createTextNode(
+            formatNumber( row, getCountOfDigits( lineCount ) ) + " "
+          ) );
+          sourceEditorLibrary.runMode(
+            sourceText,
+            "htmlmixed",
+            function( text, style ) {
+              var node;
+              if ( text == "\n" ) {
+                row++;
+                printView.appendChild( doc.createElement( "br" ) );
+                printView.appendChild( doc.createElement( "span" ) )
+                         .appendChild( doc.createTextNode(
+                  formatNumber( row, getCountOfDigits( lineCount ) ) + " "
+                ) );
+                return;
+              }
+              if ( style ) {
+                node = printView.appendChild( doc.createElement( "span" ) );
+                node.className = "cm-" + style.replace( / +/g, " cm-" );
+              } else {
+                node = printView;
+              }
+              node.appendChild( doc.createTextNode(
+                replaceTabsWithSpaces( text ) ) );
+            }
+          );
+          if ( i !== ranges.length - 1 ) {
+            printView.appendChild( doc.createElement( "br" ) );
+            printView.appendChild( doc.createElement( "br" ) );
+            printView.appendChild( doc.createElement( "hr" ) );
+            printView.appendChild( doc.createElement( "br" ) );
+          }
+        }
         aContentWindow = sourcePrintFrame.contentWindow;
       }
-      var aTitle = currentNote.getName();
       currentWindow.openDialog(
         "chrome://znotes/content/printpreview.xul",
         "",
         "chrome,dialog=no,all,modal=yes,centerscreen,resizable=yes",
         {
           aWindow: aContentWindow,
-          aTitle: aTitle
+          aTitle: currentNote.getName()
         }
       ).focus();
     };

@@ -295,17 +295,23 @@ var DocumentManager = function() {
 
   // CONSTRUCTOR
   
-  // TODO: check registry for validity of registering docs and clean it up
   function init() {
     if ( docs ) {
       return;
     }
     docs = {};
+    if ( !registry ) {
+      readRegistry();
+    }
     var documentDirectory = Utils.getDocumentDirectory();
     var entries = documentDirectory.directoryEntries;
     var doc = null;
+    var ids = null;
+    var id = null;
     var name = null;
     var entry = null;
+    var found = false;
+    var modified = false;
     while( entries.hasMoreElements() ) {
       entry = entries.getNext();
       entry.QueryInterface( Components.interfaces.nsIFile );
@@ -322,6 +328,24 @@ var DocumentManager = function() {
       if ( doc == null ) {
         Utils.log( "Error registering document: " + entry.path );
       }
+    }
+    // clean up the registy
+    ids = Object.keys( registry );
+    for each ( id in ids ) {
+      found = false;
+      for each ( doc in docs ) {
+        if ( id === doc.getId() ) {
+          found = true;
+          break;
+        }
+      }
+      if ( !found ) {
+        delete registry[id];
+        modified = true;
+      }
+    }
+    if ( modified ) {
+      writeRegistry();
     }
   };
   
