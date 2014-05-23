@@ -91,6 +91,12 @@
             <checkbox id="clipperSaveFrames" label="&clipperSaveFrames.label;" flex="1" />
             <checkbox id="clipperSeparateFrames" label="&clipperSeparateFrames.label;" flex="1" />
             <checkbox id="clipperPreserveHTML5Tags" label="&clipperPreserveHTML5Tags.label;" flex="1" />
+            <checkbox id="clipperSaveStyles" label="&clipperSaveStyles.label;" flex="1" />
+            <radiogroup id="clipperSaveStylesGroup">
+              <radio id="clipperInlineStylesheets" label="&clipperInlineStylesheets.label;" flex="1" />
+              <radio id="clipperSingleStylesheet" label="&clipperSingleStylesheet.label;" flex="1" />
+              <radio id="clipperSeparateStylesheets" label="&clipperSeparateStylesheets.label;" flex="1" />
+            </radiogroup>            
             <checkbox id="isCloseBrowserAfterImport" label="&isCloseBrowserAfterImport.label;" flex="1" />
             <checkbox id="isSelectNoteAfterImport" label="&isSelectNoteAfterImport.label;" flex="1" />
             <checkbox id="isClipperPlaySound" label="&isClipperPlaySound.label;" flex="1" />

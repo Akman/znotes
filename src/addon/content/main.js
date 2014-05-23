@@ -373,6 +373,27 @@ ru.akman.znotes.Main = function() {
             Utils.CLIPPER_FLAGS &= 0x11110111;
           }
           break;
+        case "clipperSaveStyles":
+          if ( event.data.newValue ) {
+            Utils.CLIPPER_FLAGS |= 0x00010000;
+          } else {
+            Utils.CLIPPER_FLAGS &= 0x11101111;
+          }
+          break;
+        case "clipperSingleStylesheet":
+          if ( event.data.newValue ) {
+            Utils.CLIPPER_FLAGS |= 0x00100000;
+          } else {
+            Utils.CLIPPER_FLAGS &= 0x11011111;
+          }
+          break;
+        case "clipperSeparateStylesheets":
+          if ( event.data.newValue ) {
+            Utils.CLIPPER_FLAGS |= 0x01000000;
+          } else {
+            Utils.CLIPPER_FLAGS &= 0x10111111;
+          }
+          break;
         case "isReplaceBackground":
           Utils.IS_REPLACE_BACKGROUND = event.data.newValue;
           break;
@@ -439,7 +460,16 @@ ru.akman.znotes.Main = function() {
         case "sanitize":
           Utils.IS_SANITIZE_ENABLED = this.branch.getBoolPref( "sanitize" );
           if ( Utils.IS_SANITIZE_ENABLED ) {
-            Utils.CLIPPER_FLAGS = 0x00000000;
+            Utils.CLIPPER_FLAGS &= 0x00010000;
+            if ( !prefsBundle.hasPref( "clipperSaveStyles" ) ) {
+              prefsBundle.setBoolPref( "clipperSaveStyles",
+                !!( Utils.CLIPPER_FLAGS & 0x00010000 ) );
+            }
+            if ( prefsBundle.getBoolPref( "clipperSaveStyles" ) ) {
+              Utils.CLIPPER_FLAGS |= 0x00010000;
+            } else {
+              Utils.CLIPPER_FLAGS &= 0x11101111;
+            }
           } else {
             if ( !prefsBundle.hasPref( "clipperSaveScripts" ) ) {
               prefsBundle.setBoolPref( "clipperSaveScripts",
@@ -479,6 +509,36 @@ ru.akman.znotes.Main = function() {
               Utils.CLIPPER_FLAGS |= 0x00001000;
             } else {
               Utils.CLIPPER_FLAGS &= 0x11110111;
+            }
+            //
+            if ( !prefsBundle.hasPref( "clipperSaveStyles" ) ) {
+              prefsBundle.setBoolPref( "clipperSaveStyles",
+                !!( Utils.CLIPPER_FLAGS & 0x00010000 ) );
+            }
+            if ( prefsBundle.getBoolPref( "clipperSaveStyles" ) ) {
+              Utils.CLIPPER_FLAGS |= 0x00010000;
+            } else {
+              Utils.CLIPPER_FLAGS &= 0x11101111;
+            }
+            //
+            if ( !prefsBundle.hasPref( "clipperSingleStylesheet" ) ) {
+              prefsBundle.setBoolPref( "clipperSingleStylesheet",
+                !!( Utils.CLIPPER_FLAGS & 0x00100000 ) );
+            }
+            if ( prefsBundle.getBoolPref( "clipperSingleStylesheet" ) ) {
+              Utils.CLIPPER_FLAGS |= 0x00100000;
+            } else {
+              Utils.CLIPPER_FLAGS &= 0x11011111;
+            }
+            //
+            if ( !prefsBundle.hasPref( "clipperSeparateStylesheets" ) ) {
+              prefsBundle.setBoolPref( "clipperSeparateStylesheets",
+                !!( Utils.CLIPPER_FLAGS & 0x01000000 ) );
+            }
+            if ( prefsBundle.getBoolPref( "clipperSeparateStylesheets" ) ) {
+              Utils.CLIPPER_FLAGS |= 0x01000000;
+            } else {
+              Utils.CLIPPER_FLAGS &= 0x10111111;
             }
           }
           break;
@@ -3063,8 +3123,11 @@ ru.akman.znotes.Main = function() {
           0x00000010 SAVE_FRAMES
           0x00000100 SAVE_FRAMES_IN_SEPARATE_DIRECTORY
           0x00001000 PRESERVE_HTML5_TAGS
+          0x00010000 SAVE_STYLES
+          0x00100000 SAVE_STYLESHEETS_IN_SINGLE_FILE
+          0x01000000 SAVE_STYLESHEETS_IN_SEPARATE_FILES
           */
-          0x00000000,
+          0x00010000,
           anObserver
         );
       },

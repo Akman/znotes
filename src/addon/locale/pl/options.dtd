@@ -44,6 +44,10 @@
 <!ENTITY clipperSaveFrames.label "Save frames">
 <!ENTITY clipperSeparateFrames.label "Save frames in the separate folders">
 <!ENTITY clipperPreserveHTML5Tags.label "Preserve HTML5 tags">
+<!ENTITY clipperSaveStyles.label "Save styles">
+<!ENTITY clipperInlineStylesheets.label "Inline stylesheets in a document">
+<!ENTITY clipperSingleStylesheet.label "Save stylesheets in a single file">
+<!ENTITY clipperSeparateStylesheets.label "Save stylesheets in the separate files">
 <!ENTITY isCloseBrowserAfterImport.label "Close browser window when download completes">
 <!ENTITY isSelectNoteAfterImport.label "Select created note when download completes">
 <!ENTITY isClipperPlaySound.label "Play sound when download completes">
