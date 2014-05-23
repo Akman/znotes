@@ -2399,6 +2399,7 @@ var Editor = function() {
       for ( var i = 0; i < count; i++ ) {
         range = designEditor.selection.getRangeAt( i );
         ranges.push( {
+          commonAncestorContainer: range.commonAncestorContainer,
           startContainer: range.startContainer,
           startOffset: range.startOffset,
           endContainer: range.endContainer,
@@ -3170,14 +3171,12 @@ var Editor = function() {
 
     // DEBUG
     
-    function dumpSelection() {
+    function dumpSelection( ranges ) {
       var range, commonAncestorContainer;
       var startContainer, startOffset
       var endContainer, endOffset;
-      var count = designEditor.selection ?
-        designEditor.selection.rangeCount : 0;
-      for ( var i = 0; i < count; i++ ) {
-        range = designEditor.selection.getRangeAt( i );
+      for ( var i = 0; i < ranges.length; i++ ) {
+        range = ranges[i];
         startContainer = range.startContainer;
         startOffset = range.startOffset;
         endContainer = range.endContainer;
@@ -3267,7 +3266,7 @@ var Editor = function() {
     function doDebug() {
       /*
       Module.run();
-      dumpSelection();
+      dumpSelection( getSelectionRanges() );
       dumpSelectionChunks();
       dumpSelectionElements(); doUndo();
       */
@@ -4513,6 +4512,14 @@ var Editor = function() {
               if ( endContainer == startContainer ) {
                 endOffset -= startOffset;
               }
+              for ( var j = i + 1; j < ranges.length; j++ ) {
+                if ( ranges[j].startContainer === startContainer ) {
+                  ranges[j].startOffset -= startOffset;
+                }
+                if ( ranges[j].endContainer === startContainer ) {
+                  ranges[j].endOffset -= startOffset;
+                }
+              }
               startOffset = 0;
             }
             if ( startOffset < startContainer.textContent.length ) {
@@ -4529,6 +4536,14 @@ var Editor = function() {
             if ( endContainer == startContainer ) {
               endOffset++;
             }
+            for ( var j = i + 1; j < ranges.length; j++ ) {
+              if ( ranges[j].startContainer === startContainer ) {
+                ranges[j].startOffset++;
+              }
+              if ( ranges[j].endContainer === startContainer ) {
+                ranges[j].endOffset++;
+              }
+            }
             break;
         }
         switch ( endContainer.nodeType ) {
@@ -4536,6 +4551,14 @@ var Editor = function() {
             if ( endOffset > 0 &&
                  endOffset < endContainer.textContent.length ) {
               endSplit = splitNode( endContainer, endOffset, true );
+              for ( var j = i + 1; j < ranges.length; j++ ) {
+                if ( ranges[j].startContainer === endContainer ) {
+                  ranges[j].startOffset -= endOffset;
+                }
+                if ( ranges[j].endContainer === endContainer ) {
+                  ranges[j].endOffset -= endOffset;
+                }
+              }
               endOffset = 0;
             }
             if ( endOffset < endContainer.textContent.length ) {
@@ -4560,6 +4583,14 @@ var Editor = function() {
             } else {
               endContainer.insertBefore(
                 endMarker, endContainer.childNodes[endOffset] );
+            }
+            for ( var j = i + 1; j < ranges.length; j++ ) {
+              if ( ranges[j].startContainer === endContainer ) {
+                ranges[j].startOffset++;
+              }
+              if ( ranges[j].endContainer === endContainer ) {
+                ranges[j].endOffset++;
+              }
             }
             break;
         }
@@ -4629,15 +4660,39 @@ var Editor = function() {
     };
     
     function getNodeIndexiesFromCache( node ) {
-      var index = nodeIndexiesCache.indexOf( node );
-      return ( index == -1 ? null : nodeIndexiesCache[index] );
+      var idxs;
+      for ( var i = 0; i < nodeIndexiesCache.length; i++ ) {
+        if ( nodeIndexiesCache[i].node === node ) {
+          idxs = nodeIndexiesCache[i].indexies;
+          return {
+            startIndex: idxs.startIndex,
+            endIndex: idxs.endIndex,
+            data: idxs.data
+          };
+        }
+      }
+      return null;
     };
     
     function putNodeIndexiesToCache( node, indexies ) {
-      var index = nodeIndexiesCache.indexOf( node );
-      if ( index == -1 ) {
-        nodeIndexiesCache.push( indexies );
+      var idxs, index = -1;
+      for ( var i = 0; i < nodeIndexiesCache.length; i++ ) {
+        if ( nodeIndexiesCache[i].node === node ) {
+          index = i;
+          break;
+        }
       }
+      if ( index == -1 ) {
+        nodeIndexiesCache.push( {
+          node: node,
+          indexies: {}
+        } );
+        index = nodeIndexiesCache.length - 1;
+      }
+      idxs = nodeIndexiesCache[index].indexies;
+      idxs.startIndex = indexies.startIndex;
+      idxs.endIndex = indexies.endIndex;
+      idxs.data = indexies.data;
     };
     
     function getNodeIndexies( node ) {
@@ -4655,11 +4710,11 @@ var Editor = function() {
           } ],
           nodeMarkers
         );
-        nodeIndexies = calcMarkersIndexies( nodeMarkers );
+        nodeIndexies = calcMarkersIndexies( nodeMarkers )[0];
         removeMarkers( nodeMarkers );
         putNodeIndexiesToCache( node, nodeIndexies );
       }
-      return nodeIndexies[0];
+      return nodeIndexies;
     };
     
     // flag: 0 - start marker || 1 - end marker
@@ -4784,14 +4839,18 @@ var Editor = function() {
     };
     
     function setupDesignEditorMarkers() {
-      var doc = sourceEditor.getDoc();
-      var sourceRanges = doc.listSelections();
-      var editorStartIndex, editorEndIndex;
+      var editorStartIndex, editorEndIndex, tmpIndex;
       var startPosition, endPosition, selectionRanges = [];
+      var sourceRanges = sourceEditor.listSelections();
       clearNodeIndexiesCache();
       for ( var i = 0; i < sourceRanges.length; i++ ) {
-        editorStartIndex = doc.indexFromPos( sourceRanges[i].anchor );
-        editorEndIndex = doc.indexFromPos( sourceRanges[i].head );
+        editorStartIndex = sourceEditor.indexFromPos( sourceRanges[i].anchor );
+        editorEndIndex = sourceEditor.indexFromPos( sourceRanges[i].head );
+        if ( editorStartIndex > editorEndIndex ) {
+          tmpIndex = editorEndIndex;
+          editorEndIndex = editorStartIndex;
+          editorStartIndex = tmpIndex;
+        }
         startPosition = getMarkerPosition( editorStartIndex, 0 );
         if ( editorStartIndex == editorEndIndex ) {
           endPosition = {
