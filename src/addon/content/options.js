@@ -47,6 +47,7 @@ Components.utils.import( "resource://znotes/documentmanager.js",
 ru.akman.znotes.Options = function() {
 
   var Utils = ru.akman.znotes.Utils;
+  var DocumentManager = ru.akman.znotes.DocumentManager;
 
   var prefsBundle = ru.akman.znotes.PrefsManager.getInstance();
   
@@ -443,7 +444,7 @@ ru.akman.znotes.Options = function() {
   };
   
   function populateDocumentTypePopup() {
-    var docs = ru.akman.znotes.DocumentManager.getInstance().getDocuments();
+    var docs = DocumentManager.getInstance().getDocuments();
     var doc, types, contentType, tooltiptext, menuItem, style;
     docTypeMenuList.selectedItem = null;
     while ( docTypeMenuPopup.firstChild ) {
@@ -645,9 +646,7 @@ ru.akman.znotes.Options = function() {
     optionsView.setAttribute( "id", "optionsView" );
     optionsView.setAttribute( "flex", "1" );
     panel.appendChild( optionsView );
-    var doc = ru.akman.znotes.DocumentManager
-                             .getInstance()
-                             .getDocumentByName( name );
+    var doc = DocumentManager.getInstance().getDocumentByName( name );
     currentOptions = doc.getOptions();
     document.loadOverlay(
       doc.getURL() + "editor.xul",
@@ -883,7 +882,6 @@ ru.akman.znotes.Options = function() {
       "clipperSingleStylesheet":    !!( Utils.CLIPPER_FLAGS & 0x00100000 ),
       "clipperSeparateStylesheets": !!( Utils.CLIPPER_FLAGS & 0x01000000 )
     };
-    Utils.log( result["clipperSaveStyles"] );
     try {
       result.shortcuts = JSON.parse( Utils.MAIN_SHORTCUTS );
       if ( typeof( result.shortcuts ) !== "object" ) {
@@ -940,7 +938,7 @@ ru.akman.znotes.Options = function() {
     Utils.cloneObject( getMainDefaultPreferences(), optionsPrefs["main"]["default"] );
     Utils.cloneObject( getMainPreferences(), optionsPrefs["main"]["original"] );
     Utils.cloneObject( getMainPreferences(), optionsPrefs["main"]["current"] );
-    var docs = ru.akman.znotes.DocumentManager.getInstance().getDocuments();
+    var docs = DocumentManager.getInstance().getDocuments();
     var doc, opt, tab, panel;
     var editorDefaults, documentDefaults;
     for ( var name in docs ) {
@@ -1049,6 +1047,20 @@ ru.akman.znotes.Options = function() {
     return isChanged;
   };
 
+  function saveAllPreferences() {
+    var opt, docs = DocumentManager.getInstance().getDocuments();
+    for ( var name in optionsPrefs ) {
+      if ( name === "main" ) {
+        setMainPreferences( optionsPrefs[name].current );
+        setPlatformPreferences( platformPrefs.current );
+        continue;
+      }
+      opt = docs[ name ].getOptions();
+      opt.setDocumentPreferences( optionsPrefs[name].current.document );
+      opt.setEditorPreferences( optionsPrefs[name].current.editor );
+    }
+  };
+  
   // LISTENERS
   
   function addEventListeners() {
@@ -1064,18 +1076,7 @@ ru.akman.znotes.Options = function() {
       currentOptions.close();
     }
     closeMainTab();
-    var docs = ru.akman.znotes.DocumentManager.getInstance().getDocuments();
-    var opt;
-    for ( var name in optionsPrefs ) {
-      if ( name == "main" ) {
-        setMainPreferences( optionsPrefs[name].current );
-        setPlatformPreferences( platformPrefs.current );
-        continue;
-      }
-      opt = docs[ name ].getOptions();
-      opt.setDocumentPreferences( optionsPrefs[name].current.document );
-      opt.setEditorPreferences( optionsPrefs[name].current.editor );
-    }
+    saveAllPreferences();
   };
 
   pub.onLoad = function() {
@@ -1143,9 +1144,48 @@ ru.akman.znotes.Options = function() {
     window.centerWindowOnScreen();
   };
   
+  pub.onClose = function( event ) {
+    var isChanged = false;
+    if ( currentOptions ) {
+      if ( currentOptions.close() ) {
+        isChanged = true;
+      }
+    }
+    if ( closeMainTab() ) {
+      isChanged = true;
+    }
+    if ( isChanged ) {
+      var params = {
+        kind: 2,
+        input: {
+          title: getString( "options.confirm.exit.title" ),
+          message1: getString( "options.confirm.exit.message1" ),
+          message2: getString( "options.confirm.exit.message2" )
+        },
+        output: null
+      };
+      window.openDialog(
+        "chrome://znotes/content/confirmdialog.xul",
+        "",
+        "chrome,dialog,modal,centerscreen,resizable=no",
+        params
+      ).focus();
+      if ( params.output ) {
+        if ( params.output.result ) {
+          saveAllPreferences();
+        }
+      } else {
+        event.preventDefault();
+        event.stopPropagation();
+        return false;
+      }
+    }
+  };
+  
   return pub;
 
 }();
 
-window.addEventListener( "load", function() { ru.akman.znotes.Options.onLoad(); }, false );
-window.addEventListener( "dialogaccept", function() { ru.akman.znotes.Options.onDialogAccept(); }, false );
+window.addEventListener( "load", ru.akman.znotes.Options.onLoad, false );
+window.addEventListener( "close", ru.akman.znotes.Options.onClose, true );
+window.addEventListener( "dialogaccept", ru.akman.znotes.Options.onDialogAccept, false );

@@ -609,7 +609,7 @@ function inspectRule( aChanges, aRule, aSheetURL, aDocumentURL,
 };
 
 function processStyleSheet( aRules, aChanges, aDocument, aSheet, aLoader,
-                            aDirectory ) {
+                            aDirectory, aFlags ) {
   if ( !aSheet || aSheet.disabled ) {
     return;
   }
@@ -620,6 +620,13 @@ function processStyleSheet( aRules, aChanges, aDocument, aSheet, aLoader,
     href: href,
     lines: []
   };
+  if ( href ) {
+    for ( var i = 0; i < aRules.length; i++ ) {
+      if ( aRules[i].href === href ) {
+        return;
+      }
+    }
+  }
   aRules.push( rules );
   while ( !href ) {
     if ( sheet.parentStyleSheet ) {
@@ -651,7 +658,7 @@ function processStyleSheet( aRules, aChanges, aDocument, aSheet, aLoader,
         sheet = rule.styleSheet;
         if ( sheet ) {
           processStyleSheet( aRules, aChanges, aDocument, sheet, aLoader,
-            aDirectory );
+            aDirectory, aFlags );
         }
         break;
       case nsIDOMCSSRule.MEDIA_RULE:
@@ -767,10 +774,11 @@ function processStyleSheet( aRules, aChanges, aDocument, aSheet, aLoader,
   }
 };
 
-function collectStyles( aRules, aChanges, aDocument, aLoader, aDirectory ) {
+function collectStyles( aRules, aChanges, aDocument, aLoader, aDirectory,
+                        aFlags ) {
   for ( var i = 0; i < aDocument.styleSheets.length; i++ ) {
     processStyleSheet( aRules, aChanges, aDocument, aDocument.styleSheets[i],
-      aLoader, aDirectory );
+                       aLoader, aDirectory, aFlags );
   }
 };
 
@@ -901,7 +909,8 @@ function fixupElement( anElement, aChanges, aFlags ) {
   }
   nodeName = ( prefix.length ? prefix + ":" : "" ) + localName;
   if ( nodeName !== name ) {
-    className = localName + "_" + createUUID();
+    className = ( aFlags & 0x00010000 /* SAVE_STYLES */ ) ?
+      localName + "_" + createUUID() : null;
     aChanges.push( {
       nodeName: name.replace( /\:/g, "\\:" ),
       className: className
@@ -946,15 +955,8 @@ function inspectElement( aRules, aChanges, anElement, aDocumentURL, aBaseURL,
         }
         break;
       case "base":
-        return anElement.parentNode.removeChild( anElement );
       case "style":
-        // TODO: STYLE
         return anElement.parentNode.removeChild( anElement );
-        /*
-        0x00010000 SAVE_STYLES
-        0x00100000 SAVE_STYLESHEETS_IN_SINGLE_FILE
-        0x01000000 SAVE_STYLESHEETS_IN_SEPARATE_FILES
-        */
       case "script":
       case "noscript":
         if ( aFlags & 0x00000001 /* SAVE_SCRIPTS */ ) {
@@ -1203,7 +1205,6 @@ function inspectElement( aRules, aChanges, anElement, aDocumentURL, aBaseURL,
     }
     anElement.removeAttribute( "_base_href" );
   }
-  // style
   if ( aFlags & 0x00010000 /* SAVE_STYLES */ ) {
     if ( anElement.style && anElement.style.cssText ) {
       var oldCSSText = anElement.style.cssText;
@@ -1225,79 +1226,127 @@ function inspectElement( aRules, aChanges, anElement, aDocumentURL, aBaseURL,
     }
   } else {
     anElement.removeAttribute( "style" );
+    anElement.removeAttribute( "class" );
   }
   return anElement;
 };
 
 function createStyles( aDocument, aRules, aBaseURL, aFile, aDirectory, aFlags ) {
-  var aURL, aText = "", line, index, anAtLines = [];
-  var aStyle = null, aCSSFile;
+  var aStyle, anURL, aText, aCSSFile, aCSSFileName, prefix;
+  var line, index, anAtLines = [];
   for ( var i = aRules.length - 1; i >= 0 ; i-- ) {
-    aRules[i].atlines = [];
+    Utils.log( i + ") " + aRules[i].href );
     for ( var j = aRules[i].lines.length - 1; j >= 0 ; j-- ) {
       line = aRules[i].lines[j].trim();
-      if ( !line.length ) {
-        aRules[i].lines.splice( j, 1 );
-      } else if ( line.indexOf( "@namespace" ) === 0 ) {
-        aRules[i].atlines.splice( 0, 0, line );
+      if ( line.length ) {
+        if ( !( aFlags & 0x01000000 /* SAVE_STYLESHEETS_IN_SEPARATE_FILES */ ) &&
+             line.indexOf( "@namespace" ) === 0 ) {
+          index = anAtLines.indexOf( line );
+          if ( index === -1 ) {
+            anAtLines.push( line );
+          }
+          aRules[i].lines.splice( j, 1 );
+        }
+      } else {
         aRules[i].lines.splice( j, 1 );
       }
     }
   }
+  aText = "";
   for ( var i = 0; i < aRules.length; i++ ) {
-    aURL = aRules[i].href;
-    if ( aRules[i].atlines.length ) {
-      for ( var j = 0; j < aRules[i].atlines.length; j++ ) {
-        line = aRules[i].atlines[j];
-        index = anAtLines.indexOf( line );
-        if ( index === -1 ) {
-          anAtLines.push( line );
+    if ( aRules[i].lines.length ) {
+      anURL = aRules[i].href;
+      if ( anURL ) {
+        if ( aFlags & 0x01000000 /* SAVE_STYLESHEETS_IN_SEPARATE_FILES */ ) {
+          aText = "/***** " + anURL + " *****/\n" +
+                  aRules[i].lines.join( "\n" );
+          aCSSFileName = getSuitableFileName( anURL, "text/css" );
+          prefix = "";
+          do {
+            aCSSFile = aDirectory.clone();
+            aCSSFile.append( prefix + aCSSFileName.name +
+                             "." + aCSSFileName.ext );
+            prefix += "_";
+          } while ( aCSSFile.exists() && !aCSSFile.isDirectory() );
+          writeFileEntry( aCSSFile, "utf-8", aText );
+          aStyle = aDocument.createElementNS(
+            aDocument.documentElement.namespaceURI,
+            "link"
+          );
+          aStyle.setAttribute( "rel", "stylesheet" );
+          aStyle.setAttribute( "type", "text/css" );
+          aStyle.setAttribute( "href", aCSSFile.leafName );
+          aDocument.getElementsByTagName( "head" )[0].appendChild(
+            aDocument.createTextNode( "\n" ) );
+          aDocument.getElementsByTagName( "head" )[0].appendChild( aStyle );
+        } else if ( aFlags & 0x00100000 /* SAVE_STYLESHEETS_IN_SINGLE_FILE */ ) {
+          aText += ( i ? "\n" : "" ) +
+                   "/***** " + anURL + " *****/\n" +
+                   aRules[i].lines.join( "\n" );
+        } else {
+          aText += ( i ? "\n      " : "" ) +
+                   "/***** " + anURL + " *****/\n      " +
+                   aRules[i].lines.join( "\n      " );
+        }
+      } else {
+        if ( aFlags & 0x01000000 /* SAVE_STYLESHEETS_IN_SEPARATE_FILES */ ) {
+          aText = aRules[i].lines.join( "\n      " );
+          aStyle = aDocument.createElementNS(
+            aDocument.documentElement.namespaceURI,
+            "style"
+          );
+          aStyle.textContent = aText + "\n    ";
+          aDocument.getElementsByTagName( "head" )[0].appendChild(
+            aDocument.createTextNode( "\n" ) );
+          aDocument.getElementsByTagName( "head" )[0].appendChild( aStyle );
+        } else if ( aFlags & 0x00100000 /* SAVE_STYLESHEETS_IN_SINGLE_FILE */ ) {
+          aText += ( i ? "\n" : "" ) +
+                   "/***** internal style sheet *****/\n" +
+                   aRules[i].lines.join( "\n" );
+        } else {
+          aText += ( i ? "\n      " : "" ) +
+                   "/***** internal style sheet *****/\n      " +
+                   aRules[i].lines.join( "\n      " );
         }
       }
     }
   }
-  aText += "\n      " + anAtLines.join( "\n      " );
-  for ( var i = 0; i < aRules.length; i++ ) {
-    aURL = aRules[i].href;
-    if ( aRules[i].lines.length ) {
-      if ( aURL ) {
-        aText += "\n      " +
-               "/***** " + aURL + " *****/" +
-               "\n      " +
-               aRules[i].lines.join( "\n      " );
-      } else {
-        aText += "\n      " +
-               "/***** internal style sheet *****/" +
-               "\n      " +
-               aRules[i].lines.join( "\n      " );
-      }
-    }
-  }
-  if ( aText ) {
+  if ( aText.length &&
+       !( aFlags & 0x01000000 /* SAVE_STYLESHEETS_IN_SEPARATE_FILES */ ) ) {
     if ( aFlags & 0x00100000 /* SAVE_STYLESHEETS_IN_SINGLE_FILE */ ) {
+      if ( anAtLines.length ) {
+        aText = anAtLines.join( "\n" ) + "\n" + aText + "\n";
+      }
+      prefix = "";
+      do {
+        aCSSFile = aDirectory.clone();
+        aCSSFile.append( prefix + "styles.css" );
+        prefix += "_";
+      } while ( aCSSFile.exists() && !aCSSFile.isDirectory() );
+      writeFileEntry( aCSSFile, "utf-8", aText );
       aStyle = aDocument.createElementNS(
         aDocument.documentElement.namespaceURI,
         "link"
       );
-      do {
-        aCSSFile = aDirectory.clone();
-        aCSSFile.append( createUUID().toLowerCase() + ".css" );
-      } while ( aCSSFile.exists() && !aCSSFile.isDirectory() );
-      writeFileEntry( aCSSFile, "utf-8", aText );
       aStyle.setAttribute( "rel", "stylesheet" );
       aStyle.setAttribute( "type", "text/css" );
       aStyle.setAttribute( "href", aCSSFile.leafName );
-      aDocument.getElementsByTagName( "head" )[0].appendChild( aStyle );
-    } else if ( aFlags & 0x01000000 /* SAVE_STYLESHEETS_IN_SEPARATE_FILES */ ) {
-      // TODO: STYLE
     } else {
+      if ( anAtLines.length ) {
+        aText = "\n      " + anAtLines.join( "\n      " ) +
+                "\n      " + aText;
+      } else {
+        aText = "\n      " + aText;
+      }
       aStyle = aDocument.createElementNS(
         aDocument.documentElement.namespaceURI,
         "style"
       );
       aStyle.textContent = aText + "\n    ";
-      aDocument.getElementsByTagName( "head" )[0].appendChild( aStyle );
     }
+    aDocument.getElementsByTagName( "head" )[0].appendChild(
+      aDocument.createTextNode( "\n" ) );
+    aDocument.getElementsByTagName( "head" )[0].appendChild( aStyle );
   }
 };
 
@@ -1392,14 +1441,17 @@ function saveDocument( aDocument, aResultObj, aFile, aDirectory, aLoader,
     aLoader,
     aFlags
   );
-  // TODO: STYLE
-  collectStyles(
-    aRules,
-    aChanges,
-    aDocument,
-    aLoader,
-    aDirectory
-  );
+  Utils.log( Utils.dumpObject( aRules ) );
+  if ( aFlags & 0x00010000 /* SAVE_STYLES */ ) {
+    collectStyles(
+      aRules,
+      aChanges,
+      aDocument,
+      aLoader,
+      aDirectory,
+      aFlags
+    );
+  }
   if ( aLoader.hasGroupJobs( aDocument.documentURI ) ) {
     aLoader.addObserver( {
       onGroupStopped: function( anEvent ) {

@@ -1445,8 +1445,8 @@ ru.akman.znotes.Main = function() {
   function doOpenOptionsDialog() {
     window.openDialog(
       "chrome://znotes/content/options.xul",
-      "_blank",
-      "chrome,dialog=yes,modal=yes,centerscreen,resizable=yes"
+      "",
+      "chrome,dialog,modal,centerscreen,resizable=yes"
     ).focus();
     return true;
   };
