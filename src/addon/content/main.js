@@ -1443,7 +1443,7 @@ ru.akman.znotes.Main = function() {
 
   // znotes_openoptionsdialog_command
   function doOpenOptionsDialog() {
-    window.openDialog(
+    window.open(
       "chrome://znotes/content/options.xul",
       "",
       "chrome,dialog,modal,centerscreen,resizable=yes"

@@ -53,6 +53,7 @@ ru.akman.znotes.Options = function() {
   
   var pub = {};
 
+  var currentWindow = null;
   var optionsTabs = null;
   var optionsPanels = null;
   var optionsPrefs = {};
@@ -85,6 +86,8 @@ ru.akman.znotes.Options = function() {
   var keysPlatformGroupBox = null;
   var keysPlatformListBox = null;
   var keysListBox = null;
+  var acceptButton = null;
+  var cancelButton = null;
   var defaultsButton = null;
   var defaultDocumentType = null;
 
@@ -545,6 +548,43 @@ ru.akman.znotes.Options = function() {
     textbox.value = shortcuts[name]["default"];
     shortcuts[name]["current"] = shortcuts[name]["default"];
     updateTextboxStyle( shortcuts, textbox );
+  };
+  
+  function onAccept( event ) {
+    if ( currentOptions ) {
+      currentOptions.close();
+    }
+    closeMainTab();
+    saveAllPreferences();
+    window.removeEventListener( "close", ru.akman.znotes.Options.onClose, true );
+    window.close();
+  };
+  
+  function onCancel( event ) {
+    window.removeEventListener( "close", ru.akman.znotes.Options.onClose, true );
+    window.close();
+  };
+  
+  function confirmSave() {
+    var params = {
+      input: {
+        kind: 2,
+        title: getString( "options.confirm.exit.title" ),
+        message1: getString( "options.confirm.exit.message1" ),
+        message2: getString( "options.confirm.exit.message2" )
+      },
+      output: null
+    };
+    window.openDialog(
+      "chrome://znotes/content/confirmdialog.xul",
+      "",
+      "chrome,dialog,modal,centerscreen,resizable=no",
+      params
+    ).focus();
+    if ( params.output ) {
+      return ( params.output.result ? 1 : 0 );
+    }
+    return -1;
   };
   
   function onDefaults( event ) {
@@ -1065,23 +1105,18 @@ ru.akman.znotes.Options = function() {
   
   function addEventListeners() {
     optionsTabs.addEventListener( "select", onTabSelect, false );
+    acceptButton.addEventListener( "command", onAccept, false );
+    cancelButton.addEventListener( "command", onCancel, false );
     defaultsButton.addEventListener( "command", onDefaults, false );
     clipperSaveStyles.addEventListener( "command", onSaveStylesChanged, false );
   };
   
   // PUBLIC
   
-  pub.onDialogAccept = function() {
-    if ( currentOptions ) {
-      currentOptions.close();
-    }
-    closeMainTab();
-    saveAllPreferences();
-  };
-
   pub.onLoad = function() {
     Utils.initGlobals();
     prefsBundle.loadPrefs();
+    currentWindow = window;
     placeName = document.getElementById( "placeName" );
     isSavePosition = document.getElementById( "isSavePosition" );
     isEditSourceEnabled = document.getElementById( "isEditSourceEnabled" );
@@ -1122,6 +1157,8 @@ ru.akman.znotes.Options = function() {
     keysListBox = document.getElementById( "keysListBox" );
     optionsTabs = document.getElementById( "optionsTabs" );
     optionsPanels = document.getElementById( "optionsPanels" );
+    acceptButton = document.getElementById( "acceptButton" );
+    cancelButton = document.getElementById( "cancelButton" );
     defaultsButton = document.getElementById( "defaultsButton" );
     keysPlatformGroupBox = document.getElementById( "keysPlatformGroupBox" );
     keysPlatformListBox = document.getElementById( "keysPlatformListBox" );
@@ -1137,15 +1174,15 @@ ru.akman.znotes.Options = function() {
           if ( topic == "xul-overlay-merged" ) {
             createTabs();
             openMainTab();
+            sizeToContent();
           }
         }
       }
     );
-    window.centerWindowOnScreen();
   };
   
   pub.onClose = function( event ) {
-    var isChanged = false;
+    var confirm, isChanged = false;
     if ( currentOptions ) {
       if ( currentOptions.close() ) {
         isChanged = true;
@@ -1154,32 +1191,19 @@ ru.akman.znotes.Options = function() {
     if ( closeMainTab() ) {
       isChanged = true;
     }
-    if ( isChanged ) {
-      var params = {
-        kind: 2,
-        input: {
-          title: getString( "options.confirm.exit.title" ),
-          message1: getString( "options.confirm.exit.message1" ),
-          message2: getString( "options.confirm.exit.message2" )
-        },
-        output: null
-      };
-      window.openDialog(
-        "chrome://znotes/content/confirmdialog.xul",
-        "",
-        "chrome,dialog,modal,centerscreen,resizable=no",
-        params
-      ).focus();
-      if ( params.output ) {
-        if ( params.output.result ) {
-          saveAllPreferences();
-        }
-      } else {
-        event.preventDefault();
-        event.stopPropagation();
-        return false;
-      }
+    if ( !isChanged ) {
+      return true;
     }
+    confirm = confirmSave();
+    if ( confirm === -1 ) {
+      event.preventDefault();
+      event.stopPropagation();
+      return false;
+    }
+    if ( confirm === 1 ) {
+      saveAllPreferences();
+    }
+    return true;
   };
   
   return pub;
@@ -1188,4 +1212,3 @@ ru.akman.znotes.Options = function() {
 
 window.addEventListener( "load", ru.akman.znotes.Options.onLoad, false );
 window.addEventListener( "close", ru.akman.znotes.Options.onClose, true );
-window.addEventListener( "dialogaccept", ru.akman.znotes.Options.onDialogAccept, false );

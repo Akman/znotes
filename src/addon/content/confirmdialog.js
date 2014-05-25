@@ -34,7 +34,13 @@ if ( !ru ) var ru = {};
 if ( !ru.akman ) ru.akman = {};
 if ( !ru.akman.znotes ) ru.akman.znotes = {};
 
+Components.utils.import( "resource://znotes/utils.js",
+  ru.akman.znotes
+);
+
 ru.akman.znotes.ConfirmDialog = function() {
+
+  var Utils = ru.akman.znotes.Utils;
 
   var args = null;
   var kind = 0;

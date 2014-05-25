@@ -38,9 +38,12 @@
 
 <!DOCTYPE window SYSTEM "chrome://znotes/locale/options.dtd">
 
-<dialog xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-  id="znotes" orient="vertical" windowtype="znotes" title="&window.title;"
-  minwidth="640" persist="width height sizemode">
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  id="znotes"
+  windowtype="znotes:options"
+  title="&window.title;"
+  orient="vertical"
+  minwidth="640">
 
   <script type="application/javascript"
     src="chrome://znotes/content/options.js" />
@@ -115,8 +118,8 @@
           </vbox>
         </groupbox>
       </tabpanel>
-      <tabpanel id="panel-mainshortcuts" orient="vertical" flex="1">
-        <groupbox id="keysPlatformGroupBox" collapsed="true">
+      <tabpanel id="panel-mainshortcuts" orient="vertical">
+        <groupbox id="keysPlatformGroupBox" collapsed="true" flex="1">
           <caption id="keysPlatformCaption"
             label="&keysPlatformCaption.label;" />
           <richlistbox id="keysPlatformListBox" class="key_list"
@@ -132,10 +135,10 @@
   </tabbox>
 
   <hbox id="buttonsHBox" dir="rtl">
-    <button id="acceptButton" dlgtype="accept" minwidth="90"
+    <button id="acceptButton" minwidth="90"
       label=" &acceptButton.label;"
       tooltiptext="&acceptButton.tooltip;" />
-    <button id="cancelButton" dlgtype="cancel" minwidth="90"
+    <button id="cancelButton" minwidth="90"
       label=" &cancelButton.label;"
       tooltiptext="&cancelButton.tooltip;" />
     <spacer id="buttonSpacer" flex="1" />
@@ -144,4 +147,4 @@
       tooltiptext="&defaultsButton.tooltip;" />
   </hbox>
   
-</dialog>
+</window>

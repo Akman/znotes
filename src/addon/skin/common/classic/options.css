@@ -33,6 +33,7 @@
 /* ***** classic/1.0 common **** */
 
 #optionsTabBox {
+  margin: 4px 2px 2px 4px;
 }
 #optionsTabs {
 }
@@ -50,18 +51,18 @@
 }
 
 #buttonsHBox {
-  margin-top: 9px;
 }
 #acceptButton {
   list-style-image: url("chrome://znotes_images/skin/accept-16x16.png");
-  margin-right: 1px;
+  margin: 0px 3px 3px 3px;
 }
 #cancelButton {
   list-style-image: url("chrome://znotes_images/skin/cancel-16x16.png");
+  margin: 0px 3px 3px 3px;
 }
 #defaultsButton {
   list-style-image: url("chrome://znotes_images/skin/default-16x16.png");
-  margin-left: -1px;
+  margin: 0px 3px 3px 3px;
 }
 
 .key_list {
