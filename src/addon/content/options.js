@@ -998,6 +998,7 @@ ru.akman.znotes.Options = function() {
       panel = document.createElement( "tabpanel" );
       panel.setAttribute( "id", "panel-" + name );
       panel.setAttribute( "orient", "vertical" );
+      panel.setAttribute( "flex", "1" );
       optionsPanels.appendChild( panel );
       // prefs
       var documentPrefs = opt.getDocumentPreferences();

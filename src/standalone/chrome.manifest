@@ -34,6 +34,7 @@ content   znotes            jar:chrome/znotes.jar!/content/
 content   znotes_drivers    modules/drivers/
 content   znotes_documents  modules/documents/
 content   znotes_welcome    welcome/
+content   znotes_changes    changes/
 content   branding          branding/
 resource  znotes            modules/
 skin      platform          classic/1.0 jar:chrome/platform.jar!/skin/winnt/classic/ os=WINNT osversion<6

@@ -36,6 +36,7 @@
 <?xul-overlay href="chrome://znotes/content/common-xr.xul" ?>
 <?xul-overlay href="chrome://znotes/content/maintab.xul" ?>
 <?xul-overlay href="chrome://znotes/content/contenttab.xul" ?>
+<?xul-overlay href="chrome://znotes/content/infotab.xul" ?>
 
 <!DOCTYPE overlay SYSTEM "chrome://znotes/locale/overlay-xr.dtd">
 
@@ -61,6 +62,7 @@
   
   <vbox id="znotes_tabpanelcontainer">
     <vbox id="znotes_contenttabpanel" />
+    <vbox id="znotes_infotabpanel" />
   </vbox>
   
   <statusbar id="znotes_statusbar">

@@ -36,6 +36,7 @@
 <?xul-overlay href="chrome://znotes/content/common-tb.xul" ?>
 <?xul-overlay href="chrome://znotes/content/maintab.xul" ?>
 <?xul-overlay href="chrome://znotes/content/contenttab.xul" ?>
+<?xul-overlay href="chrome://znotes/content/infotab.xul" ?>
 
 <!DOCTYPE overlay SYSTEM "chrome://znotes/locale/overlay-tb.dtd">
 
@@ -50,6 +51,8 @@
     src="chrome://znotes/content/maintabtype.js" />
   <script type="application/javascript"
     src="chrome://znotes/content/contenttabtype.js" />
+  <script type="application/javascript"
+    src="chrome://znotes/content/infotabtype.js" />
 
   <!-- messenger window -->
 
@@ -239,6 +242,7 @@
   <hbox id="tabmail-container">
     <vbox id="znotes_maintabpanel" collapsed="true" />
     <vbox id="znotes_contenttabpanel" collapsed="true" />
+    <vbox id="znotes_infotabpanel" collapsed="true" />
   </hbox>
 
   <!-- message context menu -->

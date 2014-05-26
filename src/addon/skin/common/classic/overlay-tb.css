@@ -34,7 +34,7 @@
 
 .tabmail-tab[type="znotesMainTab"],
 .tabmail-tab[type="znotesContentTab"],
-.tabmail-tab[type="znotesDebugTab"] {
+.tabmail-tab[type="znotesInfoTab"] {
   list-style-image: url("chrome://znotes_images/skin/znotes-16x16.png");
 }
 

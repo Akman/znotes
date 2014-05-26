@@ -90,35 +90,35 @@
         <groupbox id="clipperGroupBox">
           <caption id="clipperCaption" label="&clipperCaption.label;" />
           <vbox id="clipperVBox" align="start">
-            <checkbox id="clipperSaveScripts" label="&clipperSaveScripts.label;" flex="1" />
-            <checkbox id="clipperSaveFrames" label="&clipperSaveFrames.label;" flex="1" />
-            <checkbox id="clipperSeparateFrames" label="&clipperSeparateFrames.label;" flex="1" />
-            <checkbox id="clipperPreserveHTML5Tags" label="&clipperPreserveHTML5Tags.label;" flex="1" />
-            <checkbox id="clipperSaveStyles" label="&clipperSaveStyles.label;" flex="1" />
+            <checkbox id="clipperSaveScripts" label="&clipperSaveScripts.label;" />
+            <checkbox id="clipperSaveFrames" label="&clipperSaveFrames.label;" />
+            <checkbox id="clipperSeparateFrames" label="&clipperSeparateFrames.label;" />
+            <checkbox id="clipperPreserveHTML5Tags" label="&clipperPreserveHTML5Tags.label;" />
+            <checkbox id="clipperSaveStyles" label="&clipperSaveStyles.label;" />
             <radiogroup id="clipperSaveStylesGroup">
-              <radio id="clipperInlineStylesheets" label="&clipperInlineStylesheets.label;" flex="1" />
-              <radio id="clipperSingleStylesheet" label="&clipperSingleStylesheet.label;" flex="1" />
-              <radio id="clipperSeparateStylesheets" label="&clipperSeparateStylesheets.label;" flex="1" />
+              <radio id="clipperInlineStylesheets" label="&clipperInlineStylesheets.label;" />
+              <radio id="clipperSingleStylesheet" label="&clipperSingleStylesheet.label;" />
+              <radio id="clipperSeparateStylesheets" label="&clipperSeparateStylesheets.label;" />
             </radiogroup>            
-            <checkbox id="isCloseBrowserAfterImport" label="&isCloseBrowserAfterImport.label;" flex="1" />
-            <checkbox id="isSelectNoteAfterImport" label="&isSelectNoteAfterImport.label;" flex="1" />
-            <checkbox id="isClipperPlaySound" label="&isClipperPlaySound.label;" flex="1" />
+            <checkbox id="isCloseBrowserAfterImport" label="&isCloseBrowserAfterImport.label;" />
+            <checkbox id="isSelectNoteAfterImport" label="&isSelectNoteAfterImport.label;" />
+            <checkbox id="isClipperPlaySound" label="&isClipperPlaySound.label;" />
           </vbox>
         </groupbox>
-        <groupbox id="additionGroupBox">
+        <groupbox id="additionGroupBox" flex="1">
           <caption id="additionCaption" label="&additionCaption.label;" />
           <vbox id="additionVBox" align="start">
-            <checkbox id="isSavePosition" label="&isSavePosition.label;" flex="1" />
-            <checkbox id="isEditSourceEnabled" label="&isEditSourceEnabled.label;" flex="1" />
-            <checkbox id="isConfirmExit" label="&isConfirmExit.label;" flex="1" />
-            <checkbox id="isExitQuitTB" label="&isExitQuitTB.label;" flex="1" />
-            <checkbox id="isReplaceBackground" label="&isReplaceBackground.label;" flex="1" />
-            <checkbox id="isHighlightRow" label="&isHighlightRow.label;" flex="1" />
-            <checkbox id="isPlaySound" label="&isPlaySound.label;" flex="1" />
+            <checkbox id="isSavePosition" label="&isSavePosition.label;" />
+            <checkbox id="isEditSourceEnabled" label="&isEditSourceEnabled.label;" />
+            <checkbox id="isConfirmExit" label="&isConfirmExit.label;" />
+            <checkbox id="isExitQuitTB" label="&isExitQuitTB.label;" />
+            <checkbox id="isReplaceBackground" label="&isReplaceBackground.label;" />
+            <checkbox id="isHighlightRow" label="&isHighlightRow.label;" />
+            <checkbox id="isPlaySound" label="&isPlaySound.label;" />
           </vbox>
         </groupbox>
       </tabpanel>
-      <tabpanel id="panel-mainshortcuts" orient="vertical">
+      <tabpanel id="panel-mainshortcuts" orient="vertical" flex="1">
         <groupbox id="keysPlatformGroupBox" collapsed="true" flex="1">
           <caption id="keysPlatformCaption"
             label="&keysPlatformCaption.label;" />

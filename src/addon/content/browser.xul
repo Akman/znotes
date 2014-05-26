@@ -150,7 +150,7 @@
   <vbox id="browserView" flex="1" class="browserView">
     <browser id="zBrowser" flex="1"
       src="about:blank"
-      class="gBrowser"
+      class="zBrowser"
       type="content-primary" />
   </vbox>
 

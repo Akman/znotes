@@ -561,10 +561,6 @@ ru.akman.znotes.Main = function() {
     if ( Utils.IS_FIRST_RUN ) {
       prefsBundle.setBoolPref( "isFirstRun", false );
     }
-    if ( prefsBundle.getCharPref( "version" ) != Utils.VERSION ) {
-      prefsBundle.setCharPref( "version", Utils.VERSION );
-      Utils.IS_NEW_VERSION = true;
-    }
     if ( Utils.IS_FIRST_RUN || Utils.IS_DEBUG_ENABLED ) {
 		  observerService.notifyObservers( null, "startupcache-invalidate", null );
 		  observerService.notifyObservers( null, "chrome-flush-skin-caches", null );
@@ -5832,9 +5828,6 @@ ru.akman.znotes.Main = function() {
     if ( Utils.IS_TEST_ACTIVE ) {
       doOpenTestSuiteWindow();
     }
-    if ( Utils.IS_NEW_VERSION ) {
-      showNewVersionInfo();
-    }
     if ( Utils.IS_PLAY_SOUND ) {
       playSound();
     }
@@ -6003,10 +5996,6 @@ ru.akman.znotes.Main = function() {
         consoleWindow.close();
       }
     }
-  };
-  
-  function showNewVersionInfo() {
-    Utils.log( "TODO: showNewVersionInfo()" );
   };
   
   // PUBLIC
