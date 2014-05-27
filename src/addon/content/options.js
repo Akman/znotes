@@ -824,7 +824,7 @@ ru.akman.znotes.Options = function() {
       node = node.nextSibling;
     }
     if ( count ) {
-      keysPlatformGroupBox.removeAttribute( "collapsed" );
+      keysPlatformGroupBox.removeAttribute( "hidden" );
     }
     return result;
   };
@@ -1175,7 +1175,7 @@ ru.akman.znotes.Options = function() {
           if ( topic == "xul-overlay-merged" ) {
             createTabs();
             openMainTab();
-            sizeToContent();
+            window.sizeToContent();
           }
         }
       }

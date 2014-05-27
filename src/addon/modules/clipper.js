@@ -938,7 +938,12 @@ function addJobObserver( aJob, aCallback, aLines, anIndex ) {
 
 function inspectElement( aRules, aChanges, anElement, aDocumentURL, aBaseURL,
                          aFrames, aDirectory, aLoader, aFlags ) {
-  var anURL, aDocument, aFile, aContentType, aResultObj = { value: null };
+  var ioService =
+    Components.classes["@mozilla.org/network/io-service;1"]
+              .getService( Components.interfaces.nsIIOService );
+  var anURL, anURI, aDocument, aFile, aContentType;
+  var aResultObj = { value: null };
+  var aDocumentURI = ioService.newURI( aDocumentURL, null, null );
   var frameEntries, fileNameObj, oldCSSText, newCSSText;
   if ( anElement.namespaceURI === "http://www.w3.org/1999/xhtml" ) {
     switch ( anElement.localName.toLowerCase() ) {
@@ -1159,6 +1164,10 @@ function inspectElement( aRules, aChanges, anElement, aDocumentURL, aBaseURL,
         if ( anElement.href ) {
           anURL = resolveURL( anElement.href, aBaseURL );
           if ( checkURL( anURL ) ) {
+            anURI = ioService.newURI( anURL, null, null );
+            if ( anURI.equalsExceptRef( aDocumentURI ) && anURI.ref ) {
+              anURL = "#" + anURI.ref;
+            }
             setElementAttribute( anElement, "href", anURL );
           }
         }
@@ -1235,7 +1244,6 @@ function createStyles( aDocument, aRules, aBaseURL, aFile, aDirectory, aFlags ) 
   var aStyle, anURL, aText, aCSSFile, aCSSFileName, prefix;
   var line, index, anAtLines = [];
   for ( var i = aRules.length - 1; i >= 0 ; i-- ) {
-    Utils.log( i + ") " + aRules[i].href );
     for ( var j = aRules[i].lines.length - 1; j >= 0 ; j-- ) {
       line = aRules[i].lines[j].trim();
       if ( line.length ) {
@@ -1441,7 +1449,6 @@ function saveDocument( aDocument, aResultObj, aFile, aDirectory, aLoader,
     aLoader,
     aFlags
   );
-  Utils.log( Utils.dumpObject( aRules ) );
   if ( aFlags & 0x00010000 /* SAVE_STYLES */ ) {
     collectStyles(
       aRules,

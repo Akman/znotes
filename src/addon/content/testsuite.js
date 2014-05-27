@@ -656,16 +656,6 @@ ru.akman.znotes.TestSuite = function() {
     }
   } );
 
-  tests.push(
-    {
-      name: "New Version Info",
-      description: "Show new version info (changes)",
-      code: function () {
-        ctx.showNewVersionInfo();
-      }
-    }
-  );
-  
   tests.push( {
     name: "Content Tab",
     description: "Content Tab",

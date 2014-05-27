@@ -42,6 +42,8 @@
   windowtype="znotes:browser"
   title="&browserWindowTitle;"
   orient="vertical"
+  width="800"
+  height="600"
   persist="width height screenX screenY sizemode">
   
   <script type="application/javascript"

@@ -43,7 +43,8 @@
   windowtype="znotes:options"
   title="&window.title;"
   orient="vertical"
-  minwidth="640">
+  width="640" minwidth="640"
+  height="480">
 
   <script type="application/javascript"
     src="chrome://znotes/content/options.js" />
@@ -83,7 +84,7 @@
           <caption id="docTypeCaption" label="&docTypeCaption.label;" />
           <hbox id="docTypeHBox" align="center">
             <menulist id="docTypeMenuList" flex="1">
-              <menupopup id="docTypeMenuPopup" flex="1" />
+              <menupopup id="docTypeMenuPopup" />
             </menulist>      
           </hbox>
         </groupbox>
@@ -105,7 +106,7 @@
             <checkbox id="isClipperPlaySound" label="&isClipperPlaySound.label;" />
           </vbox>
         </groupbox>
-        <groupbox id="additionGroupBox" flex="1">
+        <groupbox id="additionGroupBox">
           <caption id="additionCaption" label="&additionCaption.label;" />
           <vbox id="additionVBox" align="start">
             <checkbox id="isSavePosition" label="&isSavePosition.label;" />
@@ -119,11 +120,11 @@
         </groupbox>
       </tabpanel>
       <tabpanel id="panel-mainshortcuts" orient="vertical" flex="1">
-        <groupbox id="keysPlatformGroupBox" collapsed="true" flex="1">
+        <groupbox id="keysPlatformGroupBox" collapsed="true">
           <caption id="keysPlatformCaption"
             label="&keysPlatformCaption.label;" />
           <richlistbox id="keysPlatformListBox" class="key_list"
-            seltype="single" flex="1"/>
+            seltype="single"/>
         </groupbox>
         <groupbox id="keysGroupBox" flex="1">
           <caption id="keysCaption" label="&keysCaption.label;" />

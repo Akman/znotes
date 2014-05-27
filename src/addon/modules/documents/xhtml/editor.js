@@ -77,6 +77,9 @@ var Editor = function() {
     var observerService =
       Components.classes["@mozilla.org/observer-service;1"]
                 .getService( Components.interfaces.nsIObserverService );
+    var ioService =
+      Components.classes["@mozilla.org/network/io-service;1"]
+                .getService( Components.interfaces.nsIIOService );
     
     var self = this;
     
@@ -4253,10 +4256,42 @@ var Editor = function() {
     };
     
     function designClickHandler( event ) {
+      var href, uri, anchor;
+      if ( !event.isTrusted || event.defaultPrevented || event.button ) {
+        return true;
+      }
       if ( currentMode == "editor" ) {
         return true;
       }
-      return Utils.clickHandler( event );
+      href = Utils.getHREFForClickEvent( event, true );
+      if ( !href ) {
+        return true;
+      }
+      uri = null;
+      try {
+        uri = ioService.newURI( href, null, null );
+      } catch ( e ) {
+        uri = null;
+      }
+      if ( !uri ) {
+        return true;
+      }
+      if ( !uri.equalsExceptRef( currentNote.getBaseURI() ) ) {
+        return Utils.clickHandler( event );
+      }
+      if ( uri.ref ) {
+        anchor = designFrame.contentDocument.getElementById( uri.ref );
+        if ( !anchor ) {
+          anchor = designFrame.contentDocument.querySelector(
+          'a[name="' + uri.ref + '"]' );
+        }
+        if ( anchor ) {
+          anchor.scrollIntoView( true );
+        }
+      }
+      event.stopPropagation();
+      event.preventDefault();
+      return false;
     };
     
     function designOverHandler( event ) {
@@ -4346,7 +4381,7 @@ var Editor = function() {
       isParseError = !obj.result;
       isParseModified = obj.changed;
       var designDocument;
-      if ( currentMode == "editor" ) {
+      if ( currentMode === "editor" ) {
         designDocument = designEditor.document;
         try {
           designEditor.beginTransaction();

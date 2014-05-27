@@ -92,6 +92,10 @@ ru.akman.znotes.Main = function() {
   var prefsMozilla =
     Components.classes["@mozilla.org/preferences-service;1"]
               .getService( Components.interfaces.nsIPrefBranch );
+
+  var ioService =
+    Components.classes["@mozilla.org/network/io-service;1"]
+              .getService( Components.interfaces.nsIIOService );
               
   var prefsBundle = ru.akman.znotes.PrefsManager.getInstance();
   var sessionManager = ru.akman.znotes.SessionManager.getInstance();
@@ -309,13 +313,22 @@ ru.akman.znotes.Main = function() {
   
   var helperObserver = {
     observe: function( aSubject, aTopic, aData ) {
+      var uri;
       switch ( aTopic ) {
         case "znotes-href":
           if ( aSubject != window || !currentNote ||
-               currentNote.getMode() == "editor" ) {
+               currentNote.getMode() === "editor" ) {
             break;
           }
-          if ( aData ) {
+          try {
+            uri = ioService.newURI( aData, null, null );
+          } catch ( e ) {
+            uri = null;
+          }
+          if ( uri ) {
+            if ( uri.equalsExceptRef( currentNote.getBaseURI() ) ) {
+              aData = "#" + uri.ref;
+            }
             statusBarLabel.setAttribute( "value", aData );
           } else {
             statusBarLabel.setAttribute( "value", "" );
