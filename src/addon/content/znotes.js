@@ -36,13 +36,29 @@ if ( !ru.akman.znotes ) ru.akman.znotes = {};
 
 Components.utils.import( "resource://znotes/utils.js", ru.akman.znotes );
 
-// following function needs venkman debugger
-// @see https://developer.mozilla.org/en-US/docs/Mozilla/Projects/XULRunner/Debugging_XULRunner_applications
-function toOpenWindowByType( inType, uri ) {
-  var winopts =
-    "chrome,extrachrome,menubar,resizable,scrollbars,status,toolbar";
-  window.open( uri, "_blank", winopts );
-}
+function toOpenWindowByType( inType, inURI ) {
+  var win =
+    Components.classes["@mozilla.org/appshell/window-mediator;1"]
+              .getService( Components.interfaces.nsIWindowMediator )
+              .getMostRecentWindow( inType );
+  if ( win ) {
+    win.focus();
+  } else {
+    win = window.open(
+      inURI,
+      "_blank",
+      "chrome,extrachrome,menubar,resizable,scrollbars,status,toolbar"
+    );
+  }
+  return win;
+};
+
+function toJavaScriptConsole() {
+  return toOpenWindowByType(
+    "global:console",
+    "chrome://global/content/console.xul"
+  );
+};
 
 ru.akman.znotes.Platform = function() {
 

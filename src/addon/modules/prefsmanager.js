@@ -227,6 +227,15 @@ var PrefsManager = function() {
           prefsMozilla.getBoolPref( "extensions.znotes.sanitize" );
       } catch ( e ) {
         prefsMozilla.deleteBranch( "extensions.znotes.sanitize" );
+        Utils.IS_SANITIZE_ENABLED = !Utils.IS_STANDALONE;
+        if ( Utils.IS_STANDALONE ) {
+          prefsMozilla.setBoolPref( "extensions.znotes.sanitize", false );
+        }
+      }
+    } else {
+      Utils.IS_SANITIZE_ENABLED = !Utils.IS_STANDALONE;
+      if ( Utils.IS_STANDALONE ) {
+        prefsMozilla.setBoolPref( "extensions.znotes.sanitize", false );
       }
     }
     if ( prefsMozilla.prefHasUserValue( "extensions.znotes.ad" ) ) {
@@ -278,44 +287,89 @@ var PrefsManager = function() {
       Utils.IS_CLIPPER_PLAY_SOUND =
         pub.getBoolPref( "isClipperPlaySound" );
       //
-      if ( !pub.hasPref( "clipperSaveScripts" ) ) {
-        pub.setBoolPref( "clipperSaveScripts",
-          !!( Utils.CLIPPER_FLAGS & 0x00000001 ) );
-      }
-      if ( pub.getBoolPref( "clipperSaveScripts" ) ) {
-        Utils.CLIPPER_FLAGS |= 0x00000001;
+      if ( Utils.IS_SANITIZE_ENABLED ) {
+        Utils.CLIPPER_FLAGS &= 0x00010000;
+        // SAVE_STYLES
+        if ( !pub.hasPref( "clipperSaveStyles" ) ) {
+          pub.setBoolPref( "clipperSaveStyles",
+            !!( Utils.CLIPPER_FLAGS & 0x00010000 ) );
+        }
+        if ( pub.getBoolPref( "clipperSaveStyles" ) ) {
+          Utils.CLIPPER_FLAGS |= 0x00010000;
+        } else {
+          Utils.CLIPPER_FLAGS &= 0x11101111;
+        }
       } else {
-        Utils.CLIPPER_FLAGS &= 0x11111110;
-      }
-      //
-      if ( !pub.hasPref( "clipperSaveFrames" ) ) {
-        pub.setBoolPref( "clipperSaveFrames",
-          !!( Utils.CLIPPER_FLAGS & 0x00000010 ) );
-      }
-      if ( pub.getBoolPref( "clipperSaveFrames" ) ) {
-        Utils.CLIPPER_FLAGS |= 0x00000010;
-      } else {
-        Utils.CLIPPER_FLAGS &= 0x11111101;
-      }
-      //
-      if ( !pub.hasPref( "clipperSeparateFrames" ) ) {
-        pub.setBoolPref( "clipperSeparateFrames",
-          !!( Utils.CLIPPER_FLAGS & 0x00000100 ) );
-      }
-      if ( pub.getBoolPref( "clipperSeparateFrames" ) ) {
-        Utils.CLIPPER_FLAGS |= 0x00000100;
-      } else {
-        Utils.CLIPPER_FLAGS &= 0x11111011;
-      }
-      //
-      if ( !pub.hasPref( "clipperPreserveHTML5Tags" ) ) {
-        pub.setBoolPref( "clipperPreserveHTML5Tags",
-          !!( Utils.CLIPPER_FLAGS & 0x00001000 ) );
-      }
-      if ( pub.getBoolPref( "clipperPreserveHTML5Tags" ) ) {
-        Utils.CLIPPER_FLAGS |= 0x00001000;
-      } else {
-        Utils.CLIPPER_FLAGS &= 0x11110111;
+        // SAVE_SCRIPTS
+        if ( !pub.hasPref( "clipperSaveScripts" ) ) {
+          pub.setBoolPref( "clipperSaveScripts",
+            !!( Utils.CLIPPER_FLAGS & 0x00000001 ) );
+        }
+        if ( pub.getBoolPref( "clipperSaveScripts" ) ) {
+          Utils.CLIPPER_FLAGS |= 0x00000001;
+        } else {
+          Utils.CLIPPER_FLAGS &= 0x11111110;
+        }
+        // SAVE_FRAMES
+        if ( !pub.hasPref( "clipperSaveFrames" ) ) {
+          pub.setBoolPref( "clipperSaveFrames",
+            !!( Utils.CLIPPER_FLAGS & 0x00000010 ) );
+        }
+        if ( pub.getBoolPref( "clipperSaveFrames" ) ) {
+          Utils.CLIPPER_FLAGS |= 0x00000010;
+        } else {
+          Utils.CLIPPER_FLAGS &= 0x11111101;
+        }
+        // SAVE_FRAMES_IN_SEPARATE_DIRECTORY
+        if ( !pub.hasPref( "clipperSeparateFrames" ) ) {
+          pub.setBoolPref( "clipperSeparateFrames",
+            !!( Utils.CLIPPER_FLAGS & 0x00000100 ) );
+        }
+        if ( pub.getBoolPref( "clipperSeparateFrames" ) ) {
+          Utils.CLIPPER_FLAGS |= 0x00000100;
+        } else {
+          Utils.CLIPPER_FLAGS &= 0x11111011;
+        }
+        // PRESERVE_HTML5_TAGS
+        if ( !pub.hasPref( "clipperPreserveHTML5Tags" ) ) {
+          pub.setBoolPref( "clipperPreserveHTML5Tags",
+            !!( Utils.CLIPPER_FLAGS & 0x00001000 ) );
+        }
+        if ( pub.getBoolPref( "clipperPreserveHTML5Tags" ) ) {
+          Utils.CLIPPER_FLAGS |= 0x00001000;
+        } else {
+          Utils.CLIPPER_FLAGS &= 0x11110111;
+        }
+        // SAVE_STYLES
+        if ( !pub.hasPref( "clipperSaveStyles" ) ) {
+          pub.setBoolPref( "clipperSaveStyles",
+            !!( Utils.CLIPPER_FLAGS & 0x00010000 ) );
+        }
+        if ( pub.getBoolPref( "clipperSaveStyles" ) ) {
+          Utils.CLIPPER_FLAGS |= 0x00010000;
+        } else {
+          Utils.CLIPPER_FLAGS &= 0x11101111;
+        }
+        // SAVE_STYLESHEETS_IN_SINGLE_FILE
+        if ( !pub.hasPref( "clipperSingleStylesheet" ) ) {
+          pub.setBoolPref( "clipperSingleStylesheet",
+            !!( Utils.CLIPPER_FLAGS & 0x00100000 ) );
+        }
+        if ( pub.getBoolPref( "clipperSingleStylesheet" ) ) {
+          Utils.CLIPPER_FLAGS |= 0x00100000;
+        } else {
+          Utils.CLIPPER_FLAGS &= 0x11011111;
+        }
+        // SAVE_STYLESHEETS_IN_SEPARATE_FILES
+        if ( !pub.hasPref( "clipperSeparateStylesheets" ) ) {
+          pub.setBoolPref( "clipperSeparateStylesheets",
+            !!( Utils.CLIPPER_FLAGS & 0x01000000 ) );
+        }
+        if ( pub.getBoolPref( "clipperSeparateStylesheets" ) ) {
+          Utils.CLIPPER_FLAGS |= 0x01000000;
+        } else {
+          Utils.CLIPPER_FLAGS &= 0x10111111;
+        }
       }
       //
       if ( !pub.hasPref( "isHighlightRow" ) ) {

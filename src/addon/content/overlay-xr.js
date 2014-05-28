@@ -248,6 +248,17 @@ ru.akman.znotes.ZNotes = function() {
     }
   };
 
+  function showNewVersionInfo() {
+    var infoURL = "chrome://znotes_changes/content/index_" +
+                  Utils.getSiteLanguage() + ".xhtml";
+    var win = window.open(
+        "chrome://znotes/content/info.xul",
+        "znotes:info",
+        "chrome,toolbar,status,resizable,centerscreen"
+      );
+    win.arguments = [ { contentPage: infoURL, windowMode: "maximized" } ];
+  };
+  
   // PUBLIC
 
   pub.load = function( event ) {
@@ -264,6 +275,10 @@ ru.akman.znotes.ZNotes = function() {
     mainShutdownObserver.register();
     document.getElementById( "znotes_maintabbrowser" )
             .setAttribute( "src", "chrome://znotes/content/main.xul" );
+    if ( prefsBundle.getCharPref( "version" ) != Utils.VERSION ) {
+      prefsBundle.setCharPref( "version", Utils.VERSION );
+      showNewVersionInfo();
+    }
   };
 
   pub.unload = function( event ) {

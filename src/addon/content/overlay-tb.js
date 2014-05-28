@@ -78,7 +78,9 @@ ru.akman.znotes.ZNotes = function() {
   
   var mailWindow = null;
   var folderTree = null;
+  //var folderTreeChildren = null;
   var threadTree = null;
+  //var threadTreeChildren = null;
   
   var keySet = null;
   var isMainLoaded = false;
@@ -182,9 +184,6 @@ ru.akman.znotes.ZNotes = function() {
           updateCommandsVisibility();
           Common.goUpdateCommand( "znotes_tbtestsuite_command", platformController.getId(), window );
           Common.goUpdateCommand( "znotes_tbconsole_command", platformController.getId(), window );
-          break;
-        case "sanitize":
-          Utils.IS_SANITIZE_ENABLED = this.branch.getBoolPref( "sanitize" );
           break;
       }
     },
@@ -785,10 +784,10 @@ ru.akman.znotes.ZNotes = function() {
     return mailWindow.gDBView ? mailWindow.gDBView.numSelected : 0;
   };
   
-  function onMessengerFocus( event ) {
+  function onMessengerEvent( event ) {
     Common.goUpdateCommand( "znotes_tbsaveasnote_command", platformController.getId(), window );
   };
-
+  
   // SHORTCUTS
 
   function setupKeyset() {
@@ -832,6 +831,7 @@ ru.akman.znotes.ZNotes = function() {
     }
     tabMail.registerTabType( ru.akman.znotes.MainTabType );
     tabMail.registerTabType( ru.akman.znotes.ContentTabType );
+    tabMail.registerTabType( ru.akman.znotes.InfoTabType );
     tabMail.registerTabMonitor( tabMonitor );
   };
 
@@ -860,10 +860,38 @@ ru.akman.znotes.ZNotes = function() {
   function addMessengerListeners() {
     folderTree = mailWindow.document.getElementById( "folderTree" );
     threadTree = mailWindow.document.getElementById( "threadTree" );
-    folderTree.addEventListener( "focus", onMessengerFocus, false );
-    folderTree.addEventListener( "blur", onMessengerFocus, false );
-    threadTree.addEventListener( "focus", onMessengerFocus, false );
-    threadTree.addEventListener( "blur", onMessengerFocus, false );
+    folderTree.addEventListener( "select", onMessengerEvent, false );
+    threadTree.addEventListener( "select", onMessengerEvent, false );
+    
+    folderTree.addEventListener( "focus", onMessengerEvent, false );
+    folderTree.addEventListener( "blur", onMessengerEvent, false );
+    /*
+    folderTree.boxObject.QueryInterface(
+      Components.interfaces.nsITreeBoxObject );
+    folderTreeChildren = folderTree.boxObject.treeBody;
+    folderTreeChildren.addEventListener( "draggesture", onMessengerEvent, false );
+    folderTreeChildren.addEventListener( "dragover", onMessengerEvent, false );
+    folderTreeChildren.addEventListener( "drop", onMessengerEvent, false );
+    */
+    threadTree.addEventListener( "focus", onMessengerEvent, false );
+    threadTree.addEventListener( "blur", onMessengerEvent, false );
+    /*
+    threadTree.boxObject.QueryInterface(
+      Components.interfaces.nsITreeBoxObject );
+    threadTreeChildren = threadTree.boxObject.treeBody;
+    threadTreeChildren.addEventListener( "draggesture", onMessengerEvent, false );
+    threadTreeChildren.addEventListener( "dragover", onMessengerEvent, false );
+    threadTreeChildren.addEventListener( "drop", onMessengerEvent, false );
+    */
+  };
+  
+  function showNewVersionInfo() {
+    var infoURL = "chrome://znotes_changes/content/index_" +
+                  Utils.getSiteLanguage() + ".xhtml";
+    var tabMail = Utils.getTabMail();
+    if ( tabMail ) {
+      tabMail.openTab( "znotesInfoTab", { contentPage: infoURL } );
+    }
   };
   
   function init() {
@@ -892,6 +920,10 @@ ru.akman.znotes.ZNotes = function() {
     updateCommandsVisibility();
     if ( mainWindowState.open ) {
       doOpenMainWindow( !mainWindowState.active );
+    }
+    if ( prefsBundle.getCharPref( "version" ) != Utils.VERSION ) {
+      prefsBundle.setCharPref( "version", Utils.VERSION );
+      showNewVersionInfo();
     }
   };
   

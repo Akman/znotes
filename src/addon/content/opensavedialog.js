@@ -1265,7 +1265,9 @@ ru.akman.znotes.OpenSaveDialog = function() {
         tbName.value = currentName;
         currentName = null;
       } else {
-        tbName.value = ( currentNote ? currentNote.getName() : "" );
+        if ( currentNote ) {
+          tbName.value = currentNote.getName();
+        }
       }
       updateTags( currentTag ? [ currentTag.getId() ] :
                                ( currentNote ? currentNote.getTags() : [] ) );
@@ -1290,7 +1292,12 @@ ru.akman.znotes.OpenSaveDialog = function() {
       btnAccept.removeAttribute( "disabled" );
     }
     if ( currentMode === "save" ) {
-      window.setTimeout( focusName, 0 );
+      window.setTimeout(
+        function() {
+          focusName()
+        },
+        0
+      );
     }
   };
   
@@ -1621,7 +1628,12 @@ ru.akman.znotes.OpenSaveDialog = function() {
   };
   
   function onNameKeyPress( event ) {
-    window.setTimeout( checkName, 0 );
+    window.setTimeout(
+      function() {
+        checkName();
+      },
+      0
+    );
   };
   
   function updateModeView() {

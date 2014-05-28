@@ -92,6 +92,10 @@ ru.akman.znotes.Main = function() {
   var prefsMozilla =
     Components.classes["@mozilla.org/preferences-service;1"]
               .getService( Components.interfaces.nsIPrefBranch );
+
+  var ioService =
+    Components.classes["@mozilla.org/network/io-service;1"]
+              .getService( Components.interfaces.nsIIOService );
               
   var prefsBundle = ru.akman.znotes.PrefsManager.getInstance();
   var sessionManager = ru.akman.znotes.SessionManager.getInstance();
@@ -101,6 +105,7 @@ ru.akman.znotes.Main = function() {
   var clipper = null;
   
   var consoleWindow = null;
+  var consoleFlag = false;
   
   var windowsList = null;
   
@@ -308,13 +313,22 @@ ru.akman.znotes.Main = function() {
   
   var helperObserver = {
     observe: function( aSubject, aTopic, aData ) {
+      var uri;
       switch ( aTopic ) {
         case "znotes-href":
           if ( aSubject != window || !currentNote ||
-               currentNote.getMode() == "editor" ) {
+               currentNote.getMode() === "editor" ) {
             break;
           }
-          if ( aData ) {
+          try {
+            uri = ioService.newURI( aData, null, null );
+          } catch ( e ) {
+            uri = null;
+          }
+          if ( uri ) {
+            if ( uri.equalsExceptRef( currentNote.getURI() ) ) {
+              aData = "#" + uri.ref;
+            }
             statusBarLabel.setAttribute( "value", aData );
           } else {
             statusBarLabel.setAttribute( "value", "" );
@@ -370,6 +384,27 @@ ru.akman.znotes.Main = function() {
             Utils.CLIPPER_FLAGS |= 0x00001000;
           } else {
             Utils.CLIPPER_FLAGS &= 0x11110111;
+          }
+          break;
+        case "clipperSaveStyles":
+          if ( event.data.newValue ) {
+            Utils.CLIPPER_FLAGS |= 0x00010000;
+          } else {
+            Utils.CLIPPER_FLAGS &= 0x11101111;
+          }
+          break;
+        case "clipperSingleStylesheet":
+          if ( event.data.newValue ) {
+            Utils.CLIPPER_FLAGS |= 0x00100000;
+          } else {
+            Utils.CLIPPER_FLAGS &= 0x11011111;
+          }
+          break;
+        case "clipperSeparateStylesheets":
+          if ( event.data.newValue ) {
+            Utils.CLIPPER_FLAGS |= 0x01000000;
+          } else {
+            Utils.CLIPPER_FLAGS &= 0x10111111;
           }
           break;
         case "isReplaceBackground":
@@ -437,6 +472,88 @@ ru.akman.znotes.Main = function() {
           break;
         case "sanitize":
           Utils.IS_SANITIZE_ENABLED = this.branch.getBoolPref( "sanitize" );
+          if ( Utils.IS_SANITIZE_ENABLED ) {
+            Utils.CLIPPER_FLAGS &= 0x00010000;
+            if ( !prefsBundle.hasPref( "clipperSaveStyles" ) ) {
+              prefsBundle.setBoolPref( "clipperSaveStyles",
+                !!( Utils.CLIPPER_FLAGS & 0x00010000 ) );
+            }
+            if ( prefsBundle.getBoolPref( "clipperSaveStyles" ) ) {
+              Utils.CLIPPER_FLAGS |= 0x00010000;
+            } else {
+              Utils.CLIPPER_FLAGS &= 0x11101111;
+            }
+          } else {
+            if ( !prefsBundle.hasPref( "clipperSaveScripts" ) ) {
+              prefsBundle.setBoolPref( "clipperSaveScripts",
+                !!( Utils.CLIPPER_FLAGS & 0x00000001 ) );
+            }
+            if ( prefsBundle.getBoolPref( "clipperSaveScripts" ) ) {
+              Utils.CLIPPER_FLAGS |= 0x00000001;
+            } else {
+              Utils.CLIPPER_FLAGS &= 0x11111110;
+            }
+            //
+            if ( !prefsBundle.hasPref( "clipperSaveFrames" ) ) {
+              prefsBundle.setBoolPref( "clipperSaveFrames",
+                !!( Utils.CLIPPER_FLAGS & 0x00000010 ) );
+            }
+            if ( prefsBundle.getBoolPref( "clipperSaveFrames" ) ) {
+              Utils.CLIPPER_FLAGS |= 0x00000010;
+            } else {
+              Utils.CLIPPER_FLAGS &= 0x11111101;
+            }
+            //
+            if ( !prefsBundle.hasPref( "clipperSeparateFrames" ) ) {
+              prefsBundle.setBoolPref( "clipperSeparateFrames",
+                !!( Utils.CLIPPER_FLAGS & 0x00000100 ) );
+            }
+            if ( prefsBundle.getBoolPref( "clipperSeparateFrames" ) ) {
+              Utils.CLIPPER_FLAGS |= 0x00000100;
+            } else {
+              Utils.CLIPPER_FLAGS &= 0x11111011;
+            }
+            //
+            if ( !prefsBundle.hasPref( "clipperPreserveHTML5Tags" ) ) {
+              prefsBundle.setBoolPref( "clipperPreserveHTML5Tags",
+                !!( Utils.CLIPPER_FLAGS & 0x00001000 ) );
+            }
+            if ( prefsBundle.getBoolPref( "clipperPreserveHTML5Tags" ) ) {
+              Utils.CLIPPER_FLAGS |= 0x00001000;
+            } else {
+              Utils.CLIPPER_FLAGS &= 0x11110111;
+            }
+            //
+            if ( !prefsBundle.hasPref( "clipperSaveStyles" ) ) {
+              prefsBundle.setBoolPref( "clipperSaveStyles",
+                !!( Utils.CLIPPER_FLAGS & 0x00010000 ) );
+            }
+            if ( prefsBundle.getBoolPref( "clipperSaveStyles" ) ) {
+              Utils.CLIPPER_FLAGS |= 0x00010000;
+            } else {
+              Utils.CLIPPER_FLAGS &= 0x11101111;
+            }
+            //
+            if ( !prefsBundle.hasPref( "clipperSingleStylesheet" ) ) {
+              prefsBundle.setBoolPref( "clipperSingleStylesheet",
+                !!( Utils.CLIPPER_FLAGS & 0x00100000 ) );
+            }
+            if ( prefsBundle.getBoolPref( "clipperSingleStylesheet" ) ) {
+              Utils.CLIPPER_FLAGS |= 0x00100000;
+            } else {
+              Utils.CLIPPER_FLAGS &= 0x11011111;
+            }
+            //
+            if ( !prefsBundle.hasPref( "clipperSeparateStylesheets" ) ) {
+              prefsBundle.setBoolPref( "clipperSeparateStylesheets",
+                !!( Utils.CLIPPER_FLAGS & 0x01000000 ) );
+            }
+            if ( prefsBundle.getBoolPref( "clipperSeparateStylesheets" ) ) {
+              Utils.CLIPPER_FLAGS |= 0x01000000;
+            } else {
+              Utils.CLIPPER_FLAGS &= 0x10111111;
+            }
+          }
           break;
       }
     },
@@ -456,11 +573,6 @@ ru.akman.znotes.Main = function() {
     prefsBundle.loadPrefs();
     if ( Utils.IS_FIRST_RUN ) {
       prefsBundle.setBoolPref( "isFirstRun", false );
-    }
-    if ( prefsBundle.getCharPref( "version" ) != Utils.VERSION ) {
-      prefsBundle.setCharPref( "version",
-        Utils.VERSION );
-      Utils.IS_FIRST_RUN = true;
     }
     if ( Utils.IS_FIRST_RUN || Utils.IS_DEBUG_ENABLED ) {
 		  observerService.notifyObservers( null, "startupcache-invalidate", null );
@@ -1141,12 +1253,16 @@ ru.akman.znotes.Main = function() {
   };
   
   function updateCommandsVisibility() {
-    var debugSeparator =
+    var appmenuDebugSeparator =
       document.getElementById( "znotes_appmenu_debug_separator" );
+    var mainmenuDebugSeparator =
+      document.getElementById( "znotes_mainmenubar_debug_separator" );
     if ( Utils.IS_DEBUG_ENABLED ) {
-      debugSeparator.removeAttribute( "hidden" );
+      appmenuDebugSeparator.removeAttribute( "hidden" );
+      mainmenuDebugSeparator.removeAttribute( "hidden" );
     } else {
-      debugSeparator.setAttribute( "hidden", "true" );
+      appmenuDebugSeparator.setAttribute( "hidden", "true" );
+      mainmenuDebugSeparator.setAttribute( "hidden", "true" );
     }
     Common.goSetCommandHidden( "znotes_addons_command", !Utils.IS_STANDALONE, window );
     Common.goSetCommandHidden( "znotes_update_command", !Utils.IS_STANDALONE, window );
@@ -1336,10 +1452,10 @@ ru.akman.znotes.Main = function() {
 
   // znotes_openoptionsdialog_command
   function doOpenOptionsDialog() {
-    window.openDialog(
+    window.open(
       "chrome://znotes/content/options.xul",
-      "_blank",
-      "chrome,dialog=yes,modal=yes,centerscreen,resizable=yes"
+      "",
+      "chrome,dialog,modal,centerscreen,resizable=yes"
     ).focus();
     return true;
   };
@@ -1378,15 +1494,13 @@ ru.akman.znotes.Main = function() {
 
   // znotes_console_command
   function doOpenConsoleWindow() {
-    var windowService = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
-                                  .getService( Components.interfaces.nsIWindowWatcher );
     if ( consoleWindow ) {
-      windowService.activeWindow = consoleWindow;
+      consoleWindow.focus();
     } else {
       consoleWindow = window.open(
         "chrome://global/content/console.xul",
-        "global:console",
-        "chrome,extrachrome,dependent,menubar,resizable,scrollbars,status,toolbar"
+        "_blank",
+        "chrome,extrachrome,menubar,resizable,scrollbars,status,toolbar"
       );
       consoleWindow.addEventListener( "close", onConsoleClose, true );
     }
@@ -3018,8 +3132,11 @@ ru.akman.znotes.Main = function() {
           0x00000010 SAVE_FRAMES
           0x00000100 SAVE_FRAMES_IN_SEPARATE_DIRECTORY
           0x00001000 PRESERVE_HTML5_TAGS
+          0x00010000 SAVE_STYLES
+          0x00100000 SAVE_STYLESHEETS_IN_SINGLE_FILE
+          0x01000000 SAVE_STYLESHEETS_IN_SEPARATE_FILES
           */
-          0x00000000,
+          0x00010000,
           anObserver
         );
       },
@@ -5624,12 +5741,13 @@ ru.akman.znotes.Main = function() {
   };
   
   function connectConsoleObserver() {
-    var windowService = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
-                                  .getService( Components.interfaces.nsIWindowWatcher );
-    var windowMediator = Components.classes["@mozilla.org/appshell/window-mediator;1"]
-                                   .getService( Components.interfaces.nsIWindowMediator );
-    consoleWindow = windowMediator.getMostRecentWindow( "global:console" );
+    consoleFlag = false;
+    consoleWindow =
+      Components.classes["@mozilla.org/appshell/window-mediator;1"]
+                .getService( Components.interfaces.nsIWindowMediator )
+                .getMostRecentWindow( "global:console" );
     if ( consoleWindow ) {
+      consoleFlag = true;
       consoleWindow.addEventListener( "close", onConsoleClose, true );
     }
   };
@@ -5844,6 +5962,7 @@ ru.akman.znotes.Main = function() {
     }
     // maximized
     if ( win.windowState == 1 ) {
+      win.maximize();
       return;
     }
     // normal
@@ -5886,7 +6005,7 @@ ru.akman.znotes.Main = function() {
   function closeConsole() {
     if ( consoleWindow ) {
       consoleWindow.removeEventListener( "close", onConsoleClose, true );
-      if ( !Utils.IS_DEBUG_ENABLED ) {
+      if ( !consoleFlag ) {
         consoleWindow.close();
       }
     }

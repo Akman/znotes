@@ -38,9 +38,13 @@
 
 <!DOCTYPE window SYSTEM "chrome://znotes/locale/options.dtd">
 
-<dialog xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-  id="znotes" orient="vertical" windowtype="znotes" title="&window.title;"
-  minwidth="640" persist="width height sizemode">
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  id="znotes"
+  windowtype="znotes:options"
+  title="&window.title;"
+  orient="vertical"
+  width="640" minwidth="640"
+  height="480">
 
   <script type="application/javascript"
     src="chrome://znotes/content/options.js" />
@@ -76,42 +80,42 @@
               placeholder="&placeName.placeholder;" />
           </hbox>
         </groupbox>
-        <groupbox id="mainGroupBox">
-          <vbox id="mainVBox" align="start">
-            <checkbox id="isSavePosition"
-              label="&isSavePosition.label;" flex="1" />
-            <checkbox id="isEditSourceEnabled"
-              label="&isEditSourceEnabled.label;" flex="1" />
-          </vbox>
-        </groupbox>
         <groupbox id="docTypeGroupBox">
           <caption id="docTypeCaption" label="&docTypeCaption.label;" />
           <hbox id="docTypeHBox" align="center">
             <menulist id="docTypeMenuList" flex="1">
-              <menupopup id="docTypeMenuPopup" flex="1" />
+              <menupopup id="docTypeMenuPopup" />
             </menulist>      
           </hbox>
         </groupbox>
         <groupbox id="clipperGroupBox">
           <caption id="clipperCaption" label="&clipperCaption.label;" />
           <vbox id="clipperVBox" align="start">
-            <checkbox id="clipperSaveScripts" label="&clipperSaveScripts.label;" flex="1" />
-            <checkbox id="clipperSaveFrames" label="&clipperSaveFrames.label;" flex="1" />
-            <checkbox id="clipperSeparateFrames" label="&clipperSeparateFrames.label;" flex="1" />
-            <checkbox id="clipperPreserveHTML5Tags" label="&clipperPreserveHTML5Tags.label;" flex="1" />
-            <checkbox id="isCloseBrowserAfterImport" label="&isCloseBrowserAfterImport.label;" flex="1" />
-            <checkbox id="isSelectNoteAfterImport" label="&isSelectNoteAfterImport.label;" flex="1" />
-            <checkbox id="isClipperPlaySound" label="&isClipperPlaySound.label;" flex="1" />
+            <checkbox id="clipperSaveScripts" label="&clipperSaveScripts.label;" />
+            <checkbox id="clipperSaveFrames" label="&clipperSaveFrames.label;" />
+            <checkbox id="clipperSeparateFrames" label="&clipperSeparateFrames.label;" />
+            <checkbox id="clipperPreserveHTML5Tags" label="&clipperPreserveHTML5Tags.label;" />
+            <checkbox id="clipperSaveStyles" label="&clipperSaveStyles.label;" />
+            <radiogroup id="clipperSaveStylesGroup">
+              <radio id="clipperInlineStylesheets" label="&clipperInlineStylesheets.label;" />
+              <radio id="clipperSingleStylesheet" label="&clipperSingleStylesheet.label;" />
+              <radio id="clipperSeparateStylesheets" label="&clipperSeparateStylesheets.label;" />
+            </radiogroup>            
+            <checkbox id="isCloseBrowserAfterImport" label="&isCloseBrowserAfterImport.label;" />
+            <checkbox id="isSelectNoteAfterImport" label="&isSelectNoteAfterImport.label;" />
+            <checkbox id="isClipperPlaySound" label="&isClipperPlaySound.label;" />
           </vbox>
         </groupbox>
         <groupbox id="additionGroupBox">
           <caption id="additionCaption" label="&additionCaption.label;" />
           <vbox id="additionVBox" align="start">
-            <checkbox id="isConfirmExit" label="&isConfirmExit.label;" flex="1" />
-            <checkbox id="isExitQuitTB" label="&isExitQuitTB.label;" flex="1" />
-            <checkbox id="isReplaceBackground" label="&isReplaceBackground.label;" flex="1" />
-            <checkbox id="isHighlightRow" label="&isHighlightRow.label;" flex="1" />
-            <checkbox id="isPlaySound" label="&isPlaySound.label;" flex="1" />
+            <checkbox id="isSavePosition" label="&isSavePosition.label;" />
+            <checkbox id="isEditSourceEnabled" label="&isEditSourceEnabled.label;" />
+            <checkbox id="isConfirmExit" label="&isConfirmExit.label;" />
+            <checkbox id="isExitQuitTB" label="&isExitQuitTB.label;" />
+            <checkbox id="isReplaceBackground" label="&isReplaceBackground.label;" />
+            <checkbox id="isHighlightRow" label="&isHighlightRow.label;" />
+            <checkbox id="isPlaySound" label="&isPlaySound.label;" />
           </vbox>
         </groupbox>
       </tabpanel>
@@ -120,7 +124,7 @@
           <caption id="keysPlatformCaption"
             label="&keysPlatformCaption.label;" />
           <richlistbox id="keysPlatformListBox" class="key_list"
-            seltype="single" flex="1"/>
+            seltype="single"/>
         </groupbox>
         <groupbox id="keysGroupBox" flex="1">
           <caption id="keysCaption" label="&keysCaption.label;" />
@@ -132,10 +136,10 @@
   </tabbox>
 
   <hbox id="buttonsHBox" dir="rtl">
-    <button id="acceptButton" dlgtype="accept" minwidth="90"
+    <button id="acceptButton" minwidth="90"
       label=" &acceptButton.label;"
       tooltiptext="&acceptButton.tooltip;" />
-    <button id="cancelButton" dlgtype="cancel" minwidth="90"
+    <button id="cancelButton" minwidth="90"
       label=" &cancelButton.label;"
       tooltiptext="&cancelButton.tooltip;" />
     <spacer id="buttonSpacer" flex="1" />
@@ -144,4 +148,4 @@
       tooltiptext="&defaultsButton.tooltip;" />
   </hbox>
   
-</dialog>
+</window>

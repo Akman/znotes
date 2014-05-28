@@ -77,6 +77,9 @@ var Editor = function() {
     var observerService =
       Components.classes["@mozilla.org/observer-service;1"]
                 .getService( Components.interfaces.nsIObserverService );
+    var ioService =
+      Components.classes["@mozilla.org/network/io-service;1"]
+                .getService( Components.interfaces.nsIIOService );
     
     var self = this;
     
@@ -667,7 +670,7 @@ var Editor = function() {
           if ( strData ) {
             var textData = strData.value.QueryInterface(
               Components.interfaces.nsISupportsString ).data;
-            sourceEditor.getDoc().replaceSelection( textData );
+            sourceEditor.getDoc().replaceSelection( textData, "around" );
           }
         } catch ( e ) {
           Utils.log( e );
@@ -2039,10 +2042,38 @@ var Editor = function() {
     // SOURCE COMMANDS
     
     function doSourceBeautify() {
-      sourceEditor.autoFormatRange(
-        sourceEditor.getCursor( "start" ),
-        sourceEditor.getCursor( "end" )
-      );
+      var ranges = sourceEditor.listSelections();
+      var delta = 0, indexies = [];
+      var len = sourceEditor.getValue().length;
+      var lIndex, rIndex;
+      for ( var i = 0; i < ranges.length; i++ ) {
+        lIndex = sourceEditor.indexFromPos( ranges[i].anchor );
+        rIndex = sourceEditor.indexFromPos( ranges[i].head );
+        if ( lIndex > rIndex ) {
+          indexies.push( rIndex );
+          indexies.push( lIndex );
+        } else {
+          indexies.push( lIndex );
+          indexies.push( rIndex );
+        }
+      }
+      ranges = [];
+      for ( var i = 0; i < indexies.length; i += 2 ) {
+        sourceEditor.autoFormatRange(
+          sourceEditor.posFromIndex( indexies[i] ),
+          sourceEditor.posFromIndex( indexies[i + 1] )
+        );
+        delta = sourceEditor.getValue().length - len;
+        len += delta;
+        for ( var j = i + 1; j < indexies.length; j++ ) {
+          indexies[j] += delta;
+        }
+        ranges.push( {
+          anchor: sourceEditor.posFromIndex( indexies[i] ),
+          head: sourceEditor.posFromIndex( indexies[i + 1] )
+        } );
+      }
+      sourceEditor.setSelections( ranges );
     };
 
     // COMMON HELPERS
@@ -2124,6 +2155,51 @@ var Editor = function() {
     };
     
     function setDisplayStyle() {
+    };
+    
+    function getCountOfLines( text ) {
+      var result = text.length > 0 ? 1 : 0;
+      var pos = text.indexOf( "\n" );
+      while ( pos !== -1 ) {
+        result++;
+        pos = text.indexOf( "\n", pos + 1 );
+      }
+      return result;
+    };
+    
+    function getCountOfDigits( number ) {
+      return ( "" + number ).length;
+    };
+    
+    function formatNumber( number, width ) {
+      var result = "" + number;
+      while ( result.length < width ) {
+        result = " " + result;
+      }
+      return result;
+    };
+    
+    function replaceTabsWithSpaces( text ) {
+      var col = 0, pos = 0, result = "";
+      var idx, size, tabSize = 8;
+      for ( ; ; ) {
+        idx = text.indexOf( "\t", pos );
+        if ( idx == -1 ) {
+          result += text.slice( pos );
+          col += text.length - pos;
+          break;
+        } else {
+          col += idx - pos;
+          result += text.slice( pos, idx );
+          size = tabSize - col % tabSize;
+          col += size;
+          for ( var i = 0; i < size; ++i ) {
+            result += " ";
+          }
+          pos = idx + 1;
+        }
+      }
+      return result;
     };
     
     // EDITOR HELPERS
@@ -2326,6 +2402,7 @@ var Editor = function() {
       for ( var i = 0; i < count; i++ ) {
         range = designEditor.selection.getRangeAt( i );
         ranges.push( {
+          commonAncestorContainer: range.commonAncestorContainer,
           startContainer: range.startContainer,
           startOffset: range.startOffset,
           endContainer: range.endContainer,
@@ -3097,14 +3174,12 @@ var Editor = function() {
 
     // DEBUG
     
-    function dumpSelection() {
+    function dumpSelection( ranges ) {
       var range, commonAncestorContainer;
       var startContainer, startOffset
       var endContainer, endOffset;
-      var count = designEditor.selection ?
-        designEditor.selection.rangeCount : 0;
-      for ( var i = 0; i < count; i++ ) {
-        range = designEditor.selection.getRangeAt( i );
+      for ( var i = 0; i < ranges.length; i++ ) {
+        range = ranges[i];
         startContainer = range.startContainer;
         startOffset = range.startOffset;
         endContainer = range.endContainer;
@@ -3194,7 +3269,7 @@ var Editor = function() {
     function doDebug() {
       /*
       Module.run();
-      dumpSelection();
+      dumpSelection( getSelectionRanges() );
       dumpSelectionChunks();
       dumpSelectionElements(); doUndo();
       */
@@ -4181,10 +4256,42 @@ var Editor = function() {
     };
     
     function designClickHandler( event ) {
+      var href, uri, anchor;
+      if ( !event.isTrusted || event.defaultPrevented || event.button ) {
+        return true;
+      }
       if ( currentMode == "editor" ) {
         return true;
       }
-      return Utils.clickHandler( event );
+      href = Utils.getHREFForClickEvent( event, true );
+      if ( !href ) {
+        return true;
+      }
+      uri = null;
+      try {
+        uri = ioService.newURI( href, null, null );
+      } catch ( e ) {
+        uri = null;
+      }
+      if ( !uri ) {
+        return true;
+      }
+      if ( !uri.equalsExceptRef( currentNote.getURI() ) ) {
+        return Utils.clickHandler( event );
+      }
+      if ( uri.ref ) {
+        anchor = designFrame.contentDocument.getElementById( uri.ref );
+        if ( !anchor ) {
+          anchor = designFrame.contentDocument.querySelector(
+          'a[name="' + uri.ref + '"]' );
+        }
+        if ( anchor ) {
+          anchor.scrollIntoView( true );
+        }
+      }
+      event.stopPropagation();
+      event.preventDefault();
+      return false;
     };
     
     function designOverHandler( event ) {
@@ -4274,7 +4381,7 @@ var Editor = function() {
       isParseError = !obj.result;
       isParseModified = obj.changed;
       var designDocument;
-      if ( currentMode == "editor" ) {
+      if ( currentMode === "editor" ) {
         designDocument = designEditor.document;
         try {
           designEditor.beginTransaction();
@@ -4440,6 +4547,14 @@ var Editor = function() {
               if ( endContainer == startContainer ) {
                 endOffset -= startOffset;
               }
+              for ( var j = i + 1; j < ranges.length; j++ ) {
+                if ( ranges[j].startContainer === startContainer ) {
+                  ranges[j].startOffset -= startOffset;
+                }
+                if ( ranges[j].endContainer === startContainer ) {
+                  ranges[j].endOffset -= startOffset;
+                }
+              }
               startOffset = 0;
             }
             if ( startOffset < startContainer.textContent.length ) {
@@ -4456,6 +4571,14 @@ var Editor = function() {
             if ( endContainer == startContainer ) {
               endOffset++;
             }
+            for ( var j = i + 1; j < ranges.length; j++ ) {
+              if ( ranges[j].startContainer === startContainer ) {
+                ranges[j].startOffset++;
+              }
+              if ( ranges[j].endContainer === startContainer ) {
+                ranges[j].endOffset++;
+              }
+            }
             break;
         }
         switch ( endContainer.nodeType ) {
@@ -4463,6 +4586,14 @@ var Editor = function() {
             if ( endOffset > 0 &&
                  endOffset < endContainer.textContent.length ) {
               endSplit = splitNode( endContainer, endOffset, true );
+              for ( var j = i + 1; j < ranges.length; j++ ) {
+                if ( ranges[j].startContainer === endContainer ) {
+                  ranges[j].startOffset -= endOffset;
+                }
+                if ( ranges[j].endContainer === endContainer ) {
+                  ranges[j].endOffset -= endOffset;
+                }
+              }
               endOffset = 0;
             }
             if ( endOffset < endContainer.textContent.length ) {
@@ -4487,6 +4618,14 @@ var Editor = function() {
             } else {
               endContainer.insertBefore(
                 endMarker, endContainer.childNodes[endOffset] );
+            }
+            for ( var j = i + 1; j < ranges.length; j++ ) {
+              if ( ranges[j].startContainer === endContainer ) {
+                ranges[j].startOffset++;
+              }
+              if ( ranges[j].endContainer === endContainer ) {
+                ranges[j].endOffset++;
+              }
             }
             break;
         }
@@ -4556,15 +4695,39 @@ var Editor = function() {
     };
     
     function getNodeIndexiesFromCache( node ) {
-      var index = nodeIndexiesCache.indexOf( node );
-      return ( index == -1 ? null : nodeIndexiesCache[index] );
+      var idxs;
+      for ( var i = 0; i < nodeIndexiesCache.length; i++ ) {
+        if ( nodeIndexiesCache[i].node === node ) {
+          idxs = nodeIndexiesCache[i].indexies;
+          return {
+            startIndex: idxs.startIndex,
+            endIndex: idxs.endIndex,
+            data: idxs.data
+          };
+        }
+      }
+      return null;
     };
     
     function putNodeIndexiesToCache( node, indexies ) {
-      var index = nodeIndexiesCache.indexOf( node );
-      if ( index == -1 ) {
-        nodeIndexiesCache.push( indexies );
+      var idxs, index = -1;
+      for ( var i = 0; i < nodeIndexiesCache.length; i++ ) {
+        if ( nodeIndexiesCache[i].node === node ) {
+          index = i;
+          break;
+        }
       }
+      if ( index == -1 ) {
+        nodeIndexiesCache.push( {
+          node: node,
+          indexies: {}
+        } );
+        index = nodeIndexiesCache.length - 1;
+      }
+      idxs = nodeIndexiesCache[index].indexies;
+      idxs.startIndex = indexies.startIndex;
+      idxs.endIndex = indexies.endIndex;
+      idxs.data = indexies.data;
     };
     
     function getNodeIndexies( node ) {
@@ -4582,11 +4745,11 @@ var Editor = function() {
           } ],
           nodeMarkers
         );
-        nodeIndexies = calcMarkersIndexies( nodeMarkers );
+        nodeIndexies = calcMarkersIndexies( nodeMarkers )[0];
         removeMarkers( nodeMarkers );
         putNodeIndexiesToCache( node, nodeIndexies );
       }
-      return nodeIndexies[0];
+      return nodeIndexies;
     };
     
     // flag: 0 - start marker || 1 - end marker
@@ -4696,48 +4859,47 @@ var Editor = function() {
         } ];
       }
       var doc = sourceEditor.getDoc();
-      var from, to;
+      var from, to, sourceRanges = [];
       for ( var i = 0; i < sourceMarkers.length; i++ ) {
         from = doc.posFromIndex( sourceMarkers[i].startIndex );
         to = doc.posFromIndex( sourceMarkers[i].endIndex );
-        if ( i ) {
-          doc.extendSelection( from, to );
-        } else {
-          doc.setSelection( from, to );
-        }
+        sourceRanges.push( {
+          anchor: from,
+          head: to
+        } );
       }
+      doc.setSelections( sourceRanges );
       sourceEditor.scrollIntoView( { from: from, to: to },
         Math.floor( sourceEditorHeight * 0.8 ) );
     };
     
     function setupDesignEditorMarkers() {
-      var doc = sourceEditor.getDoc();
-      var editorStartIndex = doc.indexFromPos( doc.getCursor( "start" ) );
-      var editorEndIndex = doc.indexFromPos( doc.getCursor( "end" ) );
+      var editorStartIndex, editorEndIndex, tmpIndex;
+      var startPosition, endPosition, selectionRanges = [];
+      var sourceRanges = sourceEditor.listSelections();
       clearNodeIndexiesCache();
-      var endPosition;
-      var startPosition = getMarkerPosition( editorStartIndex, 0 );
-      if ( editorStartIndex == editorEndIndex ) {
-        endPosition = {
-          container: startPosition.container,
-          offset: startPosition.offset
-        };
-      } else {
-        endPosition = getMarkerPosition( editorEndIndex, 1 );
-      }
-      var designMarkers = [ {
-        startContainer: startPosition.container,
-        startOffset: startPosition.offset,
-        endContainer: endPosition.container,
-        endOffset: endPosition.offset
-      } ];
-      var selectionRanges = [];
-      for ( var i = 0; i < designMarkers.length; i++ ) {
+      for ( var i = 0; i < sourceRanges.length; i++ ) {
+        editorStartIndex = sourceEditor.indexFromPos( sourceRanges[i].anchor );
+        editorEndIndex = sourceEditor.indexFromPos( sourceRanges[i].head );
+        if ( editorStartIndex > editorEndIndex ) {
+          tmpIndex = editorEndIndex;
+          editorEndIndex = editorStartIndex;
+          editorStartIndex = tmpIndex;
+        }
+        startPosition = getMarkerPosition( editorStartIndex, 0 );
+        if ( editorStartIndex == editorEndIndex ) {
+          endPosition = {
+            container: startPosition.container,
+            offset: startPosition.offset
+          };
+        } else {
+          endPosition = getMarkerPosition( editorEndIndex, 1 );
+        }
         selectionRanges.push( {
-          startContainer: designMarkers[i].startContainer,
-          startOffset: designMarkers[i].startOffset,
-          endContainer: designMarkers[i].endContainer,
-          endOffset: designMarkers[i].endOffset
+          startContainer: startPosition.container,
+          startOffset: startPosition.offset,
+          endContainer: endPosition.container,
+          endOffset: endPosition.offset
         } );
       }
       setSelectionRanges( selectionRanges );
@@ -5241,96 +5403,78 @@ var Editor = function() {
     
     function print() {
       var aContentWindow = designFrame.contentWindow;
+      var sourceEditorText, ranges, doc, printView;
+      var sourceText, lineCount, row, lIndex, rIndex;
       if ( editorTabs.selectedIndex == 1 ) {
-        var sourceText, rowBegin;
+        sourceEditorText = sourceEditor.getValue();
         if ( sourceEditor.somethingSelected() ) {
-          sourceText = sourceEditor.getSelection();
-          rowBegin = parseInt( sourceEditor.getCursor( "start" ).line ) + 1;
+          ranges = sourceEditor.listSelections();
         } else {
-          sourceText = sourceEditor.getValue();
-          rowBegin = 1;
+          ranges = [{
+            anchor: sourceEditor.posFromIndex( 0 ),
+            head: sourceEditor.posFromIndex( sourceEditorText.length )
+          }];
         }
-        var lineCount = sourceText.length > 0 ? 1 : 0;
-        var pos = sourceText.indexOf( "\n" );
-        while ( pos != -1 ) {
-          lineCount++;
-          pos = sourceText.indexOf( "\n", pos + 1 );
+        doc = sourcePrintFrame.contentWindow.document;
+        printView = doc.getElementById( "printView" );
+        while ( printView.firstChild ) {
+          printView.removeChild( printView.firstChild );
         }
-        var lineFieldWidth = ( "" + lineCount ).length;
-        var node =
-          sourcePrintFrame.contentWindow.document.getElementById( "printView" );
-        while ( node.firstChild ) {
-          node.removeChild( node.firstChild );
-        }
-        var row = rowBegin;
-        var sp = node.appendChild(
-          node.ownerDocument.createElement( "span" )
-        );
-        var lineField = "" + row;
-        while ( lineField.length < lineFieldWidth ) {
-          lineField = " " + lineField;
-        }
-        sp.appendChild(
-          node.ownerDocument.createTextNode( lineField + " " )
-        );
-        var col = 0;
-        var callback = function ( text, style ) {
-          if ( text == "\n" ) {
-            row++;
-            node.appendChild( node.ownerDocument.createElement( "br" ) );
-            var sp = node.appendChild(
-              node.ownerDocument.createElement( "span" )
-            );
-            var lineField = "" + row;
-            while ( lineField.length < lineFieldWidth ) {
-              lineField = " " + lineField;
-            }
-            sp.appendChild(
-              node.ownerDocument.createTextNode( lineField + " " )
-            );
-            col = 0;
-            return;
-          }
-          var content = "";
-          // replace tabs
-          for ( var pos = 0; ; ) {
-            var idx = text.indexOf( "\t", pos );
-            if ( idx == -1 ) {
-              content += text.slice( pos );
-              col += text.length - pos;
-              break;
-            } else {
-              col += idx - pos;
-              content += text.slice( pos, idx );
-              var size = tabSize - col % tabSize;
-              col += size;
-              for ( var i = 0; i < size; ++i ) {
-                content += " ";
-              }
-              pos = idx + 1;
-            }
-          }
-          if ( style ) {
-            var sp = node.appendChild(
-              node.ownerDocument.createElement( "span" )
-            );
-            sp.className = "cm-" + style.replace( / +/g, " cm-" );
-            sp.appendChild( node.ownerDocument.createTextNode( content ) );
+        for ( var i = 0; i < ranges.length; i++ ) {
+          lIndex = sourceEditor.indexFromPos( ranges[i].anchor );
+          rIndex = sourceEditor.indexFromPos( ranges[i].head );
+          if ( lIndex > rIndex ) {
+            sourceText = sourceEditorText.substring( rIndex, lIndex );
+            row = parseInt( ranges[i].head.line ) + 1;
           } else {
-            node.appendChild( node.ownerDocument.createTextNode( content ) );
+            sourceText = sourceEditorText.substring( lIndex, rIndex );
+            row = parseInt( ranges[i].anchor.line ) + 1;
           }
-        };
-        sourceEditorLibrary.runMode( sourceText, "htmlmixed", callback );
+          lineCount = getCountOfLines( sourceText );
+          printView.appendChild( doc.createElement( "span" ) )
+                   .appendChild( doc.createTextNode(
+            formatNumber( row, getCountOfDigits( lineCount ) ) + " "
+          ) );
+          sourceEditorLibrary.runMode(
+            sourceText,
+            "htmlmixed",
+            function( text, style ) {
+              var node;
+              if ( text == "\n" ) {
+                row++;
+                printView.appendChild( doc.createElement( "br" ) );
+                printView.appendChild( doc.createElement( "span" ) )
+                         .appendChild( doc.createTextNode(
+                  formatNumber( row, getCountOfDigits( lineCount ) ) + " "
+                ) );
+                return;
+              }
+              if ( style ) {
+                node = printView.appendChild( doc.createElement( "span" ) );
+                node.className = "cm-" + style.replace( / +/g, " cm-" );
+              } else {
+                node = printView;
+              }
+              node.appendChild( doc.createTextNode(
+                replaceTabsWithSpaces( text ) ) );
+            }
+          );
+          if ( i !== ranges.length - 1 ) {
+            printView.appendChild( doc.createElement( "br" ) );
+            printView.appendChild( doc.createElement( "br" ) );
+            printView.appendChild( doc.createElement( "hr" ) );
+            printView.appendChild( doc.createElement( "br" ) );
+          }
+        }
         aContentWindow = sourcePrintFrame.contentWindow;
       }
-      var aTitle = currentNote.getName();
       currentWindow.openDialog(
         "chrome://znotes/content/printpreview.xul",
         "",
         "chrome,dialog=no,all,modal=yes,centerscreen,resizable=yes",
         {
           aWindow: aContentWindow,
-          aTitle: aTitle
+          aTitle: currentNote.getName()
         }
       ).focus();
     };

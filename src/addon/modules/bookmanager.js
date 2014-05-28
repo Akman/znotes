@@ -127,7 +127,8 @@ var BookManager = function() {
       return;
     }
     try {
-      registryObject = JSON.parse( Utils.readFileContent( registryPath, "UTF-8" ) );
+      registryObject =
+        JSON.parse( Utils.readFileContent( registryPath, "UTF-8" ) );
     } catch ( e ) {
       Utils.log( e );
       registryObject = [];
@@ -330,7 +331,7 @@ var BookManager = function() {
         driver,
         connection,
         preferences,
-        index,
+        index, 
         opened
       );
       if ( book.getIndex() < 0 ) {

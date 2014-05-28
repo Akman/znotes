@@ -368,7 +368,7 @@ ru.akman.znotes.Clipper = function() {
   
   pub.onLoad = function() {
     aContext = Utils.MAIN_CONTEXT ? Utils.MAIN_CONTEXT() : null;
-    aBrowser = document.getElementById( "gBrowser" );
+    aBrowser = document.getElementById( "zBrowser" );
     aPopup = document.getElementById( "znotes_clippersave_menupopup" );
     aButton = document.getElementById( "znotes_clippersave_button" );
     aBundle = document.getElementById( "znotes_clipper_stringbundle" );

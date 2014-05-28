@@ -629,6 +629,34 @@ ru.akman.znotes.TestSuite = function() {
   } );
 
   tests.push( {
+    name: "Info Tab",
+    description: "Info Tab",
+    code: function () {
+      var tabMail = Utils.getTabMail();
+      if ( tabMail ) {
+        tabMail.openTab(
+          "znotesInfoTab",
+          {
+            contentPage: "chrome://znotes_welcome/content/index_ru.xhtml"
+          }
+        );
+      } else {
+        win = window.open(
+          "chrome://znotes/content/info.xul",
+          "znotes:info",
+          "chrome,toolbar,status,resizable,centerscreen"
+        );
+        win.arguments = [
+          {
+            contentPage: "chrome://znotes_welcome/content/index_ru.xhtml",
+            windowMode: "maximized"
+          }
+        ];
+      }
+    }
+  } );
+
+  tests.push( {
     name: "Content Tab",
     description: "Content Tab",
     code: function () {
@@ -639,12 +667,12 @@ ru.akman.znotes.TestSuite = function() {
       tabMail.openTab(
         "contentTab",
         {
-          contentPage: "https://mozilla.org/"
+          contentPage: "chrome://znotes_welcome/content/index_ru.xhtml"
         }
       );
     }
   } );
-
+  
   tests.push( {
     name: "Open note",
     description: "Open note dialog",
@@ -965,6 +993,14 @@ ru.akman.znotes.TestSuite = function() {
       Utils.log( "fb:like:xxxxx" );
       Utils.log( checkName( "fb:like:xxxxx" ) );
       
+    }
+  } );
+
+  tests.push( {
+    name: "Maximize window",
+    description: "Maximize application window",
+    code: function () {
+      window.maximize();
     }
   } );
   

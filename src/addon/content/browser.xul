@@ -42,6 +42,8 @@
   windowtype="znotes:browser"
   title="&browserWindowTitle;"
   orient="vertical"
+  width="800"
+  height="600"
   persist="width height screenX screenY sizemode">
   
   <script type="application/javascript"
@@ -148,9 +150,9 @@
   </toolbox>
   
   <vbox id="browserView" flex="1" class="browserView">
-    <browser id="gBrowser" flex="1"
+    <browser id="zBrowser" flex="1"
       src="about:blank"
-      class="gBrowser"
+      class="zBrowser"
       type="content-primary" />
   </vbox>
 

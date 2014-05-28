@@ -70,6 +70,7 @@ ru.akman.znotes.ClipperDialog = function() {
       aNote.importDocument(
         aResultObj.value,
         {
+          documentURI: aResultObj.documentURI,
           namespaceURI: aResultObj.value.documentElement.namespaceURI,
           lang: false,
           author: false
@@ -252,6 +253,7 @@ ru.akman.znotes.ClipperDialog = function() {
     try {
       aNote.setLoading( true );
       aNote.setOrigin( aDocument.location.toString() );
+      aResultObj.documentURI = aDocument.documentURI;
       aClipper.save(
         aDocument,
         aResultObj,

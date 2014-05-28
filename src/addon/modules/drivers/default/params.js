@@ -117,7 +117,8 @@ var Params = function() {
   };
   
   function checkExtension( aType, anExtension ) {
-    return anExtension && /^\.[^.\\/:*?"<>|\s]+$/g.test( anExtension );
+    return currentDriver.checkExtension( anExtension ) &&
+           /^\.[^.\\/:*?"<>|\s]+$/g.test( anExtension );
   };
 
   function getFileExtension( leafName ) {
@@ -340,7 +341,9 @@ var Params = function() {
       args
     ).focus();
     if ( args.output && args.output.result ) {
+      currentWindow.setCursor( "wait" );
       processCategoryEntry( connection.getRootCategoryEntry(), exts );
+      currentWindow.setCursor( "auto" );
     }
   };
   

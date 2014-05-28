@@ -429,19 +429,16 @@ var Book = function( aManager, anId, aName, aDescription, aDriver, aConnection,
   this.description = aDescription;
   this.places = {};
   this.driver = aDriver;
-  // set up value as merge with given parameters and default driver parameters
   try {
     this.connection =
       ru.akman.znotes.DriverManager.getInstance()
                                    .getDriver( this.getDriver() )
                                    .getParameters();
-    if ( Utils.fillObject( aConnection, this.connection ) ) {
-      this.updateRegistryObject();
-    }
+    Utils.fillObject( aConnection, this.connection );
   } catch ( e ) {
+    Utils.log( e );
     this.connection = aConnection;
   }
-  //
   this.preferences = aPreferences;
   this.index = anIndex;
   this.tagList = null;
@@ -457,5 +454,4 @@ var Book = function( aManager, anId, aName, aDescription, aDriver, aConnection,
     }
   }
   this.locked = false;
-
 };

@@ -36,6 +36,7 @@
 <?xul-overlay href="chrome://znotes/content/common-tb.xul" ?>
 <?xul-overlay href="chrome://znotes/content/maintab.xul" ?>
 <?xul-overlay href="chrome://znotes/content/contenttab.xul" ?>
+<?xul-overlay href="chrome://znotes/content/infotab.xul" ?>
 
 <!DOCTYPE overlay SYSTEM "chrome://znotes/locale/overlay-tb.dtd">
 
@@ -50,6 +51,8 @@
     src="chrome://znotes/content/maintabtype.js" />
   <script type="application/javascript"
     src="chrome://znotes/content/contenttabtype.js" />
+  <script type="application/javascript"
+    src="chrome://znotes/content/infotabtype.js" />
 
   <!-- messenger window -->
 
@@ -71,7 +74,8 @@
       command="znotes_tbopenmaintab_command"/>
     <toolbarbutton id="znotes_tbsaveasnote_button"
       сlass="toolbarbutton-1 znotes_tbsaveasnote_class"
-      command="znotes_tbsaveasnote_command"/>
+      command="znotes_tbsaveasnote_command"
+      observes="znotes_tbsaveasnote_command"/>
   </toolbarpalette>
 
   <!-- new button -->
@@ -101,6 +105,7 @@
     <menuitem id="znotes_tbsaveasnote_menuitem"
       class="menuitem-iconic"
       command="znotes_tbsaveasnote_command"
+      observes="znotes_tbsaveasnote_command"
       key="znotes_tbsaveasnote_key"
       insertafter="messageMenuAfterMarkSeparator"/>
   </menupopup>
@@ -127,10 +132,12 @@
           command="znotes_tbopenoptionsdialog_command"/>
         <menuitem id="znotes_tbtestsuite_menuitem"
           class="menuitem-iconic"
-          command="znotes_tbtestsuite_command"/>
+          command="znotes_tbtestsuite_command"
+          observes="znotes_tbtestsuite_command"/>
         <menuitem id="znotes_tbconsole_menuitem"
           class="menuitem-iconic"
-          command="znotes_tbconsole_command"/>
+          command="znotes_tbconsole_command"
+          observes="znotes_tbconsole_command"/>
         <menu id="znotes_menupopup_view"
           label="&znotes_menupopup_view_label;"
           accesskey="&znotes_menupopup_view_accesskey;">
@@ -204,10 +211,12 @@
           command="znotes_tbopenoptionsdialog_command"/>
         <menuitem id="znotes_tbtestsuite_appmenuitem"
           class="menuitem-iconic"
-          command="znotes_tbtestsuite_command"/>
+          command="znotes_tbtestsuite_command"
+          observes="znotes_tbtestsuite_command"/>
         <menuitem id="znotes_tbconsole_appmenuitem"
           class="menuitem-iconic"
-          command="znotes_tbconsole_command"/>
+          command="znotes_tbconsole_command"
+          observes="znotes_tbconsole_command"/>
         <menuseparator id="znotes_appbefore_help_section" />
         <menuitem id="znotes_tbopenhelp_appmenuitem"
           class="menuitem-iconic"
@@ -223,6 +232,7 @@
     <menuitem id="znotes_tbsaveasnote_appmenuitem"
       class="menuitem-iconic"
       command="znotes_tbsaveasnote_command"
+      observes="znotes_tbsaveasnote_command"
       key="znotes_tbsaveasnote_key"
       insertafter="appmenu_messageMenuAfterMarkSeparator" />
   </menupopup>
@@ -232,6 +242,7 @@
   <hbox id="tabmail-container">
     <vbox id="znotes_maintabpanel" collapsed="true" />
     <vbox id="znotes_contenttabpanel" collapsed="true" />
+    <vbox id="znotes_infotabpanel" collapsed="true" />
   </hbox>
 
   <!-- message context menu -->
@@ -240,6 +251,7 @@
     <menuitem id="znotes_tbsaveasnote_contextmenuitem"
       class="menuitem-iconic"
       command="znotes_tbsaveasnote_command"
+      observes="znotes_tbsaveasnote_command"
       key="znotes_tbsaveasnote_key"
       insertafter="mailContext-sep-afterMarkMenu" />
   </menupopup>

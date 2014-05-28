@@ -643,15 +643,15 @@
       <caption id="mainCaption:xhtml" label="&mainCaption.xhtml.label;" />
       <vbox id="mainVBox:xhtml" align="start">
         <checkbox id="isSpellcheckEnabled:xhtml"
-          label="&isSpellcheckEnabled.xhtml.label;" flex="1" />
+          label="&isSpellcheckEnabled.xhtml.label;" />
         <checkbox id="isTagsModeActive:xhtml"
-          label="&isTagsModeActive.xhtml.label;" flex="1" />
+          label="&isTagsModeActive.xhtml.label;" />
       </vbox>
     </groupbox>
     <groupbox id="keysGroupBox:xhtml" flex="1">
       <caption id="keysCaption:xhtml" label="&keysCaption.xhtml.label;" />
       <richlistbox id="keysListBox:xhtml" class="key_list"
-        seltype="single" flex="1" />
+        seltype="single" flex="1"/>
     </groupbox>
   </vbox>
   
