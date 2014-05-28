@@ -1164,10 +1164,6 @@ function inspectElement( aRules, aChanges, anElement, aDocumentURL, aBaseURL,
         if ( anElement.href ) {
           anURL = resolveURL( anElement.href, aBaseURL );
           if ( checkURL( anURL ) ) {
-            anURI = ioService.newURI( anURL, null, null );
-            if ( anURI.equalsExceptRef( aDocumentURI ) && anURI.ref ) {
-              anURL = "#" + anURI.ref;
-            }
             setElementAttribute( anElement, "href", anURL );
           }
         }

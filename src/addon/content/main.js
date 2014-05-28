@@ -326,7 +326,7 @@ ru.akman.znotes.Main = function() {
             uri = null;
           }
           if ( uri ) {
-            if ( uri.equalsExceptRef( currentNote.getBaseURI() ) ) {
+            if ( uri.equalsExceptRef( currentNote.getURI() ) ) {
               aData = "#" + uri.ref;
             }
             statusBarLabel.setAttribute( "value", aData );

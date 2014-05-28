@@ -93,7 +93,7 @@ ru.akman.znotes.Viewer = function() {
             uri = null;
           }
           if ( uri ) {
-            if ( uri.equalsExceptRef( currentNote.getBaseURI() ) ) {
+            if ( uri.equalsExceptRef( currentNote.getURI() ) ) {
               aData = "#" + uri.ref;
             }
             currentStatusbarLabel.setAttribute( "value", aData );

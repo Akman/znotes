@@ -4276,7 +4276,7 @@ var Editor = function() {
       if ( !uri ) {
         return true;
       }
-      if ( !uri.equalsExceptRef( currentNote.getBaseURI() ) ) {
+      if ( !uri.equalsExceptRef( currentNote.getURI() ) ) {
         return Utils.clickHandler( event );
       }
       if ( uri.ref ) {

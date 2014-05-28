@@ -72,8 +72,10 @@ var Document = function() {
   var Utils = ru.akman.znotes.Utils;
   var DOMUtils = ru.akman.znotes.DOMUtils;
   var Node = Components.interfaces.nsIDOMNode;
-  
-  
+  var ioService =
+    Components.classes["@mozilla.org/network/io-service;1"]
+              .getService( Components.interfaces.nsIIOService );
+
   var DocumentException = function( message ) {
     this.name = "DocumentException";
     this.message = message;
@@ -455,6 +457,46 @@ var Document = function() {
     }
   };
   
+  function processElement( aRoot, aBaseURI, aDocumentURI, aSourceURI ) {
+    var aNextElementSibling, anElement = aRoot.firstElementChild;
+    while ( anElement ) {
+      aNextElementSibling = anElement.nextElementSibling;
+      try {
+        inspectElement( anElement, aBaseURI, aDocumentURI, aSourceURI );
+        processElement( anElement, aBaseURI, aDocumentURI, aSourceURI );
+      } catch ( e ) {
+        Utils.log( e );
+      }
+      anElement = aNextElementSibling;
+    }
+  };
+  
+  function inspectElement( anElement, aBaseURI, aDocumentURI, aSourceURI ) {
+    var uri;
+    if ( anElement.namespaceURI !== "http://www.w3.org/1999/xhtml" ) {
+      return;
+    }
+    switch ( anElement.localName.toLowerCase() ) {
+      case "a":
+      case "area":
+        uri = null;
+        if ( anElement.href ) {
+          try {
+            uri = ioService.newURI( anElement.href, null, null );
+          } catch ( e ) {
+            Utils.log( e );
+            uri = null;
+          }
+        }
+        if ( !Utils.IS_SANITIZE_ENABLED &&
+             aSourceURI && uri && uri.ref &&
+             uri.equalsExceptRef( aSourceURI ) ) {
+          anElement.setAttribute( "href", aDocumentURI.spec + "#" + uri.ref );          
+        }
+        break;
+    }
+  };
+  
   // PUBLIC
   
   pub.addObserver = function( aObserver ) {
@@ -651,24 +693,20 @@ var Document = function() {
   };
   
   pub.importDocument = function( aDOM, anURI, aBaseURI, aTitle, aParams ) {
-    var metas, element, next, name, value, namespaceURI;
-    var dom = pub.getBlankDocument( anURI, aBaseURI, aTitle, false, aParams );
-    var node = aDOM.firstChild, namespaceURI = dom.documentElement.namespaceURI;
+    var metas, element, next, name, value;
     var domHead, domBody, aDOMHead, aDOMBody;
-    /**
-    ELEMENT_NODE
-    ATTRIBUTE_NODE
-    TEXT_NODE
-    CDATA_SECTION_NODE
-    ENTITY_REFERENCE_NODE
-    ENTITY_NODE
-    PROCESSING_INSTRUCTION_NODE
-    COMMENT_NODE
-    DOCUMENT_NODE
-    DOCUMENT_TYPE_NODE
-    DOCUMENT_FRAGMENT_NODE
-    NOTATION_NODE
-    */
+    var dom = pub.getBlankDocument( anURI, aBaseURI, aTitle, false, aParams );
+    var namespaceURI = dom.documentElement.namespaceURI;
+    var aDocumentURI = null;
+    if ( aParams && aParams.documentURI ) {
+      try {
+        aDocumentURI = ioService.newURI( aParams.documentURI, null, null );
+      } catch ( e ) {
+        Utils.log( e );
+        aDocumentURI = null;
+      }
+    }
+    var node = aDOM.firstChild
     // before documentElement
     while ( node && node != aDOM.documentElement ) {
       // skip doctype && processing instructions
@@ -723,6 +761,8 @@ var Document = function() {
     if ( node ) {
       node.parentNode.removeChild( node );
     }
+    // post import processing
+    processElement( dom.documentElement, aBaseURI, anURI, aDocumentURI );
     return dom;
   };
   
