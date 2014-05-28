@@ -5,8 +5,8 @@
   <prefix>znotes</prefix>
   <id>znotes@akman.ru</id>
   <bundle>net.akman.znotes</bundle>
-  <version>0.9.22</version>
-  <build>20140516</build>
+  <version>0.9.23</version>
+  <build>20140528</build>
 
   <licenses>
     <license>
