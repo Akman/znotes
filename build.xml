@@ -110,9 +110,7 @@
       </else>
     </if>
     <delete dir="${config.local.thunderbird.profile.work.dir}/extensions/${application.id}" quiet="true" includeemptydirs="true" />
-    <delete dir="${config.local.znotes.dir}" quiet="true" includeemptydirs="true">
-      <exclude name="${config.local.znotes.profile.dir}/**" />
-    </delete>
+    <delete dir="${config.local.znotes.dir}" quiet="true" includeemptydirs="true" />
   </target>
 
   <!-- BUILD ALL -->

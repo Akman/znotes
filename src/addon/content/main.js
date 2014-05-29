@@ -5847,6 +5847,10 @@ ru.akman.znotes.Main = function() {
     updateFocus();
     updateEditCommands();
     observerService.notifyObservers( window, "znotes-main-startup", null );
+    if ( prefsBundle.getCharPref( "version" ) != Utils.VERSION ) {
+      prefsBundle.setCharPref( "version", Utils.VERSION );
+      Utils.showNewVersionInfo( "maximized" );
+    }
   };
 
   function unload() {

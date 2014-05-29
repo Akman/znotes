@@ -770,6 +770,30 @@ var Utils = function() {
     throw Components.results.NS_ERROR_UNEXPECTED;
   };
 
+  pub.showNewVersionInfo = function( mode ) {
+    var tabMail, win;
+    var infoURL = "chrome://znotes_changes/content/index_" +
+                  pub.getSiteLanguage() + ".xhtml";
+    pub.initGlobals();
+    tabMail = pub.getTabMail();
+    if ( tabMail ) {
+      tabMail.openTab( "znotesInfoTab", {
+        contentPage: infoURL,
+        windowMode: mode
+      } );
+    } else {
+      win = pub.MAIN_WINDOW.open(
+        "chrome://znotes/content/info.xul",
+        "znotes:info",
+        "chrome,toolbar,status,resizable,centerscreen"
+      );
+      win.arguments = [ {
+        contentPage: infoURL,
+        windowMode: mode
+      } ];
+    }
+  };
+  
   pub.dumpObject = function( obj, chr, cnt ) {
     if ( obj === undefined ) {
       pub.log( "undefined" );

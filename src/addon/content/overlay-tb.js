@@ -885,15 +885,6 @@ ru.akman.znotes.ZNotes = function() {
     */
   };
   
-  function showNewVersionInfo() {
-    var infoURL = "chrome://znotes_changes/content/index_" +
-                  Utils.getSiteLanguage() + ".xhtml";
-    var tabMail = Utils.getTabMail();
-    if ( tabMail ) {
-      tabMail.openTab( "znotesInfoTab", { contentPage: infoURL } );
-    }
-  };
-  
   function init() {
     Utils.initGlobals();
     mailWindow = Utils.getMail3PaneWindow();
@@ -920,10 +911,11 @@ ru.akman.znotes.ZNotes = function() {
     updateCommandsVisibility();
     if ( mainWindowState.open ) {
       doOpenMainWindow( !mainWindowState.active );
-    }
-    if ( prefsBundle.getCharPref( "version" ) != Utils.VERSION ) {
-      prefsBundle.setCharPref( "version", Utils.VERSION );
-      showNewVersionInfo();
+    } else {
+      if ( prefsBundle.getCharPref( "version" ) != Utils.VERSION ) {
+        prefsBundle.setCharPref( "version", Utils.VERSION );
+        Utils.showNewVersionInfo( "maximized" );
+      }
     }
   };
   
