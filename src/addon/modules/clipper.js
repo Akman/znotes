@@ -615,7 +615,7 @@ function processStyleSheet( aRules, aChanges, aDocument, aSheet, aLoader,
   }
   var aDocumentURL = aDocument.documentURI;
   var sheet = aSheet, href = aSheet.href;
-  var media, rule, matchMedia;
+  var media, supports, keyframe, rule, matchMedia;
   var cssIndex, cssText, rules = {
     href: href,
     lines: []
@@ -655,12 +655,60 @@ function processStyleSheet( aRules, aChanges, aDocument, aSheet, aLoader,
         @import "common.css" screen, projection;
         @import url('landscape.css') screen and (orientation:landscape);
         */
-        sheet = rule.styleSheet;
-        if ( sheet ) {
-          processStyleSheet( aRules, aChanges, aDocument, sheet, aLoader,
-            aDirectory, aFlags );
+        matchMedia = true;
+        if ( rule.conditionText ) {
+          matchMedia = aDocument.defaultView.matchMedia( rule.conditionText );
+          matchMedia = matchMedia && matchMedia.matches;
         }
+        if ( matchMedia ) {
+          sheet = rule.styleSheet;
+          if ( sheet ) {
+            processStyleSheet( aRules, aChanges, aDocument, sheet, aLoader,
+              aDirectory, aFlags );
+          }
+        }  
         break;
+      // TODO: Conditional group rules
+      case nsIDOMCSSRule.SUPPORTS_RULE:
+        /**
+        Gecko 22 and Gecko 21 supported this feature only if the user enables
+        it by setting the config value layout.css.supports-rule.enabled to true
+        @supports not ( display: flex ) {
+          body { width: 100%; height: 100%; background: white; color: black; }
+          #navigation { width: 25%; }
+          #article { width: 75%; }
+        }
+        The CSSOM class CSSSupportsRule, and the CSS.supports method
+        allows to perform the same check via JavaScript
+        The supports() methods returns a Boolean value indicating
+        if the browser supports a given CSS feature, or not
+        boolValue = CSS.supports(propertyName, value);
+        boolValue = CSS.supports(supportCondition);
+        */
+        if ( rule.supports( rule.conditionText ) ) {
+          for ( var j = 0; j < rule.cssRules.length; j++ ) {
+            supports = rule.cssRules[j];
+            if ( supports.cssText &&
+                 checkSelector( aChanges, aDocument, supports.selectorText ) ) {
+              cssIndex = rules.lines.length;
+              cssText = inspectRule( aChanges, supports, href, aDocumentURL,
+                                     aLoader, aDirectory,
+                function( job, lines, index ) {
+                  lines[index] = lines[index].replace(
+                    job.getURL(),
+                    encodeURI( job.getEntry().leafName ),
+                    "g"
+                  );
+                },
+                rules.lines,
+                cssIndex
+              );
+              rules.lines.push( cssText );
+            }
+          }
+        }
+      break;
+      // TODO: Conditional group rules
       case nsIDOMCSSRule.MEDIA_RULE:
         /**
         The @media CSS at-rule associates a set of nested statements, in
@@ -672,9 +720,15 @@ function processStyleSheet( aRules, aChanges, aDocument, aSheet, aLoader,
           media-specific rules
         }
         Firefox currently only implements the print and screen media types.
+        interface CSSMediaRule {
+          readonly attribute MediaList media;
+          attribute DOMString conditionText;
+          readonly attribute CSSRuleList cssRules;
+        }
         */
         matchMedia = aDocument.defaultView.matchMedia( rule.conditionText );
-        if ( matchMedia && matchMedia.matches ) {
+        matchMedia = matchMedia && matchMedia.matches;
+        if ( matchMedia ) {
           for ( var j = 0; j < rule.cssRules.length; j++ ) {
             media = rule.cssRules[j];
             if ( media.cssText &&
@@ -732,6 +786,10 @@ function processStyleSheet( aRules, aChanges, aDocument, aSheet, aLoader,
         svg|a {}
         This matches both XHTML and SVG <a> elements
         *|a {}
+        interface CSSNamespaceRule : CSSRule {
+          readonly attribute DOMString namespaceURI;
+          readonly attribute DOMString? prefix;
+        };
         */
         if ( rule.cssText ) {
           rules.lines.push( rule.cssText );
@@ -752,22 +810,127 @@ function processStyleSheet( aRules, aChanges, aDocument, aSheet, aLoader,
         @charset "UTF-8";
         */
         break;
-      default:
+      // TODO: Conditional group rules
+      case nsIDOMCSSRule.DOCUMENT_RULE:
+        /*
+        CSS4 (deferred)
+        The @document rule is an at-rule that restricts the style rules
+        contained within it based on the URL of the document.
+        It is designed primarily for user style sheets.
+        A @document rule can specify one or more matching functions.
+        If any of the functions apply to a URL, the rule will take effect
+        on that URL.
+        The main use case is for user-defined stylesheets,
+        though this at-rule can be used on author-defined stylesheets too.
+        The functions available are:
+
+        url(), which matches an exact URL
+        url-prefix(), which matches if the document URL starts with
+                      the value provided
+        domain(), which matches if the document URL is on the domain
+                  provided (or a subdomain of it)
+        regexp(), which matches if the document URL is matched by
+                  the regular expression provided. The expression must match
+                  the entire URL.
+        
+        The values provided to the url(), url-prefix(), and domain()
+        functions can optionally be enclosed by single or double quotes.
+        The values provided to the regexp() function must be enclosed in quotes.
+        
+        Escaped values provided to the regexp() function must additionally
+        escaped from the CSS. For example, a . (period) matches any character
+        in regular expressions. To match a literal period, you would first
+        need to escape it using regular expression rules (to \.),
+        then escape that string using CSS rules (to \\.).
+        @document url(http://www.w3.org/),
+                       url-prefix(http://www.w3.org/Style/),
+                       domain(mozilla.org),
+                       regexp("https:.*")
+        {
+          CSS rules here apply to:
+          + The page "http://www.w3.org/".
+          + Any page whose URL begins with "http://www.w3.org/Style/"
+          + Any page whose URL's host is "mozilla.org" or ends with
+            ".mozilla.org"
+          + Any page whose URL starts with "https:"
+        }        
+        */
         if ( rule.cssText ) {
-          cssIndex = rules.lines.length;
-          cssText = inspectRule( aChanges, rule, href, aDocumentURL, aLoader,
-            aDirectory,
-            function( job, lines, index ) {
-              lines[index] = lines[index].replace(
-                job.getURL(),
-                encodeURI( job.getEntry().leafName ),
-                "g"
+          rules.lines.push( rule.cssText );
+        }
+        break;
+      case nsIDOMCSSRule.KEYFRAMES_RULE:
+        /**
+          Describes the aspect of intermediate steps in a CSS animation sequence
+          interface CSSKeyframesRule {
+            attribute DOMString name;
+            readonly attribute CSSRuleList cssRules;
+          };
+          To use keyframes, you create a @keyframes rule with a name that is
+          then used by the animation-name property to match an animation to
+          its keyframe list. Each @keyframes rule contains a style list of
+          keyframe selectors, each of which is comprised of a percentage
+          along the animation at which the keyframe occurs as well as
+          a block containing the style information for that keyframe.        
+          @keyframes <identifier> {
+            [ [ from | to | <percentage> ] [, from | to | <percentage> ]* block ]*
+          }
+          @keyframes animation_name {
+            0% { top: 0; left: 0; }
+            30% { top: 50px; }
+            68%, 72% { left: 50px; }
+            100% { top: 100px; left: 100%; }
+          }
+        */
+        if ( rule.cssText ) {
+          rules.lines.push( "@keyframes " + rule.name + "{" );
+          for ( var j = 0; j < rule.cssRules.length; j++ ) {
+            keyframe = rule.cssRules[j];
+            if ( keyframe.cssText ) {
+              cssIndex = rules.lines.length;
+              cssText = inspectRule( aChanges, keyframe, href, aDocumentURL,
+                                     aLoader, aDirectory,
+                function( job, lines, index ) {
+                  lines[index] = lines[index].replace(
+                    job.getURL(),
+                    encodeURI( job.getEntry().leafName ),
+                    "g"
+                  );
+                },
+                rules.lines,
+                cssIndex
               );
-            },
-            rules.lines,
-            cssIndex
-          );
-          rules.lines.push( cssText );
+              rules.lines.push( cssText );
+            }
+          }
+          rules.lines.push( "}" );
+        }
+        break;
+      case nsIDOMCSSRule.PAGE_RULE:
+        /**
+          interface CSSPageRule {
+            attribute DOMString selectorText;
+            readonly attribute CSSStyleDeclaration style;
+          };
+          The @page CSS at-rule is used to modify some CSS properties when
+          printing a document. You can't change all CSS properties with @page.
+          You can only change the margins, orphans, widows, and page breaks
+          of the document. Attempts to change any other CSS properties
+          will be ignored.
+          @page :pseudo-class {
+            margin: 2in;
+          }
+        */
+        if ( rule.cssText ) {
+          rules.lines.push( rule.cssText );
+        }
+        break;
+      default:
+        /**
+          UNKNOWN_RULE
+        */
+        if ( rule.cssText ) {
+          rules.lines.push( rule.cssText );
         }
         break;
     }

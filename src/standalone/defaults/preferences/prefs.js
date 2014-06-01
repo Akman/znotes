@@ -49,6 +49,7 @@ pref("javascript.options.strict", true);
 pref("nglayout.debug.disable_xul_cache", true);
 pref("nglayout.debug.disable_xul_fastload", true);
 */
+pref("devtools.debugger.remote-enabled", true);
 
 /* extensions */
 

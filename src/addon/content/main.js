@@ -1270,6 +1270,9 @@ ru.akman.znotes.Main = function() {
     Common.goSetCommandHidden( "znotes_console_command", !Utils.IS_DEBUG_ENABLED, window );
     Common.goSetCommandHidden( "znotes_debugger_command", !( Utils.IS_DEBUG_ENABLED && Utils.IS_STANDALONE && Utils.IS_DEBUGGER_INSTALLED ), window );
     Common.goSetCommandHidden( "znotes_inspector_command", !( Utils.IS_DEBUG_ENABLED && Utils.IS_STANDALONE && Utils.IS_INSPECTOR_INSTALLED ), window );
+    if ( Utils.IS_DEBUG_ENABLED && Utils.IS_STANDALONE ) {
+      Utils.MAIN_WINDOW.startDebuggerServer();
+    }
   };
 
   function updateCommonCommands() {
