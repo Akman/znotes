@@ -76,7 +76,7 @@ var Utils = function() {
   var isCloseBrowserAfterImport = true;
   var isSelectNoteAfterImport = true;
   var isClipperPlaySound = true;
-  var clipperFlags = 0x00010000;
+  var clipperFlags = 0x10010000;
   var defaultDocumentType = "application/xhtml+xml";
   var placeName = "";
   var mainShortCuts = "{}";
@@ -796,7 +796,7 @@ var Utils = function() {
   
   pub.dumpObject = function( obj, chr, cnt ) {
     if ( obj === undefined ) {
-      pub.log( "undefined" );
+      return "undefined";
     }
     if ( obj === null ) {
       return "null";

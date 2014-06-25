@@ -220,6 +220,7 @@ function getSuitableFileName( url, contentType, defaultType ) {
     }
   }
   if ( mime_ext && mime_ext !== ext.toLowerCase() ) {
+    Utils.log( name + " . " + mime_ext + " -> " + ext );
     if ( mime_ext === "jpg" && ext === "jpeg" ||
          mime_ext === "jpeg" && ext === "jpg" ||
          mime_ext === "htm" && ext === "html" ||
@@ -517,21 +518,21 @@ function fixupName( anElement, aName ) {
 
 // CSS
 
-function splitSelector( selector ) {
+function splitNodeName( nodeName ) {
   var index = -1;
   do {
-    index = selector.indexOf( ":", index + 1 );
-  } while ( index > 0 && selector.charAt( index - 1) === "\\" );
+    index = nodeName.indexOf( ":", index + 1 );
+  } while ( index > 0 && nodeName.charAt( index - 1) === "\\" );
   if ( index !== -1 ) {
-    return [ selector.substring( 0, index ), selector.substring( index ) ];
+    return [ nodeName.substring( 0, index ), nodeName.substring( index ) ];
   }
-  return [ selector, "" ];
+  return [ nodeName, "" ];
 };
 
-function getSelectorFromChanges( aChanges, aSelector ) {
+function getChangeForSelector( aChanges, aSelector ) {
   for each ( var aChange in aChanges ) {
     if ( aSelector === aChange.nodeName ) {
-      return aChange;
+      return "." + aChange.className;
     }
   }
   return null;
@@ -545,19 +546,16 @@ function checkSelector( aChanges, aDocument, aSelectors ) {
   for each ( var selector in selectors ) {
     selector = selector.trim();
     if ( selector.length ) {
-      selector = splitSelector( selector )[0];
-      if ( selector.length ) {
-        if ( getSelectorFromChanges( aChanges, selector ) ) {
+      if ( getChangeForSelector( aChanges, selector ) ) {
+        return true;
+      }
+      try {
+        if ( aDocument.querySelector( selector ) ) {
           return true;
         }
-        try {
-          if ( aDocument.querySelector( selector ) ) {
-            return true;
-          }
-        } catch ( e ) {
-          // SYNTAX_ERR
-          return true;
-        }
+      } catch ( e ) {
+        // SYNTAX_ERR
+        return true;
       }
     }
   }
@@ -592,10 +590,9 @@ function inspectRule( aChanges, aRule, aSheetURL, aDocumentURL,
   for ( var i = 0; i < selectors.length; i++ ) {
     selectors[i] = selectors[i].trim();
     if ( selectors[i].length ) {
-      chunks = splitSelector( selectors[i] );
-      change = getSelectorFromChanges( aChanges, chunks[0] );
-      if ( change ) {
-        selectors[i] = "." + change.className + chunks[1];
+      selector = getChangeForSelector( aChanges, selectors[i] );
+      if ( selector ) {
+        selectors[i] = selector;
         flag = true;
       }
     }
@@ -608,332 +605,402 @@ function inspectRule( aChanges, aRule, aSheetURL, aDocumentURL,
   return cssText;
 };
 
-function processStyleSheet( aRules, aChanges, aDocument, aSheet, aLoader,
-                            aDirectory, aFlags ) {
+function processRule( aRule, aRules, aChanges, aDocument, aSheet,
+                      aLoader, aDirectory, aFlags ) {
+  var matchMedia, matchSupports, matchDocument;
+  var fileName, filePrefix, sheetFile, url;
+  var cssIndex, cssText;
+  var rules = aRules[ aRules.length - 1 ];
+  var aDocumentURL = aDocument.documentURI;
+  var aSheetURL = resolveSheetURL( aDocument, aSheet );
+  /**
+  @see https://developer.mozilla.org/en-US/docs/Web/API/CSSRule
+  */
+  switch ( aRule.type ) {
+    case nsIDOMCSSRule.STYLE_RULE:
+      if ( aRule.cssText &&
+           checkSelector( aChanges, aDocument, aRule.selectorText ) ) {
+        cssIndex = rules.lines.length;
+        cssText = inspectRule( aChanges, aRule, aSheetURL, aDocumentURL,
+                               aLoader, aDirectory,
+          function( job, lines, index ) {
+            lines[index] = lines[index].replace(
+              job.getURL(),
+              encodeURI( job.getEntry().leafName ),
+              "g"
+            );
+          },
+          rules.lines,
+          cssIndex
+        );
+        rules.lines.push( cssText );
+      }
+      break;
+    case nsIDOMCSSRule.FONT_FACE_RULE:
+    case nsIDOMCSSRule.KEYFRAME_RULE:
+      if ( aRule.cssText /* &&
+           checkSelector( aChanges, aDocument, aRule.selectorText ) */ ) {
+        cssIndex = rules.lines.length;
+        cssText = inspectRule( aChanges, aRule, aSheetURL, aDocumentURL,
+                               aLoader, aDirectory,
+          function( job, lines, index ) {
+            lines[index] = lines[index].replace(
+              job.getURL(),
+              encodeURI( job.getEntry().leafName ),
+              "g"
+            );
+          },
+          rules.lines,
+          cssIndex
+        );
+        rules.lines.push( cssText );
+      }
+      break;
+    case nsIDOMCSSRule.IMPORT_RULE:
+      /**
+      The @import CSS at-rule allows to import style rules from other style
+      sheets. These rules must precede all other types of rules, except
+      @charset rules; as it is not a nested statement, it cannot be used
+      inside conditional group at-rules.
+      @import url;
+      @import url list-of-media-queries;
+      Example:
+      @import url("fineprint.css") print;
+      @import url("bluish.css") projection, tv;
+      @import 'custom.css';
+      @import url("chrome://communicator/skin/");
+      @import "common.css" screen, projection;
+      @import url('landscape.css') screen and (orientation:landscape);
+      Where relative url are used, they’re interpreted as being relative
+      to the importing style sheet.
+      */
+      matchMedia = true;
+      if ( aFlags & 0x10000000 /* SAVE_ACTIVE_RULES_ONLY */ ) {
+        if ( aRule.media && aRule.media.mediaText ) {
+          matchMedia = aDocument.defaultView.matchMedia( aRule.media.mediaText );
+          matchMedia = matchMedia && matchMedia.matches;
+        }
+      }
+      if ( matchMedia && aRule.styleSheet ) {
+        url = null;
+        if ( aFlags & 0x01000000 /* SAVE_STYLESHEETS_IN_SEPARATE_FILES */ ) {
+          fileName = getSuitableFileName( aRule.styleSheet.href, "text/css" );
+          filePrefix = "";
+          do {
+            sheetFile = aDirectory.clone();
+            sheetFile.append( filePrefix + fileName.name + "." + fileName.ext );
+            filePrefix += "_";
+          } while ( sheetFile.exists() && !sheetFile.isDirectory() );
+          writeFileEntry( sheetFile, "utf-8", "" );
+          url = sheetFile.leafName;
+          cssText = '@import url( "' + url + '" )';
+          if ( aRule.media && aRule.media.mediaText ) {
+            cssText += " " + aRule.media.mediaText;
+          }
+          cssText += ";";
+          rules.lines.push( cssText );
+        }
+        processStyleSheet( aRules, aChanges, aDocument, aRule.styleSheet, url,
+                           aLoader, aDirectory, aFlags );
+      }  
+      break;
+    case nsIDOMCSSRule.SUPPORTS_RULE:
+      /**
+      Gecko 22 and Gecko 21 supported this feature only if the user enables
+      it by setting the config value layout.css.supports-rule.enabled to true
+      @supports not ( display: flex ) {
+        body { width: 100%; height: 100%; background: white; color: black; }
+        #navigation { width: 25%; }
+        #article { width: 75%; }
+      }
+      The CSSOM class CSSSupportsRule, and the CSS.supports method
+      allows to perform the same check via JavaScript
+      The supports() methods returns a Boolean value indicating
+      if the browser supports a given CSS feature, or not
+      boolValue = CSS.supports( propertyName, value );
+      boolValue = CSS.supports( supportCondition );
+      */
+      matchSupports = true;
+      if ( aFlags & 0x10000000 /* SAVE_ACTIVE_RULES_ONLY */ ) {
+        matchSupports = aRule.supports( aRule.conditionText );
+      } else {
+        rules.lines.push( "@supports " + aRule.conditionText + " {" );
+      }
+      if ( matchSupports ) {
+        for ( var j = 0; j < aRule.cssRules.length; j++ ) {
+          processRule( aRule.cssRules[j], aRules, aChanges, aDocument, aSheet,
+                       aLoader, aDirectory, aFlags );
+        }
+      } 
+      if ( !( aFlags & 0x10000000 /* SAVE_ACTIVE_RULES_ONLY */ ) ) {
+        rules.lines.push( "}" );
+      }
+      break;
+    case nsIDOMCSSRule.MEDIA_RULE:
+      /**
+      The @media CSS at-rule associates a set of nested statements, in
+      a CSS block, that is delimited by curly braces, with a condition
+      defined by a media query. The @media at-rule may be used not only at
+      the top level of a CSS, but also inside any CSS conditional-group
+      at-rule.
+      @media <media types> {
+        media-specific rules
+      }
+      Firefox currently only implements the print and screen media types.
+      interface CSSMediaRule {
+        readonly attribute MediaList media;
+        attribute DOMString conditionText;
+        readonly attribute CSSRuleList cssRules;
+      }
+      */
+      matchMedia = true;
+      if ( aFlags & 0x10000000 /* SAVE_ACTIVE_RULES_ONLY */ ) {
+        matchMedia = aDocument.defaultView.matchMedia( aRule.conditionText );
+        matchMedia = matchMedia && matchMedia.matches;
+      } else {
+        // aRule.media.mediaText === aRule.conditionText
+        rules.lines.push( "@media " + aRule.conditionText + " {" );
+      }
+      if ( matchMedia ) {
+        for ( var j = 0; j < aRule.cssRules.length; j++ ) {
+          processRule( aRule.cssRules[j], aRules, aChanges, aDocument, aSheet,
+                       aLoader, aDirectory, aFlags );
+        }
+      }
+      if ( !( aFlags & 0x10000000 /* SAVE_ACTIVE_RULES_ONLY */ ) ) {
+        rules.lines.push( "}" );
+      }
+      break;
+    case nsIDOMCSSRule.DOCUMENT_RULE:
+      /*
+      CSS4 ( deferred )
+      The @document rule is an at-rule that restricts the style rules
+      contained within it based on the URL of the document.
+      It is designed primarily for user style sheets.
+      A @document rule can specify one or more matching functions.
+      If any of the functions apply to a URL, the rule will take effect
+      on that URL.
+      The main use case is for user-defined stylesheets,
+      though this at-rule can be used on author-defined stylesheets too.
+      The functions available are:
+
+      url(), which matches an exact URL
+      url-prefix(), which matches if the document URL starts with
+                    the value provided
+      domain(), which matches if the document URL is on the domain
+                provided (or a subdomain of it)
+      regexp(), which matches if the document URL is matched by
+                the regular expression provided. The expression must match
+                the entire URL.
+      
+      The values provided to the url(), url-prefix(), and domain()
+      functions can optionally be enclosed by single or double quotes.
+      The values provided to the regexp() function must be enclosed in quotes.
+      
+      Escaped values provided to the regexp() function must additionally
+      escaped from the CSS. For example, a . (period) matches any character
+      in regular expressions. To match a literal period, you would first
+      need to escape it using regular expression rules (to \.),
+      then escape that string using CSS rules (to \\.).
+      @document url(http://www.w3.org/),
+                     url-prefix(http://www.w3.org/Style/),
+                     domain(mozilla.org),
+                     regexp("https:.*")
+      {
+        CSS rules here apply to:
+        + The page "http://www.w3.org/".
+        + Any page whose URL begins with "http://www.w3.org/Style/"
+        + Any page whose URL's host is "mozilla.org" or ends with
+          ".mozilla.org"
+        + Any page whose URL starts with "https:"
+      }        
+      */
+      if ( aRule.cssText ) {
+        rules.lines.push( aRule.cssText );
+      }
+      break;
+      // TODO: implement matchDocument()
+      matchDocument = true;
+      if ( aFlags & 0x10000000 /* SAVE_ACTIVE_RULES_ONLY */ ) {
+        // matchDocument = aDocument.defaultView.matchDocument( aRule.???? );
+      } else {
+        // rules.lines.push( "@document " + aRule.conditionText + " {" );
+      }
+      if ( matchDocument ) {
+        for ( var j = 0; j < aRule.cssRules.length; j++ ) {
+          processRule( aRule.cssRules[j], aRules, aChanges, aDocument, aSheet,
+                       aLoader, aDirectory, aFlags );
+        }
+      }
+      if ( !( aFlags & 0x10000000 /* SAVE_ACTIVE_RULES_ONLY */ ) ) {
+        // rules.lines.push( "}" );
+      }
+      break;
+    case nsIDOMCSSRule.NAMESPACE_RULE:
+      /**
+      The @namespace rule is an at-rule that defines the XML namespaces
+      that will be used in the style sheet. The namespaces defined can be used
+      to restrict the universal, type, and attribute selectors to only select
+      elements under that namespace. The @namespace rule is generally only
+      useful when dealing with an XML document containing multiple
+      namespaces - for example, an XHTML document with SVG embedded.      
+      @namespace url(http://www.w3.org/1999/xhtml);
+      @namespace svg url(http://www.w3.org/2000/svg);
+      This matches all XHTML <a> elements, as XHTML is the default namespace
+      a {}
+      This matches all SVG <a> elements
+      svg|a {}
+      This matches both XHTML and SVG <a> elements
+      *|a {}
+      interface CSSNamespaceRule : CSSRule {
+        readonly attribute DOMString namespaceURI;
+        readonly attribute DOMString? prefix;
+      };
+      */
+      if ( aRule.cssText ) {
+        rules.lines.push( aRule.cssText );
+      }
+      break;
+    case nsIDOMCSSRule.CHARSET_RULE:
+      /**
+      The @charset CSS at-rule specifies the character encoding used in the
+      style sheet. It must be the first element in the style sheet and not
+      be preceded by any character; as it is not a nested statement,
+      it cannot be used inside conditional group at-rules.
+      If several @charset at-rules are defined, only the first one is used,
+      and it cannot be used inside a style attribute on an HTML element
+      or inside the <style> element where the character set of the HTML page
+      is relevant.      
+      @charset charset;
+      Set the encoding of the style sheet to Unicode UTF-8
+      @charset "UTF-8";
+      */
+      rules.lines.push( '@charset "UTF-8";' );
+      break;
+    case nsIDOMCSSRule.KEYFRAMES_RULE:
+      /**
+        Describes the aspect of intermediate steps in a CSS animation sequence
+        interface CSSKeyframesRule {
+          attribute DOMString name;
+          readonly attribute CSSRuleList cssRules;
+        };
+        To use keyframes, you create a @keyframes rule with a name that is
+        then used by the animation-name property to match an animation to
+        its keyframe list. Each @keyframes rule contains a style list of
+        keyframe selectors, each of which is comprised of a percentage
+        along the animation at which the keyframe occurs as well as
+        a block containing the style information for that keyframe.        
+        @keyframes <identifier> {
+          [ [ from | to | <percentage> ] [, from | to | <percentage> ]* block ]*
+        }
+        @keyframes animation_name {
+          0% { top: 0; left: 0; }
+          30% { top: 50px; }
+          68%, 72% { left: 50px; }
+          100% { top: 100px; left: 100%; }
+        }
+      */
+      rules.lines.push( "@keyframes " + aRule.name + " {" );
+      for ( var j = 0; j < aRule.cssRules.length; j++ ) {
+        processRule( aRule.cssRules[j], aRules, aChanges, aDocument, aSheet,
+                     aLoader, aDirectory, aFlags );
+      }
+      rules.lines.push( "}" );
+      break;
+    case nsIDOMCSSRule.PAGE_RULE:
+      /**
+        interface CSSPageRule {
+          attribute DOMString selectorText;
+          readonly attribute CSSStyleDeclaration style;
+        };
+        The @page CSS at-rule is used to modify some CSS properties when
+        printing a document. You can't change all CSS properties with @page.
+        You can only change the margins, orphans, widows, and page breaks
+        of the document. Attempts to change any other CSS properties
+        will be ignored.
+        @page :pseudo-class {
+          margin: 2in;
+        }
+      */
+      if ( aRule.cssText ) {
+        rules.lines.push( aRule.cssText );
+      }
+      break;
+    case nsIDOMCSSRule.REGION_STYLE_RULE:
+      /**
+      @see http://www.w3.org/TR/css3-regions/
+      */
+      if ( aRule.cssText ) {
+        rules.lines.push( aRule.cssText );
+      }
+      break;
+    case nsIDOMCSSRule.VIEWPORT_RULE:
+      /**
+      @see http://www.w3.org/TR/css-device-adapt/
+      */
+      if ( aRule.cssText ) {
+        rules.lines.push( aRule.cssText );
+      }
+      break;
+    case nsIDOMCSSRule.COUNTER_STYLE_RULE:
+      /**
+      @see http://www.w3.org/TR/css-counter-styles-3/
+      */
+      if ( aRule.cssText ) {
+        rules.lines.push( aRule.cssText );
+      }
+      break;
+    case nsIDOMCSSRule.FONT_FEATURE_VALUES_RULE:
+      /**
+      @see http://www.w3.org/TR/css-fonts-3/
+      */
+      if ( aRule.cssText ) {
+        rules.lines.push( aRule.cssText );
+      }
+      break;
+    case nsIDOMCSSRule.UNKNOWN_RULE:
+    default:
+      if ( aRule.cssText ) {
+        rules.lines.push( aRule.cssText );
+      }
+      break;
+  }
+};
+
+function resolveSheetURL( aDocument, aSheet ) {
+  var result = aSheet.href;
+  while ( !result ) {
+    if ( aSheet.parentStyleSheet ) {
+      aSheet = aSheet.parentStyleSheet;
+      result = aSheet.href;
+    } else {
+      result = aDocument.baseURI;
+    }
+  }
+  return result;
+};
+
+function processStyleSheet( aRules, aChanges, aDocument, aSheet, aSheetURL,
+                            aLoader, aDirectory, aFlags ) {
   if ( !aSheet || aSheet.disabled ) {
     return;
   }
-  var aDocumentURL = aDocument.documentURI;
-  var sheet = aSheet, href = aSheet.href;
-  var media, supports, keyframe, rule, matchMedia;
-  var cssIndex, cssText, rules = {
-    href: href,
-    lines: []
-  };
-  if ( href ) {
+  if ( aSheet.href ) {
     for ( var i = 0; i < aRules.length; i++ ) {
-      if ( aRules[i].href === href ) {
+      if ( aRules[i].href === aSheet.href ) {
         return;
       }
     }
   }
-  aRules.push( rules );
-  while ( !href ) {
-    if ( sheet.parentStyleSheet ) {
-      sheet = sheet.parentStyleSheet;
-      href = sheet.href;
-    } else {
-      href = aDocument.baseURI;
-    }
-  }
+  aRules.push( {
+    owner: !!aSheet.ownerRule,
+    url: aSheetURL,
+    href: aSheet.href,
+    lines: []
+  } );
   for ( var i = 0; i < aSheet.cssRules.length; i++ ) {
-    rule = aSheet.cssRules[i];
-    switch ( rule.type ) {
-      case nsIDOMCSSRule.IMPORT_RULE:
-        /**
-        The @import CSS at-rule allows to import style rules from other style
-        sheets. These rules must precede all other types of rules, except
-        @charset rules; as it is not a nested statement, it cannot be used
-        inside conditional group at-rules.
-        @import url;
-        @import url list-of-media-queries;
-        Example:
-        @import url("fineprint.css") print;
-        @import url("bluish.css") projection, tv;
-        @import 'custom.css';
-        @import url("chrome://communicator/skin/");
-        @import "common.css" screen, projection;
-        @import url('landscape.css') screen and (orientation:landscape);
-        */
-        matchMedia = true;
-        if ( rule.conditionText ) {
-          matchMedia = aDocument.defaultView.matchMedia( rule.conditionText );
-          matchMedia = matchMedia && matchMedia.matches;
-        }
-        if ( matchMedia ) {
-          sheet = rule.styleSheet;
-          if ( sheet ) {
-            processStyleSheet( aRules, aChanges, aDocument, sheet, aLoader,
-              aDirectory, aFlags );
-          }
-        }  
-        break;
-      // TODO: Conditional group rules
-      case nsIDOMCSSRule.SUPPORTS_RULE:
-        /**
-        Gecko 22 and Gecko 21 supported this feature only if the user enables
-        it by setting the config value layout.css.supports-rule.enabled to true
-        @supports not ( display: flex ) {
-          body { width: 100%; height: 100%; background: white; color: black; }
-          #navigation { width: 25%; }
-          #article { width: 75%; }
-        }
-        The CSSOM class CSSSupportsRule, and the CSS.supports method
-        allows to perform the same check via JavaScript
-        The supports() methods returns a Boolean value indicating
-        if the browser supports a given CSS feature, or not
-        boolValue = CSS.supports(propertyName, value);
-        boolValue = CSS.supports(supportCondition);
-        */
-        if ( rule.supports( rule.conditionText ) ) {
-          for ( var j = 0; j < rule.cssRules.length; j++ ) {
-            supports = rule.cssRules[j];
-            if ( supports.cssText &&
-                 checkSelector( aChanges, aDocument, supports.selectorText ) ) {
-              cssIndex = rules.lines.length;
-              cssText = inspectRule( aChanges, supports, href, aDocumentURL,
-                                     aLoader, aDirectory,
-                function( job, lines, index ) {
-                  lines[index] = lines[index].replace(
-                    job.getURL(),
-                    encodeURI( job.getEntry().leafName ),
-                    "g"
-                  );
-                },
-                rules.lines,
-                cssIndex
-              );
-              rules.lines.push( cssText );
-            }
-          }
-        }
-      break;
-      // TODO: Conditional group rules
-      case nsIDOMCSSRule.MEDIA_RULE:
-        /**
-        The @media CSS at-rule associates a set of nested statements, in
-        a CSS block, that is delimited by curly braces, with a condition
-        defined by a media query. The @media at-rule may be used not only at
-        the top level of a CSS, but also inside any CSS conditional-group
-        at-rule.
-        @media <media types> {
-          media-specific rules
-        }
-        Firefox currently only implements the print and screen media types.
-        interface CSSMediaRule {
-          readonly attribute MediaList media;
-          attribute DOMString conditionText;
-          readonly attribute CSSRuleList cssRules;
-        }
-        */
-        matchMedia = aDocument.defaultView.matchMedia( rule.conditionText );
-        matchMedia = matchMedia && matchMedia.matches;
-        if ( matchMedia ) {
-          for ( var j = 0; j < rule.cssRules.length; j++ ) {
-            media = rule.cssRules[j];
-            if ( media.cssText &&
-                 checkSelector( aChanges, aDocument, media.selectorText ) ) {
-              cssIndex = rules.lines.length;
-              cssText = inspectRule( aChanges, media, href, aDocumentURL,
-                                     aLoader, aDirectory,
-                function( job, lines, index ) {
-                  lines[index] = lines[index].replace(
-                    job.getURL(),
-                    encodeURI( job.getEntry().leafName ),
-                    "g"
-                  );
-                },
-                rules.lines,
-                cssIndex
-              );
-              rules.lines.push( cssText );
-            }
-          }
-        }
-        break;
-      case nsIDOMCSSRule.STYLE_RULE:
-        if ( rule.cssText &&
-             checkSelector( aChanges, aDocument, rule.selectorText ) ) {
-          cssIndex = rules.lines.length;
-          cssText = inspectRule( aChanges, rule, href, aDocumentURL, aLoader,
-            aDirectory,
-            function( job, lines, index ) {
-              lines[index] = lines[index].replace(
-                job.getURL(),
-                encodeURI( job.getEntry().leafName ),
-                "g"
-              );
-            },
-            rules.lines,
-            cssIndex
-          );
-          rules.lines.push( cssText );
-        }
-        break;
-      case nsIDOMCSSRule.NAMESPACE_RULE:
-        /**
-        The @namespace rule is an at-rule that defines the XML namespaces
-        that will be used in the style sheet. The namespaces defined can be used
-        to restrict the universal, type, and attribute selectors to only select
-        elements under that namespace. The @namespace rule is generally only
-        useful when dealing with an XML document containing multiple
-        namespaces - for example, an XHTML document with SVG embedded.      
-        @namespace url(http://www.w3.org/1999/xhtml);
-        @namespace svg url(http://www.w3.org/2000/svg);
-        This matches all XHTML <a> elements, as XHTML is the default namespace
-        a {}
-        This matches all SVG <a> elements
-        svg|a {}
-        This matches both XHTML and SVG <a> elements
-        *|a {}
-        interface CSSNamespaceRule : CSSRule {
-          readonly attribute DOMString namespaceURI;
-          readonly attribute DOMString? prefix;
-        };
-        */
-        if ( rule.cssText ) {
-          rules.lines.push( rule.cssText );
-        }
-        break;
-      case nsIDOMCSSRule.CHARSET_RULE:
-        /**
-        The @charset CSS at-rule specifies the character encoding used in the
-        style sheet. It must be the first element in the style sheet and not
-        be preceded by any character; as it is not a nested statement,
-        it cannot be used inside conditional group at-rules.
-        If several @charset at-rules are defined, only the first one is used,
-        and it cannot be used inside a style attribute on an HTML element
-        or inside the <style> element where the character set of the HTML page
-        is relevant.      
-        @charset charset;
-        Set the encoding of the style sheet to Unicode UTF-8
-        @charset "UTF-8";
-        */
-        break;
-      // TODO: Conditional group rules
-      case nsIDOMCSSRule.DOCUMENT_RULE:
-        /*
-        CSS4 (deferred)
-        The @document rule is an at-rule that restricts the style rules
-        contained within it based on the URL of the document.
-        It is designed primarily for user style sheets.
-        A @document rule can specify one or more matching functions.
-        If any of the functions apply to a URL, the rule will take effect
-        on that URL.
-        The main use case is for user-defined stylesheets,
-        though this at-rule can be used on author-defined stylesheets too.
-        The functions available are:
-
-        url(), which matches an exact URL
-        url-prefix(), which matches if the document URL starts with
-                      the value provided
-        domain(), which matches if the document URL is on the domain
-                  provided (or a subdomain of it)
-        regexp(), which matches if the document URL is matched by
-                  the regular expression provided. The expression must match
-                  the entire URL.
-        
-        The values provided to the url(), url-prefix(), and domain()
-        functions can optionally be enclosed by single or double quotes.
-        The values provided to the regexp() function must be enclosed in quotes.
-        
-        Escaped values provided to the regexp() function must additionally
-        escaped from the CSS. For example, a . (period) matches any character
-        in regular expressions. To match a literal period, you would first
-        need to escape it using regular expression rules (to \.),
-        then escape that string using CSS rules (to \\.).
-        @document url(http://www.w3.org/),
-                       url-prefix(http://www.w3.org/Style/),
-                       domain(mozilla.org),
-                       regexp("https:.*")
-        {
-          CSS rules here apply to:
-          + The page "http://www.w3.org/".
-          + Any page whose URL begins with "http://www.w3.org/Style/"
-          + Any page whose URL's host is "mozilla.org" or ends with
-            ".mozilla.org"
-          + Any page whose URL starts with "https:"
-        }        
-        */
-        if ( rule.cssText ) {
-          rules.lines.push( rule.cssText );
-        }
-        break;
-      case nsIDOMCSSRule.KEYFRAMES_RULE:
-        /**
-          Describes the aspect of intermediate steps in a CSS animation sequence
-          interface CSSKeyframesRule {
-            attribute DOMString name;
-            readonly attribute CSSRuleList cssRules;
-          };
-          To use keyframes, you create a @keyframes rule with a name that is
-          then used by the animation-name property to match an animation to
-          its keyframe list. Each @keyframes rule contains a style list of
-          keyframe selectors, each of which is comprised of a percentage
-          along the animation at which the keyframe occurs as well as
-          a block containing the style information for that keyframe.        
-          @keyframes <identifier> {
-            [ [ from | to | <percentage> ] [, from | to | <percentage> ]* block ]*
-          }
-          @keyframes animation_name {
-            0% { top: 0; left: 0; }
-            30% { top: 50px; }
-            68%, 72% { left: 50px; }
-            100% { top: 100px; left: 100%; }
-          }
-        */
-        if ( rule.cssText ) {
-          rules.lines.push( "@keyframes " + rule.name + "{" );
-          for ( var j = 0; j < rule.cssRules.length; j++ ) {
-            keyframe = rule.cssRules[j];
-            if ( keyframe.cssText ) {
-              cssIndex = rules.lines.length;
-              cssText = inspectRule( aChanges, keyframe, href, aDocumentURL,
-                                     aLoader, aDirectory,
-                function( job, lines, index ) {
-                  lines[index] = lines[index].replace(
-                    job.getURL(),
-                    encodeURI( job.getEntry().leafName ),
-                    "g"
-                  );
-                },
-                rules.lines,
-                cssIndex
-              );
-              rules.lines.push( cssText );
-            }
-          }
-          rules.lines.push( "}" );
-        }
-        break;
-      case nsIDOMCSSRule.PAGE_RULE:
-        /**
-          interface CSSPageRule {
-            attribute DOMString selectorText;
-            readonly attribute CSSStyleDeclaration style;
-          };
-          The @page CSS at-rule is used to modify some CSS properties when
-          printing a document. You can't change all CSS properties with @page.
-          You can only change the margins, orphans, widows, and page breaks
-          of the document. Attempts to change any other CSS properties
-          will be ignored.
-          @page :pseudo-class {
-            margin: 2in;
-          }
-        */
-        if ( rule.cssText ) {
-          rules.lines.push( rule.cssText );
-        }
-        break;
-      default:
-        /**
-          UNKNOWN_RULE
-        */
-        if ( rule.cssText ) {
-          rules.lines.push( rule.cssText );
-        }
-        break;
-    }
+    processRule( aSheet.cssRules[i], aRules, aChanges, aDocument, aSheet,
+                 aLoader, aDirectory, aFlags );
   }
 };
 
@@ -941,7 +1008,7 @@ function collectStyles( aRules, aChanges, aDocument, aLoader, aDirectory,
                         aFlags ) {
   for ( var i = 0; i < aDocument.styleSheets.length; i++ ) {
     processStyleSheet( aRules, aChanges, aDocument, aDocument.styleSheets[i],
-                       aLoader, aDirectory, aFlags );
+                       null, aLoader, aDirectory, aFlags );
   }
 };
 
@@ -1072,12 +1139,22 @@ function fixupElement( anElement, aChanges, aFlags ) {
   }
   nodeName = ( prefix.length ? prefix + ":" : "" ) + localName;
   if ( nodeName !== name ) {
-    className = ( aFlags & 0x00010000 /* SAVE_STYLES */ ) ?
-      localName + "_" + createUUID() : null;
-    aChanges.push( {
-      nodeName: name.replace( /\:/g, "\\:" ),
-      className: className
-    } );
+    className = null;
+    if ( aFlags & 0x00010000 /* SAVE_STYLES */ ) {
+      for ( var i = 0; i < aChanges.length; i++ ) {
+        if ( aChanges[i].nodeName === name ) {
+          className = aChanges[i].className;
+          break;
+        }
+      }
+      if ( !className ) {
+        className = name.replace( /\:/g, "-" ) + "-" + createUUID();
+        aChanges.push( {
+          nodeName: name,
+          className: className
+        } );
+      }
+    }
     anElement = replaceElement( anElement, nodeName, className );
   }
   return anElement;
@@ -1099,7 +1176,7 @@ function addJobObserver( aJob, aCallback, aLines, anIndex ) {
   return aJob;
 };
 
-function inspectElement( aRules, aChanges, anElement, aDocumentURL, aBaseURL,
+function inspectElement( aLinks, aRules, aChanges, anElement, aDocumentURL, aBaseURL,
                          aFrames, aDirectory, aLoader, aFlags ) {
   var ioService =
     Components.classes["@mozilla.org/network/io-service;1"]
@@ -1166,9 +1243,18 @@ function inspectElement( aRules, aChanges, anElement, aDocumentURL, aBaseURL,
           }
           switch ( anElement.rel.toLowerCase() ) {
             case "stylesheet":
+              if ( anElement.href && anElement.hasAttribute( "media" ) &&
+                   !( aFlags & 0x10000000 /* SAVE_ACTIVE_RULES_ONLY */ ) ) {
+                aLinks.push( {
+                  href: anElement.href,
+                  media: anElement.getAttribute( "media" )
+                } );
+              }
               return anElement.parentNode.removeChild( anElement );
             case "icon":
+            case "shortcut":
             case "shortcut icon":
+            case "icon shortcut":
               if ( anElement.href ) {
                 anURL = resolveURL( anElement.href, aBaseURL );
                 if ( checkURL( anURL ) ) {
@@ -1399,15 +1485,15 @@ function inspectElement( aRules, aChanges, anElement, aDocumentURL, aBaseURL,
   return anElement;
 };
 
-function createStyles( aDocument, aRules, aBaseURL, aFile, aDirectory, aFlags ) {
+function createStyles( aDocument, aLinks, aRules, aBaseURL, aFile, aDirectory, aFlags ) {
   var aStyle, anURL, aText, aCSSFile, aCSSFileName, prefix;
   var line, index, anAtLines = [];
   for ( var i = aRules.length - 1; i >= 0 ; i-- ) {
     for ( var j = aRules[i].lines.length - 1; j >= 0 ; j-- ) {
       line = aRules[i].lines[j].trim();
       if ( line.length ) {
-        if ( !( aFlags & 0x01000000 /* SAVE_STYLESHEETS_IN_SEPARATE_FILES */ ) &&
-             line.indexOf( "@namespace" ) === 0 ) {
+        if ( line.indexOf( "@namespace" ) === 0 &&
+             !( aFlags & 0x01000000 /* SAVE_STYLESHEETS_IN_SEPARATE_FILES */ ) ) {
           index = anAtLines.indexOf( line );
           if ( index === -1 ) {
             anAtLines.push( line );
@@ -1427,25 +1513,38 @@ function createStyles( aDocument, aRules, aBaseURL, aFile, aDirectory, aFlags ) 
         if ( aFlags & 0x01000000 /* SAVE_STYLESHEETS_IN_SEPARATE_FILES */ ) {
           aText = "/***** " + anURL + " *****/\n" +
                   aRules[i].lines.join( "\n" );
-          aCSSFileName = getSuitableFileName( anURL, "text/css" );
-          prefix = "";
-          do {
+          if ( aRules[i].url ) {
             aCSSFile = aDirectory.clone();
-            aCSSFile.append( prefix + aCSSFileName.name +
-                             "." + aCSSFileName.ext );
-            prefix += "_";
-          } while ( aCSSFile.exists() && !aCSSFile.isDirectory() );
+            aCSSFile.append( aRules[i].url );
+          } else {
+            aCSSFileName = getSuitableFileName( anURL, "text/css" );
+            prefix = "";
+            do {
+              aCSSFile = aDirectory.clone();
+              aCSSFile.append( prefix + aCSSFileName.name +
+                               "." + aCSSFileName.ext );
+              prefix += "_";
+            } while ( aCSSFile.exists() && !aCSSFile.isDirectory() );
+          }
           writeFileEntry( aCSSFile, "utf-8", aText );
-          aStyle = aDocument.createElementNS(
-            aDocument.documentElement.namespaceURI,
-            "link"
-          );
-          aStyle.setAttribute( "rel", "stylesheet" );
-          aStyle.setAttribute( "type", "text/css" );
-          aStyle.setAttribute( "href", aCSSFile.leafName );
-          aDocument.getElementsByTagName( "head" )[0].appendChild(
-            aDocument.createTextNode( "\n" ) );
-          aDocument.getElementsByTagName( "head" )[0].appendChild( aStyle );
+          if ( !aRules[i].owner ) {
+            aStyle = aDocument.createElementNS(
+              aDocument.documentElement.namespaceURI,
+              "link"
+            );
+            aStyle.setAttribute( "rel", "stylesheet" );
+            aStyle.setAttribute( "type", "text/css" );
+            aStyle.setAttribute( "href", aCSSFile.leafName );
+            for ( var j = 0; j < aLinks.length; j++ ) {
+              if ( aLinks[j].href === anURL ) {
+                aStyle.setAttribute( "media", aLinks[j].media );
+                break;
+              }
+            }
+            aDocument.getElementsByTagName( "head" )[0].appendChild(
+              aDocument.createTextNode( "\n" ) );
+            aDocument.getElementsByTagName( "head" )[0].appendChild( aStyle );
+          }
         } else if ( aFlags & 0x00100000 /* SAVE_STYLESHEETS_IN_SINGLE_FILE */ ) {
           aText += ( i ? "\n" : "" ) +
                    "/***** " + anURL + " *****/\n" +
@@ -1517,7 +1616,7 @@ function createStyles( aDocument, aRules, aBaseURL, aFile, aDirectory, aFlags ) 
   }
 };
 
-function processElement( aRules, aChanges, aRoot, aDocumentURL,
+function processElement( aLinks, aRules, aChanges, aRoot, aDocumentURL,
                          aBaseURL, aFrames, aDirectory, aLoader, aFlags ) {
   var aNextElementSibling, anElement = aRoot.firstElementChild;
   while ( anElement ) {
@@ -1525,9 +1624,10 @@ function processElement( aRules, aChanges, aRoot, aDocumentURL,
     try {
       anElement = fixupElement( anElement, aChanges, aFlags );
       if ( anElement ) {
-        anElement = inspectElement( aRules, aChanges, anElement, aDocumentURL,
-                                    aBaseURL, aFrames, aDirectory, aLoader, aFlags );
-        processElement( aRules, aChanges, anElement, aDocumentURL,
+        anElement = inspectElement( aLinks, aRules, aChanges, anElement,
+                                    aDocumentURL, aBaseURL, aFrames,
+                                    aDirectory, aLoader, aFlags );
+        processElement( aLinks, aRules, aChanges, anElement, aDocumentURL,
                         aBaseURL, aFrames, aDirectory, aLoader, aFlags );
       }
     } catch ( e ) {
@@ -1545,7 +1645,7 @@ function collectFrames( aDocument ) {
   return result;
 };
 
-function doneDocument( aDocument, aResult, aRules, aBaseURL, aFile, aDirectory, aFlags ) {
+function doneDocument( aDocument, aResult, aLinks, aRules, aBaseURL, aFile, aDirectory, aFlags ) {
   var aHead, aStyle, aMeta, aCollection, aBase, aBaseTarget;
   var namespaceURI = aResult.documentElement.namespaceURI;
   // HEAD
@@ -1561,7 +1661,7 @@ function doneDocument( aDocument, aResult, aRules, aBaseURL, aFile, aDirectory, 
   }
   // STYLE
   if ( aFlags & 0x00010000 /* SAVE_STYLES */ ) {
-    createStyles( aResult, aRules, aBaseURL, aFile, aDirectory, aFlags );
+    createStyles( aResult, aLinks, aRules, aBaseURL, aFile, aDirectory, aFlags );
   }
   // BASE
   aCollection = aDocument.getElementsByTagName( "base" );
@@ -1595,9 +1695,11 @@ function saveDocument( aDocument, aResultObj, aFile, aDirectory, aLoader,
   var isFrame = ( aDocument.defaultView.top !== aDocument.defaultView.self );
   var aBaseURL = getFileURI( aFile.parent ).getRelativeSpec(
     getFileURI( aDirectory ) );
+  var aLinks = [];
   var aRules = [];
   var aChanges = [];
   processElement(
+    aLinks,
     aRules,
     aChanges,
     aResult.documentElement,
@@ -1622,12 +1724,12 @@ function saveDocument( aDocument, aResultObj, aFile, aDirectory, aLoader,
     aLoader.addObserver( {
       onGroupStopped: function( anEvent ) {
         if ( anEvent.getData().id === aDocument.documentURI ) {
-          doneDocument( aDocument, aResult, aRules, aBaseURL, aFile, aDirectory, aFlags );
+          doneDocument( aDocument, aResult, aLinks, aRules, aBaseURL, aFile, aDirectory, aFlags );
         }
       }
     } );
   } else {
-    doneDocument( aDocument, aResult, aRules, aBaseURL, aFile, aDirectory, aFlags );
+    doneDocument( aDocument, aResult, aLinks, aRules, aBaseURL, aFile, aDirectory, aFlags );
   }
 };
 

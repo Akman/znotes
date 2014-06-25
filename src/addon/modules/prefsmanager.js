@@ -288,7 +288,7 @@ var PrefsManager = function() {
         pub.getBoolPref( "isClipperPlaySound" );
       //
       if ( Utils.IS_SANITIZE_ENABLED ) {
-        Utils.CLIPPER_FLAGS &= 0x00010000;
+        Utils.CLIPPER_FLAGS &= 0x10010000;
         // SAVE_STYLES
         if ( !pub.hasPref( "clipperSaveStyles" ) ) {
           pub.setBoolPref( "clipperSaveStyles",
@@ -299,6 +299,16 @@ var PrefsManager = function() {
         } else {
           Utils.CLIPPER_FLAGS &= 0x11101111;
         }
+        // SAVE_ACTIVE_RULES_ONLY
+        if ( !pub.hasPref( "clipperSaveActiveRulesOnly" ) ) {
+          pub.setBoolPref( "clipperSaveActiveRulesOnly",
+            !!( Utils.CLIPPER_FLAGS & 0x10000000 ) );
+        }
+        //if ( pub.getBoolPref( "clipperSaveActiveRulesOnly" ) ) {
+          Utils.CLIPPER_FLAGS |= 0x10000000;
+        //} else {
+        //  Utils.CLIPPER_FLAGS &= 0x01111111;
+        //}
       } else {
         // SAVE_SCRIPTS
         if ( !pub.hasPref( "clipperSaveScripts" ) ) {
@@ -369,6 +379,16 @@ var PrefsManager = function() {
           Utils.CLIPPER_FLAGS |= 0x01000000;
         } else {
           Utils.CLIPPER_FLAGS &= 0x10111111;
+        }
+        // SAVE_ACTIVE_RULES_ONLY
+        if ( !pub.hasPref( "clipperSaveActiveRulesOnly" ) ) {
+          pub.setBoolPref( "clipperSaveActiveRulesOnly",
+            !!( Utils.CLIPPER_FLAGS & 0x10000000 ) );
+        }
+        if ( pub.getBoolPref( "clipperSaveActiveRulesOnly" ) ) {
+          Utils.CLIPPER_FLAGS |= 0x10000000;
+        } else {
+          Utils.CLIPPER_FLAGS &= 0x01111111;
         }
       }
       //

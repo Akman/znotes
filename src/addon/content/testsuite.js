@@ -1003,6 +1003,113 @@ ru.akman.znotes.TestSuite = function() {
       window.maximize();
     }
   } );
+
+  tests.push( {
+    name: "Clipper flags",
+    description: "Show web-clipper flags",
+    code: function () {
+      Utils.log( Utils.CLIPPER_FLAGS.toString( 16 ) );
+    }
+  } );
+
+  tests.push( {
+    name: "Selectors",
+    description: "Parse CSS selector",
+    code: function () {
+
+      function extractChunks( src, re, name ) {
+        var res, chunk;
+        var index = 0, chunks = [];
+        while ( res = re.exec( src ) ) {
+          chunk = src.substring( index, res.index );
+          if ( chunk.length ) {
+            chunks.push( { chunk: chunk, name: "" } );
+          }
+          chunks.push( { chunk: res[0], name: name } );
+          index = re.lastIndex;
+        }
+        chunk = src.substring( index );
+        if ( chunk.length ) {
+          chunks.push( { chunk: chunk, name: "" } );
+        }
+        return chunks;
+      };
+      
+      function parseSelector( selector ) {
+        var exprs = {
+          // order of items is significant!
+          PSEUDO_CLASS_EXCEPT_NOT: /[:](?:(link|visited|active|hover|focus|lang|root|empty|target|enabled|disabled|checked|default|valid|invalid|required|optional)|((in|out\-of)\-range)|(read\-(only|write))|(first|last|only|nth)(\-last)?\-(child|of\-type))(?:\([_a-z0-9\-\+\.\\]*\))?/ig,
+          PSEUDO_ELEMENT: /[:]{1,2}(?:first\-(letter|line)|before|after|selection|value|choices|repeat\-(item|index)|outside|alternate|(line\-)?marker|slot\([_a-z0-9\-\+\.\\]*\))/ig,
+          ATTR_SELECTOR: /\[\s*((([_a-z]+[_a-z0-9\-\:\\]*)|\*)?\|)?([_a-z]+[_a-z0-9\-\:\\]*)\s*(((\^\=)|(\$\=)|(\*\=)|\=|(\~\=)|(\|\=))\s*(([_a-z]+[_a-z0-9\-\:\\]*)|(([\"][^\"]*[\"])|([\'][^\']*[\'])))\s*)?\]/ig,
+          // ATTR_SELECTOR: /\[\s*[_a-z0-9\-\:\.\|\\]+\s*(?:[~\|\*\^\$]?=\s*[\"\'][^\"\']*[\"\'])?\s*\]/ig
+          CLASS_SELECTOR: /\.[_a-z]+[_a-z0-9\-\:\\]*/ig,
+          ID_SELECTOR: /\#[_a-z]+[_a-z0-9\-\:\\]*/ig,
+          TYPE_SELECTOR: /(([_a-z]+[_a-z0-9\-\:\\]*|\*)?\|)?[_a-z]+[_a-z0-9\-\:\\]*/ig,
+          UNIVERSAL_SELECTOR: /(([_a-z]+[_a-z0-9\-\:\\]*|\*)?\|)?\*/ig,
+          COMBINATOR: /\+\s*|\>\s*|\~\s*|\s+/ig,
+        };
+        var i, j, temp, result = [ { chunk: selector, name: "" } ];
+        for ( var name in exprs ) {
+          j = 0;
+          while ( j < result.length ) {
+            if ( !result[j].name ) {
+              temp = extractChunks( result[j].chunk, exprs[name], name );
+              result.splice( j, 1 );
+              for ( i = 0; i < temp.length; i++ ) {
+                result.splice( j++, 0, temp[i] );
+              }
+            } else {
+              j++;
+            }
+          }
+        }
+        return result;
+      };
+      //
+      var selectors = [
+        "*",
+        "LI",
+        "UL LI",
+        "UL OL+LI",
+        "H1 + *[REL=up]",
+        "UL OL LI.red",
+        "LI.red.level",
+        "#x34y",
+        "div ol>li p",
+        "h1.opener + h2",
+        "div p *[href]",
+        "ol > li:last-child",
+        "img:nth-of-type(2n+1)",
+        ":nth-child( 3n + 1 )",
+        ":nth-child( +3n - 2 )",
+        ":nth-child( -n+ 6)",
+        ":nth-child( +6 )",
+        "#s12:not(FOO)",
+        ":lang(fr-be) > q",
+        "*:target::before",
+        "*:target",
+        "p.note:target",
+        "html|*:not(:link):not(:visited)",
+        "button:not([DISABLED])",
+        "*|*:not(:hover)",
+        "*|*:not(*)",
+        "tr > td:last-of-type",
+        "[foo|att=val]",
+        "[*|att]",
+        "[|att]",
+        "[att]",
+        "p[title*='hello']",
+        "a[href$='.html']",
+        "object[type^='image/']",
+        "a[hreflang|='en']",
+        "span[hello='Cleveland'][goodbye='Columbus']"
+      ];
+      for ( var i = 0; i < selectors.length; i++ ) {
+        Utils.log( ">>>>>>> " + selectors[i] + " <<<<<<<<" );
+        Utils.log( Utils.dumpObject( parseSelector( selectors[i] ) ) );
+      }
+    }
+  } );
   
   return pub;
 
