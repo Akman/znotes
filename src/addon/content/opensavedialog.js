@@ -77,8 +77,8 @@ ru.akman.znotes.OpenSaveDialog = function() {
   var tbBook = null;
   var tbCategory = null;
   var lblName = null;
-  var hbName = null;
-  var tbName = null;
+  var mlName = null;
+  var mpName = null;
   var lblType = null;
   var mlType = null;
   var mpType = null;
@@ -101,6 +101,7 @@ ru.akman.znotes.OpenSaveDialog = function() {
   var currentTag = null;
   var currentNote = null;
   var currentName = null;
+  var currentType = null;
   
   var booksStateListener = null;
   var contentTreeStateListener = null;
@@ -159,7 +160,7 @@ ru.akman.znotes.OpenSaveDialog = function() {
       },
       output: null
     };
-    if ( result != NOT_EXISTS ) {
+    if ( result !== NOT_EXISTS ) {
       window.openDialog(
         "chrome://znotes/content/messagedialog.xul",
         "",
@@ -1246,11 +1247,11 @@ ru.akman.znotes.OpenSaveDialog = function() {
     if ( !currentBook || !currentBook.isOpen() ) {
       tbBook.value = "";
       tbCategory.value = "";
-      tbName.value = "";
+      mlName.value = "";
       setSelectedType( null );
       updateTags( [] );
       btnTags.setAttribute( "disabled", "true" );
-      tbName.setAttribute( "readonly", "true" );
+      mlName.setAttribute( "readonly", "true" );
       btnAccept.setAttribute( "disabled", "true" );
       return;
     }
@@ -1262,26 +1263,34 @@ ru.akman.znotes.OpenSaveDialog = function() {
                                    Utils.DEFAULT_DOCUMENT_TYPE );
     if ( currentMode === "save" ) {
       if ( currentName ) {
-        tbName.value = currentName;
+        mlName.value = currentName;
         currentName = null;
       } else {
         if ( currentNote ) {
-          tbName.value = currentNote.getName();
+          mlName.value = currentNote.getName();
+        }
+      }
+      if ( currentType ) {
+        setSelectedType( currentType );
+      } else {
+        if ( currentNote ) {
+          setSelectedType( currentNote ? currentNote.getType() :
+                                   Utils.DEFAULT_DOCUMENT_TYPE );
         }
       }
       updateTags( currentTag ? [ currentTag.getId() ] :
                                ( currentNote ? currentNote.getTags() : [] ) );
     } else {
-      tbName.value = ( currentNote ? currentNote.getName() : "" );
+      mlName.value = ( currentNote ? currentNote.getName() : "" );
       updateTags( currentNote ? currentNote.getTags() : [] );
     }
     if ( currentMode === "save" ) {
       btnTags.removeAttribute( "disabled" );
-      tbName.removeAttribute( "readonly" );
+      mlName.removeAttribute( "readonly" );
       checkName();
     } else {
       btnTags.setAttribute( "disabled", "true" );
-      tbName.setAttribute( "readonly", "true" );
+      mlName.setAttribute( "readonly", "true" );
       if ( currentNote ) {
         btnAccept.removeAttribute( "disabled" );
       } else {
@@ -1302,16 +1311,17 @@ ru.akman.znotes.OpenSaveDialog = function() {
   };
   
   function focusName() {
-    tbName.focus();
+    mlName.focus();
   };
   
   function checkName() {
+    var name;
     if ( currentMode === "open" ) {
       btnAccept.removeAttribute( "disabled" );
       return;
     }
-    var aName = tbName.value.trim();
-    if ( !aName.length ) {
+    name = mlName.value.trim();
+    if ( !name.length ) {
       btnAccept.setAttribute( "disabled", "true" );
       return;
     }
@@ -1319,7 +1329,7 @@ ru.akman.znotes.OpenSaveDialog = function() {
       btnAccept.removeAttribute( "disabled" );
     } else {
       if ( !currentCategory ||
-           !currentCategory.canCreateNote( aName, getSelectedType() ) ) {
+           !currentCategory.canCreateNote( name, getSelectedType() ) ) {
         btnAccept.setAttribute( "disabled", "true" );
       } else {
         btnAccept.removeAttribute( "disabled" );
@@ -1380,11 +1390,63 @@ ru.akman.znotes.OpenSaveDialog = function() {
     }
     return null;
   };
+
+  function onNameChange( event ) {
+    if ( currentMode === "open" ) {
+      setSelectedName( currentNote ? currentNote.getName() : null );
+    }
+    currentName = getSelectedName();
+    onNameKeyPress( event );
+  };
+  
+  function getSelectedName() {
+    var selectedItem = mlName.selectedItem;
+    return selectedItem ? selectedItem.getAttribute( "value" ) : null;
+  };
+  
+  function setSelectedName( aName ) {
+    if ( !aName ) {
+      mlName.selectedItem = null;
+      return;
+    }
+    var menuItem;
+    for ( var i = 0; i < mpName.childNodes.length; i++ ) {
+      menuItem = mpName.childNodes[i];
+      if ( menuItem.getAttribute( "value" ) === aName ) {
+        mlName.selectedItem = menuItem;
+        return;
+      }
+    }
+  };
+  
+  function updateNameMenu() {
+    var menuItem, name, names = [];
+    if ( currentName ) {
+      names.push( currentName );
+    }
+    mlName.selectedItem = null;
+    while ( mpName.firstChild ) {
+      mpName.removeChild( mpName.firstChild );
+    }
+    for ( var i = 0; i < names.length; i++ ) {
+      name = names[i];
+      menuItem = document.createElement( "menuitem" );
+      menuItem.setAttribute( "id", "menuitem_" + i );
+      menuItem.setAttribute( "label", name );
+      menuItem.setAttribute( "value", name );
+      menuItem.className = "menuitem-iconic";
+      mpName.appendChild( menuItem );
+      if ( i === 0 ) {
+        mlName.selectedItem = menuItem;
+      }
+    }
+  };
   
   function onTypeChange( event ) {
     if ( currentMode === "open" ) {
       setSelectedType( currentNote ? currentNote.getType() : null );
     }
+    currentType = getSelectedType();
   };
   
   function getSelectedType() {
@@ -1624,7 +1686,7 @@ ru.akman.znotes.OpenSaveDialog = function() {
   };
   
   function onNameFocus( event ) {
-    tbName.select();
+    mlName.select();
   };
   
   function onNameKeyPress( event ) {
@@ -1664,7 +1726,7 @@ ru.akman.znotes.OpenSaveDialog = function() {
       vbBooks.classList.remove( "vbBooksNotes" );
       vbBooks.classList.add( "vbBooksCategories" );
       lblName.setAttribute( "collapsed", "true" );
-      hbName.setAttribute( "collapsed", "true" );
+      mlName.setAttribute( "collapsed", "true" );
       lblTags.setAttribute( "collapsed", "true" );
       hbTags.setAttribute( "collapsed", "true" );
       lblType.setAttribute( "collapsed", "true" );
@@ -1679,8 +1741,9 @@ ru.akman.znotes.OpenSaveDialog = function() {
     tagTree.addEventListener( "select", onTagSelect, false );
     noteTree.addEventListener( "select", onNoteSelect, false );
     noteTree.addEventListener( "dblclick", onNoteDblClick, false );
-    tbName.addEventListener( "focus", onNameFocus, false );
-    tbName.addEventListener( "keypress", onNameKeyPress, true );
+    mlName.addEventListener( "focus", onNameFocus, false );
+    mlName.addEventListener( "keypress", onNameKeyPress, true );
+    mlName.addEventListener( "command", onNameChange, false );
     btnTags.addEventListener( "command", showTagMenu, false );
     mlType.addEventListener( "command", onTypeChange, false );
     bookManager.addStateListener( booksStateListener );
@@ -1693,8 +1756,9 @@ ru.akman.znotes.OpenSaveDialog = function() {
     tagTree.removeEventListener( "select", onTagSelect, false );
     noteTree.removeEventListener( "select", onNoteSelect, false );
     noteTree.removeEventListener( "dblclick", onNoteDblClick, false );
-    tbName.removeEventListener( "focus", onNameFocus, false );
-    tbName.removeEventListener( "keypress", onNameKeyPress, true );
+    mlName.removeEventListener( "focus", onNameFocus, false );
+    mlName.removeEventListener( "keypress", onNameKeyPress, true );
+    mlName.removeEventListener( "command", onNameChange, false );
     btnTags.removeEventListener( "command", showTagMenu, false );
     mlType.removeEventListener( "command", onTypeChange, false );
     bookManager.removeStateListener( booksStateListener );
@@ -1739,6 +1803,9 @@ ru.akman.znotes.OpenSaveDialog = function() {
     if ( window.arguments[0].input.aName ) {
       currentName = window.arguments[0].input.aName;
     }
+    if ( window.arguments[0].input.aType ) {
+      currentType = window.arguments[0].input.aType;
+    }
     //
     vbLeft = document.getElementById( "vbLeft" );
     vbBooks = document.getElementById( "vbBooks" );
@@ -1772,8 +1839,8 @@ ru.akman.znotes.OpenSaveDialog = function() {
     tbBook = document.getElementById( "tbBook" );
     tbCategory = document.getElementById( "tbCategory" );
     lblName = document.getElementById( "lblName" );
-    hbName =  document.getElementById( "hbName" );
-    tbName = document.getElementById( "tbName" );
+    mlName = document.getElementById( "mlName" );
+    mpName = document.getElementById( "mpName" );
     lblType =  document.getElementById( "lblType" );
     mlType = document.getElementById( "mlType" );
     mpType = document.getElementById( "mpType" );
@@ -1820,6 +1887,7 @@ ru.akman.znotes.OpenSaveDialog = function() {
     };
     updateModeView();
     updateTypeMenu();
+    updateNameMenu();
     addEventListeners();
     updateBookTree();
     initBookSelection();
@@ -1848,7 +1916,7 @@ ru.akman.znotes.OpenSaveDialog = function() {
         aCategory: currentCategory,
         aTags: getSelectedTags(),
         aType: getSelectedType(),
-        aName: tbName.value.trim(),
+        aName: mlName.value.trim(),
         aNote: currentNote
       };
     }

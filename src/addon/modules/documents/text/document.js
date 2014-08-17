@@ -177,11 +177,7 @@ var Document = function() {
   };
   
   pub.getBlankDocument = function( anURI, aBaseURI, aTitle, aCommentFlag, aParams ) {
-    var dom = "";
-    if ( aTitle ) {
-      dom += aTitle + "\n";
-    }
-    return dom;
+    return "";
   };
   
   pub.serializeToString = function( aDOM, anURI, aBaseURI ) {
@@ -206,26 +202,36 @@ var Document = function() {
   };
 
   pub.importDocument = function( aDOM, anURI, aBaseURI, aTitle, aParams ) {
-    var dom = pub.getBlankDocument( anURI, aBaseURI, aTitle, false, aParams );
-    // TODO: How to encode html to text ?!
+    
+    // TODO: documentEncoder html -> text
     /*
-    // DOES NOT WORK !
-    var nsIDocumentEncoder = Components.interfaces.nsIDocumentEncoder;
-    var documentEncoder =
-      Components.classes["@mozilla.org/layout/documentEncoder;1?type=text/plain"]
-                .createInstance( nsIDocumentEncoder );
-    documentEncoder.init( aDOM, "text/plain",
-      nsIDocumentEncoder.OutputLFLineBreak |
-      nsIDocumentEncoder.OutputPersistNBSP |
-      nsIDocumentEncoder.OutputBodyOnly |
-      nsIDocumentEncoder.SkipInvisibleContent |
-      nsIDocumentEncoder.OutputNoScriptContent
-    );
-    dom += documentEncoder.encodeToString();
+    try {
+      var nsIDocumentEncoder = Components.interfaces.nsIDocumentEncoder;
+      var documentEncoder =
+        Components.classes["@mozilla.org/layout/documentEncoder;1?type=text/plain"]
+                  .createInstance( nsIDocumentEncoder );
+      documentEncoder.init( aDOM, "text/plain",
+        nsIDocumentEncoder.OutputLFLineBreak |
+        nsIDocumentEncoder.OutputPersistNBSP |
+        nsIDocumentEncoder.OutputBodyOnly |
+        nsIDocumentEncoder.SkipInvisibleContent |
+        nsIDocumentEncoder.OutputNoScriptContent
+      );
+      Utils.log( documentEncoder.encodeToString() );
+    } catch ( e ) {
+      Utils.log( e + "\n" + Utils.dumpStack() );
+    }
     */
-    var body = aDOM.querySelector( "body" );
-    if ( body ) {
-      dom += body.textContent;
+    
+    var dom, body;
+    dom = pub.getBlankDocument( anURI, aBaseURI, aTitle, false, aParams );
+    try {
+      body = aDOM.querySelector( "body" );
+      if ( body ) {
+        dom += body.textContent;
+      }
+    } catch ( e ) {
+      Utils.log( e + "\n" + Utils.dumpStack() );
     }
     return dom;
   };

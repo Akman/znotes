@@ -228,7 +228,7 @@ ru.akman.znotes.ZNotes = function() {
         shortcuts = {};
       }
     } catch ( e ) {
-      Utils.log( e );
+      Utils.log( e + "\n" + Utils.dumpStack() );
       shortcuts = {};
     }
     keySet.update( shortcuts );

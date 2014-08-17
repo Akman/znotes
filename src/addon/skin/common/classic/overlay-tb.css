@@ -38,32 +38,6 @@
   list-style-image: url("chrome://znotes_images/skin/znotes-16x16.png");
 }
 
-#znotes_tbopenmaintab_button {
-  list-style-image: url("chrome://znotes_images/skin/znotes-24x24.png");
-}
-#znotes_tbopenmaintab_button[disabled="true"] {
-  list-style-image: url("chrome://znotes_images/skin/znotes-disabled-24x24.png");
-}
-toolbar[iconsize="small"] #znotes_tbopenmaintab_button {
-  list-style-image: url("chrome://znotes_images/skin/znotes-16x16.png");
-}
-toolbar[iconsize="small"] #znotes_tbopenmaintab_button[disabled="true"] {
-  list-style-image: url("chrome://znotes_images/skin/znotes-disabled-16x16.png");
-}
-
-#znotes_tbsaveasnote_button {
-  list-style-image: url("chrome://znotes_images/skin/save-email-24x24.png");
-}
-#znotes_tbsaveasnote_button[disabled="true"] {
-  list-style-image: url("chrome://znotes_images/skin/save-email-disabled-24x24.png");
-}
-toolbar[iconsize="small"] #znotes_tbsaveasnote_button {
-  list-style-image: url("chrome://znotes_images/skin/save-email-16x16.png");
-}
-toolbar[iconsize="small"] #znotes_tbsaveasnote_button[disabled="true"] {
-  list-style-image: url("chrome://znotes_images/skin/save-email-disabled-16x16.png");
-}
-
 #znotes_statusbarpanellogo {
   list-style-image: url("chrome://znotes_images/skin/znotes-16x16.png");
 }

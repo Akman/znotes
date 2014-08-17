@@ -911,16 +911,26 @@
     name="release-addon"
     description="- Release addon"
     depends="addon">
+    <zip
+      destfile="${bin.dir}/addon/chrome/znotes-tb.jar">
+      <zipfileset
+        src="${bin.dir}/addon/chrome/znotes.jar"
+        excludes="**/testsuite*" />
+    </zip>
     <zip destfile="${releases.dir}/releases/addon/${application.fullname}-tb.xpi">
       <mappedresources enablemultiplemappings="yes">
         <fileset dir="${bin.dir}/addon">
+          <exclude name="**/znotes.jar" />
           <exclude name="install.rdf" />
+          <exclude name="**/testsuite*" />
         </fileset>
         <filtermapper>
+          <replacestring from="znotes-tb.jar" to="znotes.jar" />
           <replacestring from="install.amo.rdf" to="install.rdf" />
         </filtermapper>
       </mappedresources>
     </zip>
+    <delete file="${bin.dir}/addon/chrome/znotes-tb.jar" quiet="true" />
     <zip destfile="${releases.dir}/releases/addon/${application.fullname}.xpi">
       <fileset dir="${bin.dir}/addon">
         <exclude name="install.amo.rdf" />

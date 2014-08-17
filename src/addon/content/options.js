@@ -844,7 +844,7 @@ ru.akman.znotes.Options = function() {
         result.shortcuts = {};
       }
     } catch ( e ) {
-      Utils.log( e );
+      Utils.log( e + "\n" + Utils.dumpStack() );
       result.shortcuts = {};
     }
     return result;
@@ -937,7 +937,7 @@ ru.akman.znotes.Options = function() {
         result.shortcuts = {};
       }
     } catch ( e ) {
-      Utils.log( e );
+      Utils.log( e + "\n" + Utils.dumpStack() );
       result.shortcuts = {};
     }
     return result;

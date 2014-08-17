@@ -436,7 +436,7 @@ var Book = function( aManager, anId, aName, aDescription, aDriver, aConnection,
                                    .getParameters();
     Utils.fillObject( aConnection, this.connection );
   } catch ( e ) {
-    Utils.log( e );
+    Utils.log( e + "\n" + Utils.dumpStack() );
     this.connection = aConnection;
   }
   this.preferences = aPreferences;

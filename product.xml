@@ -6,7 +6,7 @@
   <id>znotes@akman.ru</id>
   <bundle>net.akman.znotes</bundle>
   <version>0.9.23</version>
-  <build>20140601</build>
+  <build>20140817</build>
 
   <licenses>
     <license>
@@ -35,7 +35,7 @@
     <id>{3550f703-e582-4d05-9a08-453d09bdfdc6}</id>
     <version>
       <min>17.0</min>
-      <max>31.*</max>
+      <max>32.*</max>
     </version>
   </gecko>
 

@@ -216,14 +216,14 @@ var DocumentManager = function() {
                   Components.utils.import( url + modules[i].path,
                     ru.akman.znotes.doc[ name ] );
                 } catch ( e ) {
-                  Utils.log( e );
+                  Utils.log( e + "\n" + Utils.dumpStack() );
                 }
               }
             }
           }
         }
       } catch ( e ) {
-        Utils.log( e );
+        Utils.log( e + "\n" + Utils.dumpStack() );
       }
       var doc = ru.akman.znotes.doc[ name ].Document;
       var opt = ru.akman.znotes.doc[ name ].Options;
@@ -323,10 +323,10 @@ var DocumentManager = function() {
         doc = registerDocument( name );
       } catch ( e ) {
         doc = null;
-        Utils.log( e );
+        Utils.log( e + "\n" + Utils.dumpStack() );
       }
       if ( doc == null ) {
-        Utils.log( "Error registering document: " + entry.path );
+        Utils.log( "DocumentManager::init() Error registering document: " + entry.path );
       }
     }
     // clean up the registy

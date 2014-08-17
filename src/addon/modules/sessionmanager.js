@@ -68,7 +68,7 @@ var SessionManager = function() {
       var data = Utils.readFileContent( entry, "UTF-8" );
       state = JSON.parse( data );
     } catch ( e ) {
-      Utils.log( e );
+      Utils.log( e + "\n" + Utils.dumpStack() );
       state = {
         tabs: []
       };

@@ -74,7 +74,7 @@ var PrefsManager = function() {
       var data = ru.akman.znotes.Utils.readFileContent( entry, "UTF-8" );
       prefs = JSON.parse( data );
     } catch ( e ) {
-      Utils.log( e );
+      Utils.log( e + "\n" + Utils.dumpStack() );
       prefs = {};
       savePrefs();
     }
@@ -477,7 +477,7 @@ var PrefsManager = function() {
         pub.getCharPref( "platform_shortcuts" );
       //
     } catch ( e ) {
-      Utils.log( e );
+      Utils.log( e + "\n" + Utils.dumpStack() );
     }
   };
   

@@ -40,6 +40,7 @@ pref("browser.chromeURL", "chrome://znotes/content/browser.xul");
 pref("accessibility.typeaheadfind.flashBar", 0);
 pref("print.use_global_printsettings", true);
 pref("print.save_print_settings", true);
+pref("layout.xml.prettyprint", true);
 /* debug mode */
 
 /*

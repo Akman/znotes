@@ -71,7 +71,6 @@ ru.akman.znotes.ClipperDialog = function() {
         aResultObj.value,
         {
           documentURI: aResultObj.documentURI,
-          namespaceURI: aResultObj.value.documentElement.namespaceURI,
           lang: false,
           author: false
         }
@@ -234,6 +233,7 @@ ru.akman.znotes.ClipperDialog = function() {
       jobLabel.setAttribute( "value", Utils.getErrorName( status ) );
       jobLabel.classList.add( "error" );
       jobProgress = jobBox.childNodes[2];
+      // TODO: jobProgress is undefined
       jobProgress.setAttribute( "collapsed", "true" );
     }
   };
@@ -263,7 +263,7 @@ ru.akman.znotes.ClipperDialog = function() {
         anObserver
       );
     } catch ( e ) {
-      Utils.log( e );
+      Utils.log( e + "\n" + Utils.dumpStack() );
       aClipper.abort();
     }
   };

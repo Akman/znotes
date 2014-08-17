@@ -113,7 +113,7 @@ ru.akman.znotes.Browser = function() {
           shortcuts = {};
         }
       } catch ( e ) {
-        Utils.log( e );
+        Utils.log( e + "\n" + Utils.dumpStack() );
         shortcuts = {};
       }
       this.mKeyset.update( shortcuts );
@@ -297,12 +297,9 @@ ru.akman.znotes.Browser = function() {
       // if ( aFlags & nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT ) {
       //   anchor clicked!
       // }
-      var location = Utils.getURLFromURI( aLocation );
-      if ( location ) {
-        browserURLTextBox.value = location;
-        browserURLTextBox.select();
-        updateCommands();
-      }
+      browserURLTextBox.value = Utils.getURLFromURI( aLocation );
+      browserURLTextBox.select();
+      updateCommands();
     },
     onProgressChange: function( aWebProgress, aRequest, aCurSelfProgress,
                                 aMaxSelfProgress, aCurTotalProgress,
@@ -320,7 +317,13 @@ ru.akman.znotes.Browser = function() {
     },
     onRefreshAttempted: function( aWebProgress, aRefreshURI, aMillis,
                                   aSameURI ) {
-      aWebProgress.DOMWindow.location.assign( aRefreshURI.spec );
+      var newLocation = Utils.getURLFromURI( aRefreshURI );
+      var curLocation = aWebProgress.DOMWindow.location ?
+        aWebProgress.DOMWindow.location.href : "";
+      if ( newLocation &&
+           newLocation.toLowerCase() !== curLocation.toLowerCase() ) {
+        aWebProgress.DOMWindow.location.assign( newLocation );
+      }
       // BUG: return PR_TRUE still cancel redirect
       // var aResult =
       //   Components.classes["@mozilla.org/supports-PRBool;1"]

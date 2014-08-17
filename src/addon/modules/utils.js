@@ -314,7 +314,7 @@ var Utils = function() {
     get IS_INSPECTOR_INSTALLED() {
       return pub.convertChromeURL( "chrome://inspector/content/" );
     },
-    
+
     // C O M M O N  P R E F E R E N S E S
 
     get IS_SAVE_POSITION() {
@@ -1003,6 +1003,9 @@ var Utils = function() {
   pub.copyEntryTo = function( from, to, name, overwrite ) {
     var entries, entry, parent = to ? to.clone() : from.parent.clone();
     var flag = ( overwrite === undefined ? false : !!overwrite );
+    if ( !from.exists() ) {
+      return;
+    }
     if ( from.isDirectory() ) {
       parent.append( name );
       if ( !parent.exists() || !parent.isDirectory() ) {
@@ -1019,10 +1022,20 @@ var Utils = function() {
       entry = parent.clone();
       entry.append( name );
       if ( !entry.exists() || entry.isDirectory() ) {
-        from.copyTo( parent, name );
+        try {
+          from.copyTo( parent, name );
+        } catch ( e ) {
+          pub.log( "nsIFile.copyTo()\n" + e + "from: " + from.path + "\nto: " + parent.path + "\nname: " + name );
+        }
       } else if ( flag ) {
-        entry.remove( true );
-        from.copyTo( parent, name );
+        if ( entry.exists() ) {
+          entry.remove( true );
+        }
+        try {
+          from.copyTo( parent, name );
+        } catch ( e ) {
+          pub.log( "nsIFile.copyTo()\n" + e + "from: " + from.path + "\nto: " + parent.path + "\nname: " + name );
+        }
       }
     }
   };
@@ -1769,18 +1782,22 @@ var Utils = function() {
   };
 
   pub.updateKeyAttribute = function( node ) {
-    if ( node.hasAttribute( "key" ) ) {
-      var id = node.getAttribute( "key" );
-      node.removeAttribute( "key" );
-      node.setAttribute( "key", id );
-    }
-    if ( !node.hasChildNodes() ) {
-      return;
-    }
-    var child = node.firstChild;
-    while ( child ) {
-      pub.updateKeyAttribute( child );
-      child = child.nextSibling;
+    var id, child;
+    if ( node ) {
+      try {
+        if ( node.hasAttribute( "key" ) ) {
+          id = node.getAttribute( "key" );
+          node.removeAttribute( "key" );
+          node.setAttribute( "key", id );
+        }
+        child = node.firstElementChild;
+        while ( child ) {
+          pub.updateKeyAttribute( child );
+          child = child.nextElementSibling;
+        }
+      } catch ( e ) {
+        Utils.log( e + "\n" + pub.dumpObject( node ) );
+      }
     }
   };
   
@@ -1907,6 +1924,18 @@ var Utils = function() {
     sound.beep();
   };
 
+  pub.checkChromeURL = function( url ) {
+    var ios = Components.classes["@mozilla.org/network/io-service;1"]
+                        .getService( Components.interfaces.nsIIOService );
+    try {
+      ios.newChannelFromURI( ios.newURI( url, null, null ) ).open();
+      return true;
+    } catch ( e ) {
+      //
+    }
+    return false;
+  };
+  
   pub.loadScript = function( url, context, charset ) {
     var loader =
       Components.classes["@mozilla.org/moz/jssubscript-loader;1"]

@@ -316,7 +316,7 @@ ru.akman.znotes.Main = function() {
       var uri;
       switch ( aTopic ) {
         case "znotes-href":
-          if ( aSubject != window || !currentNote ||
+          if ( aSubject !== window || !currentNote ||
                currentNote.getMode() === "editor" ) {
             break;
           }
@@ -1420,7 +1420,7 @@ ru.akman.znotes.Main = function() {
           settings = printSettingsService.newPrintSettings;
         }
       } catch (e) {
-        Utils.log( e );
+        Utils.log( e + "\n" + Utils.dumpStack() );
       }
       if ( settings ) {
         settings.isCancelled = false;
@@ -1430,7 +1430,7 @@ ru.akman.znotes.Main = function() {
         printSettingsService.savePrintSettingsToPrefs( settings, true, settings.kInitSaveNativeData );
       }
     } catch (e) {
-      Utils.log( e );
+      Utils.log( e + "\n" + Utils.dumpStack() );
       return false;
     }
     return true;
@@ -1503,22 +1503,41 @@ ru.akman.znotes.Main = function() {
 
   // znotes_testsuite_command
   function doOpenTestSuiteWindow() {
-    var windowService = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
-                                  .getService( Components.interfaces.nsIWindowWatcher );
-    var windowMediator = Components.classes["@mozilla.org/appshell/window-mediator;1"]
-                                   .getService( Components.interfaces.nsIWindowMediator );
+    var windowService =
+      Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
+                .getService( Components.interfaces.nsIWindowWatcher );
+    var windowMediator =
+      Components.classes["@mozilla.org/appshell/window-mediator;1"]
+                .getService( Components.interfaces.nsIWindowMediator );
     var win = windowMediator.getMostRecentWindow( "znotes:test" );
     if ( win ) {
       windowService.activeWindow = win;
     } else {
-      win = window.open(
-        "chrome://znotes/content/testsuite.xul",
-        "znotes:test",
-        "chrome,dialog=no,modal=no,resizable=yes,centerscreen"
-      );
-      win.arguments = [
-        getTestContext()
-      ];
+      if ( Utils.checkChromeURL( "chrome://znotes/content/testsuite.xul" ) ) {
+        win = window.open(
+          "chrome://znotes/content/testsuite.xul",
+          "znotes:test",
+          "chrome,dialog=no,modal=no,resizable=yes,centerscreen"
+        );
+        win.arguments = [
+          {
+            // window
+            win: window,
+            // document
+            doc: document,
+            // objects
+            book: currentBook,
+            category: currentCategory,
+            tag: currentTag,
+            note: currentNote,
+            // keyset
+            keyset: mainKeySet,
+            // functions
+            createWelcomeNote: createWelcomeNote,
+            createNote: createNote
+          }
+        ];
+      }
     }
     return true;
   };
@@ -2327,7 +2346,7 @@ ru.akman.znotes.Main = function() {
     try {
       aCategory.rename( aNewName );
     } catch ( e ) {
-      Utils.log( e );
+      Utils.log( e + "\n" + Utils.dumpStack() );
       openErrorDialog(
         getFormattedString( "main.errordialog.category", [ aCategory.getName() ] ),
         e.message
@@ -2393,7 +2412,7 @@ ru.akman.znotes.Main = function() {
       folderTree.view.selection.select( aSelectionRow );
       folderTree.addEventListener( "select", onFolderSelect, false );
     } catch ( e ) {
-      Utils.log( e );
+      Utils.log( e + "\n" + Utils.dumpStack() );
       openErrorDialog(
         getFormattedString( "main.errordialog.category", [ currentCategory.getName() ] ),
         e.message
@@ -3181,7 +3200,7 @@ ru.akman.znotes.Main = function() {
     try {
       aNote.rename( aNewName );
     } catch ( e ) {
-      Utils.log( e );
+      Utils.log( e + "\n" + Utils.dumpStack() );
       openErrorDialog(
         getFormattedString( "main.errordialog.note", [ currentNote.getName() ] ),
         e.message
@@ -3221,7 +3240,7 @@ ru.akman.znotes.Main = function() {
       currentNote.moveInto( aNewParent );
       noteTree.view.selection.select( anIndex );
     } catch ( e ) {
-      Utils.log( e );
+      Utils.log( e + "\n" + Utils.dumpStack() );
       openErrorDialog(
         getFormattedString( "main.errordialog.note", [ currentNote.getName() ] ),
         e.message
@@ -3248,7 +3267,7 @@ ru.akman.znotes.Main = function() {
       try {
         result = book.open();
       } catch ( e ) {
-        Utils.log( e );
+        Utils.log( e + "\n" + Utils.dumpStack() );
       }
       if ( result != 0 ) {
         var message = "";
@@ -3956,7 +3975,7 @@ ru.akman.znotes.Main = function() {
             var tag = currentBook.getTagList().getTagById( treeItem.getAttribute( "value" ) );
             renameTag( tag, newValue );
           } catch ( e ) {
-            Utils.log( e );
+            Utils.log( e + "\n" + Utils.dumpStack() );
             tagTree.view.setCellText( aRow, aColumn, oldValue );
           }
         }
@@ -4146,7 +4165,7 @@ ru.akman.znotes.Main = function() {
           }
         }
       } catch ( e ) {
-        Utils.log( e );
+        Utils.log( e + "\n" + Utils.dumpStack() );
       }
     }
     booksList = bookManager.getBooksAsArray();
@@ -4490,7 +4509,7 @@ ru.akman.znotes.Main = function() {
             var book = bookManager.getBookById( treeItem.getAttribute( "value" ) );
             renameBook( book, newValue );
           } catch ( e ) {
-            Utils.log( e );
+            Utils.log( e + "\n" + Utils.dumpStack() );
             bookTree.view.setCellText( anEditBookIndex, aColumn, oldValue );
           }
         }
@@ -5813,7 +5832,7 @@ ru.akman.znotes.Main = function() {
         shortcuts = {};
       }
     } catch ( e ) {
-      Utils.log( e );
+      Utils.log( e + "\n" + Utils.dumpStack() );
       shortcuts = {};
     }
     mainKeySet.update( shortcuts );
@@ -5962,25 +5981,6 @@ ru.akman.znotes.Main = function() {
       category: currentCategory,
       tag: currentTag,
       note: currentNote
-    };
-  };
-  
-  function getTestContext() {
-    return {
-      // window
-      win: window,
-      // document
-      doc: document,
-      // objects
-      book: currentBook,
-      category: currentCategory,
-      tag: currentTag,
-      note: currentNote,
-      // keyset
-      keyset: mainKeySet,
-      // functions
-      createWelcomeNote: createWelcomeNote,
-      createNote: createNote
     };
   };
   

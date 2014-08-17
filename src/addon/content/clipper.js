@@ -92,6 +92,13 @@ ru.akman.znotes.Clipper = function() {
     },
     onRefreshAttempted: function( aWebProgress, aRefreshURI, aMillis,
                                   aSameURI ) {
+      var newLocation = Utils.getURLFromURI( aRefreshURI );
+      var curLocation = aWebProgress.DOMWindow.location ?
+        aWebProgress.DOMWindow.location.href : "";
+      if ( newLocation &&
+           newLocation.toLowerCase() !== curLocation.toLowerCase() ) {
+        aWebProgress.DOMWindow.location.assign( newLocation );
+      }
     },
     onSecurityChange: function( aWebProgress, aRequest, aState ) {
     },
@@ -140,7 +147,7 @@ ru.akman.znotes.Clipper = function() {
       }
       switch ( cmd ) {
         case "znotes_clippersave_command":
-          if ( aPopup.state == "open" ) {
+          if ( aPopup.state === "open" ) {
             aPopup.hidePopup();
           } else {
             aPopup.openPopup( aButton,
@@ -229,12 +236,10 @@ ru.akman.znotes.Clipper = function() {
         if ( !aParams.output || !aParams.output.result ) {
           return;
         }
-        aNote.setTags( anInfo.aTags );
-        aNote.setType( anInfo.aType );
-      } else {
-        aNote = anInfo.aCategory.createNote( anInfo.aName, anInfo.aType );
-        aNote.setTags( anInfo.aTags );
+        aNote.remove();
       }
+      aNote = anInfo.aCategory.createNote( anInfo.aName, anInfo.aType );
+      aNote.setTags( anInfo.aTags );
     } catch ( e ) {
       aParams = {
         input: {
@@ -305,7 +310,7 @@ ru.akman.znotes.Clipper = function() {
         window.close();                
       }
     } catch ( e ) {
-      Utils.log( e );
+      Utils.log( e + "\n" + Utils.dumpStack() );
     }
     // remove temp content entries
     try {
@@ -316,7 +321,7 @@ ru.akman.znotes.Clipper = function() {
         contentDirectory.remove( true );
       }
     } catch ( e ) {
-      Utils.log( e );
+      Utils.log( e + "\n" + Utils.dumpStack() );
     }
   };
   
@@ -351,7 +356,8 @@ ru.akman.znotes.Clipper = function() {
         aCategory: ( aContext ? aContext.category : null ),
         aTag: ( aContext ? aContext.tag : null ),
         aNote: ( aContext ? aContext.note : null ),
-        aName: aName
+        aName: aName,
+        aType: "application/xhtml+xml"
       },
       output: null
     };
