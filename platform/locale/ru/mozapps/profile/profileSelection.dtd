@@ -18,5 +18,5 @@
 <!ENTITY pmDescription.label "&brandShortName; хранит информацию о ваших настройках, закладках и т.д. в личном профиле.">
 <!ENTITY offlineState.label "Работать автономно">
 <!ENTITY offlineState.accesskey "а">
-<!ENTITY autoSelect.label "Запускать выделенный профиль без запроса">
-<!ENTITY autoSelect.accesskey "п">
+<!ENTITY useSelected.label "Запускать выделенный профиль без запроса">
+<!ENTITY useSelected.accesskey "п">
