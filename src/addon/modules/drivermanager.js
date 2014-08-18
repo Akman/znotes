@@ -115,7 +115,7 @@ var DriverManager = function() {
         driver = registerDriver( name );
       } catch ( e ) {
         driver = null;
-        Utils.log( e );
+        Utils.log( e + "\n" + Utils.dumpStack() );
       }
       if ( driver == null ) {
         Utils.log( "Error registering driver: " + entry.path );

@@ -40,6 +40,7 @@ pref("browser.chromeURL", "chrome://znotes/content/browser.xul");
 pref("accessibility.typeaheadfind.flashBar", 0);
 pref("print.use_global_printsettings", true);
 pref("print.save_print_settings", true);
+pref("layout.xml.prettyprint", true);
 /* debug mode */
 
 /*
@@ -49,6 +50,7 @@ pref("javascript.options.strict", true);
 pref("nglayout.debug.disable_xul_cache", true);
 pref("nglayout.debug.disable_xul_fastload", true);
 */
+pref("devtools.debugger.remote-enabled", true);
 
 /* extensions */
 

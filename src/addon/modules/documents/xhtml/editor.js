@@ -117,6 +117,7 @@ var Editor = function() {
     var tagsSheetURL = "chrome://znotes/skin/documents/xhtml/tags.css";
     
     var selectionChunks = null;
+    var initialCaretPosition = null;
     
     var undoState = {
       modifications: null,
@@ -631,7 +632,7 @@ var Editor = function() {
           clipboard.setData( transferable, null, clipboard.kGlobalClipboard );
         }
       } catch ( e ) {
-        Utils.log( e );
+        Utils.log( e + "\n" + Utils.dumpStack() );
       }
       return true;
     };
@@ -673,7 +674,7 @@ var Editor = function() {
             sourceEditor.getDoc().replaceSelection( textData, "around" );
           }
         } catch ( e ) {
-          Utils.log( e );
+          Utils.log( e + "\n" + Utils.dumpStack() );
         }
       }
       return true;
@@ -1037,7 +1038,7 @@ var Editor = function() {
           }
         }
       } catch ( e ) {
-        Utils.log( e );
+        Utils.log( e + "\n" + Utils.dumpStack() );
       } finally {
         designEditor.endTransaction();
       }
@@ -1087,7 +1088,7 @@ var Editor = function() {
           }
         }
       } catch ( e ) {
-        Utils.log( e );
+        Utils.log( e + "\n" + Utils.dumpStack() );
       } finally {
         designEditor.endTransaction();
       }
@@ -1161,7 +1162,7 @@ var Editor = function() {
           }
         }
       } catch ( e ) {
-        Utils.log( e );
+        Utils.log( e + "\n" + Utils.dumpStack() );
       } finally {
         designEditor.endTransaction();
       }
@@ -1197,7 +1198,7 @@ var Editor = function() {
           }
         }
       } catch ( e ) {
-        Utils.log( e );
+        Utils.log( e + "\n" + Utils.dumpStack() );
       } finally {
         designEditor.endTransaction();
       }
@@ -1283,7 +1284,7 @@ var Editor = function() {
           }
         }
       } catch ( e ) {
-        Utils.log( e );
+        Utils.log( e + "\n" + Utils.dumpStack() );
       } finally {
         designEditor.endTransaction();
       }
@@ -1319,7 +1320,7 @@ var Editor = function() {
           }
         }
       } catch ( e ) {
-        Utils.log( e );
+        Utils.log( e + "\n" + Utils.dumpStack() );
       } finally {
         designEditor.endTransaction();
       }
@@ -1373,7 +1374,7 @@ var Editor = function() {
           }
         }
       } catch ( e ) {
-        Utils.log( e );
+        Utils.log( e + "\n" + Utils.dumpStack() );
       } finally {
         designEditor.endTransaction();
       }
@@ -1428,7 +1429,7 @@ var Editor = function() {
           }
         }
       } catch ( e ) {
-        Utils.log( e );
+        Utils.log( e + "\n" + Utils.dumpStack() );
       } finally {
         designEditor.endTransaction();
       }
@@ -1487,7 +1488,7 @@ var Editor = function() {
           }
         }
       } catch ( e ) {
-        Utils.log( e );
+        Utils.log( e + "\n" + Utils.dumpStack() );
       } finally {
         designEditor.endTransaction();
       }
@@ -1547,7 +1548,7 @@ var Editor = function() {
           }
         }
       } catch ( e ) {
-        Utils.log( e );
+        Utils.log( e + "\n" + Utils.dumpStack() );
       } finally {
         designEditor.endTransaction();
       }
@@ -1583,7 +1584,7 @@ var Editor = function() {
           }
         }
       } catch ( e ) {
-        Utils.log( e );
+        Utils.log( e + "\n" + Utils.dumpStack() );
       } finally {
         designEditor.endTransaction();
       }
@@ -1641,7 +1642,7 @@ var Editor = function() {
           }
         }
       } catch ( e ) {
-        Utils.log( e );
+        Utils.log( e + "\n" + Utils.dumpStack() );
       } finally {
         designEditor.endTransaction();
       }
@@ -1688,7 +1689,7 @@ var Editor = function() {
           }
         }
       } catch ( e ) {
-        Utils.log( e );
+        Utils.log( e + "\n" + Utils.dumpStack() );
       } finally {
         designEditor.endTransaction();
       }
@@ -1737,7 +1738,7 @@ var Editor = function() {
           }
         }
       } catch ( e ) {
-        Utils.log( e );
+        Utils.log( e + "\n" + Utils.dumpStack() );
       } finally {
         designEditor.endTransaction();
       }
@@ -1786,7 +1787,7 @@ var Editor = function() {
           }
         }
       } catch ( e ) {
-        Utils.log( e );
+        Utils.log( e + "\n" + Utils.dumpStack() );
       } finally {
         designEditor.endTransaction();
       }
@@ -1946,7 +1947,7 @@ var Editor = function() {
           designEditor.removeList( "ol" );
         }
       } catch ( e ) {
-        Utils.log( e );
+        Utils.log( e + "\n" + Utils.dumpStack() );
       } finally {
         designEditor.endTransaction();
       }
@@ -1966,7 +1967,7 @@ var Editor = function() {
           designEditor.removeList( "ul" );
         }
       } catch ( e ) {
-        Utils.log( e );
+        Utils.log( e + "\n" + Utils.dumpStack() );
       } finally {
         designEditor.endTransaction();
       }
@@ -2429,10 +2430,12 @@ var Editor = function() {
       }
       var range = designEditor.selection.getRangeAt( 0 );
       var node = range.startContainer;
-      while ( node && node.nodeType != Node.ELEMENT_NODE ) {
+      while ( node && node.nodeType !== Node.ELEMENT_NODE ) {
         node = node.parentNode;
       }
-      node.scrollIntoView();
+      if ( node ) {
+        node.scrollIntoView();
+      }
     };
     
     function getSelectionChunks() {
@@ -3260,7 +3263,7 @@ var Editor = function() {
           }
         }
       } catch ( e ) {
-        Utils.log( e );
+        Utils.log( e + "\n" + Utils.dumpStack() );
       } finally {
         designEditor.endTransaction();
       }
@@ -3307,7 +3310,7 @@ var Editor = function() {
           }
         }
       } catch ( e ) {
-        Utils.log( e );
+        Utils.log( e + "\n" + Utils.dumpStack() );
       } finally {
         designEditor.endTransaction();
       }
@@ -4082,6 +4085,13 @@ var Editor = function() {
       if ( !currentWindow ) {
         return;
       }
+      // BUG: Ctrl+Home does not scroll selection into view
+      if ( event &&
+           event.type === "keyup" &&
+           event.ctrlKey &&
+           event.keyCode === event.DOM_VK_HOME ) {
+        designFrame.contentDocument.body.scrollIntoView();
+      }
       currentWindow.setTimeout(
         function() {
           if ( isSourceEditingActive ) {
@@ -4090,13 +4100,6 @@ var Editor = function() {
           } else if ( isDesignEditingActive ) {
             updateDesignEditorDirtyState();
             designFrame.contentWindow.focus();
-            // BUG: Ctrl+Home does not scroll selection into view
-            var selection = designFrame.contentWindow.getSelection();
-            var body = designFrame.contentDocument.querySelector( "body" );
-            if ( selection.isCollapsed &&
-                 body && body === selection.focusNode ) {
-              scrollSelectionIntoView();
-            }
           } else {
             designFrame.focus();
           }
@@ -4399,7 +4402,7 @@ var Editor = function() {
             node = node.nextSibling;
           }
         } catch ( e ) {
-          Utils.log( e );
+          Utils.log( e + "\n" + Utils.dumpStack() );
         } finally {
           designEditor.endTransaction();
         }
@@ -4418,7 +4421,7 @@ var Editor = function() {
             node = node.nextSibling;
           }
         } catch ( e ) {
-          Utils.log( e );
+          Utils.log( e + "\n" + Utils.dumpStack() );
         }
       }
     };
@@ -4482,6 +4485,19 @@ var Editor = function() {
             designToolBox.removeAttribute( "collapsed" );
           }
           setupDesignEditorMarkers();
+          if ( !initialCaretPosition ) {
+            initialCaretPosition =
+              designFrame.contentDocument.caretPositionFromPoint( 0, 0 );
+            if ( initialCaretPosition ) {
+              setSelectionRanges( [ {
+                startContainer: initialCaretPosition.offsetNode,
+                startOffset: initialCaretPosition.offset,
+                endContainer: initialCaretPosition.offsetNode,
+                endOffset: initialCaretPosition.offset
+              } ] );
+            }
+          }
+          scrollSelectionIntoView();
         } else {
           designFrame.setAttribute( "context", "znotes_edit_menupopup" );
           setDocumentEditable( false );
@@ -4685,7 +4701,7 @@ var Editor = function() {
           } );
         }
       } catch ( e ) {
-        Utils.log( e );
+        Utils.log( e + "\n" + Utils.dumpStack() );
       }
       return result;
     };
@@ -4903,7 +4919,6 @@ var Editor = function() {
         } );
       }
       setSelectionRanges( selectionRanges );
-      scrollSelectionIntoView();
     };
     
     // KEYSET
@@ -5219,6 +5234,7 @@ var Editor = function() {
     };
     
     function start() {
+      var body, tagColor;
       if ( editorTabs.hasAttribute( "hidden" ) ) {
         editorTabs.removeAttribute( "hidden" );
       }
@@ -5229,8 +5245,8 @@ var Editor = function() {
       } else {
         editorTabSource.setAttribute( "hidden", "true" );
       }
-      var tagColor = designFrame.getAttribute( "body.backgroundColor" );
-      var body = designFrame.contentDocument.body;
+      tagColor = designFrame.getAttribute( "body.backgroundColor" );
+      body = designFrame.contentDocument.body;
       if ( body && body.style ) {
         if ( tagColor ) {
           body.style.setProperty( 'background-color', tagColor );
@@ -5331,6 +5347,7 @@ var Editor = function() {
       designEditor = null;
       designEditorTM = null;
       spellCheckerUI = null;
+      initialCaretPosition = null;
       return true;
     };
     

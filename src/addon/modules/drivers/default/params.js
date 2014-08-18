@@ -152,7 +152,7 @@ var Params = function() {
       try {
         entry.setLeafName( getFileName( entry.getLeafName() ) + exts[type] );
       } catch ( e ) {
-        Utils.log( e );
+        Utils.log( e + "\n" + Utils.dumpStack() );
       }
     }
   };

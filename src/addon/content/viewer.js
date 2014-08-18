@@ -83,7 +83,7 @@ ru.akman.znotes.Viewer = function() {
       var uri;
       switch ( aTopic ) {
         case "znotes-href":
-          if ( aSubject != window || !currentNote ||
+          if ( aSubject !== window || !currentNote ||
                currentNote.getMode() === "editor" ) {
             break;
           }
@@ -121,24 +121,20 @@ ru.akman.znotes.Viewer = function() {
       if ( !( cmd in viewerCommands ) ) {
         return false;
       }
-      Utils.log( this.getName() + "::supportsCommand() '" + cmd + "'" );
       return true;
     },
     isCommandEnabled: function( cmd ) {
       if ( !( cmd in viewerCommands ) ) {
         return false;
       }
-      Utils.log( this.getName() + "::isCommandEnabled() '" + cmd + "'" );
       return true;
     },
     doCommand: function( cmd ) {
       if ( !( cmd in viewerCommands ) ) {
         return;
       }
-      Utils.log( this.getName() + "::doCommand() '" + cmd + "'" );
     },
     onEvent: function( event ) {
-      Utils.log( this.getName() + "::onEvent() '" + event + "'" );
     },
     getName: function() {
       return "VIEWER";
@@ -256,7 +252,7 @@ ru.akman.znotes.Viewer = function() {
         shortcuts = {};
       }
     } catch ( e ) {
-      Utils.log( e );
+      Utils.log( e + "\n" + Utils.dumpStack() );
       shortcuts = {};
     }
     keySet.update( shortcuts );

@@ -81,6 +81,7 @@ ru.akman.znotes.Options = function() {
   var clipperInlineStylesheets = null;
   var clipperSingleStylesheet = null;
   var clipperSeparateStylesheets = null;
+  var clipperSaveActiveRulesOnly = null;
   var docTypeMenuList = null;
   var docTypeMenuPopup = null;
   var keysPlatformGroupBox = null;
@@ -615,6 +616,7 @@ ru.akman.znotes.Options = function() {
     } else {
       clipperSaveStylesGroup.selectedItem = clipperInlineStylesheets;
     }
+    clipperSaveActiveRulesOnly.checked = optionsPrefs["main"]["default"].clipperSaveActiveRulesOnly;
     onSaveStylesChanged();
     defaultDocumentType = optionsPrefs["main"]["default"].defaultDocumentType;
     populateDocumentTypePopup();
@@ -642,11 +644,13 @@ ru.akman.znotes.Options = function() {
       clipperInlineStylesheets.removeAttribute( "disabled" );
       clipperSingleStylesheet.removeAttribute( "disabled" );
       clipperSeparateStylesheets.removeAttribute( "disabled" );
+      clipperSaveActiveRulesOnly.removeAttribute( "disabled" );
     } else {
       clipperSaveStylesGroup.setAttribute( "disabled", "true" );
       clipperInlineStylesheets.setAttribute( "disabled", "true" );
       clipperSingleStylesheet.setAttribute( "disabled", "true" );
       clipperSeparateStylesheets.setAttribute( "disabled", "true" );
+      clipperSaveActiveRulesOnly.setAttribute( "disabled", "true" );
     }
   };
   
@@ -789,6 +793,9 @@ ru.akman.znotes.Options = function() {
     currentPrefs.defaultDocumentType = defaultDocumentType;
     isChanged = isChanged ||
       ( currentPrefs.defaultDocumentType !== originalPrefs.defaultDocumentType );
+    currentPrefs.clipperSaveActiveRulesOnly = clipperSaveActiveRulesOnly.checked;
+    isChanged = isChanged ||
+      ( currentPrefs.clipperSaveActiveRulesOnly !== originalPrefs.clipperSaveActiveRulesOnly );
     return isChanged;
   };
   
@@ -837,7 +844,7 @@ ru.akman.znotes.Options = function() {
         result.shortcuts = {};
       }
     } catch ( e ) {
-      Utils.log( e );
+      Utils.log( e + "\n" + Utils.dumpStack() );
       result.shortcuts = {};
     }
     return result;
@@ -867,7 +874,8 @@ ru.akman.znotes.Options = function() {
       "clipperPreserveHTML5Tags": false,
       "clipperSaveStyles": true,
       "clipperSingleStylesheet": false,
-      "clipperSeparateStylesheets": false
+      "clipperSeparateStylesheets": false,
+      "clipperSaveActiveRulesOnly": true
     };
     result.shortcuts = {};
     var id, name, command;
@@ -920,7 +928,8 @@ ru.akman.znotes.Options = function() {
       "clipperPreserveHTML5Tags":   !!( Utils.CLIPPER_FLAGS & 0x00001000 ),
       "clipperSaveStyles":          !!( Utils.CLIPPER_FLAGS & 0x00010000 ),
       "clipperSingleStylesheet":    !!( Utils.CLIPPER_FLAGS & 0x00100000 ),
-      "clipperSeparateStylesheets": !!( Utils.CLIPPER_FLAGS & 0x01000000 )
+      "clipperSeparateStylesheets": !!( Utils.CLIPPER_FLAGS & 0x01000000 ),
+      "clipperSaveActiveRulesOnly": !!( Utils.CLIPPER_FLAGS & 0x10000000 )
     };
     try {
       result.shortcuts = JSON.parse( Utils.MAIN_SHORTCUTS );
@@ -928,7 +937,7 @@ ru.akman.znotes.Options = function() {
         result.shortcuts = {};
       }
     } catch ( e ) {
-      Utils.log( e );
+      Utils.log( e + "\n" + Utils.dumpStack() );
       result.shortcuts = {};
     }
     return result;
@@ -955,6 +964,7 @@ ru.akman.znotes.Options = function() {
     prefsBundle.setBoolPref( "clipperSaveStyles", prefs.clipperSaveStyles );
     prefsBundle.setBoolPref( "clipperSingleStylesheet", prefs.clipperSingleStylesheet );
     prefsBundle.setBoolPref( "clipperSeparateStylesheets", prefs.clipperSeparateStylesheets );
+    prefsBundle.setBoolPref( "clipperSaveActiveRulesOnly", prefs.clipperSaveActiveRulesOnly );
   };
   
   // TABS
@@ -1057,6 +1067,7 @@ ru.akman.znotes.Options = function() {
     } else {
       clipperSaveStylesGroup.selectedItem = clipperInlineStylesheets;
     }
+    clipperSaveActiveRulesOnly.checked = currentPrefs.clipperSaveActiveRulesOnly;
     onSaveStylesChanged();
     defaultDocumentType = currentPrefs.defaultDocumentType;
     populateDocumentTypePopup();
@@ -1141,17 +1152,20 @@ ru.akman.znotes.Options = function() {
     clipperInlineStylesheets = document.getElementById( "clipperInlineStylesheets" );
     clipperSingleStylesheet = document.getElementById( "clipperSingleStylesheet" );
     clipperSeparateStylesheets = document.getElementById( "clipperSeparateStylesheets" );
+    clipperSaveActiveRulesOnly = document.getElementById( "clipperSaveActiveRulesOnly" );
     clipperSeparateFrames.setAttribute( "hidden", "true" );
     if ( Utils.IS_SANITIZE_ENABLED ) {
       clipperSaveScripts.setAttribute( "hidden", "true" );
       clipperSaveFrames.setAttribute( "hidden", "true" );
       clipperPreserveHTML5Tags.setAttribute( "hidden", "true" );
       clipperSaveStylesGroup.setAttribute( "hidden", "true" );
+      clipperSaveActiveRulesOnly.setAttribute( "hidden", "true" );
     } else {
       clipperSaveScripts.removeAttribute( "hidden" );
       clipperSaveFrames.removeAttribute( "hidden" );
       clipperPreserveHTML5Tags.removeAttribute( "hidden" );
       clipperSaveStylesGroup.removeAttribute( "hidden" );
+      clipperSaveActiveRulesOnly.removeAttribute( "hidden" );
     }
     docTypeMenuList = document.getElementById( "docTypeMenuList" );
     docTypeMenuPopup = document.getElementById( "docTypeMenuPopup" );

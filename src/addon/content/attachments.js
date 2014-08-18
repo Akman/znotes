@@ -373,7 +373,7 @@ ru.akman.znotes.Attachments = function() {
             }
             src.copyTo( parentDir, fileName );
           } catch ( e ) {
-            Utils.log( e );
+            Utils.log( e + "\n" + Utils.dumpStack() );
           }
           break;
         case "contact" :

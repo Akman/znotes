@@ -130,7 +130,7 @@ var BookManager = function() {
       registryObject =
         JSON.parse( Utils.readFileContent( registryPath, "UTF-8" ) );
     } catch ( e ) {
-      Utils.log( e );
+      Utils.log( e + "\n" + Utils.dumpStack() );
       registryObject = [];
     }
   };

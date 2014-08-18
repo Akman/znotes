@@ -37,6 +37,7 @@ if ( !ru.akman.znotes ) ru.akman.znotes = {};
 Components.utils.import( "resource://znotes/utils.js" , ru.akman.znotes );
 Components.utils.import( "resource://znotes/domutils.js" , ru.akman.znotes );
 Components.utils.import( "resource://znotes/updatemanager.js" , ru.akman.znotes );
+Components.utils.import( "resource://znotes/css.js" , ru.akman.znotes );
 
 ru.akman.znotes.TestSuite = function() {
 
@@ -44,6 +45,7 @@ ru.akman.znotes.TestSuite = function() {
 
   var Utils = ru.akman.znotes.Utils;
   var DOMUtils = ru.akman.znotes.DOMUtils;
+  var CSSUtils = ru.akman.znotes.CSSUtils;
   
   var mozPrefs = Components.classes["@mozilla.org/preferences-service;1"]
                            .getService( Components.interfaces.nsIPrefBranch );
@@ -64,7 +66,7 @@ ru.akman.znotes.TestSuite = function() {
     try {
       tests[testIndex].code( event );
     } catch ( e ) {
-      Utils.log( e );
+      Utils.log( e + "\n" + Utils.dumpStack() );
     }
     Utils.log( delimiter + "\n" );
   };
@@ -279,6 +281,10 @@ ru.akman.znotes.TestSuite = function() {
         testTextBox.value += "URLS :: \n";
         testTextBox.value += "index = " + Utils.SITE + Utils.URLS.index + "\n";
         testTextBox.value += "forum = " + Utils.SITE + Utils.URLS.forum + "\n";
+        //
+        testTextBox.value += "IS_SANITIZE_ENABLED: " + !!Utils.IS_SANITIZE_ENABLED + "\n";
+        testTextBox.value += "IS_AD_ENABLED: " + !!Utils.IS_AD_ENABLED + "\n";
+        testTextBox.value += "IS_DEBUG_ENABLED: " + !!Utils.IS_DEBUG_ENABLED + "\n";
       }
     }
   );
@@ -348,7 +354,6 @@ ru.akman.znotes.TestSuite = function() {
     }
   );
   
-  
   tests.push(
     {
       name: "Chrome URI to path",
@@ -367,7 +372,7 @@ ru.akman.znotes.TestSuite = function() {
       }
     }
   );
-  
+
   tests.push(
     {
       name: "Driver path",
@@ -702,8 +707,8 @@ ru.akman.znotes.TestSuite = function() {
   } );
 
   tests.push( {
-    name: "Save note",
-    description: "Save note dialog",
+    name: "Save note (can overwrite)",
+    description: "Save note (can overwrite) dialog",
     code: function () {
       var params = {
         input: {
@@ -734,6 +739,38 @@ ru.akman.znotes.TestSuite = function() {
   } );
 
   tests.push( {
+    name: "Save note",
+    description: "Save note dialog",
+    code: function () {
+      var params = {
+        input: {
+          title: "Save note",
+          aBook: ctx.book,
+          aCategory: ctx.category,
+          aTag: ctx.tag,
+          aNote: ctx.note,
+          aName: "defaul name for a note"
+        },
+        output: null
+      };
+      window.openDialog(
+        "chrome://znotes/content/opensavedialog.xul?mode=save&type=note",
+        "",
+        "chrome,dialog=yes,modal=yes,centerscreen,resizable=yes",
+        params
+      ).focus();
+      if ( !params.output ) {
+        return;
+      }
+      Utils.log( params.output.aBook.getName() );
+      Utils.log( params.output.aCategory.getName() );
+      Utils.log( params.output.aTags );
+      Utils.log( params.output.aType );
+      Utils.log( params.output.aName );
+    }
+  } );
+  
+  tests.push( {
     name: "Open category",
     description: "Open category dialog",
     code: function () {
@@ -762,8 +799,8 @@ ru.akman.znotes.TestSuite = function() {
   } );
   
   tests.push( {
-    name: "Save category",
-    description: "Save category dialog",
+    name: "Save category (can overwrite)",
+    description: "Save category (can overwrite) dialog",
     code: function () {
       var params = {
         input: {
@@ -793,6 +830,37 @@ ru.akman.znotes.TestSuite = function() {
     }
   } );
 
+  tests.push( {
+    name: "Save category",
+    description: "Save category dialog",
+    code: function () {
+      var params = {
+        input: {
+          title: "Save category",
+          aBook: ctx.book,
+          aCategory: ctx.category,
+          aTag: ctx.tag,
+          aNote: ctx.note
+        },
+        output: null
+      };
+      window.openDialog(
+        "chrome://znotes/content/opensavedialog.xul?mode=save&type=category",
+        "",
+        "chrome,dialog=yes,modal=yes,centerscreen,resizable=yes",
+        params
+      ).focus();
+      if ( !params.output ) {
+        return;
+      }
+      Utils.log( params.output.aBook.getName() );
+      Utils.log( params.output.aCategory.getName() );
+      Utils.log( params.output.aName );
+      Utils.log( params.output.aTags );
+      Utils.log( params.output.aType );
+    }
+  } );
+  
   tests.push( {
     name: "Show many alerts",
     description: "Show popups by alerts service",
@@ -827,7 +895,7 @@ ru.akman.znotes.TestSuite = function() {
             "popup" + i
           );
         } catch ( e ) {
-          Utils.log( e );
+          Utils.log( e + "\n" + Utils.dumpStack() );
         }
       }
     }
@@ -917,37 +985,10 @@ ru.akman.znotes.TestSuite = function() {
       anURI = ioService.newURI( "file:///F:\Development/workspace/gecko/znotes/etc/Samples/sample1.html", null, null );
       aBaseURI = ioService.newURI( "file:///F:\Development/workspace/gecko/znotes/etc/Samples/sample1_files/", null, null );
       aPrincipal = securityManager.getCodebasePrincipal( anURI );
+      // TODO: anURI cause message in error console, what principal must be use?    
       domParser.init( aPrincipal, null /* anURI */, aBaseURI, null );
       aDOM = domParser.parseFromString( aText, "text/html" );
       Utils.log( "SERIALIZED TEXT:\n" + DOMUtils.serializeHTMLToString( aDOM ) + "\n" );
-    }
-  } );
-
-  tests.push( {
-    name: "Split selector",
-    description: "Split css selector",
-    code: function () {
-    
-      function splitSelector( selector ) {
-        var index = -1;
-        do {
-          index = selector.indexOf( ":", index + 1 );
-        } while ( index > 0 && selector.charAt( index - 1) === "\\" );
-        if ( index !== -1 ) {
-          return [ selector.substring( 0, index ), selector.substring( index ) ];
-        }
-        return [ selector, "" ];
-      };
-
-      Utils.log( "abc\\:xyz:123\\:456" );
-      Utils.log( splitSelector( "abc\\:xyz:123:456" ) );
-      Utils.log( "abc:xyz\\:123\\:456" );
-      Utils.log( splitSelector( "abc:xyz\\:123\\:456" ) );
-      Utils.log( "abc" );
-      Utils.log( splitSelector( "abc" ) );
-      Utils.log( "abc:xyz" );
-      Utils.log( splitSelector( "abc:xyz" ) );
-      
     }
   } );
 
@@ -1003,7 +1044,222 @@ ru.akman.znotes.TestSuite = function() {
       window.maximize();
     }
   } );
-  
+
+  tests.push( {
+    name: "Clipper flags",
+    description: "Show web-clipper flags",
+    code: function () {
+      Utils.log( Utils.CLIPPER_FLAGS.toString( 16 ) );
+    }
+  } );
+
+  tests.push( {
+    name: "Selectors",
+    description: "Parse CSS selector",
+    code: function () {
+    
+      var namespaces = CSSUtils.Namespaces.create()
+            .set( CSSUtils.Namespaces.knowns["html"] )
+            .set( CSSUtils.Namespaces.knowns["xlink"], "xlink" )
+            .set( CSSUtils.Namespaces.knowns["og"], "og" )
+            .set( CSSUtils.Namespaces.knowns["fb"], "fb" )
+            .set( CSSUtils.Namespaces.knowns["g"], "g" )
+            .set( CSSUtils.Namespaces.knowns["svg"], "svg" )
+            .set( CSSUtils.Namespaces.knowns["math"], "math" );    
+      
+      function test( str, namespaces ) {
+        var selectors, space, pointer;
+        Utils.log( str );
+        try {
+          selectors = CSSUtils.parseSelectors( str, namespaces );
+          if ( str === selectors.serialize() ) {
+            Utils.log( "OK" );
+          } else {
+            Utils.log( selectors.dump() );
+            Utils.log( "FAIL" );
+          }
+        } catch ( e ) {
+          if ( ( "position" in e ) && ( "length" in e ) ) {
+            space = new Array( e.position + 1 ).join( " " );
+            pointer = new Array( e.length + 1 ).join( "^" );
+            if ( !pointer ) {
+              pointer = "^";
+            }
+            Utils.log(
+              space + pointer + "\n" +
+              space + "+--- [ " + e.position + " / " + e.length + "] --- " + e.message
+            );
+          } else {
+            Utils.log( e );
+          }
+        }
+      }
+    
+      var selectors = [
+        "LI, /* abc */\n" +
+        "UL /* 123 */ LI, html|*:not(:link):not(:visited),\n" +
+        "svg|sp\\23 an[hello='Cleveland']" +
+        '[fb|goodbye="Colum\\' + "\n" +
+        'bus"]',
+        "",
+        "'abc\\" + "xyz'",
+        "'abc\\" + "\\xyz'",
+        "'abc\\" + "'" + "def'",
+        '"abc\\' + '"' + 'def"',
+        "'abc\\" + "\n" + "def'",
+        "'abc\\" + "def'",
+        "http://znotes.net\\2f docume\\" + "\n" + "ntation.xhtml'",
+        '"http://znotes.net\\2f docume\\' + '\n' + 'ntation.xhtml"',
+        "@import url( http://znotes.net )",
+        "@import url(  'http://znotes.net'  )",
+        "@import 'http://znotes.net'",
+        '@import url( "http://znotes.net\\2f docume\\' + '\n' + 'ntation.xhtml" )',
+        "@import url( http://znotes.net\\2f docume\\" + "\n" + "ntation.xhtml )",
+        "@import url( http://znotes.net\\2f documentation.xhtml )",
+        "@import url( 'http://znotes.net\\2f documentation.xhtml' )",
+        '@import url( "http://znotes.net\\2f documentation.xhtml" )',
+        '@import url( "http://znotes.net\\00002fdocumentation.xhtml" )',
+        '@import url( "http://znotes.net\\00002f documentation.xhtml" )',
+        "#IDENT\\000023NUM",
+        "#IDENT\\23NUM",
+        "#IDENT\\23 NUM",
+        "#IDENT\\23  NUM",
+        "#IDENT\\000023\\000023NUM",
+        "#IDENT\\23\\000023NUM",
+        "#IDENT\\000023\\23 NUM",
+        "#IDENT\\000023\\23  NUM",
+        "u+",
+        "u+?",
+        "u+??????",
+        "u+???????",
+        "u+002D",
+        "U+2D?",
+        "u+002D??",
+        "U+?-002F",
+        "IDENT\\00002fSLASH",
+        "IDENT\\2FSLASH",
+        "IDENT\\2F SLASH",
+        "IDENT\\2F  SLASH",
+        "IDENT\\00002fALPHA",
+        "IDENT\\2fALPHA",
+        "IDENT\\2F ALPHA",
+        "IDENT\\2F  ALPHA",
+        "*",
+        "UL LI",
+        "UL OL+LI",
+        "H1 + *[REL=up]",
+        "UL OL LI.red",
+        "LI.red.level",
+        "#x34y",
+        "div ol>li p",
+        "h1.opener + h2",
+        "div p *[href]",
+        "ol > li:last-child",
+        "#s12:not(FOO)",
+        ":lang(fr-be) > q",
+        "*:target::before",
+        "*:target",
+        "p.note:target",
+        "button:not([DISABLED])",
+        "tr > td:last-of-type",
+        "[foo|att=val]",
+        "[*|att]",
+        "[|att]",
+        "[att]",
+        "*|*[foo='bar']",
+        "*|UL[svg|r='10']",
+        "|UL[|r='10']",
+        "html|*[attr='10']",
+        "html|*:not(:link):not(:visited)",
+        "*|*:not(:hover)",
+        "*|*:not(*)",
+        "p[title*='hello']",
+        "a[href$='.html']",
+        "object[type^='image/']",
+        "a[hreflang|='en']",
+        "span[hello='Cleveland'][goodbye='Columbus']",
+        ":nth-child( 3n + 1 )",
+        ":nth-child( +3n - 2 )",
+        ":nth-child( -n+ 6)",
+        ":nth-child( +n+ 6)",
+        ":nth-child( +6 )",
+        ":nth-child( 3 n )",
+        ":nth-child( + 2n)",
+        ":nth-child(+ 2)",
+        "img:nth-of-type(2n+1)",
+        "img:nth-of-type(-2n+1)",
+        "img:nth-of-type(2n-1)",
+        "img:nth-of-type(-2n-1)",
+        "tr:nth-child(odd)",
+        "#main-nav.expand > ul > li:not(:last-child)",
+        "html[dir='rtl'] #main-header .logo",
+        "#main-header:before, #main-header:after",
+        ".error, .error > :-moz-any(.start-tag, .end-tag, .comment, .cdata)",
+        ".error, .error > :-moz-any(.start-tag, .end-tag, .comment, .cdata )",
+        ".error, .error > :-moz-any( .start-tag, .end-tag, .comment, .cdata)",
+        ".error, .error > :-moz-any( .start-tag, .end-tag, .comment, .cdata )"
+      ];
+      
+      for ( var i = 0; i < selectors.length; i++ ) {
+        test( selectors[i] );
+      }
+      
+    }
+  } );
+
+  tests.push( {
+    name: "namespace at-rule",
+    description: "Parse namespace at-rule",
+    code: function () {
+    
+      function test( str ) {
+        var ns, space, pointer;
+        Utils.log( str );
+        try {
+          ns = CSSUtils.parseNamespaceRule( str );
+          Utils.log( ns.dump() );
+          Utils.log( str === ns.serialize() ? "OK" : "FAIL" );
+        } catch ( e ) {
+          space = new Array( e.position + 1 ).join( " " );
+          pointer = new Array( e.length + 1 ).join( "^" );
+          if ( !pointer ) {
+            pointer = "^";
+          }
+          Utils.log(
+            space + pointer + "\n" +
+            space + "+--- [ " + e.position + " / " + e.length + "] --- " + e.message
+          );
+        }
+      }
+    
+      var rules = [
+        '@namespace     "http://www.w3.org/1999/xhtml";',
+        "@namespace     'http://base.google.com/ns/1.0';",
+        '@namespace url("http://www.w3.org/1999/xhtml");',
+        '@namespace  url(http://www.w3.org/1999/xhtml);',
+        "@namespace url('http://www.w3.org/1999/xhtml');",
+        //
+        '@namespace fb        "http://ogp.me/ns/fb#";',
+        "@namespace xlink     'http://www.w3.org/1999/xlink';",
+        '@namespace math   url(http://www.w3.org/1998/Math/MathML);',
+        '@namespace svg   url("http://www.w3.org/2000/svg");',
+        "@namespace og    url('http://ogp.me/ns#');",
+        //
+        "@namespace empty '';",
+        "@namespace '';",
+        '@namespace "";',
+        '@namespace url("");',
+        "@namespace url('');",
+        '@namespace url();'
+      ];
+      
+      for ( var i = 0; i < rules.length; i++ ) {
+        test( rules[i] );
+      }
+      
+    }
+  } );
+
   return pub;
 
 }();

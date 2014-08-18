@@ -964,7 +964,7 @@ var Driver = function() {
           }
           srcEntry.copyTo( contentDirectoryEntry, null );
         } catch ( e ) {
-          Utils.log( e );
+          Utils.log( e + "\n" + Utils.dumpStack() );
           return null;
         }
       }
@@ -992,7 +992,7 @@ var Driver = function() {
           fileEntry.remove( false );
         }
       } catch ( e ) {
-        Utils.log( e );
+        Utils.log( e + "\n" + Utils.dumpStack() );
       }
       contentsDescriptor.removeItem( leafName );
       return info;
@@ -1063,7 +1063,7 @@ var Driver = function() {
               }
               srcEntry.copyTo( attachmentsDirectoryEntry, null );
             } catch ( e ) {
-              Utils.log( e );
+              Utils.log( e + "\n" + Utils.dumpStack() );
               return null;
             }
           }
@@ -1098,7 +1098,7 @@ var Driver = function() {
               fileEntry.remove( false );
             }
           } catch ( e ) {
-            Utils.log( e );
+            Utils.log( e + "\n" + Utils.dumpStack() );
           }
           break;
         case "contact" :
@@ -1285,12 +1285,13 @@ var Driver = function() {
       while( entries.hasMoreElements() ) {
         entry = entries.getNext();
         entry.QueryInterface( Components.interfaces.nsIFile );
-        if ( flagMove ) {
-          entry.moveTo( toDirectoryEntry, entry.leafName );
-        } else {
-          //entry.copyTo( toDirectoryEntry, entry.leafName );
-          Utils.copyEntryTo( entry, toDirectoryEntry, entry.leafName, true /* overwrite */ );          
+        Utils.copyEntryTo( entry, toDirectoryEntry, entry.leafName, true /* overwrite */ );
+        if ( flagMove && entry.exists() ) {
+          entry.remove( true );
         }
+      }
+      if ( flagMove && fromDirectoryEntry.exists() ) {
+        fromDirectoryEntry.remove( true );
       }
       this.updateContentsDescriptor( toDirectoryEntry );
     };

@@ -138,7 +138,7 @@ ru.akman.znotes.Book = function() {
     try {
       conn = driver.getConnection( currentConnection );
     } catch ( e ) {
-      Utils.log( e );
+      Utils.log( e + "\n" + Utils.dumpStack() );
       msg1 = e.message;
       msg2 = e.param;
     }

@@ -35,6 +35,7 @@ if ( !ru.akman ) ru.akman = {};
 if ( !ru.akman.znotes ) ru.akman.znotes = {};
 
 Components.utils.import( "resource://znotes/utils.js", ru.akman.znotes );
+Components.utils.import( "resource://gre/modules/devtools/dbg-server.jsm" );
 
 function toOpenWindowByType( inType, inURI ) {
   var win =
@@ -58,6 +59,14 @@ function toJavaScriptConsole() {
     "global:console",
     "chrome://global/content/console.xul"
   );
+};
+
+function startDebuggerServer() {
+  if ( !DebuggerServer.initialized ) {
+    DebuggerServer.init();
+    DebuggerServer.addBrowserActors( "znotes:platform" );
+  }
+  DebuggerServer.openListener( 6000 );
 };
 
 ru.akman.znotes.Platform = function() {
