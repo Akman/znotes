@@ -518,10 +518,6 @@ ru.akman.znotes.ZNotes = function() {
           return true;
         case "znotes_tbsaveasnote_command":
           return getNumSelectedMessages() > 0;
-          /*
-          return ( getNumSelectedMessages() > 0 ) &&
-                 Common.isCommandEnabled( "znotes_newnote_command", null, mainWindow );
-          */
         case "znotes_tbnewnote_command":
           return Common.isCommandEnabled( "znotes_newnote_command", null, mainWindow );
         case "znotes_tbopenoptionsdialog_command":
@@ -660,6 +656,7 @@ ru.akman.znotes.ZNotes = function() {
   };
 
   function doNewBook() {
+    window.setCursor( "wait" );
     if ( !driverManager ) {
       Components.utils.import( "resource://znotes/drivermanager.js",
         ru.akman.znotes
@@ -689,6 +686,7 @@ ru.akman.znotes.ZNotes = function() {
       },
       output: null
     };
+    window.setCursor( "auto" );
     window.openDialog(
       "chrome://znotes/content/book.xul",
       "",
@@ -710,6 +708,7 @@ ru.akman.znotes.ZNotes = function() {
     if ( !messageURIs ) {
       return;
     }
+    window.setCursor( "wait" );
     var ctx = Utils.MAIN_CONTEXT ? Utils.MAIN_CONTEXT() : null;
     var args, arr, index;
     var book = null, category = null;
@@ -755,6 +754,7 @@ ru.akman.znotes.ZNotes = function() {
       },
       output: null
     };
+    window.setCursor( "auto" );
     window.openDialog(
       "chrome://znotes/content/opensavedialog.xul?mode=save&type=category",
       "",
