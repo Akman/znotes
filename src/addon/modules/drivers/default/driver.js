@@ -1274,7 +1274,7 @@ var Driver = function() {
       var entry, entries;
       var toDirectoryEntry = this.getContentDirectory();
       entries = toDirectoryEntry.directoryEntries;
-      while( entries.hasMoreElements() ) {
+      while( entries && entries.hasMoreElements() ) {
         entry = entries.getNext();
         entry.QueryInterface( Components.interfaces.nsIFile );
         if ( entry.leafName !== ENTRY_DESCRIPTOR_FILENAME ) {
@@ -1282,7 +1282,7 @@ var Driver = function() {
         }
       }
       entries = fromDirectoryEntry.directoryEntries;
-      while( entries.hasMoreElements() ) {
+      while( entries && entries.hasMoreElements() ) {
         entry = entries.getNext();
         entry.QueryInterface( Components.interfaces.nsIFile );
         Utils.copyEntryTo( entry, toDirectoryEntry, entry.leafName, true /* overwrite */ );

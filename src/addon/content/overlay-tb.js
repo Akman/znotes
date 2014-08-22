@@ -343,25 +343,18 @@ ru.akman.znotes.ZNotes = function() {
               aNote.setLoading( true );
             },
             onLoaderStopped: function( anEvent ) {
-              var aStatus = anEvent.getData().status;
-              try {
-                if ( !aStatus ) {
-                  if ( aDirectory.exists() ) {
-                    aNote.loadContentDirectory( aDirectory, true );
-                  } else {
-                    aDirectory.remove( true );
-                  }
-                  if ( aFile.exists() ) {
-                    aFile.remove( false );
-                  }
-                }
+              try {  
+                aNote.loadContentDirectory( aDirectory, true );
               } catch ( e ) {
                 Utils.log( e + "\n" + Utils.dumpStack() );
               }
-              try {
-                if ( !aStatus ) {
-                  aNote.importDocument( aResultObj.value );
-                }
+              try {  
+                aFile.remove( false );
+              } catch ( e ) {
+                Utils.log( e + "\n" + Utils.dumpStack() );
+              }
+              try {  
+                aNote.importDocument( aResultObj.value );
               } catch ( e ) {
                 Utils.log( e + "\n" + Utils.dumpStack() );
               }
@@ -819,7 +812,7 @@ ru.akman.znotes.ZNotes = function() {
             "application/xhtml+xml" : "text/plain";
           contentData = htmlBodies.length ?
             htmlBodies.join( "" ) : textBodies.join( "" );
-          // TODO: undefined behavior
+          // TODO: async create
           note = createNote(
             book,
             category,

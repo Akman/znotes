@@ -1260,6 +1260,59 @@ ru.akman.znotes.TestSuite = function() {
     }
   } );
 
+  tests.push( {
+    name: "mailbox:/// protocol",
+    description: "get message by mailbox-url",
+    code: function () {
+      var urls = [
+        "mailbox:///D:/Thunderbird/Mail%20Folders%20&%20Files/Verizon/Drafts?number=368880&phint=cHash%3DACAD1695A60DF23A9340B954123CC53C&phint=mHash%3DB6F9B3D874B82D70C01DC7B47761E6CD&phint=eHash%3DC6BE66D084D847B0CCD17BCE9E2D096B&phint=cmpgnName%3D99_C_T_Rewards_Announcement_2",
+        "mailbox:///D:/Thunderbird/Mail%20Folders%20&%20Files/Verizon/Drafts?number=368880&che=140818100251-0700&plaid=808392&camid=06112012&ucid=C6BE66D084D847B0CCD17BCE9E2D096B",
+        "mailbox:///D:/Thunderbird/Mail%20Folders%20&%20Files/Verizon/Drafts?number=368880&r=dbb21f2334b68a74bd20e0c3bb9a5707cca4d2a2&s=C6BE66D084D847B0CCD17BCE9E2D096B&campaign_2014_Q2=99_C_T_Rewards_Announcement_2",
+        "mailbox:///D:/Thunderbird/Mail%20Folders%20&%20Files/Verizon/Drafts?number=368880&d=C6BE66D084D847B0CCD17BCE9E2D096B&t=99_C_T_Rewards_Announcement_2",
+        "mailbox:///D:/Thunderbird/Mail%20Folders%20&%20Files/Verizon/Drafts?number=368880&_ri_=X0Gzc2X%3DWQpglLjHJlTQGtzb90ze1FzbRzfvRdKriaq3MzbYwt9imKEf2zd1zeW5OVXHkMX%3Dw&_ei_=EolaGGF4SNMvxFF7KucKuWMj0RxN_v3p4uCP-OXbwIrtYK2nYm0Yn6ehU1gpbR5ylI4_MddSNp0mFyedtGnq7dQ27IPqDOFJnRLtcAp49Jylu3a-Rhuix0cvGUUEzLcmRM."
+      ];
+      
+      function testURL( url ) {
+        var ioService, uri, channel;
+        Utils.log( "Source: " + url );
+        ioService =
+          Components.classes["@mozilla.org/network/io-service;1"]
+                    .getService( Components.interfaces.nsIIOService );
+        uri = ioService.newURI( url, null, null );
+        uri.QueryInterface( Components.interfaces.nsIURL );
+        if ( uri.query ) {
+          uri.query = uri.query.replace(
+            /header=filter&emitter=js(&fetchCompleteMessage=false)?&?/,
+            ""
+          );
+        }
+        Utils.log( "Fixed: " + uri.spec );
+        try {
+          channel = ioService.newChannelFromURI( uri );
+        } catch ( e ) {
+          channel = null;
+          Utils.log( e );
+        }
+        if ( channel ) {
+          channel.asyncOpen(
+            {
+              onStartRequest: function ( aRequest, aContext ) {
+              },
+              onStopRequest: function ( aRequest, aContext, aStatusCode ) {
+              },
+              onDataAvailable: function ( aRequest, aContext, aStream, aOffset, aCount ) {
+              },
+            },
+            null
+          );
+        }
+      };
+      for ( var i = 0; i < urls.length; i++ ) {
+        testURL( urls[i] );
+      }
+    }
+  } );
+  
   return pub;
 
 }();

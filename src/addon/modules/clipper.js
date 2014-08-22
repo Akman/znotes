@@ -488,15 +488,124 @@ function writeFileEntry( entry, encoding, data ) {
   }
 };
 
-function loadURLToFileEntry( url, referrer, ctx,
-                             entry, mode, perm, bufsize, listener ) {
-  var fileOutputStream =
+// TODO: nsIPrompt, nsIAuthPrompt/nsIAuthPrompt2
+function ChannelObserver( channel, ctx, entry, mode, perm, bufsize, listener ) {
+  this.mChannel = channel;
+  this.mContext = ctx;
+  this.mEntry = entry;
+  this.mMode = mode;
+  this.mPerm = perm;
+  this.mBufsize = bufsize;
+  this.mListener = listener;
+  this.mFileOutputStream =
     Components.classes["@mozilla.org/network/safe-file-output-stream;1"]
               .createInstance( nsIFileOutputStream );
-  var bufferedOutputStream =
+  this.mBufferedOutputStream =
     Components.classes["@mozilla.org/network/buffered-output-stream;1"]
               .createInstance( nsIBufferedOutputStream );
-  var status, uri, channel = null;
+  this.mStatus = -1;
+};
+ChannelObserver.prototype = {
+  QueryInterface: function( iid ) {
+    if ( iid.equals( Components.interfaces.nsISupports ) ||
+         iid.equals( Components.interfaces.nsIRequestObserver ) ||
+         iid.equals( Components.interfaces.nsIStreamListener ) ||
+         iid.equals( Components.interfaces.nsIInterfaceRequestor ) ||
+         iid.equals( Components.interfaces.nsIProgressEventSink ) ||
+         iid.equals( Components.interfaces.nsIChannelEventSink ) ) {
+      return this;
+    }
+    throw Components.results.NS_ERROR_NO_INTERFACE;
+  },
+  // nsIRequestObserver
+  getInterface: function( iid ) {
+    if ( iid.equals( Components.interfaces.nsIProgressEventSink ) ||
+         iid.equals( Components.interfaces.nsIChannelEventSink ) ||
+         iid.equals( Components.interfaces.nsIRequestObserver ) ||
+         iid.equals( Components.interfaces.nsIStreamListener ) ) {
+      return this;
+    }
+    return null;
+  },
+  // nsIChannelEventSink
+  asyncOnChannelRedirect: function( oldChannel, newChannel, flags, callback ) {
+    this.mChannel = newChannel;
+    this.mChannel.notificationCallbacks = this;
+    this.mChannel.asyncOpen( this, this.mContext );
+    callback.onRedirectVerifyCallback( Components.results.NS_OK );
+  },
+  // nsIRequestObserver
+  onStartRequest: function( aRequest, aContext ) {
+    var isRequestSucceeded = true;
+    this.mStatus = 0;
+    if ( this.mListener && this.mListener.onstart ) {
+      this.mListener.onstart( this.mChannel, aRequest, aContext );
+    }
+    if ( this.mChannel instanceof nsIHttpChannel ) {
+      try {
+        isRequestSucceeded = this.mChannel.requestSucceeded;
+      } catch ( e ) {
+        isRequestSucceeded = false;
+      }
+    }
+    if ( isRequestSucceeded ) {
+      this.mFileOutputStream.init( this.mEntry, this.mMode, this.mPerm,
+        nsIFileOutputStream.DEFER_OPEN );
+      this.mBufferedOutputStream.init( this.mFileOutputStream, this.mBufsize );
+    } else {
+      // TODO: real status
+      aRequest.cancel( Components.results.NS_ERROR_FILE_NOT_FOUND );
+    }
+  },
+  onStopRequest: function( aRequest, aContext, aStatusCode ) {
+    this.mStatus = 1;
+    this.mBufferedOutputStream.flush();
+    if ( this.mFileOutputStream instanceof nsISafeOutputStream ) {
+      this.mFileOutputStream.finish();
+    } else {
+      this.mFileOutputStream.close();
+    }
+    if ( this.mListener && this.mListener.onstop ) {
+      this.mListener.onstop( this.mChannel, aRequest, aContext, aStatusCode );
+    }
+  },
+  // nsIStreamListener
+  onDataAvailable: function( aRequest, aContext, aStream, aOffset, aCount ) {
+    var count = aCount;
+    while ( count > 0 ) {
+      count -= this.mBufferedOutputStream.writeFrom( aStream, count );
+    }
+    if ( this.mListener && this.mListener.onprogress ) {
+      this.mListener.onprogress( this.mChannel, aRequest, aContext, aOffset,
+        aCount );
+    }
+  },
+  // nsIProgressEventSink
+  onProgress: function( aRequest, aContext, aProgress, aProgressMax ) {
+    /*
+    aProgress - Numeric value in the range 0 to aProgressMax indicating
+                the number of bytes transfered thus far.
+    aProgressMax - Numeric value indicating maximum number of bytes that will
+                   be transfered (or 0xFFFFFFFFFFFFFFFF if total is unknown).
+    */
+  },
+  onStatus: function( aRequest, aContext, aStatus, aStatusArg ) {
+    /*
+    aStatus - Status code (not necessarily an error code) indicating the state
+              of the channel (usually the state of the underlying transport).
+              @see nsISocketTransport for socket specific status codes.
+    aStatusArg - Status code argument to be used with the string bundle service
+                 to convert the status message into localized, human readable
+                 text. the meaning of this parameter is specific to the value
+                 of the status code. for socket status codes, this parameter
+                 indicates the host:port associated with the status code.
+    */
+  }
+};
+
+function loadURLToFileEntry( url, referrer, ctx,
+                             entry, mode, perm, bufsize, listener ) {
+  var uri, status, observer, channel = null;
   try {
     uri = ioService.newURI( url, null, null );
     if ( uri.scheme.toLowerCase() === "mailbox" ) {
@@ -523,55 +632,12 @@ function loadURLToFileEntry( url, referrer, ctx,
            referrer ) {
         channel.referrer = ioService.newURI( referrer, null, null );
       }
-      channel.asyncOpen(
-        {
-          onStartRequest: function ( aRequest, aContext ) {
-            var isRequestSucceeded = true;
-            if ( listener && listener.onstart ) {
-              listener.onstart( channel, aRequest, aContext );
-            }
-            if ( channel instanceof nsIHttpChannel ) {
-              try {
-                isRequestSucceeded = channel.requestSucceeded;
-              } catch ( e ) {
-                isRequestSucceeded = false;
-              }
-            }
-            if ( isRequestSucceeded ) {
-              fileOutputStream.init( entry, mode, perm,
-                nsIFileOutputStream.DEFER_OPEN );
-              bufferedOutputStream.init( fileOutputStream, bufsize );
-            } else {
-              aRequest.cancel( Components.results.NS_ERROR_FILE_NOT_FOUND );
-            }
-          },
-          onStopRequest: function ( aRequest, aContext, aStatusCode ) {
-            bufferedOutputStream.flush();
-            if ( fileOutputStream instanceof nsISafeOutputStream ) {
-              fileOutputStream.finish();
-            } else {
-              fileOutputStream.close();
-            }
-            if ( listener && listener.onstop ) {
-              listener.onstop( channel, aRequest, aContext, aStatusCode );
-            }
-          },
-          onDataAvailable: function ( aRequest, aContext, aStream,
-                                      aOffset, aCount ) {
-            var count = aCount;
-            while ( count > 0 ) {
-              count -= bufferedOutputStream.writeFrom( aStream, count );
-            }
-            if ( listener && listener.onprogress ) {
-              listener.onprogress( channel, aRequest, aContext, aOffset, aCount );
-            }
-          }
-        },
-        ctx
-      );
+      observer =
+        new ChannelObserver( channel, ctx, entry, mode, perm, bufsize, listener );
+      channel.notificationCallbacks = observer;
+      channel.asyncOpen( observer, ctx );
     }
   } catch ( e ) {
-    Utils.log( e + "\n" + Utils.dumpStack() );
     if ( e.name && ( e.name in Components.results ) ) {
       status = Components.results[e.name];
     } else {
@@ -742,6 +808,9 @@ function processRule( aRule, aRules, aSubstitution,
                                aRule, aSheetURL, aDocumentURL,
                                aDirectory, aLoader, aFlags,
           function( job, lines, index ) {
+            if ( job.getStatus() ) {
+              return;
+            }
             lines[index] = lines[index].replace(
               job.getURL(),
               encodeURI( job.getEntry().leafName ),
@@ -762,6 +831,9 @@ function processRule( aRule, aRules, aSubstitution,
                                aRule, aSheetURL, aDocumentURL,
                                aDirectory, aLoader, aFlags,
           function( job, lines, index ) {
+            if ( job.getStatus() ) {
+              return;
+            }
             lines[index] = lines[index].replace(
               job.getURL(),
               encodeURI( job.getEntry().leafName ),
@@ -1464,9 +1536,7 @@ function addJobObserver( aJob, aCallback, aLines, anIndex ) {
   var anObserver = {
     onJobStopped: function( anEvent ) {
       if ( anEvent.getData().job === aJob ) {
-        if ( !aJob.getStatus() ) {
-          aCallback( aJob, aLines, anIndex );
-        }
+        aCallback( aJob, aLines, anIndex )
         aLoader.removeObserver( anObserver );
       }
     }
@@ -1535,6 +1605,9 @@ function inspectElement( aLinks, aRules, aSubstitution, anElement, aDocumentURL,
                 aLoader.createJob( aDirectory, anURL, aDocumentURL, aContentType,
                                    aDocumentURL /* groupId */ ),
                 function( job ) {
+                  if ( job.getStatus() ) {
+                    return;
+                  }
                   setElementAttribute(
                     anElement,
                     "src",
@@ -1572,6 +1645,9 @@ function inspectElement( aLinks, aRules, aSubstitution, anElement, aDocumentURL,
                   aLoader.createJob( aDirectory, anURL, aDocumentURL,
                                      aContentType, aDocumentURL /* groupId */ ),
                   function( job ) {
+                    if ( job.getStatus() ) {
+                      return;
+                    }
                     setElementAttribute(
                       anElement,
                       "href",
@@ -1594,6 +1670,9 @@ function inspectElement( aLinks, aRules, aSubstitution, anElement, aDocumentURL,
                 aLoader.createJob( aDirectory, anURL, aDocumentURL,
                                    aContentType, aDocumentURL /* groupId */ ),
                 function( job ) {
+                  if ( job.getStatus() ) {
+                    return;
+                  }
                   setElementAttribute(
                     anElement,
                     "href",
@@ -1621,6 +1700,9 @@ function inspectElement( aLinks, aRules, aSubstitution, anElement, aDocumentURL,
               aLoader.createJob( aDirectory, anURL, aDocumentURL, "",
                                  aDocumentURL /* groupId */ ),
               function( job ) {
+                if ( job.getStatus() ) {
+                  return;
+                }
                 setElementAttribute(
                   anElement,
                   "src",
@@ -1642,6 +1724,9 @@ function inspectElement( aLinks, aRules, aSubstitution, anElement, aDocumentURL,
               aLoader.createJob( aDirectory, anURL, aDocumentURL, aContentType,
                                  aDocumentURL /* groupId */ ),
               function( job ) {
+                if ( job.getStatus() ) {
+                  return;
+                }
                 setElementAttribute(
                   anElement,
                   "src",
@@ -1663,6 +1748,9 @@ function inspectElement( aLinks, aRules, aSubstitution, anElement, aDocumentURL,
               aLoader.createJob( aDirectory, anURL, aDocumentURL,
                                  aContentType, aDocumentURL /* groupId */ ),
               function( job ) {
+                if ( job.getStatus() ) {
+                  return;
+                }
                 setElementAttribute(
                   anElement,
                   "data",
@@ -1686,6 +1774,9 @@ function inspectElement( aLinks, aRules, aSubstitution, anElement, aDocumentURL,
               aLoader.createJob( aDirectory, anURL, aDocumentURL, "",
                                  aDocumentURL /* groupId */ ),
               function( job ) {
+                if ( job.getStatus() ) {
+                  return;
+                }
                 setElementAttribute(
                   anElement,
                   "background",
@@ -1707,6 +1798,9 @@ function inspectElement( aLinks, aRules, aSubstitution, anElement, aDocumentURL,
                   aLoader.createJob( aDirectory, anURL, aDocumentURL,
                                      "", aDocumentURL /* groupId */ ),
                   function( job ) {
+                    if ( job.getStatus() ) {
+                      return;
+                    }
                     setElementAttribute(
                       anElement,
                       "src",
@@ -1804,6 +1898,9 @@ function inspectElement( aLinks, aRules, aSubstitution, anElement, aDocumentURL,
         null /* localNamespaces */, anElement.style, aBaseURL, aDocumentURL,
         aDirectory, aLoader, aFlags,
         function( job ) {
+          if ( job.getStatus() ) {
+            return;
+          }
           var cssText = anElement.style.cssText.replace(
             job.getURL(),
             encodeURI( job.getEntry().leafName ),
