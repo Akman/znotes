@@ -463,12 +463,17 @@ ru.akman.znotes.Attachments = function() {
     };
 
     function getFileDescription( entry ) {
-      var result = Utils.STRINGS_BUNDLE.getString(
+      var size, result = Utils.STRINGS_BUNDLE.getString(
         "attachments.filenotfound" );
       if ( entry.exists() && !entry.isDirectory() ) {
-        result = Utils.STRINGS_BUNDLE.getString( "attachments.filesize" ) +
-          ": " + Math.round( entry.fileSize / 1000 ) + " " +
-          Utils.STRINGS_BUNDLE.getString( "attachments.kib" );
+        result = Utils.STRINGS_BUNDLE.getString( "attachments.filesize" ) + ": ";
+        if ( entry.fileSize < 1024 ) {
+          result += entry.fileSize + " " +
+            Utils.STRINGS_BUNDLE.getString( "attachments.bytes" );
+        } else {
+          result += Math.round( entry.fileSize / 1024 ) + " " +
+            Utils.STRINGS_BUNDLE.getString( "attachments.kib" );
+        }
       }
       return result;
     };
