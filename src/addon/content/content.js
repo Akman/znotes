@@ -361,9 +361,14 @@ ru.akman.znotes.Content = function() {
     function getFileDescription( entry ) {
       var result = Utils.STRINGS_BUNDLE.getString( "content.filenotfound" );
       if ( entry.exists() && !entry.isDirectory() ) {
-        result = Utils.STRINGS_BUNDLE.getString( "content.filesize" ) + ": " +
-                 Math.round( entry.fileSize / 1000 ) + " " +
-                 Utils.STRINGS_BUNDLE.getString( "content.kib" );
+        result = Utils.STRINGS_BUNDLE.getString( "content.filesize" ) + ": ";
+        if ( entry.fileSize < 1024 ) {
+          result += entry.fileSize + " " +
+            Utils.STRINGS_BUNDLE.getString( "content.bytes" );
+        } else {
+          result += Math.round( entry.fileSize / 1024 ) + " " +
+            Utils.STRINGS_BUNDLE.getString( "content.kib" );
+        }
       }
       return result;
     };
