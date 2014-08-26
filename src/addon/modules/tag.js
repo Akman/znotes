@@ -112,26 +112,28 @@ var Tag = function( list, id, name, color, index, selectedIndex ) {
   };
 
   this.getIndex = function() {
-    return this.index;
+    return parseInt( this.index );
   };
 
   this.setIndex = function( index ) {
-    if ( this.isNoTag() || this.getIndex() == index ) {
+    var value = parseInt( index );
+    if ( this.isNoTag() || this.getIndex() === value ) {
       return;
     }
-    this.index = index;
+    this.index = value;
     this.getDescriptor().setItem( this.getDescriptorItemInfo() );
   };
 
   this.getSelectedIndex = function() {
-    return this.selectedIndex;
+    return parseInt( this.selectedIndex );
   };
 
   this.setSelectedIndex = function( selectedIndex ) {
-    if ( this.getSelectedIndex() == selectedIndex ) {
+    var value = parseInt( selectedIndex );
+    if ( this.getSelectedIndex() === value ) {
       return;
     }
-    this.selectedIndex = selectedIndex;
+    this.selectedIndex = value;
     this.getDescriptor().setItem( this.getDescriptorItemInfo() );
   };
 

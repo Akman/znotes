@@ -1367,7 +1367,7 @@ var Utils = function() {
   pub.addProperty = function( node, value ) {
     var properties = node.hasAttribute( "properties" ) ?
       node.getAttribute( "properties" ).trim() : "";
-    properties = properties.length ? properties.split( /\s+/ ) : [];
+    properties = properties.length ? properties.split( /\s+/g ) : [];
     if ( properties.indexOf( value ) < 0 ) {
       properties.push( value );
     }
@@ -1377,7 +1377,7 @@ var Utils = function() {
   pub.removeProperty = function( node, value ) {
     var properties = node.hasAttribute( "properties" ) ?
       node.getAttribute( "properties" ).trim() : "";
-    properties = properties.length ? properties.split( /\s+/ ) : [];
+    properties = properties.length ? properties.split( /\s+/g ) : [];
     var index = properties.indexOf( value );
     if ( index < 0 ) {
       return;

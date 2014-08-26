@@ -364,6 +364,21 @@ menuitem.znotes_deletecategory_class[disabled="true"] {
   list-style-image: url("chrome://znotes_images/skin/delete-folder-disabled-16x16.png");
 }
 
+.znotes_clearbin_class {
+  list-style-image: url("chrome://znotes_images/skin/clear-bin-24x24.png");
+}
+.znotes_clearbin_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/clear-bin-disabled-24x24.png");
+}
+toolbar[iconsize="small"] .znotes_clearbin_class,
+menuitem.znotes_clearbin_class  {
+  list-style-image: url("chrome://znotes_images/skin/clear-bin-16x16.png");
+}
+toolbar[iconsize="small"] .znotes_clearbin_class[disabled="true"],
+menuitem.znotes_clearbin_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/clear-bin-disabled-16x16.png");
+}
+
 .znotes_renamecategory_class {
   list-style-image: url("chrome://znotes_images/skin/rename-folder-24x24.png");
 }

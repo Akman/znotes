@@ -193,6 +193,13 @@
 <!ENTITY znotes_deletecategory_key_modifiers "">
 <!ENTITY znotes_deletecategory_keycode "">
 
+<!ENTITY znotes_clearbin_label "Vider cette corbeille maintenant">
+<!ENTITY znotes_clearbin_tooltip "Vider cette corbeille maintenant">
+<!ENTITY znotes_clearbin_accesskey "">
+<!ENTITY znotes_clearbin_key "">
+<!ENTITY znotes_clearbin_key_modifiers "">
+<!ENTITY znotes_clearbin_keycode "">
+
 <!ENTITY znotes_renamecategory_label "Renommer la catégorie">
 <!ENTITY znotes_renamecategory_tooltip "Renommer la categorie">
 <!ENTITY znotes_renamecategory_accesskey "">

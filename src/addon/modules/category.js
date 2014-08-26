@@ -105,10 +105,6 @@ var Category = function( aBook, anEntry, aParent ) {
     }
   };
 
-  this.isRoot = function() {
-    return ( this.parent == null );
-  };
-
   this.getBook = function() {
     return this.book;
   };
@@ -117,6 +113,37 @@ var Category = function( aBook, anEntry, aParent ) {
     return this.parent;
   };
 
+  this.isRoot = function() {
+    return ( this.parent == null );
+  };
+
+  this.getRoot = function() {
+    if ( this.book ) {
+      return this.book ? this.book.getContentTree().getRoot() : null;
+    }
+  };
+
+  this.isBin = function() {
+    return this.entry.isBin();
+  };
+
+  this.getBin = function() {
+    var tree = this.book ? this.book.getContentTree() : null;
+    return tree ? tree.getBin() : null;
+  };
+  
+  this.isInBin = function() {
+    var aBin = this.getBin();
+    var aCategory = this.getParent();
+    while ( aCategory ) {
+      if ( aCategory === aBin ) {
+        return true;
+      }
+      aCategory = aCategory.getParent();
+    }
+    return false;
+  };
+  
   this.noteExists = function( name, aType ) {
     return this.entry.exists( name, aType );
   };
@@ -169,26 +196,28 @@ var Category = function( aBook, anEntry, aParent ) {
   };
 
   this.getSelectedIndex = function() {
-    return this.selectedIndex;
+    return parseInt( this.selectedIndex );
   };
 
   this.setSelectedIndex = function( anIndex ) {
-    if ( this.selectedIndex != anIndex ) {
-      this.entry.setSelectedIndex( anIndex );
-      this.selectedIndex = anIndex;
+    var value = parseInt( anIndex );
+    if ( this.getSelectedIndex() !== value ) {
+      this.entry.setSelectedIndex( value );
+      this.selectedIndex = value;
     }
   };
 
   this.getIndex = function() {
-    return this.index;
+    return parseInt( this.index );
   };
 
   this.setIndex = function( index ) {
-    if ( this.index == index ) {
+    var value = parseInt( index );
+    if ( this.getIndex() === value ) {
       return;
     }
-    this.index = index;
-    this.entry.setIndex( index );
+    this.index = value;
+    this.entry.setIndex( value );
   };
 
   this.isLocked = function() {
@@ -239,6 +268,14 @@ var Category = function( aBook, anEntry, aParent ) {
     return this.categories.length > 0;
   };
 
+  this.hasNotes = function() {
+    return this.notes.length > 0;
+  };
+
+  this.isEmpty = function() {
+    return !this.hasCategories() && !this.hasNotes();
+  };
+
   this.getCategories = function() {
     return this.categories.slice(0);
   };
@@ -258,30 +295,6 @@ var Category = function( aBook, anEntry, aParent ) {
     return null;
   };
 
-  this.remove = function() {
-    if ( this.isRoot() ) {
-      return;
-    }
-    var parent = this.getParent();
-    var categories = this.getCategories();
-    for ( var i = 0; i < categories.length; i++ ) {
-      categories[i].remove();
-    }
-    var notes = this.getNotes();
-    for ( var i = 0; i < notes.length; i++ ) {
-      notes[i].remove();
-    }
-    this.entry.remove();
-    this.exists = false;
-    parent.removeCategory( this );
-    parent.notifyStateListener(
-      new ru.akman.znotes.core.Event(
-        "CategoryDeleted",
-        { parentCategory: parent, deletedCategory: this }
-      )
-    );
-  };
-
   this.rename = function( aNewName ) {
     if ( this.isRoot() ) {
       return;
@@ -296,6 +309,34 @@ var Category = function( aBook, anEntry, aParent ) {
           { parentCategory: this.getParent(), changedCategory: this }
         )
       );
+    }
+  };
+
+  this.remove = function() {
+    if ( this.isRoot() || this.isBin() ) {
+      return;
+    }
+    if ( this.isInBin() ) {
+      var parent = this.getParent();
+      var categories = this.getCategories();
+      var notes = this.getNotes();
+      for ( var i = 0; i < categories.length; i++ ) {
+        categories[i].remove();
+      }
+      for ( var i = 0; i < notes.length; i++ ) {
+        notes[i].remove();
+      }
+      this.entry.remove();
+      this.exists = false;
+      parent.removeCategory( this );
+      parent.notifyStateListener(
+        new ru.akman.znotes.core.Event(
+          "CategoryDeleted",
+          { parentCategory: parent, deletedCategory: this }
+        )
+      );
+    } else {
+      this.moveInto( this.getBin() );
     }
   };
 
@@ -327,11 +368,20 @@ var Category = function( aBook, anEntry, aParent ) {
     );
     return aCategory;
   };
-
+  
   this.appendCategory = function( aCategory ) {
-    this.categories.push( aCategory );
-    aCategory.parent = this;
-    aCategory.setIndex( this.categories.length - 1 );
+    var anIndex = this.categories.indexOf( this.getBin() );
+    if ( anIndex === -1 ) {
+      this.categories.push( aCategory );
+      aCategory.parent = this;
+      aCategory.setIndex( this.categories.length - 1 );
+    } else {
+      this.categories.splice( anIndex, 0, aCategory );
+      aCategory.parent = this;
+      for ( var i = anIndex; i < this.categories.length; i++ ) {
+        this.categories[i].setIndex( i );
+      }
+    }
     this.notifyStateListener(
       new ru.akman.znotes.core.Event(
         "CategoryAppended",
@@ -375,10 +425,6 @@ var Category = function( aBook, anEntry, aParent ) {
     return aCategory;
   };
   
-  this.deleteCategory = function( aCategory ) {
-    aCategory.remove();
-  };
-
   this.createNote = function( aName, aType, aTag ) {
     var aNote = new ru.akman.znotes.core.Note(
       this.book,
@@ -449,10 +495,6 @@ var Category = function( aBook, anEntry, aParent ) {
       )
     );
     return aNote;
-  };
-
-  this.deleteNote = function( aNote ) {
-    aNote.remove();
   };
 
   this.addStateListener = function( stateListener ) {

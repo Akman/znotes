@@ -759,6 +759,7 @@ ru.akman.znotes.Main = function() {
     "znotes_refreshfoldertree_command": null,
     "znotes_newcategory_command": null,
     "znotes_deletecategory_command": null,
+    "znotes_clearbin_command": null,
     "znotes_renamecategory_command": null,
     // tag
     "znotes_refreshtagtree_command": null,
@@ -837,16 +838,21 @@ ru.akman.znotes.Main = function() {
         case "znotes_refreshbooktree_command":
           return true;
         // category
+        case "znotes_clearbin_command":
+          return currentBook && currentBook.isOpen() &&
+                 currentBook.getContentTree().getBin() &&
+                 !currentBook.getContentTree().getBin().isEmpty();
         case "znotes_deletecategory_command":
         case "znotes_renamecategory_command":
           return currentBook && currentBook.isOpen() &&
-                 currentBook.getSelectedTree() == "Categories" &&
+                 currentBook.getSelectedTree() === "Categories" &&
                  currentCategory &&
-                 ( categoriesList.indexOf( currentCategory ) != 0 );
+                 !currentCategory.isRoot() &&
+                 !currentCategory.isBin();
         case "znotes_refreshfoldertree_command":
         case "znotes_newcategory_command":
           return currentBook && currentBook.isOpen() &&
-                 currentBook.getSelectedTree() == "Categories";
+                 currentBook.getSelectedTree() === "Categories";
           // tag
         case "znotes_deletetag_command":
         case "znotes_renametag_command":
@@ -950,6 +956,9 @@ ru.akman.znotes.Main = function() {
           break;
         case "znotes_deletecategory_command":
           doDeleteCategory();
+          break;
+        case "znotes_clearbin_command":
+          doClearBin();
           break;
         case "znotes_renamecategory_command":
           doRenameCategory();
@@ -1129,7 +1138,8 @@ ru.akman.znotes.Main = function() {
               return currentBook && currentBook.isOpen() &&
                      currentBook.getSelectedTree() == "Categories" &&
                      currentCategory &&
-                     ( categoriesList.indexOf( currentCategory ) != 0 );
+                     !currentCategory.isRoot() &&
+                     !currentCategory.isBin();
             case "tagTree":
               return currentBook && currentBook.isOpen() &&
                      currentBook.getSelectedTree() == "Tags" &&
@@ -1337,17 +1347,10 @@ ru.akman.znotes.Main = function() {
     Common.goUpdateCommand( "znotes_refreshfoldertree_command", mainController.getId(), window );
     Common.goUpdateCommand( "znotes_newcategory_command", mainController.getId(), window );
     Common.goUpdateCommand( "znotes_deletecategory_command", mainController.getId(), window );
+    Common.goUpdateCommand( "znotes_clearbin_command", mainController.getId(), window );
     Common.goUpdateCommand( "znotes_renamecategory_command", mainController.getId(), window );
   };
   
-  function updateTagCommands() {
-    Common.goUpdateCommand( "znotes_refreshtagtree_command", mainController.getId(), window );
-    Common.goUpdateCommand( "znotes_newtag_command", mainController.getId(), window );
-    Common.goUpdateCommand( "znotes_deletetag_command", mainController.getId(), window );
-    Common.goUpdateCommand( "znotes_renametag_command", mainController.getId(), window );
-    Common.goUpdateCommand( "znotes_colortag_command", mainController.getId(), window );
-  };
-
   function updateNoteCommands() {
     Common.goUpdateCommand( "znotes_newnote_command", mainController.getId(), window );
     Common.goUpdateCommand( "znotes_importnote_command", mainController.getId(), window );
@@ -1357,6 +1360,14 @@ ru.akman.znotes.Main = function() {
     Common.goUpdateCommand( "znotes_updatenote_command", mainController.getId(), window );
     Common.goUpdateCommand( "znotes_refreshnotetree_command", mainController.getId(), window );
   };
+
+  function updateTagCommands() {
+    Common.goUpdateCommand( "znotes_refreshtagtree_command", mainController.getId(), window );
+    Common.goUpdateCommand( "znotes_newtag_command", mainController.getId(), window );
+    Common.goUpdateCommand( "znotes_deletetag_command", mainController.getId(), window );
+    Common.goUpdateCommand( "znotes_renametag_command", mainController.getId(), window );
+    Common.goUpdateCommand( "znotes_colortag_command", mainController.getId(), window );
+  };  
   
   // znotes_exit_command
   function doExit() {
@@ -1769,7 +1780,7 @@ ru.akman.znotes.Main = function() {
       params
     ).focus();
     if ( params.output && params.output.result ) {
-      currentNote.remove();
+      deleteNote( currentNote );
     }
     return true;
   };
@@ -1962,6 +1973,31 @@ ru.akman.znotes.Main = function() {
     return true;
   };
 
+  // znotes_clearbin_command
+  function doClearBin() {
+    var params = {
+      input: {
+        title: getString( "main.category.confirmClearBin.title" ),
+        message1: getFormattedString(
+          "main.category.confirmClearBin.message1",
+          [ currentCategory.name ]
+        ),
+        message2: getString( "main.category.confirmClearBin.message2" )
+      },
+      output: null
+    };
+    window.openDialog(
+      "chrome://znotes/content/confirmdialog.xul",
+      "",
+      "chrome,dialog=yes,modal=yes,centerscreen,resizable=no",
+      params
+    ).focus();
+    if ( params.output && params.output.result ) {
+      clearBin();
+    }
+    return true;
+  };
+  
   // znotes_renamecategory_command
   function doRenameCategory() {
     var aRow = getFolderTreeRow( currentCategory );
@@ -2227,7 +2263,7 @@ ru.akman.znotes.Main = function() {
   
   function createCategoriesList() {
     var append = function( aCategory ) {
-      if ( aCategory == null ) {
+      if ( !aCategory ) {
         return;
       }
       categoriesList.push( aCategory );
@@ -2290,10 +2326,21 @@ ru.akman.znotes.Main = function() {
     var treeChildren = null;
     treeItem = document.createElement( "treeitem" );
     treeRow = document.createElement( "treerow" );
-    treeRow.setAttribute( "properties", "folderrow" );
+    Utils.setProperty( treeRow, "folderrow" );
+    if ( aCategory.isBin() ) {
+      Utils.addProperty( treeRow, "binrow" );
+    }
     treeCell = document.createElement( "treecell" );
     treeCell.setAttribute( "label", "" + aCategory.getName() );
-    treeCell.setAttribute( "properties", "folder" );
+    Utils.setProperty( treeCell, "folder" );
+    if ( aCategory.isBin() ) {
+      Utils.addProperty( treeCell, "bin" );
+      if ( !aCategory.hasCategories() && !aCategory.hasNotes() ) {
+        Utils.addProperty( treeCell, "empty" );
+      }
+    } else if ( aCategory.isRoot() ) {
+      Utils.addProperty( treeCell, "root" );
+    }
     treeRow.appendChild( treeCell );
     treeCell = document.createElement( "treecell" );
     treeCell.setAttribute( "label", "" + aCategory.getNotesCount() );
@@ -2316,6 +2363,16 @@ ru.akman.znotes.Main = function() {
       treeCell = treeRow.childNodes[
         folderTree.columns.getNamedColumn( "folderTreeName" ).index ];
       treeCell.setAttribute( "label", "" + aCategory.getName() );
+      if ( aCategory.isBin() ) {
+        Utils.addProperty( treeCell, "bin" );
+        if ( aCategory.hasCategories() || aCategory.hasNotes() ) {
+          Utils.removeProperty( treeCell, "empty" );
+        } else {
+          Utils.addProperty( treeCell, "empty" );
+        }
+      } else if ( aCategory.isRoot() ) {
+        Utils.addProperty( treeCell, "root" );
+      }
       treeCell = treeRow.childNodes[
         folderTree.columns.getNamedColumn( "folderTreeCount" ).index ];
       treeCell.setAttribute( "label", "" + aCategory.getNotesCount() );
@@ -2358,8 +2415,8 @@ ru.akman.znotes.Main = function() {
 
   function deleteCategory( aCategory ) {
     var aParent = aCategory.getParent();
-    aParent.deleteCategory( aCategory );
     var aRow = null;
+    aCategory.remove();
     if ( aParent.hasCategories() ) {
       var anIndex = aCategory.getIndex();
       if ( anIndex > aParent.getCategoriesCount() - 1 ) {
@@ -2370,20 +2427,33 @@ ru.akman.znotes.Main = function() {
       aRow = getFolderTreeRow( aParent );
     }
     folderTree.view.selection.select( aRow );
-    return aCategory;
   };
 
+  function clearBin() {
+    if ( currentBook && currentBook.isOpen() ) {
+      currentBook.getContentTree().clearBin();
+    }
+  };
+  
   function categoryMoveTo( aRow ) {
     var anIndex = null;
+    var aParent = currentCategory.getParent();
+    var anOldIndex = currentCategory.getIndex();
     var aTargetInfo = getFolderTreeItemAndCategoryAtRowIndex( aRow );
-    if ( aTargetInfo.category == null ) {
-      anIndex = currentCategory.getParent().getCategoriesCount() - 1;
+    if ( aTargetInfo.category === null ) {
+      anIndex = aParent.getCategoriesCount() - 1;
+      if ( aParent.isRoot() ) {
+        anIndex--;
+      }
     } else {
-      if ( aTargetInfo.category.getParent() != currentCategory.getParent() ) {
-        anIndex = currentCategory.getParent().getCategoriesCount() - 1;
+      if ( aTargetInfo.category.getParent() !== aParent ) {
+        anIndex = aParent.getCategoriesCount() - 1;
+        if ( aParent.isRoot() ) {
+          anIndex--;
+        }
       } else {
         anIndex = aTargetInfo.category.getIndex();
-        if ( anIndex > currentCategory.getIndex() ) {
+        if ( anIndex > anOldIndex ) {
           anIndex--;
         }
       }
@@ -2398,27 +2468,18 @@ ru.akman.znotes.Main = function() {
   function categoryMoveInto( aRow ) {
     var anOldParent = currentCategory.getParent();
     var aNewParent = getFolderTreeItemAndCategoryAtRowIndex( aRow ).category;
-    try {
-      currentCategory.moveInto( aNewParent );
-      if ( !anOldParent.hasCategories() ) {
-        anOldParent.setOpenState( false );
-      }
-      while ( !aNewParent.isRoot() ) {
-        aNewParent.setOpenState( true );
-        aNewParent = aNewParent.getParent();
-      }
-      var aSelectionRow = getFolderTreeRow( currentCategory );
-      folderTree.removeEventListener( "select", onFolderSelect, false );
-      folderTree.view.selection.select( aSelectionRow );
-      folderTree.addEventListener( "select", onFolderSelect, false );
-    } catch ( e ) {
-      Utils.log( e + "\n" + Utils.dumpStack() );
-      openErrorDialog(
-        getFormattedString( "main.errordialog.category", [ currentCategory.getName() ] ),
-        e.message
-      );
-      throw e;
+    currentCategory.moveInto( aNewParent );
+    if ( !anOldParent.hasCategories() ) {
+      anOldParent.setOpenState( false );
     }
+    while ( !aNewParent.isRoot() ) {
+      aNewParent.setOpenState( true );
+      aNewParent = aNewParent.getParent();
+    }
+    var aSelectionRow = getFolderTreeRow( currentCategory );
+    folderTree.removeEventListener( "select", onFolderSelect, false );
+    folderTree.view.selection.select( aSelectionRow );
+    folderTree.addEventListener( "select", onFolderSelect, false );
   };
 
   // CATEGORIES EVENTS
@@ -2533,7 +2594,7 @@ ru.akman.znotes.Main = function() {
 
   function onFolderContextMenu( event ) {
     var aRow = folderTreeBoxObject.getRowAt( event.clientX, event.clientY );
-    if ( anEditCategory != null ||
+    if ( anEditCategory !== null ||
          aRow < 0 || aRow > folderTree.view.rowCount - 1 ) {
       event.stopPropagation();
       event.preventDefault();
@@ -2640,8 +2701,9 @@ ru.akman.znotes.Main = function() {
   };
 
   function getDragDropInfo() {
-    if ( currentCategory == null )
+    if ( !currentCategory ) {
       return;
+    }
     infoDragDrop.folderTreeRowCount = folderTree.view.rowCount;
     infoDragDrop.itemOfCategory = getFolderTreeItemAtItemIndex(
         categoriesList.indexOf( currentCategory )
@@ -2667,6 +2729,15 @@ ru.akman.znotes.Main = function() {
     infoDragDrop.depthOfCategory = getFolderTreeItemRowDepth(
       infoDragDrop.itemOfCategory
     );
+    infoDragDrop.itemOfBin = getFolderTreeItemAtItemIndex(
+        categoriesList.indexOf( currentCategory.getBin() )
+    );
+    infoDragDrop.rowOfBin = folderTree.view.getIndexOfItem(
+      infoDragDrop.itemOfBin
+    );
+    infoDragDrop.depthOfBin = getFolderTreeItemRowDepth(
+      infoDragDrop.itemOfBin
+    );
     infoDragDrop.rowOfNoteParent = -1;
     if ( currentNote != null ) {
       infoDragDrop.rowOfNoteParent = folderTree.view.getIndexOfItem(
@@ -2680,46 +2751,55 @@ ru.akman.znotes.Main = function() {
     var isCategory = event.dataTransfer.types.contains( "znotes/x-category" );
     var isNote = event.dataTransfer.types.contains( "znotes/x-note" );
     var aRow = folderTreeBoxObject.getRowAt( event.clientX, event.clientY );
-    if ( infoDragDrop.folderTreeRowCount != folderTree.view.rowCount ) {
+    var separatorAmend = folderTreeSeparatorRow === null ? 0 : 1;
+    if ( infoDragDrop.folderTreeRowCount !== folderTree.view.rowCount ) {
       getDragDropInfo();
     }
     if ( aRow > folderTree.view.rowCount - 1 ) {
       aRow = -1;
     }
     var isDisabled = (
-      ( currentBook && currentBook.getSelectedTree() == "Tags" ) ||
+      ( currentBook && currentBook.getSelectedTree() === "Tags" ) ||
       ( !isNote && !isCategory ) ||
-      ( isNote && dropEffect != "move" ) ||
-      ( isCategory && dropEffect != "copy" && dropEffect != "move" ) ||
-      ( isCategory && dropEffect == "move" &&
-        aRow == -1 &&
-        infoDragDrop.rowOfCategoryParent + infoDragDrop.depthOfCategoryParent - ( folderTreeSeparatorRow == null ? 0 : 1 ) <= folderTree.view.rowCount - ( folderTreeSeparatorRow == null ? 0 : 1 ) - 1 &&
-        infoDragDrop.rowOfCategoryParent + infoDragDrop.depthOfCategoryParent - ( folderTreeSeparatorRow == null ? 0 : 1 ) == infoDragDrop.rowOfCategory + infoDragDrop.depthOfCategory
+      ( isNote && dropEffect !== "move" ) ||
+      ( isCategory && dropEffect !== "copy" && dropEffect !== "move" ) ||
+      // MOVE
+      ( isCategory && dropEffect === "move" && aRow === -1 &&
+        infoDragDrop.rowOfCategory < infoDragDrop.rowOfBin
       ) ||
-      ( isCategory && dropEffect == "move" &&
-        aRow >= infoDragDrop.rowOfCategory - ( folderTreeSeparatorRow == null ? 0 : 1 ) &&
+      ( isCategory && dropEffect === "move" && aRow === -1 &&
+        infoDragDrop.rowOfCategory ===
+        infoDragDrop.folderTreeRowCount - infoDragDrop.depthOfCategory - 1
+      ) ||
+      ( isCategory && dropEffect === "move" && aRow !== -1 &&
+        aRow > infoDragDrop.rowOfBin - separatorAmend &&
+        infoDragDrop.rowOfCategory < infoDragDrop.rowOfBin
+      ) ||
+      ( isCategory && dropEffect === "move" && aRow !== -1 &&
+        aRow >= infoDragDrop.rowOfCategory - separatorAmend &&
         aRow <= infoDragDrop.rowOfCategory + infoDragDrop.depthOfCategory + 1
       ) ||
-      ( isCategory && dropEffect == "move" &&
-        aRow != -1 &&
-        aRow != infoDragDrop.rowOfCategoryParent + infoDragDrop.depthOfCategoryParent + 1 &&
-        infoDragDrop.rowOfCategoryParent != folderTree.view.getParentIndex( aRow )
+      ( isCategory && dropEffect === "move" && aRow !== -1 &&
+        aRow !== infoDragDrop.rowOfCategoryParent +
+                 infoDragDrop.depthOfCategoryParent + 1 &&
+        infoDragDrop.rowOfCategoryParent !==
+        folderTree.view.getParentIndex( aRow )
       ) ||
-      ( isCategory && dropEffect == "copy" &&
-        aRow == -1
-      ) ||
-      ( isCategory && dropEffect == "copy" &&
+      // COPY
+      ( isCategory && dropEffect === "copy" && aRow === -1 ) ||
+      ( isCategory && dropEffect === "copy" &&
         aRow >= infoDragDrop.rowOfCategory &&
         aRow <= infoDragDrop.rowOfCategory + infoDragDrop.depthOfCategory
       ) ||
-      ( isCategory && dropEffect == "copy" &&
-        aRow == infoDragDrop.rowOfCategoryParent
+      ( isCategory && dropEffect === "copy" &&
+        aRow === infoDragDrop.rowOfCategoryParent
       ) ||
-      ( isNote && ( aRow == -1 || aRow == infoDragDrop.rowOfNoteParent ) )
+      ( isNote && ( aRow === -1 || aRow === infoDragDrop.rowOfNoteParent ) )
     );
     switch ( event.type ) {
-      case "dragstart" :
-        if ( aRow == 0 ) {
+      case "dragstart":
+        if ( currentCategory &&
+             ( currentCategory.isRoot() || currentCategory.isBin() ) ) {
           return;
         }
         getDragDropInfo();
@@ -2727,17 +2807,17 @@ ru.akman.znotes.Main = function() {
         isDragDropActive = true;
         event.dataTransfer.setData( "znotes/x-category", "CATEGORY" );
         return;
-      case "dragenter" :
-      case "drag" :
+      case "dragenter":
+      case "drag":
         event.stopPropagation();
         event.preventDefault();
         return;
-      case "dragleave" :
+      case "dragleave":
         clearFolderTreeDragMarkers();
         event.stopPropagation();
         event.preventDefault();
         return;
-      case "dragover" :
+      case "dragover":
         if ( isDisabled ) {
           clearFolderTreeDragMarkers();
           event.dataTransfer.dropEffect = "none";
@@ -2746,66 +2826,84 @@ ru.akman.znotes.Main = function() {
         event.stopPropagation();
         event.preventDefault();
         if ( isCategory ) {
-          if ( dropEffect == "move" ) {
-            if ( aRow == folderTreeSeparatorRow ) {
+          if ( dropEffect === "move" ) {
+            if ( aRow === folderTreeSeparatorRow ) {
               return;
             }
             clearFolderTreeDragMarkers();
             showFolderTreeSeparator( aRow );
           }
-          if ( dropEffect == "copy" ) {
-            if ( aRow == folderTreeDropRow )
+          if ( dropEffect === "copy" ) {
+            if ( aRow === folderTreeDropRow )
               return;
             clearFolderTreeDragMarkers();
             showFolderTreeDropRow( aRow );
           }
         }
         if ( isNote ) {
-          if ( aRow == folderTreeDropRow )
+          if ( aRow === folderTreeDropRow )
             return;
           clearFolderTreeDropRow();
           showFolderTreeDropRow( aRow );
         }
         return;
-      case "drop" :
+      case "drop":
         if ( isDisabled ) {
           event.dataTransfer.dropEffect = "none";
           return;
         }
         event.stopPropagation();
         event.preventDefault();
-        if ( isCategory && event.dataTransfer.getData( "znotes/x-category" ) == "CATEGORY" ) {
+        if ( isCategory &&
+             event.dataTransfer.getData( "znotes/x-category" ) === "CATEGORY" ) {
           infoDragDrop.row = aRow;
-          if ( dropEffect == "move" &&
-               aRow != -1 &&
-               infoDragDrop.rowOfCategoryParent != folderTree.view.getParentIndex( aRow ) )
+          if ( dropEffect === "move" &&
+               aRow !== -1 &&
+               infoDragDrop.rowOfCategoryParent !==
+               folderTree.view.getParentIndex( aRow ) )
             infoDragDrop.row = -1;
           infoDragDrop.dropEffect = dropEffect;
           break;
         }
-        if ( isNote && event.dataTransfer.getData( "znotes/x-note" ) == "NOTE" ) {
+        if ( isNote &&
+             event.dataTransfer.getData( "znotes/x-note" ) === "NOTE" ) {
           infoDragDrop.row = aRow;
           infoDragDrop.dropEffect = "copy";
           break;
         }
         clearFolderTreeDragMarkers();
         return;
-      case "dragend" :
+      case "dragend":
         clearFolderTreeDragMarkers();
         clearNoteTreeDragMarkers();
         isDragDropActive = false;
+        event.stopPropagation();
+        event.preventDefault();
         folderTree.addEventListener( "select", onFolderSelect, false );
-        if ( dropEffect == "none" ) {
+        if ( dropEffect === "none" ) {
           return;
         }
         switch ( infoDragDrop.dropEffect ) {
-          case "move" :
-            categoryMoveTo( infoDragDrop.row );
+          case "move":
+            try {
+              categoryMoveTo( infoDragDrop.row );
+            } catch ( e ) {
+              Utils.log( e + "\n" + Utils.dumpStack() );
+              openErrorDialog(
+                getFormattedString( "main.errordialog.category", [ currentCategory.getName() ] ),
+                e.message
+              );
+            }
             break;
-          case "copy" :
+          case "copy":
             try {
               categoryMoveInto( infoDragDrop.row );
             } catch ( e ) {
+              Utils.log( e + "\n" + Utils.dumpStack() );
+              openErrorDialog(
+                getFormattedString( "main.errordialog.category", [ currentCategory.getName() ] ),
+                e.message
+              );
             }
             break;
         }
@@ -3153,16 +3251,24 @@ ru.akman.znotes.Main = function() {
           },
           onLoaderStopped: function( anEvent ) {
             var aStatus = anEvent.getData().status;
-            try {
-              if ( !aStatus ) {
+            if ( !aStatus ) {
+              try {
                 note.loadContentDirectory( aDirectory, true );
+              } catch ( e ) {
+                Utils.log( e + "\n" + Utils.dumpStack() );
+              }
+              try {
                 if ( aFile.exists() ) {
                   aFile.remove( false );
                 }
-                note.importDocument( aResultObj.value );
+              } catch ( e ) {
+                Utils.log( e + "\n" + Utils.dumpStack() );
               }
-            } catch ( e ) {
-              //
+              try {
+                note.importDocument( aResultObj.value );
+              } catch ( e ) {
+                Utils.log( e + "\n" + Utils.dumpStack() );
+              }
             }
             note.setLoading( false );
             if ( wBrowser ) {
@@ -3210,6 +3316,10 @@ ru.akman.znotes.Main = function() {
     return aNote;
   };
 
+  function deleteNote( aNote ) {
+    aNote.remove();
+  };
+  
   function noteMoveTo( aRow ) {
     if ( aRow == noteTree.view.rowCount ) {
       aRow = -1;
@@ -3236,17 +3346,8 @@ ru.akman.znotes.Main = function() {
     if ( anIndex == ( notesList.length - 1 ) ) {
       anIndex--;
     }
-    try {
-      currentNote.moveInto( aNewParent );
-      noteTree.view.selection.select( anIndex );
-    } catch ( e ) {
-      Utils.log( e + "\n" + Utils.dumpStack() );
-      openErrorDialog(
-        getFormattedString( "main.errordialog.note", [ currentNote.getName() ] ),
-        e.message
-      );
-      throw e;
-    }
+    currentNote.moveInto( aNewParent );
+    noteTree.view.selection.select( anIndex );
   };
 
   function getNoteByBookIdAndNoteId( bookId, noteId ) {
@@ -3614,16 +3715,31 @@ ru.akman.znotes.Main = function() {
         clearFolderTreeDragMarkers();
         clearNoteTreeDragMarkers();
         isDragDropActive = false;
+        event.stopPropagation();
+        event.preventDefault();
         noteTree.addEventListener( "select", onNoteSelect, false );
         if ( dropEffect != "none" ) {
           switch ( infoDragDrop.dropEffect ) {
             case "move" :
-              noteMoveTo( infoDragDrop.row );
+              try {
+                noteMoveTo( infoDragDrop.row );
+              } catch ( e ) {
+                Utils.log( e + "\n" + Utils.dumpStack() );
+                openErrorDialog(
+                  getFormattedString( "main.errordialog.note", [ currentNote.getName() ] ),
+                  e.message
+                );
+              }
               break;
             case "copy" :
               try {
                 noteMoveInto( infoDragDrop.row );
               } catch ( e ) {
+                Utils.log( e + "\n" + Utils.dumpStack() );
+                openErrorDialog(
+                  getFormattedString( "main.errordialog.note", [ currentNote.getName() ] ),
+                  e.message
+                );
               }
               break;
           }
@@ -4075,13 +4191,23 @@ ru.akman.znotes.Main = function() {
       case "dragend" :
         clearTagTreeDragMarkers();
         isDragDropActive = false;
+        event.stopPropagation();
+        event.preventDefault();
         tagTree.addEventListener( "select", onTagSelect, false );
         if ( dropEffect == "none" ) {
           return;
         }
         switch ( infoDragDrop.dropEffect ) {
           case "move" :
-            tagMoveTo( infoDragDrop.row );
+            try {
+              tagMoveTo( infoDragDrop.row );
+            } catch ( e ) {
+              Utils.log( e + "\n" + Utils.dumpStack() );
+              openErrorDialog(
+                getFormattedString( "main.errordialog.tag", [ currentTag.getName() ] ),
+                e.message
+              );
+            }
             break;
         }
         return;
@@ -4093,7 +4219,7 @@ ru.akman.znotes.Main = function() {
   //
 
   function addStateListeners() {
-    var book, tagList, contentTree;
+    var book, tagList, contentTree, contentTreeBin;
     for ( var i = 0; i < booksList.length; i++ ) {
       book = booksList[i];
       if ( book.isOpen() ) {
@@ -4101,6 +4227,10 @@ ru.akman.znotes.Main = function() {
         tagList.getNoTag().setName( getString( "main.notag.name" ) );
         tagList.addStateListener( tagListStateListener );
         contentTree = book.getContentTree();
+        contentTreeBin = contentTree.getBin();
+        if ( contentTreeBin ) {
+          contentTreeBin.rename( getString( "main.bin.name" ) );
+        }
         contentTree.addStateListener( contentTreeStateListener );
       }
     }
@@ -4650,7 +4780,7 @@ ru.akman.znotes.Main = function() {
     var aCategory = e.data.parentCategory;
     var aChangedCategory = e.data.changedCategory;
     var aBook = aCategory.getBook();
-    if ( !currentBook || currentBook != aBook ) {
+    if ( !currentBook || currentBook !== aBook ) {
       return;
     }
     updateFolderTreeItem( aChangedCategory );
@@ -4658,23 +4788,29 @@ ru.akman.znotes.Main = function() {
     for ( var i = 0; i < aNotesList.length; i++ ) {
       updateNoteTreeItem( aNotesList[i] );
     }
+    updateCategoryCommands();
   };
 
   function onCategoryAppended( e ) {
     var aCategory = e.data.parentCategory;
     var anAppendedCategory = e.data.appendedCategory;
     var aBook = aCategory.getBook();
+    var index, arr;
     if ( !currentBook || currentBook != aBook ) {
       return;
     }
-    var arr = anAppendedCategory.getCategoryWithSubcategoriesAsArray();
-    var index = categoriesList.indexOf( aCategory ) +
-                ( aCategory.depth() - arr.length ) + 1;
+    arr = anAppendedCategory.getCategoryWithSubcategoriesAsArray();
+    index = categoriesList.indexOf( aCategory ) +
+            ( aCategory.depth() - arr.length ) + 1;
+    if ( aCategory.isRoot() ) {
+      index -= aCategory.getBin().depth() + 1;
+    }
     for ( var i = 0; i < arr.length; i++ ) {
       categoriesList.splice( index++, 0, arr[i] );
     }
     aCategory.setOpenState( true );
     updateFolderTreeItem( aCategory );
+    updateCategoryCommands();
   };
 
   function onCategoryInserted( e ) {
@@ -4696,6 +4832,7 @@ ru.akman.znotes.Main = function() {
     }
     aCategory.setOpenState( true );
     updateFolderTreeItem( aCategory );
+    updateCategoryCommands();
   };
 
   function onCategoryRemoved( e ) {
@@ -4711,6 +4848,7 @@ ru.akman.znotes.Main = function() {
       aCategory.setOpenState( false );
     }
     updateFolderTreeItem( aCategory );
+    updateCategoryCommands();
   };
 
   function onNoteAppended( e ) {
@@ -4723,6 +4861,7 @@ ru.akman.znotes.Main = function() {
     var aRow = null;
     var aTreeItem = null;
     updateFolderTreeItem( aCategory );
+    updateCategoryCommands();
     switch ( currentBook.getSelectedTree() ) {
       case "Tags":
         var aCurrentTagID = currentTag.getId();
@@ -4782,6 +4921,7 @@ ru.akman.znotes.Main = function() {
     var anItemInfo = null;
     var aTreeIndex = null;
     updateFolderTreeItem( aCategory );
+    updateCategoryCommands();
     switch ( currentBook.getSelectedTree() ) {
       case "Tags":
         var aCurrentTagID = currentTag.getId();
@@ -5066,6 +5206,10 @@ ru.akman.znotes.Main = function() {
     tagList.getNoTag().setName( getString( "main.notag.name" ) );
     tagList.addStateListener( tagListStateListener );
     var contentTree = aBook.getContentTree();
+    var contentTreeBin = contentTree.getBin();
+    if ( contentTreeBin ) {
+      contentTreeBin.rename( getString( "main.bin.name" ) );
+    }
     contentTree.addStateListener( contentTreeStateListener );
     updateBookTreeItem( aBook );
     if ( currentBook && currentBook == aBook ) {
@@ -5090,6 +5234,10 @@ ru.akman.znotes.Main = function() {
         tagList.getNoTag().setName( getString( "main.notag.name" ) );
         tagList.addStateListener( tagListStateListener );
         var contentTree = aBook.getContentTree();
+        var contentTreeBin = contentTree.getBin();
+        if ( contentTreeBin ) {
+          contentTreeBin.rename( getString( "main.bin.name" ) );
+        }
         contentTree.addStateListener( contentTreeStateListener );
         var aRoot = contentTree.getRoot();
         updateFolderTreeItem( aRoot );
@@ -5198,7 +5346,7 @@ ru.akman.znotes.Main = function() {
     if ( currentBook && currentBook.isOpen() ) {
       currentBook.setSelectedCategory(
         categoriesList.indexOf( currentCategory )
-      )
+      );
     }
   };
 
@@ -5207,11 +5355,6 @@ ru.akman.znotes.Main = function() {
       return;
     }
     var currentCategoryIndex = currentBook.getSelectedCategory();
-    if ( currentCategoryIndex < 0 ) {
-      currentCategoryIndex = 0;
-    } else if ( currentCategoryIndex > folderTree.view.rowCount - 1 ) {
-      currentCategoryIndex = folderTree.view.rowCount - 1;
-    }
     var currentTreeItem = getFolderTreeItemAtItemIndex( currentCategoryIndex );
     var currentRow = currentTreeItem ?
       folderTree.view.getIndexOfItem( currentTreeItem ) : 0;
@@ -5943,11 +6086,25 @@ ru.akman.znotes.Main = function() {
   };
   
   function getString( name ) {
-    return Utils.STRINGS_BUNDLE.getString( name );
+    var str;
+    try {
+      str = Utils.STRINGS_BUNDLE.getString( name );
+    } catch ( e ) {
+      str = "?" + name + "?";
+      Utils.log( name + "\n" + e );
+    }
+    return str;
   };
   
   function getFormattedString( name, values ) {
-    return Utils.STRINGS_BUNDLE.getFormattedString( name, values );
+    var str;
+    try {
+      str = Utils.STRINGS_BUNDLE.getFormattedString( name, values );
+    } catch ( e ) {
+      str = "?" + name + "?";
+      Utils.log( name + "\n" + e );
+    }
+    return str;
   };
   
   function updateSelectedPopupItem( event ) {
@@ -5961,18 +6118,23 @@ ru.akman.znotes.Main = function() {
   function openErrorDialog( message1, message2 ) {
     var params = {
       input: {
-        title: Utils.STRINGS_BUNDLE.getString( "main.errordialog.title" ),
+        title: getString( "main.errordialog.title" ),
         message1: message1,
         message2: message2
       },
       output: null
     };
-    window.openDialog(
-      "chrome://znotes/content/messagedialog.xul",
-      "",
-      "chrome,dialog=yes,modal=yes,centerscreen,resizable=yes",
-      params
-    ).focus();
+    window.setTimeout(
+      function() {
+        window.openDialog(
+          "chrome://znotes/content/messagedialog.xul",
+          "",
+          "chrome,dialog=yes,modal=yes,centerscreen,resizable=yes",
+          params
+        ).focus();
+      },
+      0
+    );
   }
 
   function getContext() {

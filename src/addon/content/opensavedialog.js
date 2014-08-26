@@ -497,6 +497,16 @@ ru.akman.znotes.OpenSaveDialog = function() {
     treeCell = treeRow.childNodes[
       categoryTree.columns.getNamedColumn( "folderTreeName" ).index ];
     treeCell.setAttribute( "label", "" + category.getName() );
+    if ( category.isBin() ) {
+      Utils.addProperty( treeCell, "bin" );
+      if ( category.hasCategories() || category.hasNotes() ) {
+        Utils.removeProperty( treeCell, "empty" );
+      } else {
+        Utils.addProperty( treeCell, "empty" );
+      }
+    } else if ( category.isRoot() ) {
+      Utils.addProperty( treeCell, "root" );
+    }
     treeCell = treeRow.childNodes[
       categoryTree.columns.getNamedColumn( "folderTreeCount" ).index ];
     treeCell.setAttribute( "label", "" + category.getNotesCount() );
@@ -512,10 +522,21 @@ ru.akman.znotes.OpenSaveDialog = function() {
     var treeItem, treeRow, treeCell, treeChildren;
     treeItem = document.createElement( "treeitem" );
     treeRow = document.createElement( "treerow" );
-    treeRow.setAttribute( "properties", "folderrow" );
+    Utils.setProperty( treeRow, "folderrow" );
+    if ( category.isBin() ) {
+      Utils.addProperty( treeRow, "binrow" );
+    }
     treeCell = document.createElement( "treecell" );
     treeCell.setAttribute( "label", "" + category.getName() );
-    treeCell.setAttribute( "properties", "folder" );
+    Utils.setProperty( treeCell, "folder" );
+    if ( category.isBin() ) {
+      Utils.addProperty( treeCell, "bin" );
+      if ( !category.hasCategories() && !category.hasNotes() ) {
+        Utils.addProperty( treeCell, "empty" );
+      }
+    } else if ( category.isRoot() ) {
+      Utils.addProperty( treeCell, "root" );
+    }
     treeRow.appendChild( treeCell );
     treeCell = document.createElement( "treecell" );
     treeCell.setAttribute( "label", "" + category.getNotesCount() );
@@ -554,6 +575,10 @@ ru.akman.znotes.OpenSaveDialog = function() {
     categories = {};
     if ( currentBook && currentBook.isOpen() ) {
       var contentTree = currentBook.getContentTree();
+      var contentTreeBin = contentTree.getBin();
+      if ( contentTreeBin ) {
+        contentTreeBin.rename( getString( "main.bin.name" ) );
+      }
       createCategoryTreeChildren( contentTree.getRoot(),
         categoryTreeChildren );
       contentTree.addStateListener( contentTreeStateListener );

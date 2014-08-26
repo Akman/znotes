@@ -193,6 +193,13 @@
 <!ENTITY znotes_deletecategory_key_modifiers "">
 <!ENTITY znotes_deletecategory_keycode "">
 
+<!ENTITY znotes_clearbin_label "Empty trash">
+<!ENTITY znotes_clearbin_tooltip "Empty trash">
+<!ENTITY znotes_clearbin_accesskey "">
+<!ENTITY znotes_clearbin_key "">
+<!ENTITY znotes_clearbin_key_modifiers "">
+<!ENTITY znotes_clearbin_keycode "">
+
 <!ENTITY znotes_renamecategory_label "Rename category">
 <!ENTITY znotes_renamecategory_tooltip "Rename category">
 <!ENTITY znotes_renamecategory_accesskey "">

@@ -199,6 +199,27 @@ treechildren::-moz-tree-image( folder, closed ) {
 treechildren::-moz-tree-image( folder, open ) {
   list-style-image: url("chrome://znotes_images/skin/open-folder-16x16.png");
 }
+
+treechildren::-moz-tree-image( folder, root, leaf ) {
+  list-style-image: url("chrome://znotes_images/skin/book-16x16.png");
+}
+treechildren::-moz-tree-image( folder, root ) {
+  list-style-image: url("chrome://znotes_images/skin/book-16x16.png");
+}
+treechildren::-moz-tree-image( folder, root, open ) {
+  list-style-image: url("chrome://znotes_images/skin/open-book-16x16.png");
+}
+
+treechildren::-moz-tree-image( folder, bin, leaf ) {
+  list-style-image: url("chrome://znotes_images/skin/bin-open-16x16.png");
+}
+treechildren::-moz-tree-image( folder, bin ) {
+  list-style-image: url("chrome://znotes_images/skin/bin-open-16x16.png");
+}
+treechildren::-moz-tree-image( folder, bin, empty ) {
+  list-style-image: url("chrome://znotes_images/skin/bin-empty-16x16.png");
+}
+
 treechildren::-moz-tree-cell-text( folder ) {
   padding-left: 3px;
 }

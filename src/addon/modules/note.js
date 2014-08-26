@@ -54,7 +54,15 @@ var Note = function( aBook, anEntry, aCategory, aType, aTagID ) {
   this.getBook = function() {
     return this.book;
   };
+  
+  this.getRoot = function() {
+    return this.getParent().getRoot();
+  };
 
+  this.getBin = function() {
+    return this.getParent().getBin();
+  };
+  
   this.getEncoding = function() {
     return this.entry.getEncoding();
   };
@@ -107,15 +115,16 @@ var Note = function( aBook, anEntry, aCategory, aType, aTagID ) {
   };  
   
   this.getIndex = function() {
-    return this.index;
+    return parseInt( this.index );
   };
 
   this.setIndex = function( index ) {
-    if ( this.index == index ) {
+    var value = parseInt( index );
+    if ( this.getIndex() === value ) {
       return;
     }
-    this.index = index;
-    this.entry.setIndex( index );
+    this.index = value;
+    this.entry.setIndex( value );
   };
 
   this.getType = function() {
@@ -383,6 +392,18 @@ var Note = function( aBook, anEntry, aCategory, aType, aTagID ) {
     return this.name;
   };
 
+  this.isInBin = function() {
+    var aCategory = this.getParent();
+    var aBin = aCategory.getBin();
+    while ( aCategory ) {
+      if ( aCategory === aBin ) {
+        return true;
+      }
+      aCategory = aCategory.getParent();
+    }
+    return false;
+  };
+  
   this.rename = function( aName ) {
     if ( this.name != aName ) {
       this.entry.setName( aName );
@@ -399,15 +420,19 @@ var Note = function( aBook, anEntry, aCategory, aType, aTagID ) {
   };
 
   this.remove = function() {
-    this.entry.remove();
-    this.exists = false;
-    this.getParent().removeNote( this );
-    this.notifyStateListener(
-      new ru.akman.znotes.core.Event(
-        "NoteDeleted",
-        { parentCategory: this.getParent(), deletedNote: this }
-      )
-    );
+    if ( this.isInBin() ) {
+      this.entry.remove();
+      this.exists = false;
+      this.getParent().removeNote( this );
+      this.notifyStateListener(
+        new ru.akman.znotes.core.Event(
+          "NoteDeleted",
+          { parentCategory: this.getParent(), deletedNote: this }
+        )
+      );
+    } else {
+      this.moveInto( this.getBin() );
+    }
   };
 
   this.moveInto = function( aCategory ) {
@@ -417,7 +442,7 @@ var Note = function( aBook, anEntry, aCategory, aType, aTagID ) {
     this.getParent().removeNote( this );
     aCategory.appendNote( this );
   };
-
+  
   this.moveTo = function( anIndex ) {
     var aParent = this.getParent();
     if ( aParent.removeNote( this ) ) {

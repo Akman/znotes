@@ -52,6 +52,25 @@ var ContentTree = function( book, rootCategoryEntry ) {
   this.getRoot = function() {
     return this.root;
   };
+  
+  this.getBin = function() {
+    return this.bin;
+  };
+  
+  this.clearBin = function() {
+    var bin = this.getBin();
+    if ( !bin ) {
+      return;
+    }
+    var categories = bin.getCategories();
+    var notes = bin.getNotes();
+    for each ( var note in notes ) {
+      note.remove();
+    }
+    for each ( var category in categories ) {
+      category.remove();
+    }
+  };
 
   this.load = function() {
     var read = function( aCategory ) {
@@ -69,6 +88,19 @@ var ContentTree = function( book, rootCategoryEntry ) {
     };
     this.root = new ru.akman.znotes.core.Category( this.getBook(), this.rootEntry, null );
     read( this.root );
+    for each ( var category in this.root.categories ) {
+      if ( category.isBin() ) {
+        this.bin = category;
+        break;
+      }
+    }
+    if ( !this.bin ) {
+      this.bin = new ru.akman.znotes.core.Category(
+        this.getBook(),
+        this.rootEntry.createBin(),
+        this.root
+      );
+    }
   };
 
   /*
@@ -197,5 +229,6 @@ var ContentTree = function( book, rootCategoryEntry ) {
   this.book = book;
   this.rootEntry = rootCategoryEntry;
   this.root = null;
+  this.bin = null;
 
 };
