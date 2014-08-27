@@ -2415,10 +2415,10 @@ ru.akman.znotes.Main = function() {
 
   function deleteCategory( aCategory ) {
     var aParent = aCategory.getParent();
+    var anIndex = aCategory.getIndex();
     var aRow = null;
     aCategory.remove();
     if ( aParent.hasCategories() ) {
-      var anIndex = aCategory.getIndex();
       if ( anIndex > aParent.getCategoriesCount() - 1 ) {
         anIndex--;
       }
@@ -2426,6 +2426,7 @@ ru.akman.znotes.Main = function() {
     } else {
       aRow = getFolderTreeRow( aParent );
     }
+    folderTreeBoxObject.ensureRowIsVisible( aRow );
     folderTree.view.selection.select( aRow );
   };
 
@@ -2461,6 +2462,7 @@ ru.akman.znotes.Main = function() {
     currentCategory.moveTo( anIndex );
     var aSelectionRow = getFolderTreeRow( currentCategory );
     folderTree.removeEventListener( "select", onFolderSelect, false );
+    folderTreeBoxObject.ensureRowIsVisible( aSelectionRow );
     folderTree.view.selection.select( aSelectionRow );
     folderTree.addEventListener( "select", onFolderSelect, false );
   };
@@ -2478,6 +2480,7 @@ ru.akman.znotes.Main = function() {
     }
     var aSelectionRow = getFolderTreeRow( currentCategory );
     folderTree.removeEventListener( "select", onFolderSelect, false );
+    folderTreeBoxObject.ensureRowIsVisible( aSelectionRow );
     folderTree.view.selection.select( aSelectionRow );
     folderTree.addEventListener( "select", onFolderSelect, false );
   };
@@ -3334,6 +3337,7 @@ ru.akman.znotes.Main = function() {
     }
     currentNote.moveTo( aNewNoteIndex );
     noteTree.removeEventListener( "select", onNoteSelect, false );
+    noteTreeBoxObject.ensureRowIsVisible( aNewNoteIndex );
     noteTree.view.selection.select( aNewNoteIndex );
     noteTree.addEventListener( "select", onNoteSelect, false );
     saveNotesTreeSelection();
@@ -3347,6 +3351,7 @@ ru.akman.znotes.Main = function() {
       anIndex--;
     }
     currentNote.moveInto( aNewParent );
+    noteTreeBoxObject.ensureRowIsVisible( anIndex );    
     noteTree.view.selection.select( anIndex );
   };
 
@@ -3935,6 +3940,7 @@ ru.akman.znotes.Main = function() {
     }
     aTag.getTagList().deleteTag( aTag );
     if ( currentTag && currentTag == aTag ) {
+      tagTreeBoxObject.ensureRowIsVisible( anIndex );
       tagTree.view.selection.select( anIndex );
     }
     return aTag;
@@ -3954,6 +3960,7 @@ ru.akman.znotes.Main = function() {
     }
     currentTag.getBook().getTagList().moveTag( currentTag, aNewTagIndex );
     tagTree.removeEventListener( "select", onTagSelect, false );
+    tagTreeBoxObject.ensureRowIsVisible( aNewTagIndex );
     tagTree.view.selection.select( aNewTagIndex );
     tagTree.addEventListener( "select", onTagSelect, false );
   };
@@ -4482,6 +4489,7 @@ ru.akman.znotes.Main = function() {
       anIndex--;
     }
     bookManager.deleteBook( aBook );
+    bookTreeBoxObject.ensureRowIsVisible( anIndex );
     bookTree.view.selection.select( anIndex );
     return aBook;
   };
@@ -4495,6 +4503,7 @@ ru.akman.znotes.Main = function() {
       anIndex--;
     }
     bookManager.deleteBookWithAllData( aBook );
+    bookTreeBoxObject.ensureRowIsVisible( anIndex );
     bookTree.view.selection.select( anIndex );
     return aBook;
   };
@@ -4546,6 +4555,7 @@ ru.akman.znotes.Main = function() {
     }
     bookManager.moveBook( currentBook, anIndex );
     bookTree.removeEventListener( "select", onBookSelect, false );
+    bookTreeBoxObject.ensureRowIsVisible( anIndex );
     bookTree.view.selection.select( anIndex );
     bookTree.addEventListener( "select", onBookSelect, false );
   };
@@ -4943,18 +4953,21 @@ ru.akman.znotes.Main = function() {
         break;
     }
     anItemInfo = getNoteTreeItemAndIndex( aRemovedNote );
-    aTreeItem = anItemInfo.item;
-    aTreeIndex = anItemInfo.index;
-    if ( aTreeItem ) {
-      notesList.splice( aTreeIndex, 1 );
-      if ( aTreeIndex == ( noteTree.view.rowCount - 1 ) ) {
-        aTreeIndex--;
-      }
-      noteTree.removeEventListener( "select", onNoteSelect, false );
-      aTreeItem.parentNode.removeChild( aTreeItem );
-      noteTree.addEventListener( "select", onNoteSelect, false );
-      if ( !currentNote.isExists() && currentNote == aRemovedNote ) {
-        noteTree.view.selection.select( aTreeIndex );
+    if ( anItemInfo ) {
+      aTreeItem = anItemInfo.item;
+      aTreeIndex = anItemInfo.index;
+      if ( aTreeItem ) {
+        notesList.splice( aTreeIndex, 1 );
+        if ( aTreeIndex == ( noteTree.view.rowCount - 1 ) ) {
+          aTreeIndex--;
+        }
+        noteTree.removeEventListener( "select", onNoteSelect, false );
+        aTreeItem.parentNode.removeChild( aTreeItem );
+        noteTree.addEventListener( "select", onNoteSelect, false );
+        if ( currentNote === aRemovedNote ) {
+          noteTreeBoxObject.ensureRowIsVisible( aTreeIndex );
+          noteTree.view.selection.select( aTreeIndex );
+        }
       }
     }
   };
@@ -5012,6 +5025,7 @@ ru.akman.znotes.Main = function() {
             anItem.parentNode.removeChild( anItem );
             noteTree.addEventListener( "select", onNoteSelect, false );
             if ( currentNote == aNote ) {
+              noteTreeBoxObject.ensureRowIsVisible( anIndex );
               noteTree.view.selection.select( anIndex );
             }
           }

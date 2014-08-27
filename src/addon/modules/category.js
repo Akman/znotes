@@ -313,11 +313,11 @@ var Category = function( aBook, anEntry, aParent ) {
   };
 
   this.remove = function() {
+    var aParent = this.getParent();
     if ( this.isRoot() || this.isBin() ) {
       return;
     }
     if ( this.isInBin() ) {
-      var parent = this.getParent();
       var categories = this.getCategories();
       var notes = this.getNotes();
       for ( var i = 0; i < categories.length; i++ ) {
@@ -328,11 +328,11 @@ var Category = function( aBook, anEntry, aParent ) {
       }
       this.entry.remove();
       this.exists = false;
-      parent.removeCategory( this );
-      parent.notifyStateListener(
+      aParent.removeCategory( this );
+      aParent.notifyStateListener(
         new ru.akman.znotes.core.Event(
           "CategoryDeleted",
-          { parentCategory: parent, deletedCategory: this }
+          { parentCategory: aParent, deletedCategory: this }
         )
       );
     } else {
@@ -340,10 +340,25 @@ var Category = function( aBook, anEntry, aParent ) {
     }
   };
 
-  this.moveInto = function( aNewRoot ) {
-    this.entry.moveTo( aNewRoot.entry );
-    this.getParent().removeCategory( this );
-    aNewRoot.appendCategory( this );
+  this.moveInto = function( aCategory, aName ) {
+    var aSuffix, anIndex, aBin;
+    var aParent = this.getParent();
+    if ( aCategory.isBin() && ( aName === undefined ) ) {
+      aBin = this.getBin();
+      aName = this.getName();
+      aSuffix = "";
+      anIndex = 2;
+      while ( !aBin.canCreateCategory( aName + aSuffix ) ) {
+        aSuffix = " (" + anIndex++ + ")";
+      }
+      aName += aSuffix;
+    }
+    this.entry.moveTo( aCategory.entry, aName );
+    if ( aName !== undefined ) {
+      this.name = aName;
+    }
+    aParent.removeCategory( this );
+    aCategory.appendCategory( this );
     this.refresh();
     return this;
   };
@@ -446,14 +461,12 @@ var Category = function( aBook, anEntry, aParent ) {
     this.notes.push( aNote );
     aNote.parent = this;
     aNote.setIndex( this.notes.length - 1 );
-
     this.notifyStateListener(
       new ru.akman.znotes.core.Event(
         "NoteAppended",
         { parentCategory: this, appendedNote: aNote }
       )
     );
-
     return aNote;
   };
 
@@ -466,14 +479,12 @@ var Category = function( aBook, anEntry, aParent ) {
     for ( var i = anIndex; i < this.notes.length; i++ ) {
       this.notes[i].setIndex( i );
     }
-
     this.notifyStateListener(
       new ru.akman.znotes.core.Event(
         "NoteInserted",
         { parentCategory: this, insertedNote: aNote, insertedIndex: anIndex }
       )
     );
-
     return aNote;
   };
 

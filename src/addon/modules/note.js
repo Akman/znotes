@@ -420,14 +420,15 @@ var Note = function( aBook, anEntry, aCategory, aType, aTagID ) {
   };
 
   this.remove = function() {
+    var aParent = this.getParent();
     if ( this.isInBin() ) {
       this.entry.remove();
       this.exists = false;
-      this.getParent().removeNote( this );
-      this.notifyStateListener(
+      aParent.removeNote( this );
+      aParent.notifyStateListener(
         new ru.akman.znotes.core.Event(
           "NoteDeleted",
-          { parentCategory: this.getParent(), deletedNote: this }
+          { parentCategory: aParent, deletedNote: this }
         )
       );
     } else {
@@ -435,11 +436,27 @@ var Note = function( aBook, anEntry, aCategory, aType, aTagID ) {
     }
   };
 
-  this.moveInto = function( aCategory ) {
-    this.entry.moveTo( aCategory.entry );
+  this.moveInto = function( aCategory, aName ) {
+    var aSuffix, anIndex, aBin;
+    var aParent = this.getParent();
+    var aType = this.getType();
+    if ( aCategory.isBin() && ( aName === undefined ) ) {
+      aBin = this.getBin();
+      aName = this.getName();
+      aSuffix = "";
+      anIndex = 2;
+      while ( !aBin.canCreateNote( aName + aSuffix, aType ) ) {
+        aSuffix = " (" + anIndex++ + ")";
+      }
+      aName += aSuffix;
+    }
+    this.entry.moveTo( aCategory.entry, aName );
+    if ( aName !== undefined ) {
+      this.name = aName;
+    }
     // @@@@ 1 What if the note is in editing mode ?
     this.updateDocument();
-    this.getParent().removeNote( this );
+    aParent.removeNote( this );
     aCategory.appendNote( this );
   };
   
@@ -653,20 +670,17 @@ var Note = function( aBook, anEntry, aCategory, aType, aTagID ) {
       }
     }
     listenersNames += "}\n";
-    return "{ " + this.instanceId + " }\n{ " +
-      "'" + this.id + "', " +
-      "'" + this.name + "', " +
-      this.index + ", " +
-      "'" + parentName + "'" +
-      " }\n{ " +
-      this.getTags() +
-      " }\n{ " +
-      "loading = " + this.loading + ", " +
-      "locked = " + this.locked + ", " +
-      "exists = " + this.exists + ", " +
-      "listeners = " + listenersNames +
-      " }\n" +
-      this.entry
+    return "\ninstanceId: " + this.instanceId + "\n" +
+      "id: " + this.id + ", " +
+      "index: " + this.index + "\n" +
+      "name: '" + this.name + "'\n" +
+      "parent: '" + parentName + "'\n" +
+      "tags: " + this.getTags() + "\n" +
+      "loading: " + this.loading + ", " +
+      "locked: " + this.locked + ", " +
+      "exists: " + this.exists + "\n" +
+      "listeners:\n" + listenersNames + 
+      "entry:\n" + this.entry;
   };
 
   // C O N S T R U C T O R

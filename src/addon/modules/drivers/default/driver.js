@@ -502,12 +502,12 @@ var Driver = function() {
       descriptor.removeItem( leafName );
     };
 
-    this.refresh = function( aParent ) {
+    this.refresh = function( parent ) {
       var leafName = this.getLeafName();
-      var entry = aParent.entry.clone();
+      var entry = parent.entry.clone();
       entry.append( leafName );
       this.entry = entry.clone();
-      this.parent = aParent;
+      this.parent = parent;
       if ( this.isCategory() ) {
         this.descriptor.refresh( this.entry );
       } else {
@@ -523,49 +523,57 @@ var Driver = function() {
       }
     };
 
-    this.moveTo = function( category ) {
+    this.moveTo = function( aCategory, aName ) {
       var leafName = this.getLeafName();
-      var name = getNoteNameFromFileName(
-        this.isCategory() ? leafName : getFileName( leafName ) );
-      if ( !category.canCreate( name, !this.isCategory() ) ) {
+      var fileExt = this.isCategory() ? "" : getFileExtension( leafName );
+      var fileName = this.isCategory() ? leafName : getFileName( leafName );
+      var name = getNoteNameFromFileName( fileName );
+      var targetName = ( aName === undefined ? name : aName );
+      var targetLeafName = getFileNameFromNoteName( targetName ) + fileExt;
+      if ( !aCategory.canCreate( targetName, !this.isCategory() ) ) {
         throw new DriverException(
           this.isCategory() ? "ENTRY_CATEGORY_ALREADY_EXISTS" :
                               "ENTRY_NOTE_ALREADY_EXISTS",
-          name
+          targetName
         );
       }
       var descriptor = this.getDescriptor();
       var data = descriptor.getItem( leafName );
-      var targetEntry = category.entry.clone();
-      targetEntry.append( leafName );
+      var targetEntry = aCategory.entry.clone();
+      targetEntry.append( targetLeafName );
       if ( this.isCategory() ) {
         if ( !targetEntry.exists() ) {
-          this.entry.moveTo( category.entry, null );
+          this.entry.moveTo( aCategory.entry, targetLeafName );
         } else {
           throw new DriverException( "ENTRY_CATEGORY_ALREADY_EXISTS", name );
         }
       } else {
-        name = getFileName( leafName );
         var contentsDescriptor = this.getContentsDescriptor();
-        var contentDirName = name + NOTE_CONTENT_DIRECTORY_SUFFIX;
+        var contentDirName = getFileNameFromNoteName( name ) +
+                             NOTE_CONTENT_DIRECTORY_SUFFIX;
         var contentDirEntry = this.entry.parent.clone();
         contentDirEntry.append( contentDirName );
-        var targetContentDirEntry = category.entry.clone();
-        targetContentDirEntry.append( contentDirName );
+        var targetContentDirName = getFileNameFromNoteName( targetName ) +
+                                   NOTE_CONTENT_DIRECTORY_SUFFIX;
+        var targetContentDirEntry = aCategory.entry.clone();
+        targetContentDirEntry.append( targetContentDirName );
         var attachmentsDescriptor = this.getAttachmentsDescriptor();
-        var attachmentsDirName = name + NOTE_ATTACHMENTS_DIRECTORY_SUFFIX;
+        var attachmentsDirName = getFileNameFromNoteName( name ) +
+                                 NOTE_ATTACHMENTS_DIRECTORY_SUFFIX;
         var attachmentsDirEntry = this.entry.parent.clone();
         attachmentsDirEntry.append( attachmentsDirName );
-        var targetAttachmentsDirEntry = category.entry.clone();
-        targetAttachmentsDirEntry.append( attachmentsDirName );
+        var targetAttachmentsDirName = getFileNameFromNoteName( targetName ) +
+                                       NOTE_ATTACHMENTS_DIRECTORY_SUFFIX;
+        var targetAttachmentsDirEntry = aCategory.entry.clone();
+        targetAttachmentsDirEntry.append( targetAttachmentsDirName );
         if ( targetEntry.exists() ) {
-          throw new DriverException( "ENTRY_NOTE_ALREADY_EXISTS", name );
+          throw new DriverException( "ENTRY_NOTE_ALREADY_EXISTS", targetName );
         }
         if ( targetContentDirEntry.exists() ) {
-          throw new DriverException( "ENTRY_NOTE_ALREADY_EXISTS", name );
+          throw new DriverException( "ENTRY_NOTE_ALREADY_EXISTS", targetName );
         }
         if ( targetAttachmentsDirEntry.exists() ) {
-          throw new DriverException( "ENTRY_NOTE_ALREADY_EXISTS", name );
+          throw new DriverException( "ENTRY_NOTE_ALREADY_EXISTS", targetName );
         }
         if ( !contentDirEntry.exists() ) {
           throw new DriverException( "ENTRY_NOTE_DATA_CORRUPTED" );
@@ -573,15 +581,17 @@ var Driver = function() {
         if ( !attachmentsDirEntry.exists() ) {
           throw new DriverException( "ENTRY_NOTE_DATA_CORRUPTED" );
         }
-        this.entry.moveTo( category.entry, null );
-        contentDirEntry.moveTo( category.entry, null );
+        this.entry.moveTo( aCategory.entry, targetLeafName );
+        contentDirEntry.moveTo( aCategory.entry, targetContentDirName );
         contentsDescriptor.refresh( targetContentDirEntry );
-        attachmentsDirEntry.moveTo( category.entry, null );
+        attachmentsDirEntry.moveTo( aCategory.entry, targetAttachmentsDirName );
         attachmentsDescriptor.refresh( targetAttachmentsDirEntry );
       }
       descriptor.removeItem( leafName );
-      this.parent = category;
+      this.parent = aCategory;
       descriptor = this.getDescriptor();
+      data[0] = targetLeafName;
+      data[1] = targetName;
       descriptor.addItem( data );
     };
 
@@ -728,14 +738,12 @@ var Driver = function() {
         if ( targetEntry.exists() ) {
           throw new DriverException( "ENTRY_NOTE_ALREADY_EXISTS", name );
         }
-        /*
         if ( targetContentDirEntry.exists() ) {
           throw new DriverException( "ENTRY_NOTE_ALREADY_EXISTS", name );
         }
         if ( targetAttachmentsDirEntry.exists() ) {
           throw new DriverException( "ENTRY_NOTE_ALREADY_EXISTS", name );
         }
-        */
         if ( !contentDirEntry.exists() ) {
           throw new DriverException( "ENTRY_NOTE_DATA_CORRUPTED" );
         }
@@ -1343,17 +1351,6 @@ var Driver = function() {
       return this.encoding;
     };
 
-    this.toString = function() {
-      var parentEntryPath = "*NULL*";
-      if ( this.parent ) {
-        parentEntryPath = this.parent.entry.path;
-      }
-      return "'" + this.entry.path + "'\n" +
-        "'" + parentEntryPath + "'\n" +
-        this.isCategory() ? "" : this.encoding + "\n" +
-        "isCategory = " + this.isCategory();
-    };
-
     this.updateAttachmentsDescriptor = function( attachmentsDirectoryEntry ) {
       var items = this.attachmentsDescriptor.getItems();
       for ( var i = 0; i < items.length; i++ ) {
@@ -1402,6 +1399,13 @@ var Driver = function() {
           }
         }
       }
+    };
+
+    this.toString = function() {
+      return "'" + this.entry.path + "'\n" +
+        "'" + ( this.parent ? this.parent.entry.path : "*NULL*" ) + "'\n" +
+        ( this.isCategory() ? "" : this.encoding + "\n" ) +
+        ( "isCategory = " + this.isCategory() );
     };
 
     this.parent = aParent;
