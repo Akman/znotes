@@ -329,26 +329,25 @@ var Category = function( aBook, anEntry, aParent ) {
       this.entry.remove();
       this.exists = false;
       aParent.removeCategory( this );
-      aParent.notifyStateListener(
-        new ru.akman.znotes.core.Event(
-          "CategoryDeleted",
-          { parentCategory: aParent, deletedCategory: this }
-        )
-      );
     } else {
       this.moveInto( this.getBin() );
     }
+    aParent.notifyStateListener(
+      new ru.akman.znotes.core.Event(
+        "CategoryDeleted",
+        { parentCategory: aParent, deletedCategory: this }
+      )
+    );
   };
 
   this.moveInto = function( aCategory, aName ) {
-    var aSuffix, anIndex, aBin;
+    var aSuffix, anIndex;
     var aParent = this.getParent();
-    if ( aCategory.isBin() && ( aName === undefined ) ) {
-      aBin = this.getBin();
+    if ( aName === undefined ) {
       aName = this.getName();
       aSuffix = "";
       anIndex = 2;
-      while ( !aBin.canCreateCategory( aName + aSuffix ) ) {
+      while ( !aCategory.canCreateCategory( aName + aSuffix ) ) {
         aSuffix = " (" + anIndex++ + ")";
       }
       aName += aSuffix;

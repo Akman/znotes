@@ -280,6 +280,13 @@ var PrefsManager = function() {
       Utils.IS_PLAY_SOUND =
         pub.getBoolPref( "isPlaySound" );
       //
+      if ( !pub.hasPref( "isClearBinOnExit" ) ) {
+        pub.setBoolPref( "isClearBinOnExit",
+          Utils.IS_CLEAR_BIN_ON_EXIT );
+      }
+      Utils.IS_CLEAR_BIN_ON_EXIT =
+        pub.getBoolPref( "isClearBinOnExit" );
+      //
       if ( !pub.hasPref( "isClipperPlaySound" ) ) {
         pub.setBoolPref( "isClipperPlaySound",
           Utils.IS_CLIPPER_PLAY_SOUND );

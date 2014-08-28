@@ -117,6 +117,7 @@
             <checkbox id="isReplaceBackground" label="&isReplaceBackground.label;" />
             <checkbox id="isHighlightRow" label="&isHighlightRow.label;" />
             <checkbox id="isPlaySound" label="&isPlaySound.label;" />
+            <checkbox id="isClearBinOnExit" label="&isClearBinOnExit.label;" />
           </vbox>
         </groupbox>
       </tabpanel>

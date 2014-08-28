@@ -115,25 +115,32 @@
     
     <!-- category tree context -->
     <menupopup id="folderTreeMenu">
+      <menuitem  id="folderTreeMenuClearBin"
+        class="menuitem-iconic znotes_clearbin_class"
+        command="znotes_clearbin_command"
+        observes="znotes_clearbin_command"
+        key="znotes_clearbin_key"/>
+      <menuseparator id="folderTreeMenuClearBinSeparator"
+        observes="znotes_clearbin_command"/>
       <menuitem id="folderTreeMenuNew"
         class="menuitem-iconic znotes_newcategory_class"
         command="znotes_newcategory_command"
+        observes="znotes_newcategory_command"
         key="znotes_newcategory_key"/>
       <menuitem  id="folderTreeMenuDelete"
         class="menuitem-iconic znotes_deletecategory_class"
         command="znotes_deletecategory_command"
+        observes="znotes_deletecategory_command"
         key="znotes_deletecategory_key"/>
-      <menuitem  id="folderTreeMenuClearBin"
-        class="menuitem-iconic znotes_clearbin_class"
-        command="znotes_clearbin_command"
-        key="znotes_clearbin_key"/>
       <menuitem id="folderTreeMenuRename"
         class="menuitem-iconic znotes_renamecategory_class"
         command="znotes_renamecategory_command"
+        observes="znotes_renamecategory_command"
         key="znotes_renamecategory_key"/>
       <menuitem id="folderTreeMenuRefresh"
         class="menuitem-iconic znotes_refreshfoldertree_class"
         command="znotes_refreshfoldertree_command"
+        observes="znotes_refreshfoldertree_command"
         key="znotes_refreshfoldertree_key"/>
     </menupopup>
     
@@ -239,9 +246,6 @@
       <toolbarbutton id="znotes_deletecategory_button"
         class="toolbarbutton-1 znotes_deletecategory_class"
         command="znotes_deletecategory_command"/>
-      <toolbarbutton id="znotes_clearbin_button"
-        class="toolbarbutton-1 znotes_clearbin_class"
-        command="znotes_clearbin_command"/>
       <toolbarbutton id="znotes_renamecategory_button"
         class="toolbarbutton-1 znotes_renamecategory_class"
         command="znotes_renamecategory_command"/>
@@ -366,7 +370,7 @@
       iconsize="small"
       customizable="true"
       context="znotes_maintoolbar_menupopup"
-      defaultset="znotes_appendbook_button,separator,znotes_newcategory_button,znotes_deletecategory_button,znotes_clearbin_button,separator,znotes_newtag_button,znotes_deletetag_button,separator,znotes_importnote_button,znotes_newnote_button,znotes_deletenote_button,separator,znotes_openoptionsdialog_button,znotes_openabout_button,znotes_openhelp_button,spring,znotes_edit_undo_button,znotes_edit_redo_button,separator,znotes_edit_cut_button,znotes_edit_copy_button,znotes_edit_paste_button,znotes_edit_delete_button,separator,znotes_edit_selectall_button,spring,znotes_showfilterbar_button,znotes_testsuite_button,znotes_console_button,znotes_debugger_button,znotes_inspector_button,znotes_addons_button,znotes_update_button,znotes_showappmenu_button" />
+      defaultset="znotes_appendbook_button,separator,znotes_newcategory_button,znotes_deletecategory_button,separator,znotes_newtag_button,znotes_deletetag_button,separator,znotes_importnote_button,znotes_newnote_button,znotes_deletenote_button,separator,znotes_openoptionsdialog_button,znotes_openabout_button,znotes_openhelp_button,spring,znotes_edit_undo_button,znotes_edit_redo_button,separator,znotes_edit_cut_button,znotes_edit_copy_button,znotes_edit_paste_button,znotes_edit_delete_button,separator,znotes_edit_selectall_button,spring,znotes_showfilterbar_button,znotes_testsuite_button,znotes_console_button,znotes_debugger_button,znotes_inspector_button,znotes_addons_button,znotes_update_button,znotes_showappmenu_button" />
     <toolbarset id="znotes_maintoolbarset"
       context="znotes_maintoolbar_menupopup" />
   </toolbox>

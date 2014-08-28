@@ -67,6 +67,7 @@ var Utils = function() {
   var isSavePosition = true;
   var isEditSourceEnabled = true;
   var isPlaySound = true;
+  var isClearBinOnExit = false;
   var isMainMenubarVisible = false;
   var isMainToolbarVisible = true;
   var isConfirmExit = true;
@@ -341,6 +342,14 @@ var Utils = function() {
       isPlaySound = value;
     },
 
+    get IS_CLEAR_BIN_ON_EXIT() {
+      return isClearBinOnExit;
+    },
+
+    set IS_CLEAR_BIN_ON_EXIT( value ) {
+      isClearBinOnExit = value;
+    },
+    
     get IS_REPLACE_BACKGROUND() {
       return isReplaceBackground;
     },

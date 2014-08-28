@@ -355,6 +355,9 @@ ru.akman.znotes.Main = function() {
         case "isPlaySound":
           Utils.IS_PLAY_SOUND = event.data.newValue;
           break;
+        case "isClearBinOnExit":
+          Utils.IS_CLEAR_BIN_ON_EXIT = event.data.newValue;
+          break;
         case "isClipperPlaySound":
           Utils.IS_CLIPPER_PLAY_SOUND = event.data.newValue;
           break;
@@ -1344,11 +1347,14 @@ ru.akman.znotes.Main = function() {
   };
   
   function updateCategoryCommands() {
+    var isHidden = currentCategory && currentCategory.isBin();
     Common.goUpdateCommand( "znotes_refreshfoldertree_command", mainController.getId(), window );
     Common.goUpdateCommand( "znotes_newcategory_command", mainController.getId(), window );
     Common.goUpdateCommand( "znotes_deletecategory_command", mainController.getId(), window );
-    Common.goUpdateCommand( "znotes_clearbin_command", mainController.getId(), window );
     Common.goUpdateCommand( "znotes_renamecategory_command", mainController.getId(), window );
+    Common.goUpdateCommand( "znotes_clearbin_command", mainController.getId(), window );
+    Common.goSetCommandHidden( "znotes_renamecategory_command", isHidden, window );
+    Common.goSetCommandHidden( "znotes_clearbin_command", !isHidden, window );
   };
   
   function updateNoteCommands() {
@@ -1769,7 +1775,9 @@ ru.akman.znotes.Main = function() {
         title: getString( "main.note.confirmDelete.title" ),
         message1: getFormattedString(
           "main.note.confirmDelete.message1", [ currentNote.name ] ),
-        message2: getString( "main.note.confirmDelete.message2" )
+        message2: ( currentNote.isInBin() ?
+                      getString( "main.category.confirmClearBin.message1" ) :
+                      getString( "main.note.confirmDelete.message2" ) )
       },
       output: null
     };
@@ -1957,7 +1965,9 @@ ru.akman.znotes.Main = function() {
           "main.category.confirmDelete.message1",
           [ currentCategory.name ]
         ),
-        message2: getString( "main.category.confirmDelete.message2" )
+        message2: ( currentCategory.isInBin() ?
+                      getString( "main.category.confirmClearBin.message1" ) :
+                      getString( "main.category.confirmDelete.message2" ) )
       },
       output: null
     };
@@ -2468,21 +2478,33 @@ ru.akman.znotes.Main = function() {
   };
 
   function categoryMoveInto( aRow ) {
-    var anOldParent = currentCategory.getParent();
+    var aParent = currentCategory.getParent();
+    var anIndex = currentCategory.getIndex();
     var aNewParent = getFolderTreeItemAndCategoryAtRowIndex( aRow ).category;
+    var aRow;
     currentCategory.moveInto( aNewParent );
-    if ( !anOldParent.hasCategories() ) {
-      anOldParent.setOpenState( false );
+    if ( !aParent.hasCategories() ) {
+      aParent.setOpenState( false );
+      aRow = getFolderTreeRow( aParent );
+    } else {
+      if ( anIndex > aParent.getCategoriesCount() - 1 ) {
+        anIndex--;
+      }
+      aRow = getFolderTreeRow( aParent.getCategoryByIndex( anIndex ) );
     }
-    while ( !aNewParent.isRoot() ) {
+    while ( !aNewParent.isBin() && !aNewParent.isRoot() ) {
       aNewParent.setOpenState( true );
       aNewParent = aNewParent.getParent();
     }
+    folderTreeBoxObject.ensureRowIsVisible( aRow );
+    folderTree.view.selection.select( aRow );
+    /*
     var aSelectionRow = getFolderTreeRow( currentCategory );
     folderTree.removeEventListener( "select", onFolderSelect, false );
     folderTreeBoxObject.ensureRowIsVisible( aSelectionRow );
     folderTree.view.selection.select( aSelectionRow );
     folderTree.addEventListener( "select", onFolderSelect, false );
+    */
   };
 
   // CATEGORIES EVENTS
@@ -4262,6 +4284,13 @@ ru.akman.znotes.Main = function() {
   function doneBooks() {
     removeStateListeners();
     if ( booksList ) {
+      if ( Utils.IS_CLEAR_BIN_ON_EXIT ) {
+        for each ( var book in booksList ) {
+          if ( book.isOpen() ) {
+            book.getContentTree().clearBin();
+          }
+        }
+      }
       booksList.splice( 0, booksList.length );
     }
     booksList = null;
@@ -4818,7 +4847,9 @@ ru.akman.znotes.Main = function() {
     for ( var i = 0; i < arr.length; i++ ) {
       categoriesList.splice( index++, 0, arr[i] );
     }
-    aCategory.setOpenState( true );
+    if ( !aCategory.isBin() ) {
+      aCategory.setOpenState( true );
+    }
     updateFolderTreeItem( aCategory );
     updateCategoryCommands();
   };

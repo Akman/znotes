@@ -425,27 +425,26 @@ var Note = function( aBook, anEntry, aCategory, aType, aTagID ) {
       this.entry.remove();
       this.exists = false;
       aParent.removeNote( this );
-      aParent.notifyStateListener(
-        new ru.akman.znotes.core.Event(
-          "NoteDeleted",
-          { parentCategory: aParent, deletedNote: this }
-        )
-      );
     } else {
       this.moveInto( this.getBin() );
     }
+    aParent.notifyStateListener(
+      new ru.akman.znotes.core.Event(
+        "NoteDeleted",
+        { parentCategory: aParent, deletedNote: this }
+      )
+    );
   };
 
   this.moveInto = function( aCategory, aName ) {
-    var aSuffix, anIndex, aBin;
+    var aSuffix, anIndex;
     var aParent = this.getParent();
     var aType = this.getType();
-    if ( aCategory.isBin() && ( aName === undefined ) ) {
-      aBin = this.getBin();
+    if ( aName === undefined ) {
       aName = this.getName();
       aSuffix = "";
       anIndex = 2;
-      while ( !aBin.canCreateNote( aName + aSuffix, aType ) ) {
+      while ( !aCategory.canCreateNote( aName + aSuffix, aType ) ) {
         aSuffix = " (" + anIndex++ + ")";
       }
       aName += aSuffix;

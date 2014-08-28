@@ -65,6 +65,7 @@ ru.akman.znotes.Options = function() {
   var isSavePosition = null;
   var isEditSourceEnabled = null;
   var isPlaySound = null;
+  var isClearBinOnExit = null;
   var isHighlightRow = null;
   var isCloseBrowserAfterImport = null;
   var isSelectNoteAfterImport = null;
@@ -597,6 +598,7 @@ ru.akman.znotes.Options = function() {
     isSavePosition.checked = optionsPrefs["main"]["default"].isSavePosition;
     isEditSourceEnabled.checked = optionsPrefs["main"]["default"].isEditSourceEnabled;
     isPlaySound.checked = optionsPrefs["main"]["default"].isPlaySound;
+    isClearBinOnExit.checked = optionsPrefs["main"]["default"].isClearBinOnExit;
     isReplaceBackground.checked = optionsPrefs["main"]["default"].isReplaceBackground;
     isConfirmExit.checked = optionsPrefs["main"]["default"].isConfirmExit;
     isExitQuitTB.checked = optionsPrefs["main"]["default"].isExitQuitTB;
@@ -740,6 +742,9 @@ ru.akman.znotes.Options = function() {
     currentPrefs.isPlaySound = isPlaySound.checked;
     isChanged = isChanged ||
       ( currentPrefs.isPlaySound !== originalPrefs.isPlaySound );
+    currentPrefs.isClearBinOnExit = isClearBinOnExit.checked;
+    isChanged = isChanged ||
+      ( currentPrefs.isClearBinOnExit !== originalPrefs.isClearBinOnExit );
     currentPrefs.isReplaceBackground = isReplaceBackground.checked;
     isChanged = isChanged ||
       ( currentPrefs.isReplaceBackground !== originalPrefs.isReplaceBackground );
@@ -861,6 +866,7 @@ ru.akman.znotes.Options = function() {
       "isSavePosition": true,
       "isEditSourceEnabled": true,
       "isPlaySound": true,
+      "isClearBinOnExit": false,
       "isReplaceBackground": true,
       "isConfirmExit": true,
       "isExitQuitTB": true,
@@ -915,6 +921,7 @@ ru.akman.znotes.Options = function() {
       "isSavePosition": Utils.IS_SAVE_POSITION,
       "isEditSourceEnabled": Utils.IS_EDIT_SOURCE_ENABLED,
       "isPlaySound": Utils.IS_PLAY_SOUND,
+      "isClearBinOnExit": Utils.IS_CLEAR_BIN_ON_EXIT,
       "isReplaceBackground": Utils.IS_REPLACE_BACKGROUND,
       "isConfirmExit": Utils.IS_CONFIRM_EXIT,
       "isExitQuitTB": Utils.IS_EXIT_QUIT_TB,
@@ -948,6 +955,7 @@ ru.akman.znotes.Options = function() {
     prefsBundle.setBoolPref( "isSavePosition", prefs.isSavePosition );
     prefsBundle.setBoolPref( "isEditSourceEnabled", prefs.isEditSourceEnabled );
     prefsBundle.setBoolPref( "isPlaySound", prefs.isPlaySound );
+    prefsBundle.setBoolPref( "isClearBinOnExit", prefs.isClearBinOnExit );
     prefsBundle.setBoolPref( "isReplaceBackground", prefs.isReplaceBackground );
     prefsBundle.setBoolPref( "isConfirmExit", prefs.isConfirmExit );
     prefsBundle.setBoolPref( "isExitQuitTB", prefs.isExitQuitTB );
@@ -1048,6 +1056,7 @@ ru.akman.znotes.Options = function() {
     isSavePosition.checked = currentPrefs.isSavePosition;
     isEditSourceEnabled.checked = currentPrefs.isEditSourceEnabled;
     isPlaySound.checked = currentPrefs.isPlaySound;
+    isClearBinOnExit.checked = currentPrefs.isClearBinOnExit;
     isReplaceBackground.checked = currentPrefs.isReplaceBackground;
     isConfirmExit.checked = currentPrefs.isConfirmExit;
     isExitQuitTB.checked = currentPrefs.isExitQuitTB;
@@ -1133,6 +1142,7 @@ ru.akman.znotes.Options = function() {
     isSavePosition = document.getElementById( "isSavePosition" );
     isEditSourceEnabled = document.getElementById( "isEditSourceEnabled" );
     isPlaySound = document.getElementById( "isPlaySound" );
+    isClearBinOnExit = document.getElementById( "isClearBinOnExit" );
     isReplaceBackground = document.getElementById( "isReplaceBackground" );
     isConfirmExit = document.getElementById( "isConfirmExit" );
     isExitQuitTB = document.getElementById( "isExitQuitTB" );
