@@ -57,7 +57,7 @@
 <!ENTITY isExitQuitTB.label "Exiting application leads to closing TB">
 <!ENTITY isHighlightRow.label "Highlight row in the note list using the main tag color">
 <!ENTITY isPlaySound.label "Play sound at startup">
-<!ENTITY isClearBinOnExit.label "Empty recycle bin on exit">
+<!ENTITY isClearBinOnExit.label "Empty trash on exit">
 <!ENTITY keysPlatformCaption.label "Keyboard shortcuts">
 <!ENTITY keysCaption.label "Keyboard shortcuts">
 <!ENTITY defaultsButton.label "Defaults">

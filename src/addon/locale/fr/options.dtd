@@ -57,7 +57,7 @@
 <!ENTITY isReplaceBackground.label "Remplacer la couleur de fond de la note en utilisant la couleur de l'étiquette principale">
 <!ENTITY isHighlightRow.label "Mettre en surbrillance la ligne dans la liste des notes en utilisant la couleur de l'étiquette principale">
 <!ENTITY isPlaySound.label "Jouer un son au démarrage">
-<!ENTITY isClearBinOnExit.label "Empty recycle bin on exit">
+<!ENTITY isClearBinOnExit.label "Vider la corbeille en quittant">
 <!ENTITY keysPlatformCaption.label "Raccourcis clavier">
 <!ENTITY keysCaption.label "Raccourcis clavier">
 <!ENTITY defaultsButton.label "Défauts">

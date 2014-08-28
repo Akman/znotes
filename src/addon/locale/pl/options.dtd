@@ -58,7 +58,7 @@
 <!ENTITY isReplaceBackground.label "Zastąp kolor tła notatkę, za pomocą głównego koloru znacznika">
 <!ENTITY isHighlightRow.label "Zaznacz wiersz w liście notatkę przy wykorzystaniu głównego koloru znacznika">
 <!ENTITY isPlaySound.label "Odtwórz dźwięk przy starcie">
-<!ENTITY isClearBinOnExit.label "Empty recycle bin on exit">
+<!ENTITY isClearBinOnExit.label "Przy wyjściu z programu opróźniaj kosz">
 <!ENTITY keysPlatformCaption.label "Skróty klawiaturowe">
 <!ENTITY keysCaption.label "Skróty klawiaturowe">
 <!ENTITY defaultsButton.label "Domyślne">
