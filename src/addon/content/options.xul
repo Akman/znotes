@@ -103,7 +103,6 @@
             </radiogroup>            
             <checkbox id="clipperSaveActiveRulesOnly" label="&clipperSaveActiveRulesOnly.label;" />
             <checkbox id="isCloseBrowserAfterImport" label="&isCloseBrowserAfterImport.label;" />
-            <checkbox id="isSelectNoteAfterImport" label="&isSelectNoteAfterImport.label;" />
             <checkbox id="isClipperPlaySound" label="&isClipperPlaySound.label;" />
           </vbox>
         </groupbox>

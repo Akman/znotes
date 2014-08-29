@@ -49,7 +49,6 @@
 <!ENTITY clipperSeparateStylesheets.label "Save stylesheets in the separate files">
 <!ENTITY clipperSaveActiveRulesOnly.label "Save active rules only">
 <!ENTITY isCloseBrowserAfterImport.label "Close browser window when download completes">
-<!ENTITY isSelectNoteAfterImport.label "Select created note when download completes">
 <!ENTITY isClipperPlaySound.label "Play sound when download completes">
 <!ENTITY additionCaption.label "Supplément">
 <!ENTITY isConfirmExit.label "Confirmer la sortie lors de la fermeture de l'application">

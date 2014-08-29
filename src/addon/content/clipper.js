@@ -56,6 +56,7 @@ ru.akman.znotes.Clipper = function() {
     Components.classes["@mozilla.org/network/io-service;1"]
               .getService( Components.interfaces.nsIIOService );
 
+  var alertObserver = null;              
   var aContext = null;
   var aBrowser = null;
   var aBundle = null;
@@ -117,6 +118,32 @@ ru.akman.znotes.Clipper = function() {
         updateCommands();
       }
     }
+  };
+  
+  // ALERT OBSERVER
+  
+  function setupAlertObserver() {
+    alertObserver = {
+      observe: function( subject, topic, data ) {
+        var params;
+        switch ( topic ) {
+          case "alertclickcallback":
+            if ( !Utils.IS_STANDALONE ) {
+              Utils.switchToMainTab();
+            }
+            params = Common.createCommandParamsObject();
+            if ( params ) {
+              params.setStringValue( "id", data );
+              Common.goDoCommandWithParams(
+                "znotes_savemessage_command",
+                params,
+                aContext.window.document.getElementById( "znotes_dummy_command" )
+              );
+            }
+            break;
+        }
+      }
+    };
   };
   
   // COMMANDS
@@ -209,7 +236,8 @@ ru.akman.znotes.Clipper = function() {
   };
   
   function doSaveDocument() {
-    var aParams, aNote = null, anInfo = selectNote();
+    var aParams, aNote = null;
+    var anInfo = selectNote();
     if ( !anInfo ) {
       return;
     }
@@ -263,13 +291,14 @@ ru.akman.znotes.Clipper = function() {
   // CLIPPER
   
   function saveDocument( aDocument, aNote ) {
-    var contentEntries, contentExtension, contentFile, contentDirectory;
+    var id, contentEntries, contentExtension, contentFile, contentDirectory;
     var mimeService =
       Components.classes["@mozilla.org/mime;1"]
                 .getService( Components.interfaces.nsIMIMEService );
     contentExtension =
       mimeService.getPrimaryExtension( aDocument.contentType, null );
     contentExtension = ( contentExtension ? contentExtension : "html" );
+    id = aNote.getBook().getId() + "&" + aNote.getId();
     try {
       contentEntries =
         Utils.getEntriesToSaveContent( "." + contentExtension, "_files" );
@@ -292,7 +321,10 @@ ru.akman.znotes.Clipper = function() {
                 "chrome://znotes_images/skin/warning-32x32.png",
                 getString( "savePopup.fail" ),
                 aBrowser.contentDocument.location.toString(),
-                true
+                true,
+                id,
+                alertObserver,
+                id
               );
             } else {
               playSuccess();
@@ -300,7 +332,10 @@ ru.akman.znotes.Clipper = function() {
                 "chrome://znotes_images/skin/message-32x32.png",
                 getString( "savePopup.success" ),
                 aBrowser.contentDocument.location.toString(),
-                true
+                true,
+                id,
+                alertObserver,
+                id
               );
             }
           }
@@ -382,6 +417,7 @@ ru.akman.znotes.Clipper = function() {
     aBrowser.docShell.QueryInterface( nsIWebProgress );
     aBrowser.docShell.addProgressListener( progressListener,
       nsIWebProgress.NOTIFY_ALL );
+    setupAlertObserver();
     updateCommands();
   };
   

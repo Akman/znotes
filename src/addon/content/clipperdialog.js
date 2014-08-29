@@ -55,7 +55,7 @@ ru.akman.znotes.ClipperDialog = function() {
   var btnClose, btnCancel;
   var canClose = false;
   
-  // OBSERVER
+  // LOADER OBSERVER
   
   function onLoaderStarted( anEvent ) {
     btnClose.setAttribute( "collapsed", "true" );
@@ -75,7 +75,6 @@ ru.akman.znotes.ClipperDialog = function() {
           author: false
         }
       );
-      aNote.setLoading( false );
     } catch ( e ) {
       if ( e.name && ( e.name in Components.results ) ) {
         aStatus = Components.results[e.name];
@@ -83,6 +82,7 @@ ru.akman.znotes.ClipperDialog = function() {
         aStatus = Components.results.NS_ERROR_UNEXPECTED;
       }
     }
+    aNote.setLoading( false );
     if ( aCallback ) {
       aCallback( aStatus );
     }

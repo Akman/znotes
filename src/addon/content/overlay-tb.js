@@ -273,7 +273,7 @@ ru.akman.znotes.ZNotes = function() {
                 try {
                   tmpdir.remove( true );
                 } catch ( e ) {
-                  //Utils.log( e + "\n" + Utils.dumpStack() );
+                  Utils.log( e + "\n" + Utils.dumpStack() );
                 }
               }
             },
@@ -294,7 +294,7 @@ ru.akman.znotes.ZNotes = function() {
       try {
         tmpdir.remove( true );
       } catch ( e ) {
-        //Utils.log( e + "\n" + Utils.dumpStack() );
+        Utils.log( e + "\n" + Utils.dumpStack() );
       }
     }
   };
@@ -302,82 +302,85 @@ ru.akman.znotes.ZNotes = function() {
   function saveMessageToNote( aNote, aBody, anAttachments, aContact, aCallback ) {
     var securityManager, codebasePrincipal, domParser, dom;
     var anEntries, aFile, aDirectory, aResultObj;
-    addAttachments( aNote, anAttachments );
-    addContact( aNote, aContact );
-    securityManager =
-      Components.classes["@mozilla.org/scriptsecuritymanager;1"]
-                .getService( Components.interfaces.nsIScriptSecurityManager );
-    codebasePrincipal = securityManager.getCodebasePrincipal( aNote.getURI() );
-    domParser =
-      Components.classes["@mozilla.org/xmlextras/domparser;1"]
-                .createInstance( Components.interfaces.nsIDOMParser );
-    // TODO: anURI cause message in error console, what principal must be use?    
-    domParser.init( codebasePrincipal, null /* aNote.getURI() */,
-                    aNote.getBaseURI(), null );
-    dom = domParser.parseFromString( aBody, "text/html" );
-    switch( aNote.getType() ) {
-      case "application/xhtml+xml":
-        anEntries = Utils.getEntriesToSaveContent( ".xhtml", "_files" );
-        aFile = anEntries.fileEntry;
-        aDirectory = anEntries.directoryEntry;
-        aResultObj = { value: null };
-        clipper = new ru.akman.znotes.core.Clipper();
-        clipper.save(
-          dom,
-          aResultObj,
-          aFile,
-          aDirectory,
-          /*
-          0x00000001 SAVE_SCRIPTS
-          0x00000010 SAVE_FRAMES
-          0x00000100 SAVE_FRAMES_IN_SEPARATE_DIRECTORY
-          0x00001000 PRESERVE_HTML5_TAGS
-          0x00010000 SAVE_STYLES
-          0x00100000 SAVE_STYLESHEETS_IN_SINGLE_FILE
-          0x01000000 SAVE_STYLESHEETS_IN_SEPARATE_FILES
-          0x10000000 SAVE_ACTIVE_RULES_ONLY
-          */
-          0x10010000,
-          {
-            onLoaderStarted: function( anEvent ) {
-              aNote.setLoading( true );
-            },
-            onLoaderStopped: function( anEvent ) {
-              try {  
-                aNote.loadContentDirectory( aDirectory, true );
-              } catch ( e ) {
-                Utils.log( e + "\n" + Utils.dumpStack() );
-              }
-              try {  
-                aFile.remove( false );
-              } catch ( e ) {
-                Utils.log( e + "\n" + Utils.dumpStack() );
-              }
-              try {  
-                aNote.importDocument( aResultObj.value );
-              } catch ( e ) {
-                Utils.log( e + "\n" + Utils.dumpStack() );
-              }
-              aNote.setLoading( false );
-              if ( aCallback ) {
-                aCallback( aNote );
+    aNote.setLoading( true );
+    try {
+      addAttachments( aNote, anAttachments );
+      addContact( aNote, aContact );
+      securityManager =
+        Components.classes["@mozilla.org/scriptsecuritymanager;1"]
+                  .getService( Components.interfaces.nsIScriptSecurityManager );
+      codebasePrincipal = securityManager.getCodebasePrincipal( aNote.getURI() );
+      domParser =
+        Components.classes["@mozilla.org/xmlextras/domparser;1"]
+                  .createInstance( Components.interfaces.nsIDOMParser );
+      // TODO: anURI cause message in error console, what principal must be use?    
+      domParser.init( codebasePrincipal, null /* aNote.getURI() */,
+        aNote.getBaseURI(), null );
+      dom = domParser.parseFromString( aBody, "text/html" );
+      switch( aNote.getType() ) {
+        case "application/xhtml+xml":
+          anEntries = Utils.getEntriesToSaveContent( ".xhtml", "_files" );
+          aFile = anEntries.fileEntry;
+          aDirectory = anEntries.directoryEntry;
+          aResultObj = { value: null };
+          clipper = new ru.akman.znotes.core.Clipper();
+          clipper.save(
+            dom,
+            aResultObj,
+            aFile,
+            aDirectory,
+            /*
+            0x00000001 SAVE_SCRIPTS
+            0x00000010 SAVE_FRAMES
+            0x00000100 SAVE_FRAMES_IN_SEPARATE_DIRECTORY
+            0x00001000 PRESERVE_HTML5_TAGS
+            0x00010000 SAVE_STYLES
+            0x00100000 SAVE_STYLESHEETS_IN_SINGLE_FILE
+            0x01000000 SAVE_STYLESHEETS_IN_SEPARATE_FILES
+            0x10000000 SAVE_ACTIVE_RULES_ONLY
+            */
+            0x10010000,
+            {
+              onLoaderStarted: function( anEvent ) {
+              },
+              onLoaderStopped: function( anEvent ) {
+                try {  
+                  aNote.loadContentDirectory( aDirectory, true );
+                } catch ( e ) {
+                  Utils.log( e + "\n" + Utils.dumpStack() );
+                }
+                try {  
+                  aFile.remove( false );
+                } catch ( e ) {
+                  Utils.log( e + "\n" + Utils.dumpStack() );
+                }
+                try {  
+                  aNote.importDocument( aResultObj.value );
+                } catch ( e ) {
+                  Utils.log( e + "\n" + Utils.dumpStack() );
+                }
+                aNote.setLoading( false );
+                if ( aCallback ) {
+                  aCallback( aNote );
+                }
               }
             }
-          }
-        );
-        break;
-      case "text/plain":
-        aNote.setLoading( true );
-        try {
+          );
+          break;
+        case "text/plain":
           aNote.importDocument( dom );
-        } catch ( e ) {
-          Utils.log( e + "\n" + Utils.dumpStack() );
-        }
-        aNote.setLoading( false );
-        if ( aCallback ) {
-          aCallback( aNote );
-        }
-        break;
+          aNote.setLoading( false );
+          if ( aCallback ) {
+            aCallback( aNote );
+          }
+          break;
+      }
+    } catch ( e ) {
+      Utils.log( e + "\n" + Utils.dumpStack() );
+      aNote.setLoading( false );
+      if ( aCallback ) {
+        aCallback( aNote, true );
+      }
     }
   };
 
@@ -762,25 +765,30 @@ ru.akman.znotes.ZNotes = function() {
     doSaveMessages( messageURIs, book, category );
   };
 
-  function saveCallback( aNote ) {
+  function saveCallback( aNote, isError ) {
     var name = aNote.getName();
     var id = aNote.getBook().getId() + "&" + aNote.getId();
-    mailWindow.setTimeout(
-      function() {
-        var alertsService =
-          Components.classes['@mozilla.org/alerts-service;1']
-                    .getService( Components.interfaces.nsIAlertsService );
-        alertsService.showAlertNotification(
-          "chrome://znotes_images/skin/message-32x32.png",
-          getString( "main.note.loading.success" ),
-          name,
-          true,
-          id,
-          alertObserver
-        );
-      },
-      0
-    );
+    if ( isError ) {
+      Utils.showPopup(
+        "chrome://znotes_images/skin/warning-32x32.png",
+        getString( "main.note.loading.fail" ),
+        name,
+        true,
+        id,
+        alertObserver,
+        id
+      );
+    } else {
+      Utils.showPopup(
+        "chrome://znotes_images/skin/message-32x32.png",
+        getString( "main.note.loading.success" ),
+        name,
+        true,
+        id,
+        alertObserver,
+        id
+      );
+    }
   };
   
   function doSaveMessages( uris, book, category ) {
@@ -812,7 +820,6 @@ ru.akman.znotes.ZNotes = function() {
             "application/xhtml+xml" : "text/plain";
           contentData = htmlBodies.length ?
             htmlBodies.join( "" ) : textBodies.join( "" );
-          // TODO: async create
           note = createNote(
             book,
             category,

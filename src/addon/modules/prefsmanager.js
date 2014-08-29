@@ -413,13 +413,6 @@ var PrefsManager = function() {
       Utils.IS_CLOSE_BROWSER_AFTER_IMPORT =
         pub.getBoolPref( "isCloseBrowserAfterImport" );
       //
-      if ( !pub.hasPref( "isSelectNoteAfterImport" ) ) {
-        pub.setBoolPref( "isSelectNoteAfterImport",
-          Utils.IS_SELECT_NOTE_AFTER_IMPORT );
-      }
-      Utils.IS_SELECT_NOTE_AFTER_IMPORT =
-        pub.getBoolPref( "isSelectNoteAfterImport" );
-      //
       if ( !pub.hasPref( "isReplaceBackground" ) ) {
         pub.setBoolPref( "isReplaceBackground",
           Utils.IS_REPLACE_BACKGROUND );

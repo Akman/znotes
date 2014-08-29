@@ -332,7 +332,7 @@ var Category = function( aBook, anEntry, aParent ) {
     } else {
       this.moveInto( this.getBin() );
     }
-    aParent.notifyStateListener(
+    this.notifyStateListener(
       new ru.akman.znotes.core.Event(
         "CategoryDeleted",
         { parentCategory: aParent, deletedCategory: this }

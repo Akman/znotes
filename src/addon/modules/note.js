@@ -428,7 +428,7 @@ var Note = function( aBook, anEntry, aCategory, aType, aTagID ) {
     } else {
       this.moveInto( this.getBin() );
     }
-    aParent.notifyStateListener(
+    this.notifyStateListener(
       new ru.akman.znotes.core.Event(
         "NoteDeleted",
         { parentCategory: aParent, deletedNote: this }

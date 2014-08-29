@@ -400,6 +400,7 @@ function createFileEntry( dir, name ) {
     prefix += "_";
   } while ( entry.exists() && !entry.isDirectory() );
   try {
+    // TODO: NS_ERROR_FILE_NOT_FOUND: nsIFileOutputStream.init()
     ostream.init(
       entry,
       parseInt( "0x02", 16 ) | // PR_WRONLY

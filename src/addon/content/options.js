@@ -68,7 +68,6 @@ ru.akman.znotes.Options = function() {
   var isClearBinOnExit = null;
   var isHighlightRow = null;
   var isCloseBrowserAfterImport = null;
-  var isSelectNoteAfterImport = null;
   var isReplaceBackground = null;
   var isConfirmExit = null;
   var isExitQuitTB = null;
@@ -604,7 +603,6 @@ ru.akman.znotes.Options = function() {
     isExitQuitTB.checked = optionsPrefs["main"]["default"].isExitQuitTB;
     isHighlightRow.checked = optionsPrefs["main"]["default"].isHighlightRow;
     isCloseBrowserAfterImport.checked = optionsPrefs["main"]["default"].isCloseBrowserAfterImport;
-    isSelectNoteAfterImport.checked = optionsPrefs["main"]["default"].isSelectNoteAfterImport;
     isClipperPlaySound.checked = optionsPrefs["main"]["default"].isClipperPlaySound;
     clipperSaveScripts.checked = optionsPrefs["main"]["default"].clipperSaveScripts;
     clipperSaveFrames.checked = optionsPrefs["main"]["default"].clipperSaveFrames;
@@ -760,9 +758,6 @@ ru.akman.znotes.Options = function() {
     currentPrefs.isCloseBrowserAfterImport = isCloseBrowserAfterImport.checked;
     isChanged = isChanged ||
       ( currentPrefs.isCloseBrowserAfterImport !== originalPrefs.isCloseBrowserAfterImport );
-    currentPrefs.isSelectNoteAfterImport = isSelectNoteAfterImport.checked;
-    isChanged = isChanged ||
-      ( currentPrefs.isSelectNoteAfterImport !== originalPrefs.isSelectNoteAfterImport );
     currentPrefs.isClipperPlaySound = isClipperPlaySound.checked;
     isChanged = isChanged ||
       ( currentPrefs.isClipperPlaySound !== originalPrefs.isClipperPlaySound );
@@ -872,7 +867,6 @@ ru.akman.znotes.Options = function() {
       "isExitQuitTB": true,
       "isHighlightRow": false,
       "isCloseBrowserAfterImport": true,
-      "isSelectNoteAfterImport": true,
       "isClipperPlaySound": true,
       "clipperSaveScripts": false,
       "clipperSaveFrames": false,
@@ -927,7 +921,6 @@ ru.akman.znotes.Options = function() {
       "isExitQuitTB": Utils.IS_EXIT_QUIT_TB,
       "isHighlightRow": Utils.IS_HIGHLIGHT_ROW,
       "isCloseBrowserAfterImport": Utils.IS_CLOSE_BROWSER_AFTER_IMPORT,
-      "isSelectNoteAfterImport": Utils.IS_SELECT_NOTE_AFTER_IMPORT,
       "isClipperPlaySound":       Utils.IS_CLIPPER_PLAY_SOUND,
       "clipperSaveScripts":         !!( Utils.CLIPPER_FLAGS & 0x00000001 ),
       "clipperSaveFrames":          !!( Utils.CLIPPER_FLAGS & 0x00000010 ),
@@ -961,7 +954,6 @@ ru.akman.znotes.Options = function() {
     prefsBundle.setBoolPref( "isExitQuitTB", prefs.isExitQuitTB );
     prefsBundle.setBoolPref( "isHighlightRow", prefs.isHighlightRow );
     prefsBundle.setBoolPref( "isCloseBrowserAfterImport", prefs.isCloseBrowserAfterImport );
-    prefsBundle.setBoolPref( "isSelectNoteAfterImport", prefs.isSelectNoteAfterImport );
     prefsBundle.setCharPref( "defaultDocumentType", prefs.defaultDocumentType );
     prefsBundle.setCharPref( "main_shortcuts", JSON.stringify( prefs.shortcuts ) );
     prefsBundle.setBoolPref( "isClipperPlaySound", prefs.isClipperPlaySound );
@@ -1062,7 +1054,6 @@ ru.akman.znotes.Options = function() {
     isExitQuitTB.checked = currentPrefs.isExitQuitTB;
     isHighlightRow.checked = currentPrefs.isHighlightRow;
     isCloseBrowserAfterImport.checked = currentPrefs.isCloseBrowserAfterImport;
-    isSelectNoteAfterImport.checked = currentPrefs.isSelectNoteAfterImport;
     isClipperPlaySound.checked = currentPrefs.isClipperPlaySound;
     clipperSaveScripts.checked = currentPrefs.clipperSaveScripts;
     clipperSaveFrames.checked = currentPrefs.clipperSaveFrames;
@@ -1151,7 +1142,6 @@ ru.akman.znotes.Options = function() {
     }
     isHighlightRow = document.getElementById( "isHighlightRow" );
     isCloseBrowserAfterImport = document.getElementById( "isCloseBrowserAfterImport" );
-    isSelectNoteAfterImport = document.getElementById( "isSelectNoteAfterImport" );
     isClipperPlaySound = document.getElementById( "isClipperPlaySound" );
     clipperSaveScripts = document.getElementById( "clipperSaveScripts" );
     clipperSaveFrames = document.getElementById( "clipperSaveFrames" );

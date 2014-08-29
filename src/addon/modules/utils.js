@@ -75,7 +75,6 @@ var Utils = function() {
   var isReplaceBackground = false;
   var isHighlightRow = false;
   var isCloseBrowserAfterImport = true;
-  var isSelectNoteAfterImport = true;
   var isClipperPlaySound = true;
   var clipperFlags = 0x10010000;
   var defaultDocumentType = "application/xhtml+xml";
@@ -390,14 +389,6 @@ var Utils = function() {
       isCloseBrowserAfterImport = value;
     },
 
-    get IS_SELECT_NOTE_AFTER_IMPORT() {
-      return isSelectNoteAfterImport;
-    },
-
-    set IS_SELECT_NOTE_AFTER_IMPORT( value ) {
-      isSelectNoteAfterImport = value;
-    },
-    
     get IS_MAINMENUBAR_VISIBLE() {
       return isMainMenubarVisible;
     },
@@ -434,19 +425,26 @@ var Utils = function() {
 
   var fontNameArray = null;
 
-  pub.showPopup = function( img, title, text, clickable ) {
+  // TODO: showPopup()
+  pub.showPopup = function( imageUrl, title, text, textClickable,
+                            cookie, alertListener, name, dir, lang ) {
     try {
       Components.classes['@mozilla.org/alerts-service;1']
                 .getService( Components.interfaces.nsIAlertsService )
                 .showAlertNotification(
-        img,
-        title,
-        text,
-        clickable,
-        '',
-        null
+        imageUrl, title, text, textClickable,
+        cookie, alertListener, name, dir, lang
       );
-    } catch(e) {
+    } catch ( e ) {
+      Utils.log( e );
+      var win =
+        Components.classes['@mozilla.org/embedcomp/window-watcher;1']
+                  .getService( Components.interfaces.nsIWindowWatcher )
+                  .openWindow(
+          null, 'chrome://global/content/alerts/alert.xul',
+          '_blank', 'chrome,titlebar=no,popup=yes', null
+        );
+      win.arguments = [ null, title, text, false, '' ];
     }
   };
   
@@ -1779,7 +1777,7 @@ var Utils = function() {
   pub.getErrorName = function( code ) {
     var results = Components.results;
     for ( var name in results ) {
-      if ( results[name] == "" + code ) {
+      if ( results[name] === ( "" + code ) ) {
         return name;
       }
     }

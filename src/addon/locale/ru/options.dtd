@@ -49,7 +49,6 @@
 <!ENTITY clipperSeparateStylesheets.label "Сохранять таблицы стилей в отдельных файлах">
 <!ENTITY clipperSaveActiveRulesOnly.label "Сохранять только активные правила">
 <!ENTITY isCloseBrowserAfterImport.label "Закрывать окно браузера когда загрузка завершена">
-<!ENTITY isSelectNoteAfterImport.label "Выбирать созданную заметку когда загрузка завершена">
 <!ENTITY isClipperPlaySound.label "Воспроизводить звук когда загрузка завершена">
 <!ENTITY additionCaption.label "Дополнительно">
 <!ENTITY isConfirmExit.label "Запрашивать подтверждение при закрытии приложения">

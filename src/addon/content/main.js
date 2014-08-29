@@ -433,9 +433,6 @@ ru.akman.znotes.Main = function() {
         case "isCloseBrowserAfterImport":
           Utils.IS_CLOSE_BROWSER_AFTER_IMPORT = event.data.newValue;
           break;
-        case "isSelectNoteAfterImport":
-          Utils.IS_SELECT_NOTE_AFTER_IMPORT = event.data.newValue;
-          break;
         case "isSavePosition":
           Utils.IS_SAVE_POSITION = event.data.newValue;
           saveNotesTreeSelection();
@@ -735,7 +732,7 @@ ru.akman.znotes.Main = function() {
       var note, row;
       if ( currentBook && currentBook.isOpen() ) {
         note = currentBook.getContentTree().getNoteById( noteId );
-        if ( note && Utils.IS_SELECT_NOTE_AFTER_IMPORT ) {
+        if ( note ) {
           row = notesList.indexOf( note );
           if ( row >=0 && row < noteTree.view.rowCount ) {
             noteTreeBoxObject.ensureRowIsVisible( row );
@@ -5088,15 +5085,7 @@ ru.akman.znotes.Main = function() {
       return;
     }
     updateNoteTreeItem( aNote );
-    if ( !aNote.isLoading() && currentNote != aNote &&
-         Utils.IS_SELECT_NOTE_AFTER_IMPORT ) {
-      var index = notesList.indexOf( aNote );
-      if ( index >= 0 && index < noteTree.view.rowCount ) {
-        noteTreeBoxObject.ensureRowIsVisible( index );
-        noteTree.view.selection.select( index );
-      }
-    } else if ( currentNote && currentNote == aNote &&
-                !currentNote.isLoading() ) {
+    if ( currentNote && currentNote === aNote && !currentNote.isLoading() ) {
       currentNoteChanged( true );
     }
   };
@@ -6184,6 +6173,7 @@ ru.akman.znotes.Main = function() {
 
   function getContext() {
     return {
+      window: window,
       book: currentBook,
       category: currentCategory,
       tag: currentTag,

@@ -224,7 +224,7 @@ ru.akman.znotes.Editor = function() {
     function onNoteDeleted( e ) {
       var aCategory = e.data.parentCategory;
       var aNote = e.data.deletedNote;
-      if ( currentNote && currentNote == aNote && currentEditor ) {
+      if ( currentNote && currentNote === aNote && currentEditor ) {
         currentEditor.close();
       }
     };
