@@ -425,27 +425,36 @@ var Utils = function() {
 
   var fontNameArray = null;
 
-  // TODO: showPopup()
-  pub.showPopup = function( imageUrl, title, text, textClickable,
-                            cookie, alertListener, name, dir, lang ) {
-    try {
-      Components.classes['@mozilla.org/alerts-service;1']
-                .getService( Components.interfaces.nsIAlertsService )
-                .showAlertNotification(
-        imageUrl, title, text, textClickable,
-        cookie, alertListener, name, dir, lang
+  pub.showPopup = function( imageUrl, title, text, textClickable, cookie,
+                            origin, bidi, lang,
+                            replacedWindow, alertListener ) {
+    /*
+    var win =
+      Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
+                .getService( Components.interfaces.nsIWindowWatcher )
+                .openWindow(
+        null, "chrome://znotes/content/alert.xul",
+        "_blank", "chrome,titlebar=no,popup=yes", null
       );
-    } catch ( e ) {
-      Utils.log( e );
-      var win =
-        Components.classes['@mozilla.org/embedcomp/window-watcher;1']
-                  .getService( Components.interfaces.nsIWindowWatcher )
-                  .openWindow(
-          null, 'chrome://global/content/alerts/alert.xul',
-          '_blank', 'chrome,titlebar=no,popup=yes', null
-        );
-      win.arguments = [ null, title, text, false, '' ];
-    }
+    */  
+    var win = pub.MAIN_WINDOW.open(
+      "chrome://znotes/content/alert.xul",
+      "",
+      "chrome,titlebar=no,popup=yes"
+    );
+    win.arguments = [
+      imageUrl,       // the image src url
+      title,          // the alert title
+      text,           // the alert text
+      textClickable,  // is the text clickable
+      cookie,         // the alert cookie to be passed back to the listener
+      origin,         // the alert origin reported by the look and feel
+      bidi,           // bidi
+      lang,           // lang
+      replacedWindow, // replaced alert window (nsIDOMWindow)
+      alertListener   // an optional callback listener (nsIObserver)
+    ];
+    return win;
   };
   
   pub.dumpStack = function() {
@@ -1032,6 +1041,7 @@ var Utils = function() {
         try {
           from.copyTo( parent, name );
         } catch ( e ) {
+          // TODO: copyEntryTo()
           pub.log( "nsIFile.copyTo()\n" + e + "from: " + from.path + "\nto: " + parent.path + "\nname: " + name );
         }
       } else if ( flag ) {
@@ -1041,6 +1051,7 @@ var Utils = function() {
         try {
           from.copyTo( parent, name );
         } catch ( e ) {
+          // TODO: copyEntryTo()
           pub.log( "nsIFile.copyTo()\n" + e + "from: " + from.path + "\nto: " + parent.path + "\nname: " + name );
         }
       }

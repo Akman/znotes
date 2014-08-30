@@ -1517,7 +1517,7 @@ ru.akman.znotes.Main = function() {
 
   // znotes_testsuite_command
   function doOpenTestSuiteWindow() {
-    var windowService =
+    var windowWatcher =
       Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
                 .getService( Components.interfaces.nsIWindowWatcher );
     var windowMediator =
@@ -1525,7 +1525,7 @@ ru.akman.znotes.Main = function() {
                 .getService( Components.interfaces.nsIWindowMediator );
     var win = windowMediator.getMostRecentWindow( "znotes:test" );
     if ( win ) {
-      windowService.activeWindow = win;
+      windowWatcher.activeWindow = win;
     } else {
       if ( Utils.checkChromeURL( "chrome://znotes/content/testsuite.xul" ) ) {
         win = window.open(
@@ -3472,12 +3472,12 @@ ru.akman.znotes.Main = function() {
         tabContainer.selectedIndex = tabIndex;
       }
     } else {
-      var windowService =
+      var windowWatcher =
         Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
                   .getService( Components.interfaces.nsIWindowWatcher );
-      var win = windowService.getWindowByName( windowName, null );
+      var win = windowWatcher.getWindowByName( windowName, null );
       if ( win ) {
-        windowService.activeWindow = win;
+        windowWatcher.activeWindow = win;
         win.focus();        
       } else {
         win = window.open(
@@ -6094,7 +6094,7 @@ ru.akman.znotes.Main = function() {
     disconnectHelperObservers();
     disconnectMutationObservers();
     disconnectPrefsObservers();
-    closeConsole();
+    closeWindows();
   };
   
   // HELPERS
@@ -6235,12 +6235,27 @@ ru.akman.znotes.Main = function() {
     }
   };
   
-  function closeConsole() {
+  function closeWindows() {
+    var win;
+    var windowWatcher =
+      Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
+                .getService( Components.interfaces.nsIWindowWatcher );
+    var windowEnumerator = windowWatcher.getWindowEnumerator();
+    // consoleWindow
     if ( consoleWindow ) {
       consoleWindow.removeEventListener( "close", onConsoleClose, true );
       if ( !consoleFlag ) {
         consoleWindow.close();
       }
+    }
+    // browserWindow
+    while ( windowEnumerator.hasMoreElements() ) {
+      win = windowEnumerator.getNext().QueryInterface(
+        Components.interfaces.nsIDOMWindow );
+      if ( win.document.location.href ===
+           "chrome://znotes/content/browser.xul" ) {
+        win.close();
+      };
     }
   };
   

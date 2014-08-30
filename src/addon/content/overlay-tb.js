@@ -775,8 +775,11 @@ ru.akman.znotes.ZNotes = function() {
         name,
         true,
         id,
-        alertObserver,
-        id
+        0,
+        null,
+        null,
+        null,
+        alertObserver
       );
     } else {
       Utils.showPopup(
@@ -785,8 +788,11 @@ ru.akman.znotes.ZNotes = function() {
         name,
         true,
         id,
-        alertObserver,
-        id
+        0,
+        null,
+        null,
+        null,
+        alertObserver
       );
     }
   };

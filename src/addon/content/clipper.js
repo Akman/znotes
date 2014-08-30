@@ -236,7 +236,7 @@ ru.akman.znotes.Clipper = function() {
   };
   
   function doSaveDocument() {
-    var aParams, aNote = null;
+    var aParams, anIndex, aSuffix, aNote = null;
     var anInfo = selectNote();
     if ( !anInfo ) {
       return;
@@ -249,6 +249,7 @@ ru.akman.znotes.Clipper = function() {
         }
         aParams = {
           input: {
+            kind: 2,
             title: getString( "confirmOverwrite.title" ),
             message1: getString( "confirmOverwrite.message1" ),
             message2: getString( "confirmOverwrite.message2" )
@@ -261,10 +262,20 @@ ru.akman.znotes.Clipper = function() {
           "chrome,dialog=yes,modal=yes,centerscreen,resizable=no",
           aParams
         ).focus();
-        if ( !aParams.output || !aParams.output.result ) {
+        if ( !aParams.output ) {
           return;
         }
-        aNote.remove();
+        if ( aParams.output.result ) {
+          aNote.remove();
+        } else {
+          anIndex = 2;
+          aSuffix = " (" + anIndex++ + ")";
+          while ( !anInfo.aCategory.canCreateNote( anInfo.aName + aSuffix,
+                  anInfo.aType ) ) {
+            aSuffix = " (" + anIndex++ + ")";
+          }
+          anInfo.aName = anInfo.aName + aSuffix;
+        }
       }
       aNote = anInfo.aCategory.createNote( anInfo.aName, anInfo.aType );
       aNote.setTags( anInfo.aTags );
@@ -323,8 +334,11 @@ ru.akman.znotes.Clipper = function() {
                 aBrowser.contentDocument.location.toString(),
                 true,
                 id,
-                alertObserver,
-                id
+                0,
+                null,
+                null,
+                null,
+                alertObserver
               );
             } else {
               playSuccess();
@@ -334,8 +348,11 @@ ru.akman.znotes.Clipper = function() {
                 aBrowser.contentDocument.location.toString(),
                 true,
                 id,
-                alertObserver,
-                id
+                0,
+                null,
+                null,
+                null,
+                alertObserver
               );
             }
           }
