@@ -1180,54 +1180,167 @@ ru.akman.znotes.TestSuite = function() {
   } );
 
   tests.push( {
-    name: "mailbox:/// protocol",
-    description: "get message by mailbox-url",
+    name: "Show many alerts by alerts service",
+    description: "Show alerts by alerts service",
     code: function () {
-      var urls = [
-        "mailbox:///D:/Thunderbird/Mail%20Folders%20&%20Files/Verizon/Drafts?number=368880&phint=cHash%3DACAD1695A60DF23A9340B954123CC53C&phint=mHash%3DB6F9B3D874B82D70C01DC7B47761E6CD&phint=eHash%3DC6BE66D084D847B0CCD17BCE9E2D096B&phint=cmpgnName%3D99_C_T_Rewards_Announcement_2",
-        "mailbox:///D:/Thunderbird/Mail%20Folders%20&%20Files/Verizon/Drafts?number=368880&che=140818100251-0700&plaid=808392&camid=06112012&ucid=C6BE66D084D847B0CCD17BCE9E2D096B",
-        "mailbox:///D:/Thunderbird/Mail%20Folders%20&%20Files/Verizon/Drafts?number=368880&r=dbb21f2334b68a74bd20e0c3bb9a5707cca4d2a2&s=C6BE66D084D847B0CCD17BCE9E2D096B&campaign_2014_Q2=99_C_T_Rewards_Announcement_2",
-        "mailbox:///D:/Thunderbird/Mail%20Folders%20&%20Files/Verizon/Drafts?number=368880&d=C6BE66D084D847B0CCD17BCE9E2D096B&t=99_C_T_Rewards_Announcement_2",
-        "mailbox:///D:/Thunderbird/Mail%20Folders%20&%20Files/Verizon/Drafts?number=368880&_ri_=X0Gzc2X%3DWQpglLjHJlTQGtzb90ze1FzbRzfvRdKriaq3MzbYwt9imKEf2zd1zeW5OVXHkMX%3Dw&_ei_=EolaGGF4SNMvxFF7KucKuWMj0RxN_v3p4uCP-OXbwIrtYK2nYm0Yn6ehU1gpbR5ylI4_MddSNp0mFyedtGnq7dQ27IPqDOFJnRLtcAp49Jylu3a-Rhuix0cvGUUEzLcmRM."
-      ];
-      
-      function testURL( url ) {
-        var ioService, uri, channel;
-        Utils.log( "Source: " + url );
-        ioService =
-          Components.classes["@mozilla.org/network/io-service;1"]
-                    .getService( Components.interfaces.nsIIOService );
-        uri = ioService.newURI( url, null, null );
-        uri.QueryInterface( Components.interfaces.nsIURL );
-        if ( uri.query ) {
-          uri.query = uri.query.replace(
-            /header=filter&emitter=js(&fetchCompleteMessage=false)?&?/,
-            ""
-          );
-        }
-        Utils.log( "Fixed: " + uri.spec );
-        try {
-          channel = ioService.newChannelFromURI( uri );
-        } catch ( e ) {
-          channel = null;
-          Utils.log( e );
-        }
-        if ( channel ) {
-          channel.asyncOpen(
-            {
-              onStartRequest: function ( aRequest, aContext ) {
-              },
-              onStopRequest: function ( aRequest, aContext, aStatusCode ) {
-              },
-              onDataAvailable: function ( aRequest, aContext, aStream, aOffset, aCount ) {
-              },
-            },
-            null
-          );
+      var alertsService =
+        Components.classes['@mozilla.org/alerts-service;1']
+                  .getService( Components.interfaces.nsIAlertsService );
+      var windowMediator =
+        Components.classes["@mozilla.org/appshell/window-mediator;1"]
+                  .getService( Components.interfaces.nsIWindowMediator );
+      var observer = {
+        observe: function( subject, topic, data ) {
+          switch ( topic ) {
+            case "alertshow":
+              Utils.log( "alertshow: " + data );
+              break;
+            case "alertclickcallback":
+              Utils.log( "alertclickcallback: " + data );
+              break;
+            case "alertfinished":
+              Utils.log( "alertfinished: " + data );
+              break;
+          }
         }
       };
-      for ( var i = 0; i < urls.length; i++ ) {
-        testURL( urls[i] );
+      var i, win, wins;
+      for ( i = 0; i < 5; i++ ) {
+        try {
+          wins = windowMediator.getEnumerator( 'alert:alert' );
+          while ( wins.hasMoreElements() ) {
+            win = wins.getNext();
+            if ( win.outerHeight < 10 ) {
+              win.close();
+            }
+          }
+          alertsService.showAlertNotification(
+            "chrome://znotes_images/skin/message-32x32.png",
+            "TITLE-" + i,
+            "TEXT-" + i,
+            true,
+            "COOCKIE-" + i,
+            observer,
+            "NAME-" + i,
+            null,
+            null
+          );
+        } catch ( e ) {
+          Utils.log( e + "\n" + Utils.dumpStack() );
+        }
+      }
+    }
+  } );
+  
+  tests.push( {
+    name: "Show many alerts by window mediator",
+    description: "Show popups by window mediator",
+    code: function () {
+      function showPopup( imageUrl, title, text, textClickable, cookie,
+                          origin, bidi, lang,
+                          replacedWindow, alertListener ) {
+        var win, wins =
+          Components.classes["@mozilla.org/appshell/window-mediator;1"]
+                    .getService( Components.interfaces.nsIWindowMediator )
+                    .getEnumerator( 'alert:alert' );
+        while ( wins.hasMoreElements() ) {
+          win = wins.getNext();
+          if ( win.outerHeight < 10 ) {
+            win.close();
+          }
+        }
+        /*
+        win =
+          Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
+                    .getService( Components.interfaces.nsIWindowWatcher )
+                    .openWindow(
+            null, "chrome://znotes/content/alert.xul",
+            "_blank", "chrome,titlebar=no,popup=yes", null
+          );
+        */  
+        win = window.open(
+          "chrome://global/content/alerts/alert.xul",
+          "",
+          "chrome,titlebar=no,popup=yes"
+        );
+        win.arguments = [
+          imageUrl,       // the image src url
+          title,          // the alert title
+          text,           // the alert text
+          textClickable,  // is the text clickable
+          cookie,         // the alert cookie to be passed back to the listener
+          origin,         // the alert origin reported by the look and feel
+          bidi,           // bidi
+          lang,           // lang
+          replacedWindow, // replaced alert window (nsIDOMWindow)
+          alertListener   // an optional callback listener (nsIObserver)
+        ];
+        return win;
+      };
+      var observer = {
+        observe: function( subject, topic, data ) {
+          switch ( topic ) {
+            case "alertshow":
+              Utils.log( "alertshow: " + data );
+              break;
+            case "alertclickcallback":
+              Utils.log( "alertclickcallback: " + data );
+              break;
+            case "alertfinished":
+              Utils.log( "alertfinished: " + data );
+              break;
+          }
+        }
+      };
+      for ( var i = 0; i < 5; i++ ) {
+        showPopup(
+          "chrome://znotes_images/skin/message-32x32.png",
+          "TITLE-" + i,
+          "TEXT-" + i,
+          true,
+          "COOCKIE-" + i,
+          0,
+          null,
+          null,
+          null,
+          observer
+        );
+      }
+    }
+  } );
+
+  tests.push( {
+    name: "Show many alerts by fixed alert",
+    description: "Show popups by fixed alert",
+    code: function () {
+      var observer = {
+        observe: function( subject, topic, data ) {
+          switch ( topic ) {
+            case "alertshow":
+              Utils.log( "alertshow: " + data );
+              break;
+            case "alertclickcallback":
+              Utils.log( "alertclickcallback: " + data );
+              break;
+            case "alertfinished":
+              Utils.log( "alertfinished: " + data );
+              break;
+          }
+        }
+      };
+      for ( var i = 0; i < 5; i++ ) {
+        Utils.showPopup(
+          "chrome://znotes_images/skin/message-32x32.png",
+          "TITLE-" + i,
+          "TEXT-" + i,
+          true,
+          "COOCKIE-" + i,
+          0,
+          null,
+          null,
+          null,
+          observer
+        );
       }
     }
   } );

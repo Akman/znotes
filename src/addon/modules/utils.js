@@ -428,7 +428,6 @@ var Utils = function() {
   pub.showPopup = function( imageUrl, title, text, textClickable, cookie,
                             origin, bidi, lang,
                             replacedWindow, alertListener ) {
-    /*
     var win =
       Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
                 .getService( Components.interfaces.nsIWindowWatcher )
@@ -436,12 +435,6 @@ var Utils = function() {
         null, "chrome://znotes/content/alert.xul",
         "_blank", "chrome,titlebar=no,popup=yes", null
       );
-    */  
-    var win = pub.MAIN_WINDOW.open(
-      "chrome://znotes/content/alert.xul",
-      "",
-      "chrome,titlebar=no,popup=yes"
-    );
     win.arguments = [
       imageUrl,       // the image src url
       title,          // the alert title
