@@ -4896,6 +4896,7 @@ ru.akman.znotes.Main = function() {
     if ( !currentBook || currentBook != aBook ) {
       return;
     }
+    Utils.log( "onNoteAppended()" );
     var aRow = null;
     var aTreeItem = null;
     updateFolderTreeItem( aCategory );
@@ -4940,6 +4941,11 @@ ru.akman.znotes.Main = function() {
         }
         break;
     }
+    if ( currentNote === anAppendedNote ) {
+      noteTreeBoxObject.ensureRowIsVisible( aRow );
+      Utils.log( "select :: " + aRow );
+      noteTree.view.selection.select( aRow );
+    }
   };
 
   function onNoteInserted( e ) {
@@ -4954,6 +4960,7 @@ ru.akman.znotes.Main = function() {
     if ( !currentBook || currentBook != aBook ) {
       return;
     }
+    Utils.log( "onNoteRemoved()" );
     var aRow = null;
     var aTreeItem = null;
     var anItemInfo = null;
@@ -4994,6 +5001,7 @@ ru.akman.znotes.Main = function() {
         noteTree.addEventListener( "select", onNoteSelect, false );
         if ( currentNote === aRemovedNote ) {
           noteTreeBoxObject.ensureRowIsVisible( aTreeIndex );
+          Utils.log( "select :: " + aTreeIndex );
           noteTree.view.selection.select( aTreeIndex );
         }
       }

@@ -475,7 +475,7 @@ var Category = function( aBook, anEntry, aParent ) {
     }
     this.notes.splice( anIndex, 0, aNote );
     aNote.parent = this;
-    for ( var i = anIndex; i < this.notes.length; i++ ) {
+    for ( var i = 0; i < this.notes.length; i++ ) {
       this.notes[i].setIndex( i );
     }
     this.notifyStateListener(
@@ -488,15 +488,13 @@ var Category = function( aBook, anEntry, aParent ) {
   };
 
   this.removeNote = function( aNote ) {
-    var anIndex = aNote.getIndex();
-    if ( anIndex < 0 ) {
+    var anIndex = this.notes.indexOf( aNote );
+    if ( anIndex === -1 ) {
       return;
     }
     this.notes.splice( anIndex, 1 );
     for ( var i = 0; i < this.notes.length; i++ ) {
-      if ( this.notes[i].getIndex() != i ) {
-        this.notes[i].setIndex( i );
-      }
+      this.notes[i].setIndex( i );
     }
     this.notifyStateListener(
       new ru.akman.znotes.core.Event(
