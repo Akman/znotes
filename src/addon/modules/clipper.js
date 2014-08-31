@@ -306,6 +306,7 @@ function getValidFileNameChunk( name ) {
   return name[name.length - 1];
 };
 
+// TODO: must returns URL-encoded name
 function getSuitableFileName( url, contentType, defaultType ) {
   var uri = ioService.newURI( url, null, null );
   var query, name, mime, path, ext, mime_ext, index;
@@ -400,7 +401,6 @@ function createFileEntry( dir, name ) {
     prefix += "_";
   } while ( entry.exists() && !entry.isDirectory() );
   try {
-    // TODO: NS_ERROR_FILE_NOT_FOUND: nsIFileOutputStream.init()
     ostream.init(
       entry,
       parseInt( "0x02", 16 ) | // PR_WRONLY
@@ -554,8 +554,7 @@ ChannelObserver.prototype = {
         nsIFileOutputStream.DEFER_OPEN );
       this.mBufferedOutputStream.init( this.mFileOutputStream, this.mBufsize );
     } else {
-      // TODO: real status
-      aRequest.cancel( Components.results.NS_ERROR_FILE_NOT_FOUND );
+      aRequest.cancel( aRequest.status );
     }
   },
   onStopRequest: function( aRequest, aContext, aStatusCode ) {
@@ -1606,14 +1605,20 @@ function inspectElement( aLinks, aRules, aSubstitution, anElement, aDocumentURL,
                 aLoader.createJob( aDirectory, anURL, aDocumentURL, aContentType,
                                    aDocumentURL /* groupId */ ),
                 function( job ) {
-                  if ( job.getStatus() ) {
-                    return;
+                  var entry = job.getEntry();
+                  var status = job.getStatus();
+                  if ( status ) {
+                    if ( entry.exists() ) {
+                      entry.remove( false );
+                    }
+                    Utils.log( getErrorName( status ) + " : " + job.getURL() );
+                  } else {
+                    setElementAttribute(
+                      anElement,
+                      "src",
+                      encodeURI( entry.leafName )
+                    );
                   }
-                  setElementAttribute(
-                    anElement,
-                    "src",
-                    encodeURI( job.getEntry().leafName )
-                  );
                 }
               );
               setElementAttribute( anElement, "src", anURL );
@@ -1646,14 +1651,20 @@ function inspectElement( aLinks, aRules, aSubstitution, anElement, aDocumentURL,
                   aLoader.createJob( aDirectory, anURL, aDocumentURL,
                                      aContentType, aDocumentURL /* groupId */ ),
                   function( job ) {
-                    if ( job.getStatus() ) {
-                      return;
+                    var entry = job.getEntry();
+                    var status = job.getStatus();
+                    if ( status ) {
+                      if ( entry.exists() ) {
+                        entry.remove( false );
+                      }
+                      Utils.log( getErrorName( status ) + " : " + job.getURL() );
+                    } else {
+                      setElementAttribute(
+                        anElement,
+                        "href",
+                        encodeURI( entry.leafName )
+                      );
                     }
-                    setElementAttribute(
-                      anElement,
-                      "href",
-                      encodeURI( job.getEntry().leafName )
-                    );
                   }
                 );
                 setElementAttribute( anElement, "href", anURL );
@@ -1671,14 +1682,20 @@ function inspectElement( aLinks, aRules, aSubstitution, anElement, aDocumentURL,
                 aLoader.createJob( aDirectory, anURL, aDocumentURL,
                                    aContentType, aDocumentURL /* groupId */ ),
                 function( job ) {
-                  if ( job.getStatus() ) {
-                    return;
+                  var entry = job.getEntry();
+                  var status = job.getStatus();
+                  if ( status ) {
+                    if ( entry.exists() ) {
+                      entry.remove( false );
+                    }
+                    Utils.log( getErrorName( status ) + " : " + job.getURL() );
+                  } else {
+                    setElementAttribute(
+                      anElement,
+                      "href",
+                      encodeURI( entry.leafName )
+                    );
                   }
-                  setElementAttribute(
-                    anElement,
-                    "href",
-                    encodeURI( job.getEntry().leafName )
-                  );
                 }
               );
               setElementAttribute( anElement, "href", anURL );
@@ -1701,14 +1718,20 @@ function inspectElement( aLinks, aRules, aSubstitution, anElement, aDocumentURL,
               aLoader.createJob( aDirectory, anURL, aDocumentURL, "",
                                  aDocumentURL /* groupId */ ),
               function( job ) {
-                if ( job.getStatus() ) {
-                  return;
+                var entry = job.getEntry();
+                var status = job.getStatus();
+                if ( status ) {
+                  if ( entry.exists() ) {
+                    entry.remove( false );
+                  }
+                  Utils.log( getErrorName( status ) + " : " + job.getURL() );
+                } else {
+                  setElementAttribute(
+                    anElement,
+                    "src",
+                    encodeURI( entry.leafName )
+                  );
                 }
-                setElementAttribute(
-                  anElement,
-                  "src",
-                  encodeURI( job.getEntry().leafName )
-                );
               }
             );
             setElementAttribute( anElement, "src", anURL );
@@ -1725,14 +1748,20 @@ function inspectElement( aLinks, aRules, aSubstitution, anElement, aDocumentURL,
               aLoader.createJob( aDirectory, anURL, aDocumentURL, aContentType,
                                  aDocumentURL /* groupId */ ),
               function( job ) {
-                if ( job.getStatus() ) {
-                  return;
+                var entry = job.getEntry();
+                var status = job.getStatus();
+                if ( status ) {
+                  if ( entry.exists() ) {
+                    entry.remove( false );
+                  }
+                  Utils.log( getErrorName( status ) + " : " + job.getURL() );
+                } else {
+                  setElementAttribute(
+                    anElement,
+                    "src",
+                    encodeURI( entry.leafName )
+                  );
                 }
-                setElementAttribute(
-                  anElement,
-                  "src",
-                  encodeURI( job.getEntry().leafName )
-                );
               }
             );
             setElementAttribute( anElement, "src", anURL );
@@ -1749,14 +1778,20 @@ function inspectElement( aLinks, aRules, aSubstitution, anElement, aDocumentURL,
               aLoader.createJob( aDirectory, anURL, aDocumentURL,
                                  aContentType, aDocumentURL /* groupId */ ),
               function( job ) {
-                if ( job.getStatus() ) {
-                  return;
+                var entry = job.getEntry();
+                var status = job.getStatus();
+                if ( status ) {
+                  if ( entry.exists() ) {
+                    entry.remove( false );
+                  }
+                  Utils.log( getErrorName( status ) + " : " + job.getURL() );
+                } else {
+                  setElementAttribute(
+                    anElement,
+                    "data",
+                    encodeURI( entry.leafName )
+                  );
                 }
-                setElementAttribute(
-                  anElement,
-                  "data",
-                  encodeURI( job.getEntry().leafName )
-                );
               }
             );
             setElementAttribute( anElement, "data", anURL );
@@ -1775,14 +1810,20 @@ function inspectElement( aLinks, aRules, aSubstitution, anElement, aDocumentURL,
               aLoader.createJob( aDirectory, anURL, aDocumentURL, "",
                                  aDocumentURL /* groupId */ ),
               function( job ) {
-                if ( job.getStatus() ) {
-                  return;
+                var entry = job.getEntry();
+                var status = job.getStatus();
+                if ( status ) {
+                  if ( entry.exists() ) {
+                    entry.remove( false );
+                  }
+                  Utils.log( getErrorName( status ) + " : " + job.getURL() );
+                } else {
+                  setElementAttribute(
+                    anElement,
+                    "background",
+                    encodeURI( entry.leafName )
+                  );
                 }
-                setElementAttribute(
-                  anElement,
-                  "background",
-                  encodeURI( job.getEntry().leafName )
-                );
               }
             );
             setElementAttribute( anElement, "background", anURL );
@@ -1799,14 +1840,20 @@ function inspectElement( aLinks, aRules, aSubstitution, anElement, aDocumentURL,
                   aLoader.createJob( aDirectory, anURL, aDocumentURL,
                                      "", aDocumentURL /* groupId */ ),
                   function( job ) {
-                    if ( job.getStatus() ) {
-                      return;
+                    var entry = job.getEntry();
+                    var status = job.getStatus();
+                    if ( status ) {
+                      if ( entry.exists() ) {
+                        entry.remove( false );
+                      }
+                      Utils.log( getErrorName( status ) + " : " + job.getURL() );
+                    } else {
+                      setElementAttribute(
+                        anElement,
+                        "src",
+                        encodeURI( entry.leafName )
+                      );
                     }
-                    setElementAttribute(
-                      anElement,
-                      "src",
-                      encodeURI( job.getEntry().leafName )
-                    );
                   }
                 );
                 setElementAttribute( anElement, "src", anURL );
@@ -1899,15 +1946,21 @@ function inspectElement( aLinks, aRules, aSubstitution, anElement, aDocumentURL,
         null /* localNamespaces */, anElement.style, aBaseURL, aDocumentURL,
         aDirectory, aLoader, aFlags,
         function( job ) {
-          if ( job.getStatus() ) {
-            return;
+          var entry = job.getEntry();
+          var status = job.getStatus();
+          if ( status ) {
+            if ( entry.exists() ) {
+              entry.remove( false );
+            }
+            Utils.log( getErrorName( status ) + " : " + job.getURL() );
+          } else {
+            var cssText = anElement.style.cssText.replace(
+              job.getURL(),
+              encodeURI( job.getEntry().leafName ),
+              "g"
+            );
+            anElement.style.cssText = cssText;
           }
-          var cssText = anElement.style.cssText.replace(
-            job.getURL(),
-            encodeURI( job.getEntry().leafName ),
-            "g"
-          );
-          anElement.style.cssText = cssText;
         }
       );
       if ( oldCSSText !== newCSSText ) {
@@ -2264,6 +2317,7 @@ var Job = function( aLoader, aDirectory, anURL, aReferrerURL, aContentType,
   this.mEntry.append( this.mId );
   this.mStatus = -1;
   this.mActive = false;
+  this.mInitialized = false;
   this.mRequest = null;
 };
 Job.prototype = {
@@ -2313,7 +2367,11 @@ Job.prototype = {
       entryPermissions,
       bufferSize,
       {
+        // TODO: onstart() may be called again and again ...
         onstart: function( aChannel, aRequest, aContext ) {
+          if ( self.mInitialized ) {
+            return;
+          }
           var mime, fileNameObj, name, entry;
           if ( aChannel instanceof nsIHttpChannel ) {
             try {
@@ -2328,7 +2386,7 @@ Job.prototype = {
             self.mContentType = mime;
           }
           fileNameObj = getSuitableFileName(
-            self.getURL(),
+            aChannel.URI.spec,
             self.mContentType
           );
           name = fileNameObj.name;
@@ -2338,6 +2396,7 @@ Job.prototype = {
           entry = createFileEntry( self.getDirectory(), name );
           self.mEntry.initWithFile( entry );
           self.mRequest = aRequest;
+          self.mInitialized = true;
           self.getLoader()._startJob( self );
         },
         onprogress: function( aChannel, aRequest, aContext, aOffset, aCount ) {

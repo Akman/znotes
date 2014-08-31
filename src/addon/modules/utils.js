@@ -1012,9 +1012,6 @@ var Utils = function() {
   pub.copyEntryTo = function( from, to, name, overwrite ) {
     var entries, entry, parent = to ? to.clone() : from.parent.clone();
     var flag = ( overwrite === undefined ? false : !!overwrite );
-    if ( !from.exists() ) {
-      return;
-    }
     if ( from.isDirectory() ) {
       parent.append( name );
       if ( !parent.exists() || !parent.isDirectory() ) {
@@ -1022,7 +1019,7 @@ var Utils = function() {
           parseInt( "0755", 8 ) );
       }
       entries = from.directoryEntries;
-      while ( entries.hasMoreElements() ) {
+      while ( entries && entries.hasMoreElements() ) {
         entry = entries.getNext();
         entry.QueryInterface( Components.interfaces.nsIFile );
         pub.copyEntryTo( entry, parent, entry.leafName, flag );
@@ -1034,8 +1031,7 @@ var Utils = function() {
         try {
           from.copyTo( parent, name );
         } catch ( e ) {
-          // TODO: copyEntryTo()
-          pub.log( "nsIFile.copyTo()\n" + e + "from: " + from.path + "\nto: " + parent.path + "\nname: " + name );
+          //
         }
       } else if ( flag ) {
         if ( entry.exists() ) {
@@ -1044,8 +1040,7 @@ var Utils = function() {
         try {
           from.copyTo( parent, name );
         } catch ( e ) {
-          // TODO: copyEntryTo()
-          pub.log( "nsIFile.copyTo()\n" + e + "from: " + from.path + "\nto: " + parent.path + "\nname: " + name );
+          //
         }
       }
     }
