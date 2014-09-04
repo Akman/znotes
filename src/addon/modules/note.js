@@ -127,6 +127,10 @@ var Note = function( aBook, anEntry, aCategory, aType, aTagID ) {
     this.entry.setIndex( value );
   };
 
+  this.dump = function( prefix ) {
+    return prefix + this.getName() + "\n";
+  };
+  
   this.getType = function() {
     return this.type;
   };
@@ -425,15 +429,15 @@ var Note = function( aBook, anEntry, aCategory, aType, aTagID ) {
       this.entry.remove();
       this.exists = false;
       aParent.removeNote( this );
+      this.notifyStateListener(
+        new ru.akman.znotes.core.Event(
+          "NoteDeleted",
+          { parentCategory: aParent, deletedNote: this }
+        )
+      );
     } else {
       this.moveInto( this.getBin() );
     }
-    this.notifyStateListener(
-      new ru.akman.znotes.core.Event(
-        "NoteDeleted",
-        { parentCategory: aParent, deletedNote: this }
-      )
-    );
   };
 
   this.moveInto = function( aCategory, aName ) {
@@ -442,29 +446,24 @@ var Note = function( aBook, anEntry, aCategory, aType, aTagID ) {
     var aType = this.getType();
     if ( aName === undefined ) {
       aName = this.getName();
-      aSuffix = "";
-      anIndex = 2;
-      while ( !aCategory.canCreateNote( aName + aSuffix, aType ) ) {
-        aSuffix = " (" + anIndex++ + ")";
-      }
-      aName += aSuffix;
     }
+    aSuffix = "";
+    anIndex = 2;
+    while ( !aCategory.canCreateNote( aName + aSuffix, aType ) ) {
+      aSuffix = " (" + anIndex++ + ")";
+    }
+    aName += aSuffix;
     this.entry.moveTo( aCategory.entry, aName );
-    if ( aName !== undefined ) {
+    if ( this.name !== aName ) {
       this.name = aName;
     }
-    // @@@@ 1 What if the note is in editing mode ?
     this.updateDocument();
-    aParent.removeNote( this );
-    aCategory.appendNote( this );
+    aParent.moveNoteInto( this, aCategory );
   };
   
   this.moveTo = function( anIndex ) {
     var aParent = this.getParent();
-    if ( aParent.removeNote( this ) ) {
-      return aParent.insertNote( this, anIndex );
-    }
-    return null;
+    aParent.moveNoteTo( this, anIndex );
   };
 
   this.refresh = function() {
