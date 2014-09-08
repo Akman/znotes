@@ -1000,11 +1000,12 @@ ru.akman.znotes.OpenSaveDialog = function() {
   };
   
   function onNoteAppended( e ) {
-    if ( !currentBook ) {
-      return;
-    }
     var aNote = e.data.appendedNote;
     var aParent = e.data.parentCategory;
+    var aBook = aParent.getBook();
+    if ( !currentBook || currentBook !== aBook ) {
+      return;
+    }
     updateCategoryTreeItem( aParent );
     if ( !isNoteInTree( aNote, aParent ) ) {
       return;
@@ -1032,11 +1033,12 @@ ru.akman.znotes.OpenSaveDialog = function() {
   };
 
   function onNoteRemoved( e ) {
-    if ( !currentBook ) {
-      return;
-    }
     var aNote = e.data.removedNote;
     var aParent = e.data.parentCategory;
+    var aBook = aParent.getBook();
+    if ( !currentBook || currentBook !== aBook ) {
+      return;
+    }
     updateCategoryTreeItem( aParent );
     if ( !isNoteInTree( aNote, aParent ) ) {
       return;
@@ -1061,11 +1063,12 @@ ru.akman.znotes.OpenSaveDialog = function() {
  };
 
   function onNoteMovedTo( e ) {
-    if ( !currentBook || !currentCategory ) {
-      return;
-    }
     var aNote = e.data.movedToNote;
     var aParent = e.data.parentCategory;
+    var aBook = aParent.getBook();
+    if ( !currentBook || currentBook !== aBook || !currentCategory ) {
+      return;
+    }
     if ( !isNoteInTree( aNote, aParent ) ) {
       return;
     }
@@ -1095,7 +1098,8 @@ ru.akman.znotes.OpenSaveDialog = function() {
     var aNewParent = e.data.newParentCategory;
     var aNewIndex = e.data.newIndex;
     var aNote = e.data.movedIntoNote;
-    if ( !currentBook ) {
+    var aBook = anOldParent.getBook();
+    if ( !currentBook || currentBook !== aBook ) {
       return;
     }
     updateCategoryTreeItem( anOldParent );
@@ -1144,11 +1148,12 @@ ru.akman.znotes.OpenSaveDialog = function() {
   };
   
   function onNoteChanged( e ) {
-    if ( !currentBook ) {
-      return;
-    }
     var aNote = e.data.changedNote;
     var aParent = e.data.parentCategory;
+    var aBook = aParent.getBook();
+    if ( !currentBook || currentBook !== aBook ) {
+      return;
+    }
     if ( !isNoteInTree( aNote, aParent ) ) {
       return;
     }
@@ -1159,11 +1164,12 @@ ru.akman.znotes.OpenSaveDialog = function() {
   };
 
   function onNoteTagsChanged( e ) {
-    if ( !currentBook ) {
-      return;
-    }
     var aNote = e.data.changedNote;
     var aParent = e.data.parentCategory;
+    var aBook = aParent.getBook();
+    if ( !currentBook || currentBook !== aBook ) {
+      return;
+    }
     if ( currentCategory ) {
       if ( !isNoteInTree( aNote, aParent ) ) {
         return;

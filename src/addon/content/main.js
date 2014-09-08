@@ -758,20 +758,46 @@ ru.akman.znotes.Main = function() {
     getCommandStateParams: function( cmd, params ) {
     },
     doCommandParams: function( cmd, params ) {
-      var data = params.getStringValue( "id" ).split( "&" );
-      var bookId = data[0], noteId = data[1];
-      var note, row;
-      // TODO: another bookId then currentBook
-      Utils.log( bookId + " : " + noteId );
+      var book, category, parent, note, bookId, noteId, data, row;
+      data = params.getStringValue( "id" ).split( "&" );
+      bookId = data[0];
+      noteId = data[1];
+      row = -1;
+      for ( var i = 0; i < booksList.length; i++ ) {
+        book = booksList[i];
+        if ( book.getId() === bookId && book.isOpen() ) {
+          row = i;
+          break;
+        }
+      }
+      if ( row === -1 ) {
+        return;
+      }
+      if ( book !== currentBook ) {
+        bookTreeBoxObject.ensureRowIsVisible( row );
+        bookTree.view.selection.select( row );
+      }
       if ( currentBook && currentBook.isOpen() ) {
         note = currentBook.getContentTree().getNoteById( noteId );
-        if ( note ) {
-          row = notesList.indexOf( note );
-          if ( row >=0 && row < noteTree.view.rowCount ) {
-            noteTreeBoxObject.ensureRowIsVisible( row );
-            noteTree.view.selection.select( row );
-          }
+        if ( !note ) {
+          return;
         }
+        row = notesList.indexOf( note );
+        if ( row === -1 ) {
+          category = note.getParent();
+          parent = category;
+          while ( !parent.isRoot() ) {
+            parent.setOpenState( true );
+            updateFolderTreeItem( parent );
+            parent = parent.getParent();
+          }
+          row = folderTree.view.getIndexOfItem( getFolderTreeItem( category ) );
+          folderTreeBoxObject.ensureRowIsVisible( row );
+          folderTree.view.selection.select( row );
+          row = notesList.indexOf( note );
+        }
+        noteTreeBoxObject.ensureRowIsVisible( row );
+        noteTree.view.selection.select( row );
       }
     },
     doCommand: function( cmd ) {
@@ -6450,11 +6476,10 @@ ru.akman.znotes.Main = function() {
   };
   
   function closeWindows() {
-    var win;
+    var win, windowEnumerator;
     var windowWatcher =
       Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
                 .getService( Components.interfaces.nsIWindowWatcher );
-    var windowEnumerator = windowWatcher.getWindowEnumerator();
     // consoleWindow
     if ( consoleWindow ) {
       consoleWindow.removeEventListener( "close", onConsoleClose, true );
@@ -6463,11 +6488,12 @@ ru.akman.znotes.Main = function() {
       }
     }
     // browserWindow
+    windowEnumerator = windowWatcher.getWindowEnumerator();
     while ( windowEnumerator.hasMoreElements() ) {
       win = windowEnumerator.getNext().QueryInterface(
         Components.interfaces.nsIDOMWindow );
-      if ( win.document.location.href ===
-           "chrome://znotes/content/browser.xul" ) {
+      if ( win.document.location.href.indexOf(
+             "chrome://znotes/content/browser.xul" ) === 0 ) {
         win.close();
       };
     }
