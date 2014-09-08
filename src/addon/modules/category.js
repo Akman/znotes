@@ -198,14 +198,6 @@ var Category = function( aBook, anEntry, aParent ) {
     if ( this.openState !== aState ) {
       this.entry.setOpenState( aState );
       this.openState = aState;
-
-      this.notifyStateListener(
-        new ru.akman.znotes.core.Event(
-          "CategoryChanged",
-          { parentCategory: this.getParent(), changedCategory: this }
-        )
-      );
-
     }
   };
 
@@ -371,7 +363,6 @@ var Category = function( aBook, anEntry, aParent ) {
       this.name = aName;
     }
     aParent.moveCategoryInto( this, aCategory );
-    this.refresh();
     return this;
   };
 
@@ -502,6 +493,7 @@ var Category = function( aBook, anEntry, aParent ) {
         aParent.categories[i].setIndex( i );
       }
     }
+    aCategory.refresh();
     this.notifyStateListener(
       new ru.akman.znotes.core.Event(
         "CategoryMovedInto",
