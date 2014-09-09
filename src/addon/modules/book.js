@@ -249,7 +249,8 @@ var Book = function( aManager, anId, aName, aDescription, aDriver, aConnection,
   };
 
   this.removeWithAllData = function() {
-    var driver = ru.akman.znotes.DriverManager.getInstance().getDriver( this.getDriver() );
+    var driver = ru.akman.znotes.DriverManager.getInstance()
+                                              .getDriver( this.getDriver() );
     if ( !driver ) {
       return;
     }
@@ -404,6 +405,7 @@ var Book = function( aManager, anId, aName, aDescription, aDriver, aConnection,
   /*
   BookChanged( aChangedBook )
   BookDeleted( aDeletedBook )
+  BookDeletedWithData( aDeletedWithDataBook )
   BookOpened( anOpenedBook )
   BookClosed( aClosedBook )
   */

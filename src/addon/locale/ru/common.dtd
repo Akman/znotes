@@ -249,8 +249,8 @@
 <!ENTITY znotes_newnote_key_modifiers "accel,alt">
 <!ENTITY znotes_newnote_keycode "">
 
-<!ENTITY znotes_importnote_label "Импорт заметки">
-<!ENTITY znotes_importnote_tooltip "Импорт заметки">
+<!ENTITY znotes_importnote_label "Веб клиппер">
+<!ENTITY znotes_importnote_tooltip "Импорт веб страницы">
 <!ENTITY znotes_importnote_accesskey "">
 <!ENTITY znotes_importnote_key "">
 <!ENTITY znotes_importnote_key_modifiers "">

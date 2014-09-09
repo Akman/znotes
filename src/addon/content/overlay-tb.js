@@ -542,6 +542,7 @@ ru.akman.znotes.ZNotes = function() {
           doNewBook();
           break;
         case "znotes_tbnewnote_command":
+          Utils.switchToMainTab();
           Common.goDoCommand(
             "znotes_newnote_command",
             mainWindow.document.getElementById( "znotes_newnote_command" )

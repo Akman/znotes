@@ -249,8 +249,8 @@
 <!ENTITY znotes_newnote_key_modifiers "accel,alt">
 <!ENTITY znotes_newnote_keycode "">
 
-<!ENTITY znotes_importnote_label "Import note">
-<!ENTITY znotes_importnote_tooltip "Import note">
+<!ENTITY znotes_importnote_label "Web clipper">
+<!ENTITY znotes_importnote_tooltip "Import web page">
 <!ENTITY znotes_importnote_accesskey "">
 <!ENTITY znotes_importnote_key "">
 <!ENTITY znotes_importnote_key_modifiers "">
