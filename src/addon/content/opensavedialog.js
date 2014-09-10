@@ -1014,6 +1014,7 @@ ru.akman.znotes.OpenSaveDialog = function() {
   };
   
   function onNoteAppended( e ) {
+    var aRow, aTreeItem;
     var aNote = e.data.appendedNote;
     var aParent = e.data.parentCategory;
     var aBook = aParent.getBook();
@@ -1024,20 +1025,14 @@ ru.akman.znotes.OpenSaveDialog = function() {
     if ( !isNoteInTree( aNote, aParent ) ) {
       return;
     }
-    var id = aNote.getId();
-    var aRow = currentCategory ? aNote.getIndex() : noteTree.view.rowCount;
-    var aTreeItem = createNoteTreeItem( aNote );
-    notes[id] = {
+    aRow = noteTree.view.rowCount;
+    aTreeItem = createNoteTreeItem( aNote );
+    notes[aNote.getId()] = {
       note: aNote,
       item: aTreeItem
     }
     noteTree.removeEventListener( "select", onNoteSelect, false );
-    if ( aRow === noteTree.view.rowCount ) {
-      noteTreeChildren.appendChild( aTreeItem );
-    } else {
-      noteTreeChildren.insertBefore( aTreeItem,
-        noteTree.view.getItemAtIndex( aRow ) );
-    }
+    noteTreeChildren.appendChild( aTreeItem );
     noteTree.addEventListener( "select", onNoteSelect, false );
     if ( noteTree.view.rowCount === 1 ) {
       noteTreeBoxObject.ensureRowIsVisible( aRow );
@@ -1047,6 +1042,7 @@ ru.akman.znotes.OpenSaveDialog = function() {
   };
 
   function onNoteRemoved( e ) {
+    var aRow, aTreeItem;
     var aNote = e.data.removedNote;
     var aParent = e.data.parentCategory;
     var aBook = aParent.getBook();
@@ -1057,14 +1053,13 @@ ru.akman.znotes.OpenSaveDialog = function() {
     if ( !isNoteInTree( aNote, aParent ) ) {
       return;
     }
-    var id = aNote.getId();
-    var aTreeItem = getItemOfNote( aNote );
-    var aRow = noteTree.view.getIndexOfItem( aTreeItem );
-    delete notes[id];
+    aTreeItem = getItemOfNote( aNote );
+    aRow = noteTree.view.getIndexOfItem( aTreeItem );
+    delete notes[aNote.getId()];
     noteTree.removeEventListener( "select", onNoteSelect, false );
     noteTreeChildren.removeChild( aTreeItem );
     noteTree.addEventListener( "select", onNoteSelect, false );
-    if ( currentNote === aNote ) {
+    if ( currentNote && currentNote === aNote ) {
       if ( aRow === noteTree.view.rowCount ) {
         aRow--;
       }
@@ -1077,36 +1072,37 @@ ru.akman.znotes.OpenSaveDialog = function() {
  };
 
   function onNoteMovedTo( e ) {
+    var aTreeItem;
     var aNote = e.data.movedToNote;
     var aParent = e.data.parentCategory;
+    var anOldIndex = e.data.oldValue;
+    var aNewIndex = e.data.newValue;
     var aBook = aParent.getBook();
-    if ( !currentBook || currentBook !== aBook || !currentCategory ) {
+    if ( !currentBook || currentBook !== aBook ) {
       return;
     }
     if ( !isNoteInTree( aNote, aParent ) ) {
       return;
     }
-    var id = aNote.getId();
-    var aTreeItem = getItemOfNote( aNote );
-    var aRow = aNote.getIndex();
+    aTreeItem = getItemOfNote( aNote );
     noteTree.removeEventListener( "select", onNoteSelect, false );
     noteTreeChildren.removeChild( aTreeItem );
-    if ( aRow === noteTree.view.rowCount ) {
+    if ( aNewIndex === noteTree.view.rowCount ) {
       noteTreeChildren.appendChild( aTreeItem );
     } else {
       noteTreeChildren.insertBefore( aTreeItem,
-        noteTree.view.getItemAtIndex( aRow ) );
+        noteTree.view.getItemAtIndex( aNewIndex ) );
     }
-    if ( currentNote === aNote ) {
-      noteTreeBoxObject.ensureRowIsVisible( aRow );
-      noteTree.view.selection.currentIndex = aRow;
-      noteTree.view.selection.select( aRow );
+    if ( currentNote && currentNote === aNote ) {
+      noteTreeBoxObject.ensureRowIsVisible( aNewIndex );
+      noteTree.view.selection.currentIndex = aNewIndex;
+      noteTree.view.selection.select( aNewIndex );
     }
     noteTree.addEventListener( "select", onNoteSelect, false );
   };
 
   function onNoteMovedInto( e ) {
-    var id, aRow, aTreeItem;
+    var anId, aRow, aTreeItem;
     var anOldParent = e.data.oldParentCategory;
     var anOldIndex = e.data.oldIndex;
     var aNewParent = e.data.newParentCategory;
@@ -1118,15 +1114,15 @@ ru.akman.znotes.OpenSaveDialog = function() {
     }
     updateCategoryTreeItem( anOldParent );
     updateCategoryTreeItem( aNewParent );
-    id = aNote.getId();
+    anId = aNote.getId();
     if ( currentCategory === anOldParent ) {
       aTreeItem = getItemOfNote( aNote );
       aRow = noteTree.view.getIndexOfItem( aTreeItem );
       noteTree.removeEventListener( "select", onNoteSelect, false );
       noteTreeChildren.removeChild( aTreeItem );
       noteTree.addEventListener( "select", onNoteSelect, false );
-      delete notes[id];
-      if ( currentNote === aNote ) {
+      delete notes[anId];
+      if ( currentNote && currentNote === aNote ) {
         if ( aRow === noteTree.view.rowCount ) {
           aRow--;
         }
@@ -1138,18 +1134,13 @@ ru.akman.znotes.OpenSaveDialog = function() {
       }
     } else if ( currentCategory === aNewParent ) {
       aTreeItem = createNoteTreeItem( aNote );
-      aRow = aNote.getIndex();
-      notes[id] = {
+      aRow = noteTree.view.rowCount;
+      notes[anId] = {
         note: aNote,
         item: aTreeItem
       };
       noteTree.removeEventListener( "select", onNoteSelect, false );
-      if ( aRow === noteTree.view.rowCount ) {
-        noteTreeChildren.appendChild( aTreeItem );
-      } else {
-        noteTreeChildren.insertBefore( aTreeItem,
-          noteTree.view.getItemAtIndex( aRow ) );
-      }
+      noteTreeChildren.appendChild( aTreeItem );
       noteTree.addEventListener( "select", onNoteSelect, false );
       if ( noteTree.view.rowCount === 1 ) {
         noteTreeBoxObject.ensureRowIsVisible( aRow );
@@ -1178,6 +1169,7 @@ ru.akman.znotes.OpenSaveDialog = function() {
   };
 
   function onNoteTagsChanged( e ) {
+    var anId, aRow, aTreeItem;
     var aNote = e.data.changedNote;
     var aParent = e.data.parentCategory;
     var aBook = aParent.getBook();
@@ -1190,31 +1182,34 @@ ru.akman.znotes.OpenSaveDialog = function() {
       }
       onNoteChanged( e );
     } else if ( currentTag ) {
-      var id = aNote.getId();
-      var aTreeItem = getItemOfNote( aNote );
+      anId = aNote.getId();
+      aTreeItem = getItemOfNote( aNote );
       if ( isNoteInTree( aNote, aParent ) ) {
         if ( !aTreeItem ) {
           aTreeItem = createNoteTreeItem( aNote );
-          notes[id] = {
+          notes[anId] = {
             note: aNote,
             item: aTreeItem
           }
+          aRow = noteTree.view.rowCount;
+          noteTree.removeEventListener( "select", onNoteSelect, false );
           noteTreeChildren.appendChild( aTreeItem );
+          noteTree.addEventListener( "select", onNoteSelect, false );
           if ( noteTree.view.rowCount === 1 ) {
-            noteTree.view.selection.currentIndex = 0;
-            noteTree.view.selection.select( 0 );
+            noteTree.view.selection.currentIndex = aRow;
+            noteTree.view.selection.select( aRow );
           }
         } else {
           updateNoteTreeItem( aNote );
         }
       } else {
         if ( aTreeItem ) {
-          var aRow = noteTree.view.getIndexOfItem( aTreeItem );
+          aRow = noteTree.view.getIndexOfItem( aTreeItem );
           noteTree.removeEventListener( "select", onNoteSelect, false );
           noteTreeChildren.removeChild( aTreeItem );
           noteTree.addEventListener( "select", onNoteSelect, false );
-          delete notes[id];
-          if ( currentNote === aNote ) {
+          delete notes[anId];
+          if ( currentNote && currentNote === aNote ) {
             if ( aRow === noteTree.view.rowCount ) {
               aRow--;
             }
