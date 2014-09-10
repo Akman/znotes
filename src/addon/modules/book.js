@@ -59,7 +59,9 @@ var Book = function( aManager, anId, aName, aDescription, aDriver, aConnection,
   var Utils = ru.akman.znotes.Utils;
 
   this.updateRegistryObject = function() {
-    this.manager.updateRegistryObject();
+    if ( !this.isLocked() ) {
+      this.manager.updateRegistryObject();
+    }
   };
 
   this.getPlaces = function() {
@@ -163,31 +165,17 @@ var Book = function( aManager, anId, aName, aDescription, aDriver, aConnection,
     return result;
   };
 
-  this.setPreferences = function( preferences ) {
-    if ( !Utils.cloneObject( preferences, this.preferences ) ) {
-      return;
-    }
-    this.updateRegistryObject();
-    this.notifyStateListener(
-      new ru.akman.znotes.core.Event(
-        "BookChanged",
-        { changedBook: this }
-      )
-    );
-  };
-
   this.getIndex = function() {
-    return this.index;
+    return parseInt( this.index );
   };
 
   this.setIndex = function( index ) {
-    if ( this.getIndex() == index ) {
+    var value = parseInt( index );
+    if ( this.getIndex() === value ) {
       return;
     }
-    this.index = index;
-    if ( !this.isLocked() ) {
-      this.updateRegistryObject();
-    }
+    this.index = value;
+    this.updateRegistryObject();
   };
 
   this.getSelectedTree = function() {
@@ -239,7 +227,10 @@ var Book = function( aManager, anId, aName, aDescription, aDriver, aConnection,
   };
 
   this.remove = function() {
-    this.updateRegistryObject();
+    if ( this.isOpen() ) {
+      this.close();
+    }
+    this.manager.removeBook( this );
     this.notifyStateListener(
       new ru.akman.znotes.core.Event(
         "BookDeleted",
@@ -249,30 +240,39 @@ var Book = function( aManager, anId, aName, aDescription, aDriver, aConnection,
   };
 
   this.removeWithAllData = function() {
-    var driver = ru.akman.znotes.DriverManager.getInstance()
-                                              .getDriver( this.getDriver() );
-    if ( !driver ) {
-      return;
+    var driver;
+    try {
+      driver = ru.akman.znotes.DriverManager.getInstance()
+                                            .getDriver( this.getDriver() );
+      if ( driver ) {
+        driver.getConnection( this.getConnection() ).remove();
+      }
+    } catch ( e ) {
+      Utils.log( e + "\n" + Utils.dumpStack() );
     }
-    var connection = driver.getConnection( this.getConnection() );
-    connection.remove();
-    this.updateRegistryObject();
+    if ( this.isOpen() ) {
+      this.close();
+    }
+    this.manager.removeBook( this );
     this.notifyStateListener(
       new ru.akman.znotes.core.Event(
-        "BookDeleted",
-        { deletedBook: this }
+        "BookDeletedWithAllData",
+        { deletedWithAllDataBook: this }
       )
     );
   };
 
   this.createData = function() {
-    var driver = ru.akman.znotes.DriverManager.getInstance().getDriver( this.getDriver() );
-    if ( !driver ) {
-      return false;
+    var driver;
+    try {
+      driver = ru.akman.znotes.DriverManager.getInstance()
+                                            .getDriver( this.getDriver() );
+      driver.getConnection( this.getConnection() ).create();
+    } catch ( e ) {
+      driver = null;
+      Utils.log( e + "\n" + Utils.dumpStack() );
     }
-    var connection = driver.getConnection( this.getConnection() );
-    connection.create();
-    return true;
+    return !!driver;
   };
 
   this.close = function() {
@@ -282,9 +282,7 @@ var Book = function( aManager, anId, aName, aDescription, aDriver, aConnection,
     this.tagList = null;
     this.contentTree = null;
     this.opened = false;
-    if ( !this.isLocked() ) {
-      this.updateRegistryObject();
-    }
+    this.updateRegistryObject();
     this.notifyStateListener(
       new ru.akman.znotes.core.Event(
         "BookClosed",
@@ -331,9 +329,7 @@ var Book = function( aManager, anId, aName, aDescription, aDriver, aConnection,
     this.contentTree.load();
     // *************************************************************************
     this.opened = true;
-    if ( !this.isLocked() ) {
-      this.updateRegistryObject();
-    }
+    this.updateRegistryObject();
     this.notifyStateListener(
       new ru.akman.znotes.core.Event(
         "BookOpened",
@@ -402,14 +398,6 @@ var Book = function( aManager, anId, aName, aDescription, aDriver, aConnection,
     this.manager.notifyStateListener( event );
   };
 
-  /*
-  BookChanged( aChangedBook )
-  BookDeleted( aDeletedBook )
-  BookDeletedWithData( aDeletedWithDataBook )
-  BookOpened( anOpenedBook )
-  BookClosed( aClosedBook )
-  */
-
   this.toString = function() {
     return "{ id='" +
       this.id + "', name='" +
@@ -455,5 +443,6 @@ var Book = function( aManager, anId, aName, aDescription, aDriver, aConnection,
       this.opened = false;
     }
   }
+  this.manager.appendBook( this );
   this.locked = false;
 };

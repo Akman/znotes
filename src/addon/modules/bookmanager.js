@@ -46,11 +46,11 @@ var BookManager = function() {
 
   var Utils = ru.akman.znotes.Utils;
 
-  var registryPath = null;
-  var registryObject = null;
+  var registryPath = getEntry();
+  var registryObject = [];
+  var books = [];
+  var listeners = [];
 
-  var books = null;
-  var listeners = null;
   var locked = false;
   
   var pub = {};
@@ -60,19 +60,31 @@ var BookManager = function() {
     var placeId = Utils.getPlaceId();
     entry.append( placeId );
     if ( !entry.exists() || !entry.isDirectory() ) {
-      entry.create( Components.interfaces.nsIFile.DIRECTORY_TYPE, parseInt( "0755", 8 ) );
+      entry.create(
+        Components.interfaces.nsIFile.DIRECTORY_TYPE, parseInt( "0755", 8 ) );
     }
     entry.append( "notebooks.json" );
     return entry.clone();
   };
   
-  function init() {
-    registryPath = getEntry();
-    registryObject = [];
-    listeners = [];
-    books = [];
+  function loadRegistryObject() {
+    if ( !registryPath.exists() ) {
+      registryObject = [];
+      return;
+    }
+    try {
+      registryObject =
+        JSON.parse( Utils.readFileContent( registryPath, "UTF-8" ) );
+    } catch ( e ) {
+      Utils.log( e + "\n" + Utils.dumpStack() );
+      registryObject = [];
+    }
   };
-
+  
+  pub.getInstance = function() {
+    return this;
+  };
+  
   pub.getDefaultPreferences = function() {
     return {
       // data
@@ -102,10 +114,12 @@ var BookManager = function() {
   };  
   
   pub.updateRegistryObject = function() {
+    if ( locked ) {
+      return;
+    }
     registryObject.splice( 0, registryObject.length );
-    for ( var i = 0; i < books.length; i++ ) {
-      var book = books[i];
-      var info = {
+    for each ( var book in books ) {
+      registryObject.push( {
         id: book.getId(),
         name: book.getName(),
         description: book.getDescription(),
@@ -114,27 +128,80 @@ var BookManager = function() {
         driver: book.getDriver(),
         connection: book.getConnection(),
         preferences: book.getPreferences()
-      };
-      registryObject.push( info );
-    }
-    var data = JSON.stringify( registryObject );
-    Utils.writeFileContent( registryPath, "UTF-8", data );
-  };
-
-  pub.loadRegistryObject = function() {
-    if ( !registryPath.exists() ) {
-      registryObject = [];
-      return;
+      } );
     }
     try {
-      registryObject =
-        JSON.parse( Utils.readFileContent( registryPath, "UTF-8" ) );
+      Utils.writeFileContent(
+        registryPath,
+        "UTF-8",
+        JSON.stringify( registryObject )
+      );
     } catch ( e ) {
       Utils.log( e + "\n" + Utils.dumpStack() );
-      registryObject = [];
     }
   };
 
+  pub.load = function() {
+    locked = true;
+    loadRegistryObject();
+    for ( var i = 0; i < registryObject.length; i++ ) {
+      if ( !( "name" in registryObject[i] ) ) {
+        registryObject[i].name = "";
+      }
+      if ( !( "description" in registryObject[i] ) ) {
+        registryObject[i].description = "";
+      }
+      if ( !( "driver" in registryObject[i] ) ) {
+        registryObject[i].driver = "default";
+      }
+      if ( !( "connection" in registryObject[i] ) ||
+           typeof( registryObject[i].connection ) !== "object"  ) {
+        registryObject[i].connection = {};
+      }
+      if ( !( "preferences" in registryObject[i] ) ||
+           typeof( registryObject[i].preferences ) !== "object" ) {
+        registryObject[i].preferences = pub.getDefaultPreferences();
+      }
+      if ( !( "index" in registryObject[i] ) ) {
+        registryObject[i].index = -1;
+      }
+      if ( !( "opened" in registryObject[i] ) ) {
+        registryObject[i].opened = false;
+      }
+    }
+    registryObject.sort( function ( a, b ) {
+      if ( a.index < 0 && b.index >= 0 ) {
+        return 1;
+      }
+      if ( a.index >= 0 && b.index < 0 ) {
+        return -1;
+      }
+      if ( a.index < 0 && b.index < 0 ) {
+        return 0;
+      }
+      return a.index - b.index;
+    } );
+    for ( var i = 0; i < registryObject.length; i++ ) {
+      registryObject[i].index = i;
+    }
+    books.splice( 0, books.length );
+    for ( var i = 0; i < registryObject.length; i++ ) {
+      new ru.akman.znotes.core.Book(
+        this,
+        registryObject[i].id,
+        registryObject[i].name,
+        registryObject[i].description,
+        registryObject[i].driver,
+        registryObject[i].connection,
+        registryObject[i].preferences,
+        registryObject[i].index, 
+        registryObject[i].opened
+      );
+    }
+    locked = false;
+    pub.updateRegistryObject();
+  };
+  
   pub.hasBook = function( book ) {
     return books.indexOf( book ) >= 0;
   };
@@ -143,10 +210,13 @@ var BookManager = function() {
     return books.length > 0;
   };
 
+  pub.getCount = function() {
+    return books.length;
+  };
+  
   pub.getBookById = function( id ) {
-    for ( var i = 0; i < books.length; i++ ) {
-      var book = books[i];
-      if ( book.getId() == id ) {
+    for each ( var book in books ) {
+      if ( book.getId() === id ) {
         return book;
       }
     }
@@ -159,27 +229,29 @@ var BookManager = function() {
     }
     return null;
   };
-
-  pub.exists = function( name ) {
-    var result = false;
-    for ( var i = 0; i < books.length; i++ ) {
-      if ( books[i].getName() === name ) {
-        result = true;
-        break;
-      }
-    }
-    return result;
-  };
   
   pub.getBooksAsArray = function() {
     return books.slice( 0 );
   };
 
-  pub.createBook = function( aName, description, driver, connection, preferences ) {
-    var defaultDriver = ru.akman.znotes.DriverManager.getInstance().getDefaultDriver();
-    var name = ( aName === undefined ?
-      Utils.STRINGS_BUNDLE.getString( "booklist.default.book.name" ) : aName );
-    var index = 0, suffix = "";
+  pub.exists = function( name ) {
+    for each ( var book in books ) {
+      if ( book.getName() === name ) {
+        return true;
+      }
+    }
+    return false;
+  };
+
+  pub.createBook = function( name, description, driver, connection, preferences ) {
+    var index, suffix, book;
+    var defaultDriver =
+      ru.akman.znotes.DriverManager.getInstance().getDefaultDriver();
+    if ( name === undefined ) {
+      name = Utils.STRINGS_BUNDLE.getString( "booklist.default.book.name" );
+    }
+    index = 0;
+    suffix = "";
     while ( pub.exists( name + suffix ) ) {
       suffix = " (" + ++index + ")";
     }
@@ -206,20 +278,32 @@ var BookManager = function() {
       }
     }
     if ( preferences === undefined ) {
-      var preferences = pub.getDefaultPreferences();
+      preferences = pub.getDefaultPreferences();
     }
-    var id = Utils.createUUID();
-    var index = books.length;
-    var opened = false;
-    var book = new ru.akman.znotes.core.Book( this, id, name, description,
-      driver, connection, preferences, index, opened );
-    pub.appendBook( book );
+    book = new ru.akman.znotes.core.Book(
+      this,
+      Utils.createUUID(),
+      name,
+      description,
+      driver,
+      connection,
+      preferences,
+      books.length,
+      false
+    );
+    pub.notifyStateListener(
+      new ru.akman.znotes.core.Event(
+        "BookCreated",
+        { createdBook: book }
+      )
+    );
     return book;
   };
 
   pub.appendBook = function( book ) {
     books.push( book );
-    pub.updateRegistryObject();
+    book.setIndex( books.length - 1 );
+    this.updateRegistryObject();
     pub.notifyStateListener(
       new ru.akman.znotes.core.Event(
         "BookAppended",
@@ -229,32 +313,16 @@ var BookManager = function() {
     return book;
   };
 
-  pub.insertBook = function( book, index ) {
-    if ( index < 0 || index > books.length ) {
-      return null;
-    }
-    books.splice( index, 0, book );
-    for ( var i = index; i < books.length; i++ ) {
-      books[i].setIndex( i );
-    }
-    pub.notifyStateListener(
-      new ru.akman.znotes.core.Event(
-        "BookInserted",
-        { insertedBook: book, insertedIndex: index }
-      )
-    );
-    return book;
-  };
-
   pub.removeBook = function( book ) {
-    var index = book.getIndex();
-    if ( index < 0 ) {
-      return null;
+    var index = books.indexOf( book );
+    if ( index === -1 ) {
+      return book;
     }
     books.splice( index, 1 );
     for ( var i = index; i < books.length; i++ ) {
       books[i].setIndex( i );
     }
+    this.updateRegistryObject();
     pub.notifyStateListener(
       new ru.akman.znotes.core.Event(
         "BookRemoved",
@@ -264,99 +332,31 @@ var BookManager = function() {
     return book;
   };
 
-  pub.moveBook = function( book, index ) {
-    if ( pub.removeBook( book ) ) {
-      return pub.insertBook( book, index );
+  pub.moveBookTo = function( book, index ) {
+    var oldValue = books.indexOf( book );
+    if ( oldValue === -1 || oldValue === index ) {
+      return book;
     }
-    return null;
-  };
-
-  pub.deleteBook = function( book ) {
-    pub.removeBook( book );
-    book.remove();
-  };
-
-  pub.deleteBookWithAllData = function( book ) {
-    pub.removeBook( book );
-    book.removeWithAllData();
-  };
-
-  pub.getCount = function() {
-    return books.length;
-  };
-
-  pub.load = function() {
-    locked = true;
-    pub.loadRegistryObject();
-    books.splice( 0, books.length );
-    for ( var i = 0; i < registryObject.length; i++ ) {
-      var id = registryObject[i].id;
-      var name = ""
-      if ( "name" in registryObject[i] ) {
-        name = registryObject[i].name;
-      }
-      var description = "";
-      if ( "description" in registryObject[i] ) {
-        description = registryObject[i].description;
-      }
-      var driver = "default";
-      if ( "driver" in registryObject[i] ) {
-        driver = registryObject[i].driver;
-      }
-      var connection = {};
-      if ( "connection" in registryObject[i] ) {
-        if ( typeof( registryObject[i].connection ) == "object" ) {
-          connection = registryObject[i].connection;
-        }
-      }
-      var preferences = pub.getDefaultPreferences();
-      if ( "preferences" in registryObject[i] ) {
-        if ( typeof( registryObject[i].preferences ) == "object" ) {
-          preferences = registryObject[i].preferences;
-        }
-      }
-      var index = -1;
-      if ( "index" in registryObject[i] ) {
-        index = registryObject[i].index;
-      }
-      var opened = false;
-      if ( "opened" in registryObject[i] ) {
-        opened = registryObject[i].opened;
-      }
-      var book = new ru.akman.znotes.core.Book(
-        this,
-        id,
-        name,
-        description,
-        driver,
-        connection,
-        preferences,
-        index, 
-        opened
-      );
-      if ( book.getIndex() < 0 ) {
-        books.push( book );
-      } else {
-        var index = books.length;
-        for ( var j = 0; j < books.length; j++ ) {
-          if ( books[j].getIndex() < 0 ) {
-            index = j;
-            break;
-          } else {
-            if ( book.getIndex() < books[j].getIndex() ) {
-              index = j;
-              break;
-            }
-          }
-        }
-        books.splice( index, 0, book );
-      }
+    if ( index < 0 || index > books.length ) {
+      return book;
     }
-    for ( var i = 0; i < books.length; i++ ) {
+    books.splice( oldValue, 1 );
+    books.splice( index, 0, book );
+    for ( var i = Math.min( index, oldValue ); i < books.length; i++ ) {
       books[i].setIndex( i );
     }
-    pub.updateRegistryObject();
-    locked = false;
+    this.updateRegistryObject();
+    this.notifyStateListener(
+      new ru.akman.znotes.core.Event(
+        "BookMovedTo",
+        {
+          movedToBook: book,
+          oldValue: oldValue,
+          newValue: index
+        }
+      )
+    );
+    return book;
   };
 
   pub.addStateListener = function( stateListener ) {
@@ -383,23 +383,6 @@ var BookManager = function() {
       }
     }
   };
-
-  /*
-  BookCreated( aCreatedBook )
-  +BookChanged( aChangedBook )
-  +BookDeleted( aDeletedBook )
-  +BookOpened( anOpenedBook )
-  +BookClosed( aClosedBook )
-  BookAppended( anAppendedBook )
-  BookRemoved( aRemovedBook )
-  BookInserted( anInsertedBook )
-  */
-  
-  pub.getInstance = function() {
-    return this;
-  };
-  
-  init();
   
   return pub;
 

@@ -218,13 +218,32 @@ ru.akman.znotes.Main = function() {
   // DOMAIN MODEL LISTENERS
   //
   
+  /*
+  Main.createBook()            ->   BookManager.createBook()
+  Main.bookMoveTo()            ->   BookManager.moveBookTo()
+  Main.renameBook()            ->   Book.setName()
+  Main.deleteBook()            ->   Book.remove()
+  Main.deleteBookWithAllData() ->   Book.removeWithAllData()
+  Main.openBook()              ->   Book.open()
+  Main.closeBook()             ->   Book.close()
+  Main.editBook()              ->   Book.setName()
+                                    Book.setDescription()
+                                    Book.setDriver()
+                                    Book.setConnection()
+  */
   var booksStateListener = {
-    onBookChanged: onBookChanged,
-    onBookOpened: onBookOpened,
-    onBookClosed: onBookClosed,
-    onBookAppended: onBookAppended,
-    onBookRemoved: onBookRemoved,
-    onBookInserted: onBookInserted
+    onBookChanged: onBookChanged,    // Book.setName()
+                                     // Book.setDescription()
+                                     // Book.setDriver()
+                                     // Book.setConnection()
+    onBookOpened: onBookOpened,      // Book.open()
+    onBookClosed: onBookClosed,      // Book.close()
+    //onBookDeleted: onBookDeleted,  // Book.remove()
+    //onBookDeletedWithAllData: onBookDeletedWithAllData, // Book.removeWithAllData()
+    //onBookCreated: onBookCreated,  // BookManager.createBook()
+    onBookAppended: onBookAppended,  // BookManager.appendBook()
+    onBookRemoved: onBookRemoved,    // BookManager.removeBook()
+    onBookMovedTo: onBookMovedTo     // BookManager.moveBookTo()
   };
   
   var tagListStateListener = {
@@ -238,19 +257,18 @@ ru.akman.znotes.Main = function() {
   Main.createNote()    ->   Category.createNote()
   Main.renameNote()    ->   Note.rename()
   Main.deleteNote()    ->   Note.remove()
-  Main.noteMoveTo()    -> + Note.moveTo()
-  Main.noteMoveInto()  -> + Note.moveInto()
+  Main.noteMoveTo()    ->   Note.moveTo()
+  Main.noteMoveInto()  ->   Note.moveInto()
 
   Main.createCategory()    ->   Category.createCategory()
   Main.renameCategory()    ->   Category.rename()
-  Main.deleteCategory()    -> + Category.remove()
-  Main.categoryMoveTo()    -> + Category.moveTo()
-  Main.categoryMoveInto()  -> + Category.moveInto()
+  Main.deleteCategory()    ->   Category.remove()
+  Main.categoryMoveTo()    ->   Category.moveTo()
+  Main.categoryMoveInto()  ->   Category.moveInto()
   */
   var contentTreeStateListener = {
     //onCategoryCreated: onCategoryCreated,   // Category.createCategory()
     //onCategoryDeleted: onCategoryDeleted,   // Category.remove(), in Bin
-    //onCategoryInserted: onCategoryInserted, // Category.insertCategory()
     onCategoryAppended: onCategoryAppended,   // Category.appendCategory()
     onCategoryRemoved: onCategoryRemoved,     // Category.removeCategory()
     onCategoryMovedTo: onCategoryMovedTo,     // Category.moveTo()
@@ -260,7 +278,6 @@ ru.akman.znotes.Main = function() {
                                               
     //onNoteCreated: onNoteCreated,           // Category.createNote()
     //onNoteDeleted: onNoteDeleted,           // Note.remove() in Bin
-    //onNoteInserted: onNoteInserted,         // Category.insertNote()
     onNoteAppended: onNoteAppended,           // Category.appendNote()
     onNoteRemoved: onNoteRemoved,             // Category.removeNote() in Bin
     onNoteMovedTo: onNoteMovedTo,             // Note.moveTo()
@@ -932,8 +949,9 @@ ru.akman.znotes.Main = function() {
         case "znotes_processnote_command":
         case "znotes_updatenote_command":
           return currentBook && currentBook.isOpen() && currentNote;
-        case "znotes_newnote_command":
         case "znotes_importnote_command":
+          return currentBook;
+        case "znotes_newnote_command":
         case "znotes_refreshnotetree_command":
           return currentBook && currentBook.isOpen();
       }
@@ -1935,7 +1953,7 @@ ru.akman.znotes.Main = function() {
       params
     ).focus();
     if ( params.output && params.output.result ) {
-      deleteBookData( currentBook );
+      deleteBookWithAllData( currentBook );
     }
     return true;
   };
@@ -1957,7 +1975,9 @@ ru.akman.znotes.Main = function() {
 
   // znotes_openbook_command
   function doOpenBook() {
-    openBook( currentBook );
+    if ( !currentBook.isOpen() ) {
+      openBook( currentBook );
+    }
     return true;
   };
 
@@ -4319,12 +4339,13 @@ ru.akman.znotes.Main = function() {
   };
   
   function createBooksList() {
+    var defaultBook;
     removeStateListeners();
     bookManager.load();
     if ( !bookManager.hasBooks() &&
          ( Utils.IS_FIRST_RUN || Utils.IS_DEBUG_ENABLED ) ) {
       try {
-        var defaultBook = bookManager.createBook();
+        defaultBook = bookManager.createBook();
         if ( defaultBook ) {
           defaultBook.createData();
           if ( defaultBook.open() == 0 ) {
@@ -4404,12 +4425,12 @@ ru.akman.znotes.Main = function() {
   };
 
   function createBook( aParams ) {
-    var aRow;
-    var newBook = bookManager.createBook( aParams.name );
-    newBook.setDescription( aParams.description );
-    newBook.setDriver( aParams.driver );
-    newBook.setConnection( aParams.connection );
-    aRow = booksList.indexOf( newBook );
+    var aRow = booksList.indexOf( bookManager.createBook(
+      aParams.name,
+      aParams.description,
+      aParams.driver,
+      aParams.connection
+    ) );
     bookTreeBoxObject.ensureRowIsVisible( aRow );
     bookTree.view.selection.select( aRow );
     return true;
@@ -4428,11 +4449,13 @@ ru.akman.znotes.Main = function() {
     var result = CONNECTION_ERROR;
     var message = null;
     var params = null;
+    window.setCursor( "wait" );
     try {
       result = aBook.open();
     } catch ( e ) {
       message = e.message;
     }
+    window.setCursor( "auto" );
     if ( result == 0 ) {
       return result;
     }
@@ -4520,31 +4543,11 @@ ru.akman.znotes.Main = function() {
   };
 
   function deleteBook( aBook ) {
-    var anIndex = booksList.indexOf( aBook );
-    if ( anIndex === booksList.length - 1 ) {
-      anIndex--;
-    }
-    if ( aBook.isOpen() ) {
-      aBook.close();
-    }
-    bookManager.deleteBook( aBook );
-    bookTreeBoxObject.ensureRowIsVisible( anIndex );
-    bookTree.view.selection.select( anIndex );
-    return aBook;
+    aBook.remove();
   };
 
-  function deleteBookData( aBook ) {
-    var anIndex = booksList.indexOf( aBook );
-    if ( anIndex == booksList.length - 1 ) {
-      anIndex--;
-    }
-    if ( aBook.isOpen() ) {
-      aBook.close();
-    }
-    bookManager.deleteBookWithAllData( aBook );
-    bookTreeBoxObject.ensureRowIsVisible( anIndex );
-    bookTree.view.selection.select( anIndex );
-    return aBook;
+  function deleteBookWithAllData( aBook ) {
+    aBook.removeWithAllData();
   };
 
   function editBook( aBook ) {
@@ -4566,13 +4569,13 @@ ru.akman.znotes.Main = function() {
     if ( !params.output ) {
       return;
     }
-    if ( params.output.name != params.input.name ) {
+    if ( params.output.name !== params.input.name ) {
       aBook.setName( params.output.name );
     }
-    if ( params.output.description != params.input.description ) {
+    if ( params.output.description !== params.input.description ) {
       aBook.setDescription( params.output.description );
     }
-    if ( params.output.driver != params.input.driver ) {
+    if ( params.output.driver !== params.input.driver ) {
       aBook.setDriver( params.output.driver );
     }
     if ( !Utils.isObjectsEqual( params.output.connection, params.input.connection ) ) {
@@ -4580,23 +4583,8 @@ ru.akman.znotes.Main = function() {
     }
   };
 
-  function bookMoveTo( aBook, aRow ) {
-    var anIndex = (
-      ( aRow > bookTree.view.rowCount - 1 ) ? -1 : aRow
-    );
-    if ( anIndex === -1 ) {
-      anIndex = bookManager.getCount() - 1;
-    } else {
-      if ( anIndex > aBook.getIndex() ) {
-        anIndex--;
-      }
-    }
-    bookManager.moveBook( aBook, anIndex );
-    // TODO: listener
-    bookTree.removeEventListener( "select", onBookSelect, false );
-    bookTreeBoxObject.ensureRowIsVisible( anIndex );
-    bookTree.view.selection.select( anIndex );
-    bookTree.addEventListener( "select", onBookSelect, false );
+  function bookMoveTo( aBook, anIndex ) {
+    bookManager.moveBookTo( aBook, anIndex );
   };
 
   // BOOK EVENTS
@@ -4814,11 +4802,22 @@ ru.akman.znotes.Main = function() {
         }
         switch ( infoDragDrop.dropEffect ) {
           case "move":
+            if ( infoDragDrop.row > bookTree.view.rowCount - 1 ) {
+              infoDragDrop.row = -1;
+            }
+            if ( infoDragDrop.row === -1 ) {
+              infoDragDrop.row = bookManager.getCount() - 1;
+            } else {
+              if ( infoDragDrop.row > currentBook.getIndex() ) {
+                infoDragDrop.row--;
+              }
+            }
             try {
               bookMoveTo( currentBook, infoDragDrop.row );
             } catch ( e ) {
               openErrorDialog(
-                getFormattedString( "main.errordialog.book", [ currentBook.getName() ] ),
+                getFormattedString( "main.errordialog.book",
+                  [ currentBook.getName() ] ),
                 e.message
               );
             }
@@ -5126,7 +5125,6 @@ ru.akman.znotes.Main = function() {
     if ( !currentBook || currentBook != aBook ) {
       return;
     }
-    var aRow = null;
     var aTreeItem = null;
     var anItemInfo = null;
     var aTreeIndex = null;
@@ -5146,14 +5144,16 @@ ru.akman.znotes.Main = function() {
       if ( aTreeItem ) {
         aTreeIndex = anItemInfo.index;
         notesList.splice( aTreeIndex, 1 );
-        if ( aTreeIndex == ( noteTree.view.rowCount - 1 ) ) {
+        if ( aTreeIndex === ( noteTree.view.rowCount - 1 ) ) {
           aTreeIndex--;
         }
         noteTree.removeEventListener( "select", onNoteSelect, false );
         noteTreeChildren.removeChild( aTreeItem );
         noteTree.addEventListener( "select", onNoteSelect, false );
         if ( currentNote === aNote ) {
-          noteTreeBoxObject.ensureRowIsVisible( aTreeIndex );
+          if ( aTreeIndex !== -1 ) {
+            noteTreeBoxObject.ensureRowIsVisible( aTreeIndex );
+          }
           noteTree.view.selection.select( aTreeIndex );
         }
       }
@@ -5510,34 +5510,65 @@ ru.akman.znotes.Main = function() {
 
   function onBookAppended( e ) {
     var aBook = e.data.appendedBook;
-    var aRow = aBook.getIndex();
-    booksList.splice( aRow, 0, aBook );
+    var anIndex = aBook.getIndex();
     var aTreeItem = createBookTreeItem( aBook );
+    booksList.splice( anIndex, 0, aBook );
     bookTree.removeEventListener( "select", onBookSelect, false );
-    if ( aRow === booksList.length - 1 ) {
+    if ( anIndex === bookTree.view.rowCount ) {
       bookTreeChildren.appendChild( aTreeItem );
     } else {
       bookTreeChildren.insertBefore( aTreeItem,
-        bookTree.view.getItemAtIndex( aRow ) );
+        bookTree.view.getItemAtIndex( anIndex ) );
     }
     bookTree.addEventListener( "select", onBookSelect, false );
-  };
-
-  function onBookInserted( e ) {
-    e.data.appendedBook = e.data.insertedBook;
-    onBookAppended( e );
+    if ( booksList.length === 1 ) {
+      bookTreeBoxObject.ensureRowIsVisible( anIndex );
+      bookTree.view.selection.select( anIndex );
+    }
   };
 
   function onBookRemoved( e ) {
     var aBook = e.data.removedBook;
-    var aTreeIndex = booksList.indexOf( aBook );
-    booksList.splice( aTreeIndex, 1 );
-    var aTreeItem = bookTree.view.getItemAtIndex( aTreeIndex );
+    var anIndex = aBook.getIndex();
+    var aTreeItem = bookTree.view.getItemAtIndex( anIndex );
+    booksList.splice( anIndex, 1 );
+    if ( anIndex === bookTree.view.rowCount - 1 ) {
+      anIndex--;
+    }
     bookTree.removeEventListener( "select", onBookSelect, false );
     aTreeItem.parentNode.removeChild( aTreeItem );
     bookTree.addEventListener( "select", onBookSelect, false );
+    if ( currentBook && currentBook === aBook ) {
+      if ( anIndex !== -1 ) {
+        bookTreeBoxObject.ensureRowIsVisible( anIndex );
+      }
+      bookTree.view.selection.select( anIndex );
+    }
   };
 
+  function onBookMovedTo( e ) {
+    var aBook = e.data.movedToBook;
+    var anOldIndex = e.data.oldValue;
+    var aNewIndex = e.data.newValue;
+    var aTreeItem = bookTree.view.getItemAtIndex( anOldIndex );
+    booksList.splice( anOldIndex, 1 );
+    booksList.splice( aNewIndex, 0, aBook );
+    bookTree.removeEventListener( "select", onBookSelect, false );
+    bookTreeChildren.removeChild( aTreeItem );
+    if ( aNewIndex === bookTree.view.rowCount ) {
+      bookTreeChildren.appendChild( aTreeItem );
+    } else {
+      bookTreeChildren.insertBefore(
+        aTreeItem, bookTree.view.getItemAtIndex( aNewIndex ) );
+    }
+    if ( currentBook && currentBook === aBook ) {
+      bookTreeBoxObject.ensureRowIsVisible( aNewIndex );
+      bookTree.view.selection.select( aNewIndex );
+      saveBooksTreeSelection();
+    }
+    bookTree.addEventListener( "select", onBookSelect, false );
+  };
+  
   // STATE CHANGED
   
   function updateNoteView() {

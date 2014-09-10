@@ -122,11 +122,13 @@ ru.akman.znotes.OpenSaveDialog = function() {
     var params = null;
     var message = null;
     var result = CONNECTION_ERROR;
+    window.setCursor( "wait" );
     try {
       result = book.open();
     } catch ( e ) {
       message = e.message;
     }
+    window.setCursor( "auto" );
     switch ( result ) {
       case OK:
         return;
@@ -216,13 +218,15 @@ ru.akman.znotes.OpenSaveDialog = function() {
       event.stopPropagation();
       return;
     }
-    openBook( currentBook );
+    if ( !currentBook.isOpen() ) {
+      openBook( currentBook );
+    }
   };
   
   function onBookOpened( e ) {
     var aBook = e.data.openedBook;
     updateBookTreeItem( aBook );
-    if ( currentBook && currentBook == aBook ) {
+    if ( currentBook && currentBook === aBook ) {
       onBookSelect();
     }
   };
@@ -230,7 +234,7 @@ ru.akman.znotes.OpenSaveDialog = function() {
   function onBookClosed( e ) {
     var aBook = e.data.closedBook;
     updateBookTreeItem( aBook );
-    if ( currentBook && currentBook == aBook ) {
+    if ( currentBook && currentBook === aBook ) {
       onBookSelect();
     }
   };
@@ -238,63 +242,73 @@ ru.akman.znotes.OpenSaveDialog = function() {
   function onBookChanged( e ) {
     var aBook = e.data.changedBook;
     updateBookTreeItem( aBook );
-    if ( currentBook && currentBook == aBook ) {
+    if ( currentBook && currentBook === aBook ) {
       onBookSelect();
     }
   };
 
-  function onBookInserted( e ) {
-    e.data.appendedBook = e.data.insertedBook;
-    onBookAppended( e );
-  };
-
   function onBookAppended( e ) {
     var aBook = e.data.appendedBook;
-    var aRow = aBook.getIndex();
-    var id = aBook.getId();
-    var aTreeItem = getItemOfBook( aBook );
-    if ( !aTreeItem ) {
-      aTreeItem = createBookTreeItem( aBook );
-      aTreeItem.setAttribute( "id", "book_" + id );
-      books[id] = {
-        book: aBook,
-        item: aTreeItem
-      }
+    var anIndex = aBook.getIndex();
+    var aTreeItem = createBookTreeItem( aBook );
+    books[aBook.getId()] = {
+      book: aBook,
+      item: aTreeItem
     }
-    books[id].row = aRow;
-    if ( aRow == bookTree.view.rowCount ) {
+    bookTree.removeEventListener( "select", onBookSelect, false );
+    if ( anIndex === bookTree.view.rowCount ) {
       bookTreeChildren.appendChild( aTreeItem );
     } else {
       bookTreeChildren.insertBefore( aTreeItem,
-        bookTree.view.getItemAtIndex( aRow ) );
+        bookTree.view.getItemAtIndex( anIndex ) );
     }
-    if ( currentBook && currentBook == aBook ) {
-      bookTree.view.selection.currentIndex = aRow;
-      bookTree.view.selection.select( aRow );
+    bookTree.addEventListener( "select", onBookSelect, false );
+    if ( bookTree.view.rowCount === 1 ) {
+      bookTreeBoxObject.ensureRowIsVisible( anIndex );
+      bookTree.view.selection.select( anIndex );
     }
   };
 
   function onBookRemoved( e ) {
     var aBook = e.data.removedBook;
+    var anIndex = aBook.getIndex();
     var aTreeItem = getItemOfBook( aBook );
+    delete books[aBook.getId()];
+    if ( anIndex === bookTree.view.rowCount - 1 ) {
+      anIndex--;
+    }
     bookTree.removeEventListener( "select", onBookSelect, false );
     aTreeItem.parentNode.removeChild( aTreeItem );
     bookTree.addEventListener( "select", onBookSelect, false );
-  };
-
-  function onBookDeleted( e ) {
-    var aBook = e.data.deletedBook;
-    var id = aBook.getId();
-    var aRow = books[id].row;
-    delete books[id];
-    if ( currentBook && currentBook == aBook ) {
-      if ( aRow == bookTree.view.rowCount ) {
-        aRow--;
+    if ( currentBook && currentBook === aBook ) {
+      if ( anIndex !== -1 ) {
+        bookTreeBoxObject.ensureRowIsVisible( anIndex );
       }
-      bookTree.view.selection.currentIndex = aRow;
-      bookTree.view.selection.select( aRow );
+      bookTree.view.selection.currentIndex = anIndex;
+      bookTree.view.selection.select( anIndex );
     }
   };
+
+  function onBookMovedTo( e ) {
+    var aBook = e.data.movedToBook;
+    var anOldIndex = e.data.oldValue;
+    var aNewIndex = e.data.newValue;
+    var aTreeItem = bookTree.view.getItemAtIndex( anOldIndex );
+    bookTree.removeEventListener( "select", onBookSelect, false );
+    bookTreeChildren.removeChild( aTreeItem );
+    if ( aNewIndex === bookTree.view.rowCount ) {
+      bookTreeChildren.appendChild( aTreeItem );
+    } else {
+      bookTreeChildren.insertBefore(
+        aTreeItem, bookTree.view.getItemAtIndex( aNewIndex ) );
+    }
+    if ( currentBook && currentBook === aBook ) {
+      bookTreeBoxObject.ensureRowIsVisible( aNewIndex );
+      bookTree.view.selection.currentIndex = aNewIndex;
+      bookTree.view.selection.select( aNewIndex );
+    }
+    bookTree.addEventListener( "select", onBookSelect, false );
+ };
 
   function updateBookTreeItem( book ) {
     var treeCell, treeRow, treeItem = getItemOfBook( book );
@@ -326,6 +340,7 @@ ru.akman.znotes.OpenSaveDialog = function() {
     treeRow.appendChild( treeCell );
     treeItem = document.createElement( "treeitem" );
     treeItem.appendChild( treeRow );
+    treeItem.setAttribute( "id", "book_" + book.getId() );
     return treeItem;
   };
   
@@ -342,7 +357,6 @@ ru.akman.znotes.OpenSaveDialog = function() {
       id = book.getId();
       row = book.getIndex();
       treeItem = createBookTreeItem( book );
-      treeItem.setAttribute( "id", "book_" + id );
       bookTreeChildren.appendChild( treeItem );
       books[id] = {
         book: book,
@@ -1244,7 +1258,6 @@ ru.akman.znotes.OpenSaveDialog = function() {
   };
   
   function createNoteTreeItem( note ) {
-    var id = note.getId();
     var aName = note.getName();
     var isLoading = note.isLoading();
     var aCategoryName = note.getParent().getName();
@@ -1310,7 +1323,7 @@ ru.akman.znotes.OpenSaveDialog = function() {
     Utils.addProperty( treeCell, "NOTE_TAG_ROW_" + aTagID );
     treeRow.appendChild( treeCell );
     treeItem = document.createElement( "treeitem" );
-    treeItem.setAttribute( "id", "note_" + id );
+    treeItem.setAttribute( "id", "note_" + note.getId() );
     treeItem.appendChild( treeRow );
     return treeItem;
   };
@@ -1555,14 +1568,11 @@ ru.akman.znotes.OpenSaveDialog = function() {
   };
   
   function getItemOfBook( book ) {
-    if ( book ) {
-      for ( var id in books ) {
-        if ( books[id].book == book ) {
-          return books[id].item;
-        }
-      }
+    if ( !book ) {
+      return null;
     }
-    return null;
+    var id = book.getId();
+    return ( ( id in books ) ? books[id].item : null );
   };
   
   function getItemOfCategory( category ) {
@@ -1574,14 +1584,11 @@ ru.akman.znotes.OpenSaveDialog = function() {
   };
 
   function getItemOfTag( tag ) {
-    if ( tag ) {
-      for ( var id in tags ) {
-        if ( tags[id].tag == tag ) {
-          return tags[id].item;
-        }
-      }
+    if ( !tag ) {
+      return null;
     }
-    return null;
+    var id = tag.getId();
+    return ( ( id in tags ) ? tags[id].item : null );
   };
 
   function getItemOfNote( note ) {
@@ -2052,51 +2059,47 @@ ru.akman.znotes.OpenSaveDialog = function() {
     btnAccept = document.getElementById( "btnAccept" );
     //
     booksStateListener = {
-      onBookChanged: onBookChanged,
-      onBookOpened: onBookOpened,
-      onBookClosed: onBookClosed,
-      onBookAppended: onBookAppended,
-      onBookInserted: onBookInserted,
-      onBookRemoved: onBookRemoved,
-      onBookDeleted: onBookDeleted
+      onBookChanged: onBookChanged,    // Book.setName()
+                                       // Book.setDescription()
+                                       // Book.setDriver()
+                                       // Book.setConnection()
+      onBookOpened: onBookOpened,      // Book.open()
+      onBookClosed: onBookClosed,      // Book.close()
+      //onBookDeleted: onBookDeleted,  // Book.remove()
+      //onBookDeletedWithAllData: onBookDeletedWithAllData, // Book.removeWithAllData()
+      //onBookCreated: onBookCreated,  // BookManager.createBook()
+      onBookAppended: onBookAppended,  // BookManager.appendBook()
+      onBookRemoved: onBookRemoved,    // BookManager.removeBook()
+      onBookMovedTo: onBookMovedTo     // BookManager.moveBookTo()
     };
     contentTreeStateListener = {
       // category
       //onCategoryCreated: onCategoryCreated,   // Category.createCategory()
       //onCategoryDeleted: onCategoryDeleted,   // Category.remove(), in Bin
-      //onCategoryInserted: onCategoryInserted, // Category.insertCategory()
       onCategoryAppended: onCategoryAppended,   // Category.appendCategory()
       onCategoryRemoved: onCategoryRemoved,     // Category.removeCategory()
       onCategoryMovedTo: onCategoryMovedTo,     // Category.moveTo()
       onCategoryMovedInto: onCategoryMovedInto, // Category.moveInto()
-
       onCategoryChanged: onCategoryChanged,     // Category.rename()
-
       // note
       //onNoteCreated: onNoteCreated,           // Category.createNote()
       //onNoteDeleted: onNoteDeleted,           // Note.remove() in Bin
-      //onNoteInserted: onNoteInserted,         // Category.insertNote()
       onNoteAppended: onNoteAppended,           // Category.appendNote()
       onNoteRemoved: onNoteRemoved,             // Category.removeNote() in Bin
       onNoteMovedTo: onNoteMovedTo,             // Note.moveTo()
       onNoteMovedInto: onNoteMovedInto,         // Note.moveInto()
-      
       onNoteChanged: onNoteChanged,                         // Note.rename()
       onNoteTypeChanged: onNoteTypeChanged,                 // Note.setType()
       onNoteLoadingChanged: onNoteLoadingChanged,           // Note.setLoading()
       //onNoteModeChanged: onNoteModeChanged,               // Note.setMode()
-                                                            
       //onNoteDataChanged: onNoteDataChanged,               // Note.setData()
       //onNotePrefChanged: onNotePrefChanged,               // Note.savePreference()
-                                                            
       onNoteTagsChanged: onNoteTagsChanged,                 // Note.setTags()
       onNoteMainTagChanged: onNoteMainTagChanged,           // Note.setTags()
-      
       onNoteMainContentChanged: onNoteMainContentChanged,   // Note.setMainContent()
       onNoteContentLoaded: onNoteContentLoaded,             // Note.loadContentDirectory()
       //onNoteContentAppended: onNoteContentAppended,       // Note.addContent()
       //onNoteContentRemoved: onNoteContentRemoved,         // Note.removeContent()
-                                                            
       onNoteAttachmentAppended: onNoteAttachmentAppended,   // Note.addAttachment()
       onNoteAttachmentRemoved: onNoteAttachmentRemoved      // Note.removeAttachment()
     };
