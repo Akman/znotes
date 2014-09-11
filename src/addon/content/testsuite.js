@@ -53,13 +53,13 @@ ru.akman.znotes.TestSuite = function() {
   var testTextBox = null;
   var alwaysRaisedButton = null;
   var ctx = null;
-  var win = null;
-  var doc = null;
   var tests = [];
 
   function testCommand( event ) {
+    ctx = Utils.MAIN_CONTEXT();
     var testIndex = parseInt( event.target.value );
-    var delimiter = "========" + new Array( tests[testIndex].name.length + 1 ).join( "=" );
+    var delimiter = "========" +
+                    new Array( tests[testIndex].name.length + 1 ).join( "=" );
     var header = "[BEGIN] " + tests[testIndex].name;
     Utils.log( header );
     Utils.log( delimiter );
@@ -79,9 +79,6 @@ ru.akman.znotes.TestSuite = function() {
     alwaysRaisedButton = document.getElementById( "alwaysRaisedButton" );
     alwaysRaisedButton.checked = Utils.IS_TEST_RAISED;
     pub.alwaysRaised();
-    ctx = window.arguments[0];
-    win = ctx.win;
-    doc = ctx.doc;
   };
   
   pub.onClose = function( event ) {
@@ -170,9 +167,12 @@ ru.akman.znotes.TestSuite = function() {
 
   tests.push(
     {
-      name: "GetId",
-      description: "Get Id of current note",
+      name: "Note's getId()",
+      description: "Get ID of the current note",
       code: function () {
+        if ( !ctx.note ) {
+          return;
+        }
         testTextBox.value += ctx.note.getId() + "\n";
       }
     }
@@ -180,10 +180,13 @@ ru.akman.znotes.TestSuite = function() {
 
   tests.push(
     {
-      name: "getURI & getBaseURI",
-      description: "Get URIs of current note",
+      name: "Note's getURI() & getBaseURI()",
+      description: "Get URIs of the current note",
       code: function () {
-        var designFrame = doc.getElementById( "designEditor" );
+        if ( !ctx.note ) {
+          return;
+        }
+        var designFrame = ctx.document.getElementById( "designEditor" );
         testTextBox.value += "getBaseURI() :: " + decodeURIComponent( ctx.note.getBaseURI().spec ) + "\n";
         testTextBox.value += "getURI() :: " + decodeURIComponent( ctx.note.getURI().spec ) + "\n";
         testTextBox.value += "BaseURI :: " + decodeURIComponent( designFrame.contentDocument.baseURIObject.spec ) + "\n";
@@ -299,7 +302,7 @@ ru.akman.znotes.TestSuite = function() {
           },
           output: null
         };
-        win.openDialog(
+        ctx.window.openDialog(
           "chrome://znotes/content/abpicker.xul",
           "",
           "chrome,dialog=yes,modal=yes,centerscreen,resizable=yes",
@@ -397,7 +400,7 @@ ru.akman.znotes.TestSuite = function() {
       description: "Create DOM",
       code: function () {
         var defaultNS = 'http://www.w3.org/1999/xhtml';
-        var impl = win.document.implementation;
+        var impl = ctx.window.document.implementation;
         var dom = impl.createDocument(
           defaultNS,
           'html',
@@ -479,14 +482,14 @@ ru.akman.znotes.TestSuite = function() {
     name: "Screen",
     description: "Screen geometry",
     code: function () {
-      var screenX = win.screenX;
-      var screenY = win.screenY;
-      var availLeft = win.screen.availLeft;
-      var availTop = win.screen.availTop;
-      var outerWidth = win.outerWidth
-      var outerHeight = win.outerHeight;
-      var availWidth = win.screen.availWidth;
-      var availHeight = win.screen.availHeight;
+      var screenX = ctx.window.screenX;
+      var screenY = ctx.window.screenY;
+      var availLeft = ctx.window.screen.availLeft;
+      var availTop = ctx.window.screen.availTop;
+      var outerWidth = ctx.window.outerWidth
+      var outerHeight = ctx.window.outerHeight;
+      var availWidth = ctx.window.screen.availWidth;
+      var availHeight = ctx.window.screen.availHeight;
       Utils.log( "screenX = " + screenX );
       Utils.log( "screenY = " + screenY );
       Utils.log( "availLeft = " + availLeft );
@@ -594,15 +597,18 @@ ru.akman.znotes.TestSuite = function() {
             process( node );
           } else if ( node.hasAttribute( "id" ) ) {
             cmd = node.getAttribute( "id" );
-            if ( !node.hasAttribute( "disabled" ) ) {
+            if ( !node.hasAttribute( "disabled" ) ||
+                 node.getAttribute( "disabled" ) === "false" ) {
               Utils.log( cmd + " -> ENABLED" );
+            } else {
+              Utils.log( cmd + " -> DISABLED" );
             }
           }
           node = node.nextSibling;
         }
       };
       process(
-        Utils.MAIN_WINDOW.document.getElementById( "znotes_commandset" )
+        ctx.document.getElementById( "znotes_commandset" )
       );
     }
   } );
@@ -646,7 +652,7 @@ ru.akman.znotes.TestSuite = function() {
           }
         );
       } else {
-        win = window.open(
+        var win = window.open(
           "chrome://znotes/content/info.xul",
           "znotes:info",
           "chrome,toolbar,status,resizable,centerscreen"

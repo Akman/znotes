@@ -41,10 +41,6 @@ var EXPORTED_SYMBOLS = ["Tag"];
 
 var Tag = function( list, id, name, color, index, selectedIndex ) {
 
-  this.getDescriptor = function() {
-    return this.list.getDescriptor();
-  };
-
   this.getDescriptorItemInfo = function() {
     return [
       this.getId(),
@@ -53,6 +49,12 @@ var Tag = function( list, id, name, color, index, selectedIndex ) {
       this.getIndex(),
       this.getSelectedIndex()
     ];
+  };
+
+  this.setDescriptorItemInfo = function( info ) {
+    if ( !this.isLocked() ) {
+      this.list.getDescriptor().setItem( info );
+    }
   };
 
   this.getBook = function() {
@@ -80,15 +82,13 @@ var Tag = function( list, id, name, color, index, selectedIndex ) {
       return;
     }
     this.name = name;
-    this.getDescriptor().setItem( this.getDescriptorItemInfo() );
-
+    this.setDescriptorItemInfo( this.getDescriptorItemInfo() );
     this.notifyStateListener(
       new ru.akman.znotes.core.Event(
         "TagChanged",
         { changedTag: this }
       )
     );
-
   };
 
   this.getColor = function() {
@@ -100,15 +100,13 @@ var Tag = function( list, id, name, color, index, selectedIndex ) {
       return;
     }
     this.color = color;
-    this.getDescriptor().setItem( this.getDescriptorItemInfo() );
-
+    this.setDescriptorItemInfo( this.getDescriptorItemInfo() );
     this.notifyStateListener(
       new ru.akman.znotes.core.Event(
         "TagChanged",
         { changedTag: this }
       )
     );
-
   };
 
   this.getIndex = function() {
@@ -121,7 +119,7 @@ var Tag = function( list, id, name, color, index, selectedIndex ) {
       return;
     }
     this.index = value;
-    this.getDescriptor().setItem( this.getDescriptorItemInfo() );
+    this.setDescriptorItemInfo( this.getDescriptorItemInfo() );
   };
 
   this.getSelectedIndex = function() {
@@ -134,7 +132,7 @@ var Tag = function( list, id, name, color, index, selectedIndex ) {
       return;
     }
     this.selectedIndex = value;
-    this.getDescriptor().setItem( this.getDescriptorItemInfo() );
+    this.setDescriptorItemInfo( this.getDescriptorItemInfo() );
   };
 
   this.remove = function() {
@@ -145,15 +143,14 @@ var Tag = function( list, id, name, color, index, selectedIndex ) {
       processNote: function( aNote ) {
         var noteIDs = aNote.getTags();
         var indexID = noteIDs.indexOf( this.tagID );
-        if ( indexID != -1 ) {
+        if ( indexID !== -1 ) {
           noteIDs.splice( indexID, 1 );
           aNote.setTags( noteIDs );
         }
       }
     };
     contentTree.process( removeTagProcessor );
-    //
-    this.getDescriptor().removeItem( this.getId() );
+    this.list.removeTag( this );
     this.notifyStateListener(
       new ru.akman.znotes.core.Event(
         "TagDeleted",
@@ -192,11 +189,6 @@ var Tag = function( list, id, name, color, index, selectedIndex ) {
     this.list.notifyStateListener( event );
   };
 
-  /*
-  TagChanged( aChangedTag )
-  TagDeleted( aDeletedTag )
-  */
-
   this.toString = function() {
     return "{ '" +
       this.id + "', '" +
@@ -218,6 +210,7 @@ var Tag = function( list, id, name, color, index, selectedIndex ) {
   this.color = color;
   this.index = index;
   this.selectedIndex = selectedIndex;
+  this.list.appendTag( this );
   this.locked = false;
 
 };

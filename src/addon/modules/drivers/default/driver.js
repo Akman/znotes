@@ -127,22 +127,31 @@ var Driver = function() {
       var str = null;
       for ( var i = 0; i < data.length; i++ ) {
         str = trimString( data[i] );
-        if ( str.length == 0 )
-          continue;
-        result.push( parseString( str ) )
+        if ( str.length ) {
+          result.push( parseString( str ) )
+        }
       }
       return result;
     };
 
+    this.setItems = function( items ) {
+      var arr = [];
+      for ( var i = 0; i < items.length; i++ ) {
+        arr.push( composeString( items[i] ) );
+      }
+      this.writeDescriptorFile( arr );
+      return this;
+    };
+    
     this.addItem = function( info ) {
       var data = this.readDescriptorFile();
       var arr = [];
       var str = null;
       for ( var i = 0; i < data.length; i++ ) {
         str = trimString( data[i] );
-        if ( str.length == 0 )
-          continue;
-        arr.push( str );
+        if ( str.length ) {
+          arr.push( str );
+        }
       }
       str = composeString( info );
       arr.push( str );
@@ -158,13 +167,13 @@ var Driver = function() {
       var str = null;
       for ( var i = 0; i < data.length; i++ ) {
         str = trimString( data[i] );
-        if ( str.length == 0 )
-          continue;
-        parseInfo = parseString( str );
-        if ( parseInfo[0] == id ) {
-          isChanged = true;
-        } else {
-          arr.push( str );
+        if ( str.length ) {
+          parseInfo = parseString( str );
+          if ( parseInfo[0] === id ) {
+            isChanged = true;
+          } else {
+            arr.push( str );
+          }
         }
       }
       if ( isChanged ) {
@@ -181,11 +190,12 @@ var Driver = function() {
       var str = null;
       for ( var i = 0; i < data.length; i++ ) {
         str = trimString( data[i] );
-        if ( str.length == 0 )
-          continue;
-        parseInfo = parseString( str );
-        if ( parseInfo[0] == id )
-          result = parseInfo;
+        if ( str.length ) {
+          parseInfo = parseString( str );
+          if ( parseInfo[0] === id ) {
+            result = parseInfo;
+          }
+        }
       }
       return result;
     };
@@ -198,14 +208,14 @@ var Driver = function() {
       var str = null;
       for ( var i = 0; i < data.length; i++ ) {
         str = trimString( data[i] );
-        if ( str.length == 0 )
-          continue;
-        parseInfo = parseString( str );
-        if ( parseInfo[0] == info[0] ) {
-          str = composeString( info );
-          isChanged = true;
+        if ( str.length ) {
+          parseInfo = parseString( str );
+          if ( parseInfo[0] === info[0] ) {
+            str = composeString( info );
+            isChanged = true;
+          }
+          arr.push( str );
         }
-        arr.push( str );
       }
       if ( !isChanged ) {
         throw new DriverException( "DESCRIPTOR_ITEM_WAS_NOT_FOUND", info[0] );
@@ -801,7 +811,7 @@ var Driver = function() {
       if ( this.isRoot() ) {
         return 0;
       }
-      return this.getDescriptorItemField( 2 );
+      return parseInt( this.getDescriptorItemField( 2 ) );
     };
 
     this.getOpenState = function() {
@@ -834,7 +844,7 @@ var Driver = function() {
         throw new DriverException( "ENTRY_NOTE_INVALID_OPERATION" );
       if ( this.isRoot() )
         return -1;
-      return this.getDescriptorItemField( 5 );
+      return parseInt( this.getDescriptorItemField( 5 ) );
     };
 
     this.getCreateDateTime = function() {

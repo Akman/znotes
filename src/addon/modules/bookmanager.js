@@ -181,11 +181,9 @@ var BookManager = function() {
       }
       return a.index - b.index;
     } );
-    for ( var i = 0; i < registryObject.length; i++ ) {
-      registryObject[i].index = i;
-    }
     books.splice( 0, books.length );
     for ( var i = 0; i < registryObject.length; i++ ) {
+      registryObject[i].index = i;
       new ru.akman.znotes.core.Book(
         this,
         registryObject[i].id,
