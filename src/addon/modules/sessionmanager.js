@@ -77,7 +77,7 @@ var SessionManager = function() {
   };
 
   function saveSession( state ) {
-    var data = JSON.stringify( state );
+    var data = JSON.stringify( state, null, 2 );
     var entry = getEntry();
     Utils.writeFileContent( entry, "UTF-8", data );
   };

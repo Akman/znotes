@@ -82,7 +82,7 @@ var PrefsManager = function() {
 
   var savePrefs = function() {
     var entry = getEntry();
-    var data = JSON.stringify( prefs );
+    var data = JSON.stringify( prefs, null, 2 );
     ru.akman.znotes.Utils.writeFileContent( entry, "UTF-8", data );
   };
   

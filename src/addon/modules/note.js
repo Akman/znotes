@@ -698,7 +698,11 @@ var Note = function( aBook, anEntry, aCategory, aType, aTagID ) {
   this.name = this.entry.getName();
   this.id = this.entry.getId();
   this.index = this.entry.getIndex();
-  this.data = JSON.parse( this.entry.getData() );
+  try {
+    this.data = JSON.parse( this.entry.getData() );
+  } catch ( e ) {
+    this.data = {};
+  }
   //
   this.type = this.entry.getType();
   if ( aType && aType != this.type ) {

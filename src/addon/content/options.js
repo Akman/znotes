@@ -851,7 +851,8 @@ ru.akman.znotes.Options = function() {
   };
   
   function setPlatformPreferences( prefs ) {
-    prefsBundle.setCharPref( "platform_shortcuts", JSON.stringify( prefs.shortcuts ) );
+    prefsBundle.setCharPref( "platform_shortcuts",
+      JSON.stringify( prefs.shortcuts, null, 2 ) );
   };
   
   function getMainDefaultPreferences() {
@@ -955,7 +956,7 @@ ru.akman.znotes.Options = function() {
     prefsBundle.setBoolPref( "isHighlightRow", prefs.isHighlightRow );
     prefsBundle.setBoolPref( "isCloseBrowserAfterImport", prefs.isCloseBrowserAfterImport );
     prefsBundle.setCharPref( "defaultDocumentType", prefs.defaultDocumentType );
-    prefsBundle.setCharPref( "main_shortcuts", JSON.stringify( prefs.shortcuts ) );
+    prefsBundle.setCharPref( "main_shortcuts", JSON.stringify( prefs.shortcuts, null, 2 ) );
     prefsBundle.setBoolPref( "isClipperPlaySound", prefs.isClipperPlaySound );
     prefsBundle.setBoolPref( "clipperSaveScripts", prefs.clipperSaveScripts );
     prefsBundle.setBoolPref( "clipperSaveFrames", prefs.clipperSaveFrames );

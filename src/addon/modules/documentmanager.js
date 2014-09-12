@@ -95,7 +95,7 @@ var DocumentManager = function() {
       return;
     }
     try {
-      var data = JSON.stringify( registry );
+      var data = JSON.stringify( registry, null, 2 );
       Utils.writeFileContent( entry, "UTF-8", data );
     } catch ( e ) {
       Components.utils.reportError(

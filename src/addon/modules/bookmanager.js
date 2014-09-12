@@ -134,7 +134,7 @@ var BookManager = function() {
       Utils.writeFileContent(
         registryPath,
         "UTF-8",
-        JSON.stringify( registryObject )
+        JSON.stringify( registryObject, null, 2 )
       );
     } catch ( e ) {
       Utils.log( e + "\n" + Utils.dumpStack() );
