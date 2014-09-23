@@ -40,7 +40,7 @@
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <stringbundleset id="znotes_editor_stringbundleset">
-    <stringbundle id="znotes_editor_stringbundle" 
+    <stringbundle id="znotes_editor_stringbundle"
       src="chrome://znotes/locale/documents/text/editor.properties" />
   </stringbundleset>
   <commandset id="znotes_editor_commandset">
@@ -165,7 +165,7 @@
         key="znotes_editorcustomizetoolbar_key" />
     </menupopup>
   </popupset>
-  
+
   <vbox id="editorView">
     <tabbox id="editorTabBox" flex="1">
       <hbox id="editorTabsHeader">
@@ -315,5 +315,5 @@
         seltype="single" flex="1"/>
     </groupbox>
   </vbox>
-  
+
 </overlay>

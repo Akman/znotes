@@ -36,6 +36,9 @@ if ( !ru.akman.znotes ) ru.akman.znotes = {};
 
 ru.akman.znotes.MessageDialog = function() {
 
+  var Utils = ru.akman.znotes.Utils;
+  var log = Utils.getLogger( "content.messagedialog" );
+
   var args = null;
   var kind = 0;
 

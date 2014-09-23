@@ -30,24 +30,27 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+var Cc = Components.classes;
+var Ci = Components.interfaces;
+var Cr = Components.results;
+var Cu = Components.utils;
+
 if ( !ru ) var ru = {};
 if ( !ru.akman ) ru.akman = {};
 if ( !ru.akman.znotes ) ru.akman.znotes = {};
 if ( !ru.akman.znotes.core ) ru.akman.znotes.core = {};
 
-Components.utils.import( "resource://znotes/utils.js",
-  ru.akman.znotes
-);
-Components.utils.import( "resource://znotes/documentmanager.js",
-  ru.akman.znotes
-);
-Components.utils.import( "resource://znotes/bookmanager.js",
-  ru.akman.znotes.core
-);
+Cu.import( "resource://znotes/utils.js", ru.akman.znotes );
+Cu.import( "resource://znotes/images.js", ru.akman.znotes );
+Cu.import( "resource://znotes/documentmanager.js", ru.akman.znotes );
+Cu.import( "resource://znotes/bookmanager.js", ru.akman.znotes.core );
 
 ru.akman.znotes.OpenSaveDialog = function() {
 
   var Utils = ru.akman.znotes.Utils;
+  var Images = ru.akman.znotes.Images;
+
+  var log = Utils.getLogger( "content.opensavedialog" );
 
   var documentManager = ru.akman.znotes.DocumentManager.getInstance();
   var bookManager = ru.akman.znotes.core.BookManager.getInstance();
@@ -72,7 +75,7 @@ ru.akman.znotes.OpenSaveDialog = function() {
   var noteTree = null;
   var noteTreeChildren = null;
   var noteTreeBoxObject = null;
-  
+
   var vbInfo = null;
   var tbBook = null;
   var tbCategory = null;
@@ -87,12 +90,12 @@ ru.akman.znotes.OpenSaveDialog = function() {
   var btnTags = null;
   var mpTags = null;
   var btnAccept = null;
-  
+
   var books = null;
   var categories = null;
   var tags = null;
   var notes = null;
-  
+
   var canOverwrite = false;
   var onlyCategories = false;
   var currentMode = "open";
@@ -103,16 +106,16 @@ ru.akman.znotes.OpenSaveDialog = function() {
   var currentNote = null;
   var currentName = null;
   var currentType = null;
-  
+
   var booksStateListener = null;
   var contentTreeStateListener = null;
   var tagListStateListener = null;
 
   var oldValue = null;
   var newValue = null;
-  
+
   // BOOKS
-  
+
   function openBook( book ) {
     var OK = 0;
     var ALREADY_OPENED = 2;
@@ -209,7 +212,7 @@ ru.akman.znotes.OpenSaveDialog = function() {
       }
     }
   };
-  
+
   function onBookDblClick( event ) {
     var aRow = bookTreeBoxObject.getRowAt( event.clientX, event.clientY );
     if ( event.button != "0" || !currentBook || currentBook.isOpen() ||
@@ -223,7 +226,7 @@ ru.akman.znotes.OpenSaveDialog = function() {
       openBook( currentBook );
     }
   };
-  
+
   function onBookOpened( e ) {
     var aBook = e.data.openedBook;
     updateBookTreeItem( aBook );
@@ -344,7 +347,7 @@ ru.akman.znotes.OpenSaveDialog = function() {
     treeItem.setAttribute( "id", "book_" + book.getId() );
     return treeItem;
   };
-  
+
   function updateBookTree() {
     var treeItem, id, row;
     var book, bookArray = bookManager.getBooksAsArray();
@@ -367,7 +370,7 @@ ru.akman.znotes.OpenSaveDialog = function() {
     }
     bookTree.addEventListener( "select", onBookSelect, false );
   };
-  
+
   function onBookSelect( event ) {
     var index = bookTree.view.selection.currentIndex;
     var item = ( index != -1 ? bookTree.view.getItemAtIndex( index ) : null );
@@ -392,7 +395,7 @@ ru.akman.znotes.OpenSaveDialog = function() {
       initCategorySelection();
     }
   };
-  
+
   function initBookSelection() {
     var index, item = getItemOfBook( currentBook );
     if ( !item ) {
@@ -410,8 +413,8 @@ ru.akman.znotes.OpenSaveDialog = function() {
     bookTree.focus();
   };
 
-  // CATEGORIES  
-  
+  // CATEGORIES
+
   function onCategoryAppended( e ) {
     var aTreeChildren, aTreeItem, anIndex;
     var aCategory = e.data.appendedCategory;
@@ -502,7 +505,7 @@ ru.akman.znotes.OpenSaveDialog = function() {
       aTreeItem,
       aNewIndex < aTreeChildren.childNodes.length ?
         aTreeChildren.childNodes[aNewIndex] : null
-    );    
+    );
     categoryTree.addEventListener( "select", onCategorySelect, false );
     if ( aTargetCategory ) {
       aTreeItem = getItemOfCategory( aTargetCategory );
@@ -584,7 +587,7 @@ ru.akman.znotes.OpenSaveDialog = function() {
       }
     }
   };
-  
+
   function onCategoryChanged( e ) {
     var aCategory = e.data.changedCategory;
     var aParent = e.data.parentCategory;
@@ -627,7 +630,7 @@ ru.akman.znotes.OpenSaveDialog = function() {
       treeItem.removeAttribute( "container" );
     }
   };
-  
+
   function createCategoryTreeItem( category ) {
     var treeItem, treeRow, treeCell, treeChildren;
     var id = category.getId();
@@ -664,7 +667,7 @@ ru.akman.znotes.OpenSaveDialog = function() {
     treeItem.setAttribute( "id", "category_" + id );
     return treeItem;
   };
-  
+
   function createCategoryTreeChildren( category, treeChildren ) {
     var id = category.getId();
     var treeItem = createCategoryTreeItem( category );
@@ -679,7 +682,7 @@ ru.akman.znotes.OpenSaveDialog = function() {
       createCategoryTreeChildren( subcategories[i], treeItem.lastChild );
     }
   };
-  
+
   function updateCategoryTree() {
     categoryTree.removeEventListener( "select", onCategorySelect, false );
     while ( categoryTreeChildren.firstChild ) {
@@ -736,7 +739,7 @@ ru.akman.znotes.OpenSaveDialog = function() {
     }
     categoryTree.focus();
   };
-  
+
   // TAGS
 
   function onTagChanged( e ) {
@@ -810,7 +813,7 @@ ru.akman.znotes.OpenSaveDialog = function() {
       tagTree.view.selection.select( anIndex );
     }
   };
-  
+
   function onTagMovedTo( e ) {
     var aTag = e.data.movedToTag;
     var anOldIndex = e.data.oldValue;
@@ -866,7 +869,7 @@ ru.akman.znotes.OpenSaveDialog = function() {
     }
     noteTreeBoxObject.clearStyleAndImageCaches();
   };
-  
+
   function updateTagTreeItem( tag ) {
     var id = tag.getId();
     var name = tag.getName();
@@ -888,7 +891,7 @@ ru.akman.znotes.OpenSaveDialog = function() {
       document,
       "treechildren::-moz-tree-image(NOTE_TAG_" + id + ")",
       "list-style-image: url('" +
-        Utils.makeTagImage( color, true, 16 ) + "');"
+        Images.makeTagImage( color, true, 16 ) + "');"
     );
     Utils.changeCSSRule(
       document,
@@ -913,7 +916,7 @@ ru.akman.znotes.OpenSaveDialog = function() {
       document,
       "treechildren::-moz-tree-image(NOTE_TAG_" + id + ")",
       "list-style-image: url('" +
-        Utils.makeTagImage( color, true, 16 ) + "');"
+        Images.makeTagImage( color, true, 16 ) + "');"
     );
     Utils.addCSSRule(
       document,
@@ -934,7 +937,7 @@ ru.akman.znotes.OpenSaveDialog = function() {
     treeItem.setAttribute( "id", "tag_" + tag.getId() );
     return treeItem;
   };
-  
+
   function updateTagTree() {
     tagTree.removeEventListener( "select", onTagSelect, false );
     while ( tagTreeChildren.firstChild ) {
@@ -945,7 +948,7 @@ ru.akman.znotes.OpenSaveDialog = function() {
       var tagList = currentBook.getTagList();
       tagList.getNoTag().setName( getString( "main.notag.name" ) );
       var tagArray = tagList.getTagsAsArray();
-      var tag, id, row, treeItem;      
+      var tag, id, row, treeItem;
       for ( var i = 0; i < tagArray.length; i++ ) {
         tag = tagArray[i];
         id = tag.getId();
@@ -958,7 +961,7 @@ ru.akman.znotes.OpenSaveDialog = function() {
         };
         tagTreeChildren.appendChild( treeItem );
       }
-      tagTreeBoxObject.clearStyleAndImageCaches();      
+      tagTreeBoxObject.clearStyleAndImageCaches();
       tagList.addStateListener( tagListStateListener );
     }
     tagTree.addEventListener( "select", onTagSelect, false );
@@ -981,7 +984,7 @@ ru.akman.znotes.OpenSaveDialog = function() {
     updateNoteTree();
     initNoteSelection();
   };
-  
+
   function initTagSelection() {
     var index, item = getItemOfTag( currentTag );
     if ( !item ) {
@@ -998,9 +1001,9 @@ ru.akman.znotes.OpenSaveDialog = function() {
     }
     tagTree.focus();
   };
-  
+
   // NOTES
-  
+
   function onNoteDblClick( event ) {
     var aRow = noteTreeBoxObject.getRowAt( event.clientX, event.clientY );
     if ( event.button != "0" || !currentNote ||
@@ -1028,7 +1031,7 @@ ru.akman.znotes.OpenSaveDialog = function() {
     }
     return true;
   };
-  
+
   function onNoteAppended( e ) {
     var aRow, aTreeItem;
     var aNote = e.data.appendedNote;
@@ -1167,7 +1170,7 @@ ru.akman.znotes.OpenSaveDialog = function() {
       updateNoteTreeItem( aNote );
     }
   };
-  
+
   function onNoteChanged( e ) {
     var aNote = e.data.changedNote;
     var aParent = e.data.parentCategory;
@@ -1240,7 +1243,7 @@ ru.akman.znotes.OpenSaveDialog = function() {
   function onNoteMainTagChanged( e ) {
     onNoteChanged( e );
   };
-  
+
   function onNoteTypeChanged( e ) {
     onNoteChanged( e );
   };
@@ -1256,7 +1259,7 @@ ru.akman.znotes.OpenSaveDialog = function() {
   function onNoteContentLoaded( e ) {
     onNoteChanged( e );
   };
-  
+
   function onNoteAttachmentAppended( e ) {
     onNoteChanged( e );
   };
@@ -1264,7 +1267,7 @@ ru.akman.znotes.OpenSaveDialog = function() {
   function onNoteAttachmentRemoved( e ) {
     onNoteChanged( e );
   };
-  
+
   function createNoteTreeItem( note ) {
     var aName = note.getName();
     var isLoading = note.isLoading();
@@ -1335,7 +1338,7 @@ ru.akman.znotes.OpenSaveDialog = function() {
     treeItem.appendChild( treeRow );
     return treeItem;
   };
-  
+
   function updateNoteTreeItem( note ) {
     var treeItem = getItemOfNote( note );
     if ( !treeItem ) {
@@ -1414,7 +1417,7 @@ ru.akman.znotes.OpenSaveDialog = function() {
     //
     noteTreeBoxObject.clearStyleAndImageCaches();
   };
-  
+
   function updateNoteTree() {
     noteTree.removeEventListener( "select", onNoteSelect, false );
     while ( noteTreeChildren.firstChild ) {
@@ -1429,7 +1432,7 @@ ru.akman.znotes.OpenSaveDialog = function() {
         notesArray = currentBook.getContentTree()
                                 .getNotesByTag( currentTag.getId() );
       }
-      var note, id, treeItem; 
+      var note, id, treeItem;
       for ( var i = 0; i < notesArray.length; i++ ) {
         note = notesArray[i];
         id = note.getId();
@@ -1456,7 +1459,7 @@ ru.akman.znotes.OpenSaveDialog = function() {
       notes[item.getAttribute( "id" ).substr( 5 )].note : null );
     updateNoteInfo();
   };
-  
+
   function initNoteSelection() {
     var index, item = getItemOfNote( currentNote );
     if ( !item ) {
@@ -1473,7 +1476,7 @@ ru.akman.znotes.OpenSaveDialog = function() {
     }
     noteTree.focus();
   };
-  
+
   function updateNoteInfo() {
     if ( !currentBook || !currentBook.isOpen() ) {
       tbBook.value = "";
@@ -1549,11 +1552,11 @@ ru.akman.znotes.OpenSaveDialog = function() {
       );
     }
   };
-  
+
   function focusName() {
     mlName.focus();
   };
-  
+
   function checkName() {
     var name;
     if ( currentMode === "open" ) {
@@ -1576,7 +1579,7 @@ ru.akman.znotes.OpenSaveDialog = function() {
       }
     }
   };
-  
+
   // HELPERS
 
   function getString( name ) {
@@ -1586,7 +1589,7 @@ ru.akman.znotes.OpenSaveDialog = function() {
   function getFormattedString( name, values ) {
     return Utils.STRINGS_BUNDLE.getFormattedString( name, values );
   };
-  
+
   function getItemOfBook( book ) {
     if ( !book ) {
       return null;
@@ -1594,7 +1597,7 @@ ru.akman.znotes.OpenSaveDialog = function() {
     var id = book.getId();
     return ( ( id in books ) ? books[id].item : null );
   };
-  
+
   function getItemOfCategory( category ) {
     if ( !category ) {
       return null;
@@ -1626,12 +1629,12 @@ ru.akman.znotes.OpenSaveDialog = function() {
     currentName = getSelectedName();
     onNameKeyPress( event );
   };
-  
+
   function getSelectedName() {
     var selectedItem = mlName.selectedItem;
     return selectedItem ? selectedItem.getAttribute( "value" ) : null;
   };
-  
+
   function setSelectedName( aName ) {
     if ( !aName ) {
       mlName.selectedItem = null;
@@ -1646,7 +1649,7 @@ ru.akman.znotes.OpenSaveDialog = function() {
       }
     }
   };
-  
+
   function updateNameMenu() {
     var menuItem, name, names = [];
     if ( currentName ) {
@@ -1669,19 +1672,19 @@ ru.akman.znotes.OpenSaveDialog = function() {
       }
     }
   };
-  
+
   function onTypeChange( event ) {
     if ( currentMode === "open" ) {
       setSelectedType( currentNote ? currentNote.getType() : null );
     }
     currentType = getSelectedType();
   };
-  
+
   function getSelectedType() {
     var selectedItem = mlType.selectedItem;
     return selectedItem ? selectedItem.getAttribute( "value" ) : null;
   };
-  
+
   function setSelectedType( aType ) {
     if ( !aType ) {
       mlType.selectedItem = null;
@@ -1719,7 +1722,7 @@ ru.akman.znotes.OpenSaveDialog = function() {
       }
     }
   };
-  
+
   function showTagMenu( event ) {
     if ( !mpTags.firstChild ) {
       return;
@@ -1734,7 +1737,7 @@ ru.akman.znotes.OpenSaveDialog = function() {
       null
     );
   };
-  
+
   function updateTagMenu() {
     while ( mpTags.firstChild ) {
       mpTags.removeChild( mpTags.firstChild );
@@ -1762,7 +1765,7 @@ ru.akman.znotes.OpenSaveDialog = function() {
         id = tag.getId();
         name = tag.getName();
         color = tag.getColor();
-        image = Utils.makeTagImage( color, false, 16 );
+        image = Images.makeTagImage( color, false, 16 );
         menuItem = document.createElement( "menuitem" );
         menuItem.setAttribute( "class", "menuitem-iconic" );
         menuItem.setAttribute( "image", image );
@@ -1790,7 +1793,7 @@ ru.akman.znotes.OpenSaveDialog = function() {
       arr[0] = ( tagIDs && tagIDs.indexOf( id ) >= 0 ? "1" : "0" );
       menuItem.setAttribute( "value", arr.join( ";" ) );
       menuItem.setAttribute( "image",
-        Utils.makeTagImage( color, arr[0] === "1", 16 ) );
+        Images.makeTagImage( color, arr[0] === "1", 16 ) );
     }
     if ( currentBook && currentBook.isOpen() ) {
       var tagList = currentBook.getTagList();
@@ -1812,7 +1815,7 @@ ru.akman.znotes.OpenSaveDialog = function() {
         button.setAttribute( "class", "tagbutton" );
         button.setAttribute( "label", " " + tag.getName() );
         button.setAttribute( "image",
-          Utils.makeTagImage( tag.getColor(), true, 16 ) );
+          Images.makeTagImage( tag.getColor(), true, 16 ) );
         if ( currentMode === "save" ) {
           button.addEventListener( "command", onTagButtonClick, false );
         }
@@ -1820,14 +1823,14 @@ ru.akman.znotes.OpenSaveDialog = function() {
       }
     }
   };
-  
+
   function onTagButtonClick( event ) {
     var button = event.target;
     hbTags.removeChild( button );
     hbTags.insertBefore( button, hbTags.firstChild );
     currentTagIDs = getSelectedTags();
   };
-  
+
   function onTagMenuClear() {
     var menuItem, button, arr, color, tag;
     for ( var i = 2; i < mpTags.children.length; i++ ) {
@@ -1837,7 +1840,7 @@ ru.akman.znotes.OpenSaveDialog = function() {
       color = arr[2];
       menuItem.setAttribute( "value", arr.join( ";" ) );
       menuItem.setAttribute( "image",
-        Utils.makeTagImage( color, false, 16 ) );
+        Images.makeTagImage( color, false, 16 ) );
     }
     while ( hbTags.firstChild && hbTags.firstChild != btnTags ) {
       hbTags.removeChild( hbTags.firstChild );
@@ -1849,7 +1852,7 @@ ru.akman.znotes.OpenSaveDialog = function() {
       button.setAttribute( "class", "tagbutton" );
       button.setAttribute( "label", " " + tag.getName() );
       button.setAttribute( "image",
-        Utils.makeTagImage( tag.getColor(), true, 16 ) );
+        Images.makeTagImage( tag.getColor(), true, 16 ) );
       if ( currentMode === "save" ) {
         button.addEventListener( "command", onTagButtonClick, false );
       }
@@ -1857,7 +1860,7 @@ ru.akman.znotes.OpenSaveDialog = function() {
     }
     currentTagIDs = getSelectedTags();
   };
-  
+
   function onTagMenuClick( event ) {
     var menuItem = event.target;
     var arr = menuItem.getAttribute( "value" ).split( ";" );
@@ -1866,7 +1869,7 @@ ru.akman.znotes.OpenSaveDialog = function() {
     var checked = ( arr[0] === "1" );
     menuItem.setAttribute( "value", arr.join( ";" ) );
     menuItem.setAttribute( "image",
-      Utils.makeTagImage( arr[2], checked, 16 ) );
+      Images.makeTagImage( arr[2], checked, 16 ) );
     if ( currentBook && currentBook.isOpen() ) {
       var button, tag, tagList = currentBook.getTagList();
       if ( checked ) {
@@ -1880,7 +1883,7 @@ ru.akman.znotes.OpenSaveDialog = function() {
         button.setAttribute( "class", "tagbutton" );
         button.setAttribute( "label", " " + tag.getName() );
         button.setAttribute( "image",
-          Utils.makeTagImage( tag.getColor(), true, 16 ) );
+          Images.makeTagImage( tag.getColor(), true, 16 ) );
         if ( currentMode === "save" ) {
           button.addEventListener( "command", onTagButtonClick, false );
         }
@@ -1895,7 +1898,7 @@ ru.akman.znotes.OpenSaveDialog = function() {
           button.setAttribute( "class", "tagbutton" );
           button.setAttribute( "label", " " + tag.getName() );
           button.setAttribute( "image",
-            Utils.makeTagImage( tag.getColor(), true, 16 ) );
+            Images.makeTagImage( tag.getColor(), true, 16 ) );
           if ( currentMode === "save" ) {
             button.addEventListener( "command", onTagButtonClick, false );
           }
@@ -1905,7 +1908,7 @@ ru.akman.znotes.OpenSaveDialog = function() {
     }
     currentTagIDs = getSelectedTags();
   };
-  
+
   function getSelectedTags() {
     var tagIDs = [];
     var noTagId = currentBook.getTagList().getNoTag().getId();
@@ -1919,11 +1922,11 @@ ru.akman.znotes.OpenSaveDialog = function() {
     }
     return tagIDs;
   };
-  
+
   function onNameFocus( event ) {
     mlName.select();
   };
-  
+
   function onNameKeyPress( event ) {
     window.setTimeout(
       function() {
@@ -1932,7 +1935,7 @@ ru.akman.znotes.OpenSaveDialog = function() {
       0
     );
   };
-  
+
   function updateModeView() {
     if ( currentMode === "save" ) {
       tagsSplitter.setAttribute( "collapsed", "true" );
@@ -1968,7 +1971,7 @@ ru.akman.znotes.OpenSaveDialog = function() {
       mlType.setAttribute( "collapsed", "true" );
     }
   };
-  
+
   function addEventListeners() {
     bookTree.addEventListener( "select", onBookSelect, false );
     bookTree.addEventListener( "dblclick", onBookDblClick, false );
@@ -1998,9 +2001,9 @@ ru.akman.znotes.OpenSaveDialog = function() {
     mlType.removeEventListener( "command", onTypeChange, false );
     bookManager.removeStateListener( booksStateListener );
   };
-  
+
   // PUBLIC
-  
+
   var pub = {};
 
   pub.onLoad = function() {
@@ -2047,29 +2050,25 @@ ru.akman.znotes.OpenSaveDialog = function() {
     bookTree = document.getElementById( "bookTree" );
     bookTreeChildren = document.getElementById( "bookTreeChildren" );
     bookTreeBoxObject = bookTree.boxObject;
-    bookTreeBoxObject.QueryInterface(
-      Components.interfaces.nsITreeBoxObject );
+    bookTreeBoxObject.QueryInterface( Ci.nsITreeBoxObject );
     booksSplitter = document.getElementById( "booksSplitter" );
     vbFolders = document.getElementById( "vbFolders" );
     categoryTree = document.getElementById( "folderTree" );
     categoryTreeChildren = document.getElementById( "folderTreeChildren" );
     categoryTreeBoxObject = categoryTree.boxObject;
-    categoryTreeBoxObject.QueryInterface(
-      Components.interfaces.nsITreeBoxObject );
+    categoryTreeBoxObject.QueryInterface( Ci.nsITreeBoxObject );
     tagsSplitter = document.getElementById( "tagsSplitter" );
     vbTags = document.getElementById( "vbTags" );
     tagTree = document.getElementById( "tagTree" );
     tagTreeChildren = document.getElementById( "tagTreeChildren" );
     tagTreeBoxObject = tagTree.boxObject;
-    tagTreeBoxObject.QueryInterface(
-      Components.interfaces.nsITreeBoxObject );
+    tagTreeBoxObject.QueryInterface( Ci.nsITreeBoxObject );
     vbRight = document.getElementById( "vbRight" );
     vbNotes = document.getElementById( "vbNotes" );
     noteTree = document.getElementById( "noteTree" );
     noteTreeChildren = document.getElementById( "noteTreeChildren" );
     noteTreeBoxObject = noteTree.boxObject;
-    noteTreeBoxObject.QueryInterface(
-      Components.interfaces.nsITreeBoxObject );
+    noteTreeBoxObject.QueryInterface( Ci.nsITreeBoxObject );
     vbInfo = document.getElementById( "vbInfo" );
     tbBook = document.getElementById( "tbBook" );
     tbCategory = document.getElementById( "tbCategory" );
@@ -2100,7 +2099,7 @@ ru.akman.znotes.OpenSaveDialog = function() {
       /* Book.remove() */
       //onBookDeleted: onBookDeleted,
       /* Book.removeWithAllData() */
-      //onBookDeletedWithAllData: onBookDeletedWithAllData, 
+      //onBookDeletedWithAllData: onBookDeletedWithAllData,
       /* BookManager.createBook() */
       //onBookCreated: onBookCreated,
       /* BookManager.appendBook() */
@@ -2114,7 +2113,7 @@ ru.akman.znotes.OpenSaveDialog = function() {
     contentTreeStateListener = {
       /* Category.createCategory() */
       //onCategoryCreated: onCategoryCreated,
-      /* Category.remove(), in Bin */      
+      /* Category.remove(), in Bin */
       //onCategoryDeleted: onCategoryDeleted,
       /* Category.appendCategory() */
       onCategoryAppended: onCategoryAppended,
@@ -2192,7 +2191,6 @@ ru.akman.znotes.OpenSaveDialog = function() {
     addEventListeners();
     updateBookTree();
     initBookSelection();
-    Utils.log( currentTag );
   };
 
   pub.onUnload = function() {
@@ -2204,7 +2202,7 @@ ru.akman.znotes.OpenSaveDialog = function() {
         tagListStateListener );
     }
   };
-  
+
   pub.onDialogAccept = function() {
     if ( currentMode === "open" ) {
       window.arguments[0].output = {

@@ -30,16 +30,25 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+const EXPORTED_SYMBOLS = ["Event"];
+
+var Cc = Components.classes;
+var Ci = Components.interfaces;
+var Cr = Components.results;
+var Cu = Components.utils;
+
 if ( !ru ) var ru = {};
 if ( !ru.akman ) ru.akman = {};
 if ( !ru.akman.znotes ) ru.akman.znotes = {};
 if ( !ru.akman.znotes.core ) ru.akman.znotes.core = {};
 
-Components.utils.import( "resource://znotes/utils.js"   , ru.akman.znotes );
-
-var EXPORTED_SYMBOLS = ["Event"];
+Cu.import( "resource://znotes/utils.js", ru.akman.znotes );
 
 var Event = function( aType, aData ) {
+
+  var Utils = ru.akman.znotes.Utils;
+  var log = Utils.getLogger( "modules.event" );
+
   this.type = aType;
   this.data = aData;
 };

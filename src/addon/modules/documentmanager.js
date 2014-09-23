@@ -30,46 +30,51 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+const EXPORTED_SYMBOLS = ["DocumentManager"];
+
+var Cc = Components.classes;
+var Ci = Components.interfaces;
+var Cr = Components.results;
+var Cu = Components.utils;
+
 if ( !ru ) var ru = {};
 if ( !ru.akman ) ru.akman = {};
 if ( !ru.akman.znotes ) ru.akman.znotes = {};
 if ( !ru.akman.znotes.core ) ru.akman.znotes.core = {};
 if ( !ru.akman.znotes.doc ) ru.akman.znotes.doc = {};
 
-Components.utils.import( "resource://znotes/utils.js", ru.akman.znotes );
-Components.utils.import( "resource://znotes/event.js", ru.akman.znotes.core );
-
-var EXPORTED_SYMBOLS = ["DocumentManager"];
+Cu.import( "resource://znotes/utils.js", ru.akman.znotes );
+Cu.import( "resource://znotes/event.js", ru.akman.znotes.core );
 
 var DocumentManager = function() {
 
   var Utils = ru.akman.znotes.Utils;
+  var log = Utils.getLogger( "modules.documentmanager" );
 
   var pub = {};
 
   var docs = null;
 
   var registry = null;
-  
+
   function getRegistryEntry() {
     var entry = Utils.getPlacesPath();
     var placeId = Utils.getPlaceId();
     entry.append( placeId );
     try {
       if ( !entry.exists() || !entry.isDirectory() ) {
-        entry.create( Components.interfaces.nsIFile.DIRECTORY_TYPE,
-          parseInt( "0755", 8 ) );
+        entry.create( Ci.nsIFile.DIRECTORY_TYPE, parseInt( "0755", 8 ) );
       }
       entry.append( "documents.json" );
       return entry.clone();
     } catch ( e ) {
-      Components.utils.reportError(
-        "An error occurred accessing the registry of documents:\n" + e
+      log.warn(
+        "An error occurred accessing the registry of documents\n" + e
       );
     }
     return null;
   };
-  
+
   function readRegistry() {
     var entry = getRegistryEntry();
     if ( !entry || !entry.exists() ) {
@@ -78,8 +83,8 @@ var DocumentManager = function() {
       try {
         registry = JSON.parse( Utils.readFileContent( entry, "UTF-8" ) );
       } catch ( e ) {
-        Components.utils.reportError(
-          "An error occurred parsing the registry of documents:\n" + e
+        log.warn(
+          "An error occurred parsing the registry of documents\n" + e
         );
         registry = {};
       }
@@ -89,8 +94,8 @@ var DocumentManager = function() {
   function writeRegistry() {
     var entry = getRegistryEntry();
     if ( !entry ) {
-      Components.utils.reportError(
-        "An error occurred writing the registry of documents:\n" + e
+      log.warn(
+        "An error occurred writing the registry of documents\n" + e
       );
       return;
     }
@@ -98,12 +103,12 @@ var DocumentManager = function() {
       var data = JSON.stringify( registry, null, 2 );
       Utils.writeFileContent( entry, "UTF-8", data );
     } catch ( e ) {
-      Components.utils.reportError(
-        "An error occurred writing the registry of documents:\n" + e
+      log.warn(
+        "An error occurred writing the registry of documents\n" + e
       );
     }
   };
-  
+
   function getDocumentPreferences( doc ) {
     if ( !registry ) {
       readRegistry();
@@ -121,12 +126,10 @@ var DocumentManager = function() {
     Utils.cloneObject( registry[id].document, result );
     return result;
   };
-  
+
   function setDocumentPreferences( doc, preferences ) {
     if ( !preferences || ( typeof( preferences ) != "object" ) ) {
-      Components.utils.reportError(
-        "An error occurred setting the preferences of document:\n invalid argument!"
-      );
+      log.debug( "setDocumentPreferences() - invalid argument" );
     }
     var id = doc.getId();
     if ( !( id in registry ) || ( typeof( registry[id] ) != "object" ) ) {
@@ -146,9 +149,9 @@ var DocumentManager = function() {
             preferences: prefsObject
           }
         )
-      );  
+      );
     }
-  };  
+  };
 
   function getEditorPreferences( doc ) {
     if ( !registry ) {
@@ -167,12 +170,10 @@ var DocumentManager = function() {
     Utils.cloneObject( registry[id].editor, result );
     return result;
   };
-  
+
   function setEditorPreferences( doc, preferences ) {
     if ( !preferences || ( typeof( preferences ) != "object" ) ) {
-      Components.utils.reportError(
-        "An error occurred setting the preferences of editor:\n invalid argument!"
-      );
+      log.debug( "setEditorPreferences() - invalid argument" );
     }
     var id = doc.getId();
     if ( !( id in registry ) || ( typeof( registry[id] ) != "object" ) ) {
@@ -192,18 +193,18 @@ var DocumentManager = function() {
             preferences: prefsObject
           }
         )
-      );  
+      );
     }
-  };  
-  
+  };
+
   function registerDocument( name ) {
     unregisterDocument( name );
     var url = "chrome://znotes_documents/content/" + name + "/";
     try {
       ru.akman.znotes.doc[ name ] = {};
-      Components.utils.import( url + "editor.js", ru.akman.znotes.doc[ name ] );
-      Components.utils.import( url + "document.js", ru.akman.znotes.doc[ name ] );
-      Components.utils.import( url + "options.js", ru.akman.znotes.doc[ name ] );
+      Cu.import( url + "editor.js", ru.akman.znotes.doc[ name ] );
+      Cu.import( url + "document.js", ru.akman.znotes.doc[ name ] );
+      Cu.import( url + "options.js", ru.akman.znotes.doc[ name ] );
       var modules, entry;
       try {
         var entry = Utils.getFileFromURLSpec( url + "modules.json" );
@@ -213,17 +214,19 @@ var DocumentManager = function() {
             for ( var i = 0; i < modules.length; i++ ) {
               if ( "path" in modules[i] ) {
                 try {
-                  Components.utils.import( url + modules[i].path,
-                    ru.akman.znotes.doc[ name ] );
+                  Cu.import(
+                    url + modules[i].path,
+                    ru.akman.znotes.doc[ name ]
+                  );
                 } catch ( e ) {
-                  Utils.log( e + "\n" + Utils.dumpStack() );
+                  log.warn( e + "\n" + Utils.dumpStack() );
                 }
               }
             }
           }
         }
       } catch ( e ) {
-        Utils.log( e + "\n" + Utils.dumpStack() );
+        log.warn( e + "\n" + Utils.dumpStack() );
       }
       var doc = ru.akman.znotes.doc[ name ].Document;
       var opt = ru.akman.znotes.doc[ name ].Options;
@@ -294,7 +297,7 @@ var DocumentManager = function() {
   };
 
   // CONSTRUCTOR
-  
+
   function init() {
     if ( docs ) {
       return;
@@ -303,7 +306,7 @@ var DocumentManager = function() {
     if ( !registry ) {
       readRegistry();
     }
-    var documentDirectory = Utils.getDocumentDirectory();
+    var documentDirectory = Utils.getDocumentsPath();
     var entries = documentDirectory.directoryEntries;
     var doc = null;
     var ids = null;
@@ -314,7 +317,7 @@ var DocumentManager = function() {
     var modified = false;
     while( entries.hasMoreElements() ) {
       entry = entries.getNext();
-      entry.QueryInterface( Components.interfaces.nsIFile );
+      entry.QueryInterface( Ci.nsIFile );
       if ( !entry.isDirectory() ) {
         continue;
       }
@@ -323,10 +326,10 @@ var DocumentManager = function() {
         doc = registerDocument( name );
       } catch ( e ) {
         doc = null;
-        Utils.log( e + "\n" + Utils.dumpStack() );
+        log.warn( e + "\n" + Utils.dumpStack() );
       }
-      if ( doc == null ) {
-        Utils.log( "DocumentManager::init() Error registering document: " + entry.path );
+      if ( doc === null ) {
+        log.error( "Error registering document\n" + entry.path );
       }
     }
     // clean up the registy
@@ -348,9 +351,9 @@ var DocumentManager = function() {
       writeRegistry();
     }
   };
-  
+
   // PUBLIC
-  
+
   pub.getDocuments = function() {
     var value, result = {};
     for ( var name in docs ) {
@@ -403,11 +406,11 @@ var DocumentManager = function() {
     }
     return null;
   };
-  
+
   pub.getInstance = function() {
     return this;
   };
-  
+
   init();
 
   return pub;

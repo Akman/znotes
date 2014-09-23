@@ -30,34 +30,39 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+const EXPORTED_SYMBOLS = ["PrefsManager"];
+
+var Cc = Components.classes;
+var Ci = Components.interfaces;
+var Cr = Components.results;
+var Cu = Components.utils;
+
 if ( !ru ) var ru = {};
 if ( !ru.akman ) ru.akman = {};
 if ( !ru.akman.znotes ) ru.akman.znotes = {};
 if ( !ru.akman.znotes.core ) ru.akman.znotes.core = {};
 
-Components.utils.import( "resource://znotes/utils.js", ru.akman.znotes );
-Components.utils.import( "resource://znotes/event.js", ru.akman.znotes.core );
-
-var EXPORTED_SYMBOLS = ["PrefsManager"];
+Cu.import( "resource://znotes/utils.js", ru.akman.znotes );
+Cu.import( "resource://znotes/event.js", ru.akman.znotes.core );
 
 var PrefsManager = function() {
 
   var Utils = ru.akman.znotes.Utils;
+  var log = Utils.getLogger( "modules.prefsmanager" );
 
   var prefsMozilla =
-    Components.classes["@mozilla.org/preferences-service;1"]
-              .getService( Components.interfaces.nsIPrefBranch );
-  
+    Cc["@mozilla.org/preferences-service;1"]
+    .getService( Ci.nsIPrefBranch );
+
   var prefs = null;
   var observers = [];
 
   var getEntry = function() {
-    var entry = ru.akman.znotes.Utils.getPlacesPath();
-    var placeId = ru.akman.znotes.Utils.getPlaceId();
+    var entry = Utils.getPlacesPath();
+    var placeId = Utils.getPlaceId();
     entry.append( placeId );
     if ( !entry.exists() || !entry.isDirectory() ) {
-      entry.create( Components.interfaces.nsIFile.DIRECTORY_TYPE,
-        parseInt( "0755", 8 ) );
+      entry.create( Ci.nsIFile.DIRECTORY_TYPE, parseInt( "0755", 8 ) );
     }
     entry.append( "prefs.json" );
     return entry.clone();
@@ -71,10 +76,10 @@ var PrefsManager = function() {
       return;
     }
     try {
-      var data = ru.akman.znotes.Utils.readFileContent( entry, "UTF-8" );
+      var data = Utils.readFileContent( entry, "UTF-8" );
       prefs = JSON.parse( data );
     } catch ( e ) {
-      Utils.log( e + "\n" + Utils.dumpStack() );
+      log.warn( e + "\n" + Utils.dumpStack() );
       prefs = {};
       savePrefs();
     }
@@ -83,9 +88,9 @@ var PrefsManager = function() {
   var savePrefs = function() {
     var entry = getEntry();
     var data = JSON.stringify( prefs, null, 2 );
-    ru.akman.znotes.Utils.writeFileContent( entry, "UTF-8", data );
+    Utils.writeFileContent( entry, "UTF-8", data );
   };
-  
+
   var notifyObservers = function( event ) {
     for ( var i = 0; i < observers.length; i++ ) {
       if ( observers[i][ "on" + event.type ] ) {
@@ -117,7 +122,7 @@ var PrefsManager = function() {
       )
     );
   };
-  
+
   pub.getBoolPref = function( name ) {
     if ( !pub.hasPref( name ) ) {
       return null;
@@ -477,10 +482,10 @@ var PrefsManager = function() {
         pub.getCharPref( "platform_shortcuts" );
       //
     } catch ( e ) {
-      Utils.log( e + "\n" + Utils.dumpStack() );
+      log.warn( e + "\n" + Utils.dumpStack() );
     }
   };
-  
+
   pub.getInstance = function() {
     return this;
   };

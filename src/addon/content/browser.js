@@ -30,24 +30,27 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+var Cc = Components.classes;
+var Ci = Components.interfaces;
+var Cr = Components.results;
+var Cu = Components.utils;
+
 if ( !ru ) var ru = {};
 if ( !ru.akman ) ru.akman = {};
 if ( !ru.akman.znotes ) ru.akman.znotes = {};
 
-Components.utils.import( "resource://znotes/utils.js",
-  ru.akman.znotes
-);
-Components.utils.import( "resource://znotes/keyset.js",
-  ru.akman.znotes
-);
+Cu.import( "resource://znotes/utils.js", ru.akman.znotes );
+Cu.import( "resource://znotes/keyset.js", ru.akman.znotes );
 
 ru.akman.znotes.Browser = function() {
 
   var Utils = ru.akman.znotes.Utils;
   var Common = ru.akman.znotes.Common;
 
+  var log = Utils.getLogger( "content.browser" );
+
   var context = null;
-  
+
   var browserToolBox = null;
   var browserToolBar = null
   var browserURLTextBox = null;
@@ -59,26 +62,18 @@ ru.akman.znotes.Browser = function() {
   var statusBarImage = null;
   var statusBarLabel = null;
 
-  var nsIWebNavigation = Components.interfaces.nsIWebNavigation;
-  var nsIWebProgress = Components.interfaces.nsIWebProgress;
-  var nsIWebProgressListener = Components.interfaces.nsIWebProgressListener;
-  var nsIWebProgressListener2 = Components.interfaces.nsIWebProgressListener2;
-  var nsISupportsWeakReference = Components.interfaces.nsISupportsWeakReference;
-  var nsISupports = Components.interfaces.nsISupports;
-  
-  var ioService = Components.classes["@mozilla.org/network/io-service;1"]
-                            .getService( Components.interfaces.nsIIOService );
+  var ioService =
+    Cc["@mozilla.org/network/io-service;1"].getService( Ci.nsIIOService );
 
   var windowWatcher =
-    Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
-              .getService( Components.interfaces.nsIWindowWatcher );
+    Cc["@mozilla.org/embedcomp/window-watcher;1"]
+    .getService( Ci.nsIWindowWatcher );
 
   var observerService =
-    Components.classes["@mozilla.org/observer-service;1"]
-              .getService( Components.interfaces.nsIObserverService );
+    Cc["@mozilla.org/observer-service;1"].getService( Ci.nsIObserverService );
 
   // KEYSET
-  
+
   var browserKeyset = {
     mKeyset: null,
     mShortcuts: "{}",
@@ -113,7 +108,7 @@ ru.akman.znotes.Browser = function() {
           shortcuts = {};
         }
       } catch ( e ) {
-        Utils.log( e + "\n" + Utils.dumpStack() );
+        log.warn( e + "\n" + Utils.dumpStack() );
         shortcuts = {};
       }
       this.mKeyset.update( shortcuts );
@@ -165,7 +160,7 @@ ru.akman.znotes.Browser = function() {
           try {
             zBrowser.webNavigation.loadURI(
               browserURLTextBox.value,
-              nsIWebNavigation.LOAD_FLAGS_NONE,
+              Ci.nsIWebNavigation.LOAD_FLAGS_NONE,
               null,
               null,
               null
@@ -178,14 +173,13 @@ ru.akman.znotes.Browser = function() {
           zBrowser.webNavigation.goBack();
           break;
         case "znotes_next_command":
-          zBrowser.webNavigation.goForward();        
+          zBrowser.webNavigation.goForward();
           break;
         case "znotes_stop_command":
-          zBrowser.webNavigation.stop( nsIWebNavigation.STOP_ALL );
+          zBrowser.webNavigation.stop( Ci.nsIWebNavigation.STOP_ALL );
           break;
         case "znotes_reload_command":
-          zBrowser.webNavigation.reload(
-            nsIWebNavigation.LOAD_FLAGS_NONE );
+          zBrowser.webNavigation.reload( Ci.nsIWebNavigation.LOAD_FLAGS_NONE );
           break;
         case "znotes_customizetoolbar_command":
           window.openDialog(
@@ -221,9 +215,9 @@ ru.akman.znotes.Browser = function() {
           return window.controllers.getControllerId( this );
         };
       } catch ( e ) {
-        Components.utils.reportError(
+        log.warn(
           "An error occurred registering '" + this.getName() +
-          "' controller: " + e
+          "' controller\n" + e
         );
       }
     },
@@ -234,33 +228,33 @@ ru.akman.znotes.Browser = function() {
       try {
         window.controllers.removeController( this );
       } catch ( e ) {
-        Components.utils.reportError(
+        log.warn(
           "An error occurred unregistering '" + this.getName() +
-          "' controller: " + e
+          "' controller\n" + e
         );
       }
     }
   };
-  
+
   function updateCommands() {
     browserController.updateCommands();
   };
-  
+
   // HTTP OBSERVER
   var HTTPObserver = {
     observe: function( aSubject, aTopic, aData ) {
-      aSubject.QueryInterface( Components.interfaces.nsIHttpChannel );
+      aSubject.QueryInterface( Ci.nsIHttpChannel );
       var url = aSubject.URI.spec;
       switch ( aTopic ) {
         case "http-on-modify-request":
           // aSubject.setRequestHeader(
           //   "Referer", "http://referer.com", false );
-          // aSubject.cancel( Components.results.NS_BINDING_ABORTED );
+          // aSubject.cancel( Cr.NS_BINDING_ABORTED );
           break;
         case "http-on-examine-response":
           // aSubject.setRequestHeader(
           //   "Referer", "http://referer.com", false );
-          // aSubject.cancel( Components.results.NS_BINDING_ABORTED );
+          // aSubject.cancel( Cr.NS_BINDING_ABORTED );
           break;
       }
     },
@@ -275,26 +269,26 @@ ru.akman.znotes.Browser = function() {
   };
 
   // PROGRESS LISTENER
-  
+
   var progressListener = {
     QueryInterface: function( aIID ) {
-      if ( aIID.equals( nsIWebProgressListener ) ||
-           aIID.equals( nsIWebProgressListener2 ) ||
-           aIID.equals( nsISupportsWeakReference ) ||
-           aIID.equals( nsISupports ) ) {
+      if ( aIID.equals( Ci.nsIWebProgressListener ) ||
+           aIID.equals( Ci.nsIWebProgressListener2 ) ||
+           aIID.equals( Ci.nsISupportsWeakReference ) ||
+           aIID.equals( Ci.nsISupports ) ) {
         return this;
       }
-      throw Components.results.NS_NOINTERFACE;
+      throw Cr.NS_NOINTERFACE;
     },
     onLocationChange: function( aWebProgress, aRequest, aLocation,
                                 aFlags ) {
       // if ( aRequest && !Components.isSuccessCode( aRequest.status ) ) {
       //   load failure
       // }
-      // if ( aRequest instanceof Components.interfaces.nsHTTPChannel ) {
+      // if ( aRequest instanceof Ci.nsHTTPChannel ) {
       //   test aRequest.responseStatus ( HTTP STATUS )
       // }
-      // if ( aFlags & nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT ) {
+      // if ( aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT ) {
       //   anchor clicked!
       // }
       browserURLTextBox.value = Utils.getURLFromURI( aLocation );
@@ -326,8 +320,8 @@ ru.akman.znotes.Browser = function() {
       }
       // BUG: return PR_TRUE still cancel redirect
       // var aResult =
-      //   Components.classes["@mozilla.org/supports-PRBool;1"]
-      //             .createInstance( Components.interfaces.nsISupportsPRBool );
+      //   Cc["@mozilla.org/supports-PRBool;1"]
+      //             .createInstance( Ci.nsISupportsPRBool );
       // aResult.data = 1; // PR_TRUE
       // return aResult;
     },
@@ -339,15 +333,15 @@ ru.akman.znotes.Browser = function() {
     },
     onStateChange: function( aWebProgress, aRequest, aStateFlags,
                              aStatus ) {
-      if ( aStateFlags & nsIWebProgressListener.STATE_STOP ) {
-        if ( aStateFlags & nsIWebProgressListener.STATE_IS_DOCUMENT ) {
+      if ( aStateFlags & Ci.nsIWebProgressListener.STATE_STOP ) {
+        if ( aStateFlags & Ci.nsIWebProgressListener.STATE_IS_DOCUMENT ) {
           browserSpinner.setAttribute( "src", getFavoriteIconURL() );
           zBrowser.contentWindow.scrollbars.visible = true;
         }
         statusBarImage.className = "browserBlack";
         statusBarLabel.value = "";
-      } else if ( aStateFlags & nsIWebProgressListener.STATE_START ) {
-        if ( aStateFlags & nsIWebProgressListener.STATE_IS_DOCUMENT ) {
+      } else if ( aStateFlags & Ci.nsIWebProgressListener.STATE_START ) {
+        if ( aStateFlags & Ci.nsIWebProgressListener.STATE_IS_DOCUMENT ) {
           browserSpinner.setAttribute( "src",
             "chrome://znotes_images/skin/spinner-16x16.gif" );
         }
@@ -357,7 +351,7 @@ ru.akman.znotes.Browser = function() {
   };
 
   // EVENTS
-  
+
   function onBrowserLoad( event ) {
     var doc = event.originalTarget;
     if ( doc instanceof HTMLDocument ) {
@@ -370,7 +364,7 @@ ru.akman.znotes.Browser = function() {
       // doc processing
     }
   };
-  
+
   function onURLChanged( event ) {
     browserURLTextBox.value = browserURLTextBox.value.trim();
     browserURLTextBox.select();
@@ -387,12 +381,12 @@ ru.akman.znotes.Browser = function() {
     }
     Common.goDoCommand( 'znotes_load_command', browserURLTextBox );
   };
-  
+
   function mouseOverHandler( event ) {
     var href = Utils.getHREFForClickEvent( event, true );
     statusBarLabel.value = href ? href : "";
   };
-  
+
   function mouseClickHandler( event ) {
     if ( event.defaultPrevented || event.button ) {
       return true;
@@ -414,13 +408,13 @@ ru.akman.znotes.Browser = function() {
     event.preventDefault();
     return false;
   };
-  
+
   // HELPERS
-  
+
   function getString( name ) {
     return Utils.STRINGS_BUNDLE.getString( name );
   };
-  
+
   function setupUI() {
     browserView = document.getElementById( "browserView" );
     browserURLTextBox = document.getElementById( "znotes_url_textbox" );
@@ -447,7 +441,7 @@ ru.akman.znotes.Browser = function() {
     statusBarImage = document.getElementById( "browserStatusBarImage" );
     statusBarLabel = document.getElementById( "browserStatusBarLabel" );
   };
-  
+
   function getFavoriteIconURL() {
     var result = null;
     var nodeList = zBrowser.contentDocument.getElementsByTagName( "link" );
@@ -468,21 +462,21 @@ ru.akman.znotes.Browser = function() {
     }
     return result ? result : "chrome://znotes_images/skin/ready-16x16.png";
   };
-  
+
   function browserToolBoxCustomizeDone( isChanged ) {
     updateCommands();
   };
-  
+
   function addEventListeners() {
     browserURLTextBox.addEventListener( "change", onURLChanged, false );
     zBrowser.addEventListener( "mouseover", mouseOverHandler, false );
     zBrowser.addEventListener( "click", mouseClickHandler, false );
     zBrowser.addEventListener( "load", onBrowserLoad, true );
-    zBrowser.docShell.QueryInterface( nsIWebProgress );
+    zBrowser.docShell.QueryInterface( Ci.nsIWebProgress );
     zBrowser.docShell.addProgressListener( progressListener,
-      nsIWebProgress.NOTIFY_ALL );
+      Ci.nsIWebProgress.NOTIFY_ALL );
   };
-  
+
   function removeEventListeners() {
     zBrowser.docShell.removeProgressListener( progressListener );
     zBrowser.removeEventListener( "load", onBrowserLoad, true );
@@ -490,9 +484,9 @@ ru.akman.znotes.Browser = function() {
     zBrowser.removeEventListener( "mouseover", mouseOverHandler, false );
     browserURLTextBox.removeEventListener( "change", onURLChanged, false );
   };
-  
+
   // PUBLIC
-  
+
   var pub = {};
 
   pub.onLoad = function() {
@@ -513,7 +507,7 @@ ru.akman.znotes.Browser = function() {
     browserController.unregister();
     return true;
   };
-  
+
   return pub;
 
 }();

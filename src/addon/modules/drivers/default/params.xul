@@ -40,10 +40,10 @@
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <stringbundleset id="bookStringBundleset">
-    <stringbundle id="paramsStringbundle" 
+    <stringbundle id="paramsStringbundle"
       src="chrome://znotes/locale/drivers/default/params.properties" />
   </stringbundleset>
-  
+
   <vbox id="paramsView">
     <label id="label_encoding" value="&encoding.label;"
       control="textbox_encoding" />
@@ -73,5 +73,5 @@
       <treechildren id="extensionsTreeChildren"/>
     </tree>
   </vbox>
-  
+
 </overlay>

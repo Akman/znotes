@@ -30,21 +30,27 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+const EXPORTED_SYMBOLS = ["BookManager"];
+
+var Cc = Components.classes;
+var Ci = Components.interfaces;
+var Cr = Components.results;
+var Cu = Components.utils;
+
 if ( !ru ) var ru = {};
 if ( !ru.akman ) ru.akman = {};
 if ( !ru.akman.znotes ) ru.akman.znotes = {};
 if ( !ru.akman.znotes.core ) ru.akman.znotes.core = {};
 
-Components.utils.import( "resource://znotes/utils.js", ru.akman.znotes );
-Components.utils.import( "resource://znotes/event.js", ru.akman.znotes.core );
-Components.utils.import( "resource://znotes/book.js", ru.akman.znotes.core );
-Components.utils.import( "resource://znotes/drivermanager.js", ru.akman.znotes );
-
-var EXPORTED_SYMBOLS = ["BookManager"];
+Cu.import( "resource://znotes/utils.js", ru.akman.znotes );
+Cu.import( "resource://znotes/event.js", ru.akman.znotes.core );
+Cu.import( "resource://znotes/book.js", ru.akman.znotes.core );
+Cu.import( "resource://znotes/drivermanager.js", ru.akman.znotes );
 
 var BookManager = function() {
 
   var Utils = ru.akman.znotes.Utils;
+  var log = Utils.getLogger( "modules.bookmanager" );
 
   var registryPath = getEntry();
   var registryObject = [];
@@ -52,21 +58,20 @@ var BookManager = function() {
   var listeners = [];
 
   var locked = false;
-  
+
   var pub = {};
-  
+
   function getEntry() {
     var entry = Utils.getPlacesPath();
     var placeId = Utils.getPlaceId();
     entry.append( placeId );
     if ( !entry.exists() || !entry.isDirectory() ) {
-      entry.create(
-        Components.interfaces.nsIFile.DIRECTORY_TYPE, parseInt( "0755", 8 ) );
+      entry.create( Ci.nsIFile.DIRECTORY_TYPE, parseInt( "0755", 8 ) );
     }
     entry.append( "notebooks.json" );
     return entry.clone();
   };
-  
+
   function loadRegistryObject() {
     if ( !registryPath.exists() ) {
       registryObject = [];
@@ -76,15 +81,15 @@ var BookManager = function() {
       registryObject =
         JSON.parse( Utils.readFileContent( registryPath, "UTF-8" ) );
     } catch ( e ) {
-      Utils.log( e + "\n" + Utils.dumpStack() );
+      log.warn( e + "\n" + Utils.dumpStack() );
       registryObject = [];
     }
   };
-  
+
   pub.getInstance = function() {
     return this;
   };
-  
+
   pub.getDefaultPreferences = function() {
     return {
       // data
@@ -111,8 +116,8 @@ var BookManager = function() {
       "noteAddonsBoxHeight": "100",
       "qfBoxCollapsed": "true"
     };
-  };  
-  
+  };
+
   pub.updateRegistryObject = function() {
     if ( locked ) {
       return;
@@ -137,7 +142,7 @@ var BookManager = function() {
         JSON.stringify( registryObject, null, 2 )
       );
     } catch ( e ) {
-      Utils.log( e + "\n" + Utils.dumpStack() );
+      log.warn( e + "\n" + Utils.dumpStack() );
     }
   };
 
@@ -192,14 +197,14 @@ var BookManager = function() {
         registryObject[i].driver,
         registryObject[i].connection,
         registryObject[i].preferences,
-        registryObject[i].index, 
+        registryObject[i].index,
         registryObject[i].opened
       );
     }
     locked = false;
     pub.updateRegistryObject();
   };
-  
+
   pub.hasBook = function( book ) {
     return books.indexOf( book ) >= 0;
   };
@@ -211,7 +216,7 @@ var BookManager = function() {
   pub.getCount = function() {
     return books.length;
   };
-  
+
   pub.getBookById = function( id ) {
     for each ( var book in books ) {
       if ( book.getId() === id ) {
@@ -227,7 +232,7 @@ var BookManager = function() {
     }
     return null;
   };
-  
+
   pub.getBooksAsArray = function() {
     return books.slice( 0 );
   };
@@ -381,7 +386,7 @@ var BookManager = function() {
       }
     }
   };
-  
+
   return pub;
 
 }();

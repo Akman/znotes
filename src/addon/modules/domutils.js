@@ -30,21 +30,24 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+const EXPORTED_SYMBOLS = ["DOMUtils"];
+
+var Cc = Components.classes;
+var Ci = Components.interfaces;
+var Cr = Components.results;
+var Cu = Components.utils;
+
 if ( !ru ) var ru = {};
 if ( !ru.akman ) ru.akman = {};
 if ( !ru.akman.znotes ) ru.akman.znotes = {};
 
-Components.utils.import( "resource://znotes/utils.js",
-  ru.akman.znotes
-);
-
-var EXPORTED_SYMBOLS = ["DOMUtils"];
+Cu.import( "resource://znotes/utils.js", ru.akman.znotes );
 
 var DOMUtils = function() {
 
   var Utils = ru.akman.znotes.Utils;
-  var Node = Components.interfaces.nsIDOMNode;
-  
+  var log = Utils.getLogger( "modules.domutils" );
+
   var pub = {};
 
   // NODE
@@ -67,26 +70,25 @@ var DOMUtils = function() {
     return doctype === '<!DOCTYPE html>' ||
            doctype === '<!DOCTYPE html SYSTEM "about:legacy-compat">';
   };
-  
+
   pub.serializeHTMLToString = function( aDOM, anEncoding ) {
-    var nsIDocumentEncoder = Components.interfaces.nsIDocumentEncoder;
     var documentEncoder =
-      Components.classes["@mozilla.org/layout/documentEncoder;1?type=text/html"]
-                .createInstance( nsIDocumentEncoder );
-    documentEncoder.init( aDOM, "text/html", nsIDocumentEncoder.OutputRaw );
+      Cc["@mozilla.org/layout/documentEncoder;1?type=text/html"]
+      .createInstance( Ci.nsIDocumentEncoder );
+    documentEncoder.init( aDOM, "text/html", Ci.nsIDocumentEncoder.OutputRaw );
     if ( anEncoding ) {
       documentEncoder.setCharset( anEncoding );
     }
     return documentEncoder.encodeToString();
   };
-  
+
   /*
   pub.serializeHTMLToString = function( aDOM ) {
     var result = "";
     var node = aDOM.firstChild;
     while ( node ) {
       switch ( node.nodeType ) {
-        case Node.DOCUMENT_TYPE_NODE:
+        case Ci.nsIDOMNode.DOCUMENT_TYPE_NODE:
           result += '<!DOCTYPE ' + aDOM.doctype.name;
           if ( aDOM.doctype.publicId ) {
             result += ' PUBLIC "' + aDOM.doctype.publicId + '"';
@@ -99,14 +101,14 @@ var DOMUtils = function() {
           }
           result += ">\n";
           break;
-        case Node.TEXT_NODE:
+        case Ci.nsIDOMNode.TEXT_NODE:
           result += node.textContent;
           break;
-        case Node.COMMENT_NODE:
+        case Ci.nsIDOMNode.COMMENT_NODE:
           result += "<!--" + node.textContent + "-->\n";
           break;
-        case Node.ELEMENT_NODE:
-        case Node.DOCUMENT_NODE:
+        case Ci.nsIDOMNode.ELEMENT_NODE:
+        case Ci.nsIDOMNode.DOCUMENT_NODE:
           result += pub.getElementOuterHTML( node );
           break;
       }
@@ -115,14 +117,14 @@ var DOMUtils = function() {
     return result;
   };
   */
-  
+
   /*
   pub.getElementOuterHTML = function( element ) {
     var name, value;
-    if ( element.nodeType !== Node.ELEMENT_NODE &&
-         element.nodeType !== Node.DOCUMENT_NODE &&
-         element.nodeType !== pub.DOCUMENT_FRAGMENT_NODE ) {
-      throw Components.results.NS_ERROR_UNEXPECTED;
+    if ( element.nodeType !== Ci.nsIDOMNode.ELEMENT_NODE &&
+         element.nodeType !== Ci.nsIDOMNode.DOCUMENT_NODE &&
+         element.nodeType !== Ci.nsIDOMNode.DOCUMENT_FRAGMENT_NODE ) {
+      throw Cr.NS_ERROR_UNEXPECTED;
     }
     var result = '<' + element.nodeName.toLowerCase();
     for ( var i = element.attributes.length - 1; i >= 0; i-- ) {
@@ -136,7 +138,7 @@ var DOMUtils = function() {
     return result;
   };
   */
-  
+
   pub.getNodeIndexInParent = function( aNode ) {
     var result = 0;
     var node = aNode.previousSibling;
@@ -146,7 +148,7 @@ var DOMUtils = function() {
     }
     return result;
   };
-  
+
   pub.isElementDescendantOf = function( element, name ) {
     var nodeName, result = false;
     while ( element ) {
@@ -159,7 +161,7 @@ var DOMUtils = function() {
     }
     return result;
   };
-  
+
   // is testedNode right sibling of baseNode
   pub.isRightSibling = function( baseNode, testedNode ) {
     var node = baseNode.nextSibling;
@@ -171,7 +173,7 @@ var DOMUtils = function() {
     }
     return false;
   };
-  
+
   pub.getNextTerminalNode = function( node ) {
     var body = node.ownerDocument.body;
     var result = node;
@@ -184,7 +186,7 @@ var DOMUtils = function() {
     }
     return result;
   };
-  
+
   pub.getPrevTerminalNode = function( node ) {
     var body = node.ownerDocument.body;
     var result = node;
@@ -197,15 +199,15 @@ var DOMUtils = function() {
     }
     return result;
   };
-  
+
   pub.normalizeRangeStart = function( range ) {
     var startContainer = range.startContainer;
     var startOffset = range.startOffset;
     var nextTerm = null;
-    if ( startContainer.nodeType == Node.TEXT_NODE &&
+    if ( startContainer.nodeType == Ci.nsIDOMNode.TEXT_NODE &&
          startOffset == startContainer.length ) {
       nextTerm = pub.getNextTerminalNode( startContainer );
-    } else if ( startContainer.nodeType == Node.ELEMENT_NODE ) {
+    } else if ( startContainer.nodeType == Ci.nsIDOMNode.ELEMENT_NODE ) {
       if ( startOffset == startContainer.childNodes.length ) {
         nextTerm = pub.getNextTerminalNode( startContainer );
       } else if ( startContainer.childNodes.item( startOffset ).hasChildNodes() ) {
@@ -214,13 +216,13 @@ var DOMUtils = function() {
           nextTerm = nextTerm.firstChild;
         }
       }
-    } 
+    }
     if ( nextTerm ) {
       switch ( nextTerm.nodeType ) {
-        case Node.TEXT_NODE:
+        case Ci.nsIDOMNode.TEXT_NODE:
           range.setStart( nextTerm, 0 );
           break;
-        case Node.ELEMENT_NODE:
+        case Ci.nsIDOMNode.ELEMENT_NODE:
           range.setStart(
             nextTerm.parentNode,
             pub.getNodeIndexInParent( nextTerm )
@@ -229,15 +231,15 @@ var DOMUtils = function() {
       }
     }
   };
-  
+
   pub.normalizeRangeEnd = function( range ) {
     var endContainer = range.endContainer;
     var endOffset = range.endOffset;
     var prevTerm = null;
-    if ( endContainer.nodeType == Node.TEXT_NODE &&
+    if ( endContainer.nodeType === Ci.nsIDOMNode.TEXT_NODE &&
          endOffset == 0 ) {
       prevTerm = pub.getPrevTerminalNode( endContainer );
-    } else if ( endContainer.nodeType == Node.ELEMENT_NODE ) {
+    } else if ( endContainer.nodeType === Ci.nsIDOMNode.ELEMENT_NODE ) {
       if ( endOffset == 0 ) {
         prevTerm = pub.getPrevTerminalNode( endContainer );
       } else if ( endContainer.childNodes.item( endOffset - 1 ).hasChildNodes() ) {
@@ -246,13 +248,13 @@ var DOMUtils = function() {
           prevTerm = prevTerm.lastChild;
         }
       }
-    } 
+    }
     if ( prevTerm ) {
       switch ( prevTerm.nodeType ) {
-        case Node.TEXT_NODE:
+        case Ci.nsIDOMNode.TEXT_NODE:
           range.setEnd( prevTerm, prevTerm.length );
           break;
-        case Node.ELEMENT_NODE:
+        case Ci.nsIDOMNode.ELEMENT_NODE:
           range.setEnd(
             prevTerm.parentNode,
             pub.getNodeIndexInParent( prevTerm ) + 1
@@ -261,7 +263,7 @@ var DOMUtils = function() {
       }
     }
   };
-  
+
   pub.convolveSelection = function( selection ) {
     if ( !selection || !selection.rangeCount || selection.isCollapsed ) {
       return;
@@ -278,20 +280,20 @@ var DOMUtils = function() {
         ) || (
           (
             (
-              prevRange.endContainer.nodeType == Node.TEXT_NODE &&
-              prevRange.endOffset == prevRange.endContainer.length
+              prevRange.endContainer.nodeType === Ci.nsIDOMNode.TEXT_NODE &&
+              prevRange.endOffset === prevRange.endContainer.length
             ) || (
-              prevRange.endContainer.nodeType == Node.ELEMENT_NODE
+              prevRange.endContainer.nodeType === Ci.nsIDOMNode.ELEMENT_NODE
             )
           ) && (
             (
-              nextRange.startContainer.nodeType == Node.TEXT_NODE &&
-              nextRange.startOffset == 0
+              nextRange.startContainer.nodeType === Ci.nsIDOMNode.TEXT_NODE &&
+              nextRange.startOffset === 0
             ) || (
-              nextRange.startContainer.nodeType == Node.ELEMENT_NODE
+              nextRange.startContainer.nodeType === Ci.nsIDOMNode.ELEMENT_NODE
             )
           ) && (
-            pub.getNextTerminalNode( prevRange.endContainer ) ==
+            pub.getNextTerminalNode( prevRange.endContainer ) ===
               nextRange.startContainer
           )
         );
@@ -306,9 +308,9 @@ var DOMUtils = function() {
       selection.removeRange( removedRanges[i] );
     }
   };
-  
+
   // STYLE
-  
+
   pub.ElementStyle = function() {
   };
   pub.ElementStyle.prototype = {
@@ -331,7 +333,7 @@ var DOMUtils = function() {
       return result;
     }
   };
-  
+
   pub.getElementStyle = function( element ) {
     if ( !element || !element.style ) {
       return null;
@@ -358,9 +360,9 @@ var DOMUtils = function() {
     }
     return result;
   };
-  
+
   // SELECTION
-  
+
   pub.cloneSelection = function( win ) {
     var selection = win.getSelection();
     if ( !selection || selection.rangeCount == 0 ) {
@@ -373,7 +375,7 @@ var DOMUtils = function() {
     }
     return fragment;
   };
-  
+
   pub.cloneRange = function( target, range ) {
     var state = {
       processFlag: false,
@@ -390,7 +392,7 @@ var DOMUtils = function() {
       state
     );
   };
-  
+
   pub.cloneStyle = function( from, to ) {
     var fromStyle = from.style;
     var toStyle = to.style;
@@ -415,7 +417,7 @@ var DOMUtils = function() {
       toStyle.setProperty( name, value, priority );
     }
   };
-  
+
   pub.cloneLinks = function( from, to ) {
     if ( from.hasAttribute( "src" ) ) {
       to.setAttribute(
@@ -430,7 +432,7 @@ var DOMUtils = function() {
       );
     }
   };
-  
+
   pub.cloneNode = function( target, root, startContainer, startOffset,
                             endContainer, endOffset, state ) {
     var doc = root.ownerDocument;
@@ -439,11 +441,11 @@ var DOMUtils = function() {
     var span;
     var isBody = (
       root &&
-      root.nodeType == 1 &&
-      root.nodeName.toLowerCase() == "body"
+      root.nodeType === 1 &&
+      root.nodeName.toLowerCase() === "body"
     );
     switch ( root.nodeType ) {
-      case Node.TEXT_NODE:
+      case Ci.nsIDOMNode.TEXT_NODE:
         if ( root == startContainer && root == endContainer ) {
           textNode = root.cloneNode( false );
           textNode.nodeValue =
@@ -476,7 +478,7 @@ var DOMUtils = function() {
           return;
         }
         break;
-      case Node.ELEMENT_NODE:
+      case Ci.nsIDOMNode.ELEMENT_NODE:
         if ( isBody ) {
           targetNode = doc.createElement( "div" );
         } else {
@@ -489,7 +491,7 @@ var DOMUtils = function() {
           state.rootFlag = false;
           if ( isBody ) {
             pub.cloneStyle( root, targetNode );
-            targetNode.style.removeProperty( "background-color" ); 
+            targetNode.style.removeProperty( "background-color" );
             if ( targetNode.style.length == 0 ) {
               targetNode.removeAttribute( "style" );
             }
@@ -526,7 +528,7 @@ var DOMUtils = function() {
         break;
     }
   };
-  
+
   return pub;
 
 }();

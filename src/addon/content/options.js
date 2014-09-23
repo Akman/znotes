@@ -30,27 +30,27 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+var Cc = Components.classes;
+var Ci = Components.interfaces;
+var Cr = Components.results;
+var Cu = Components.utils;
+
 if ( !ru ) var ru = {};
 if ( !ru.akman ) ru.akman = {};
 if ( !ru.akman.znotes ) ru.akman.znotes = {};
 
-Components.utils.import( "resource://znotes/utils.js",
-  ru.akman.znotes
-);
-Components.utils.import( "resource://znotes/prefsmanager.js",
-  ru.akman.znotes
-);
-Components.utils.import( "resource://znotes/documentmanager.js",
-  ru.akman.znotes
-);
+Cu.import( "resource://znotes/utils.js", ru.akman.znotes );
+Cu.import( "resource://znotes/prefsmanager.js", ru.akman.znotes );
+Cu.import( "resource://znotes/documentmanager.js", ru.akman.znotes );
 
 ru.akman.znotes.Options = function() {
 
   var Utils = ru.akman.znotes.Utils;
-  var DocumentManager = ru.akman.znotes.DocumentManager;
+  var log = Utils.getLogger( "content.options" );
 
+  var DocumentManager = ru.akman.znotes.DocumentManager;
   var prefsBundle = ru.akman.znotes.PrefsManager.getInstance();
-  
+
   var pub = {};
 
   var currentWindow = null;
@@ -60,7 +60,7 @@ ru.akman.znotes.Options = function() {
   var platformPrefs = null;
   var currentOptions = null;
   var isOptionsChanged = false;
-  
+
   var placeName = null;
   var isSavePosition = null;
   var isEditSourceEnabled = null;
@@ -77,7 +77,7 @@ ru.akman.znotes.Options = function() {
   var clipperSeparateFrames = null;
   var clipperPreserveHTML5Tags = null;
   var clipperSaveStyles = null;
-  var clipperSaveStylesGroup = null; 
+  var clipperSaveStylesGroup = null;
   var clipperInlineStylesheets = null;
   var clipperSingleStylesheet = null;
   var clipperSeparateStylesheets = null;
@@ -97,13 +97,13 @@ ru.akman.znotes.Options = function() {
   var platformShortcuts = {};
   var mainKeyset = null;
   var mainShortcuts = {};
-  
+
   // HELPERS
-  
+
   function getString( name ) {
     return Utils.STRINGS_BUNDLE.getString( name );
   };
-  
+
   function fetchPlatformAssignedKeys() {
     platformAssignedKeys = {};
     var keysets = Utils.MAIN_WINDOW.document.getElementsByTagName( "keyset" );
@@ -170,7 +170,7 @@ ru.akman.znotes.Options = function() {
       process( keysets[i] );
     }
   };
-  
+
   function clearContainers( containers ) {
     var id, node;
     for ( var i = 0; i < containers.length; i++ ) {
@@ -181,13 +181,13 @@ ru.akman.znotes.Options = function() {
       }
     }
   };
-  
+
   function isShortcutChanged( shortcuts, name ) {
     var value = ( shortcuts[name]["original"] === null ) ?
       shortcuts[name]["default"] : shortcuts[name]["original"];
     return shortcuts[name]["current"] !== value;
   };
-  
+
   function getTabShortcuts( defaultShortcuts, currentShortcuts ) {
     var name, result = {};
     for ( var id in defaultShortcuts ) {
@@ -204,7 +204,7 @@ ru.akman.znotes.Options = function() {
     }
     return result;
   };
-  
+
   function getPlatformShortcuts() {
     var name, result = {};
     for ( var name in platformShortcuts ) {
@@ -229,7 +229,7 @@ ru.akman.znotes.Options = function() {
   function checkPlatformShortcut( shortcut ) {
     return shortcut in platformAssignedKeys;
   };
-  
+
   function checkShortcut( shortcuts, name, shortcut ) {
     for ( var n in shortcuts ) {
       if ( n != name && shortcuts[n] === shortcut ) {
@@ -249,7 +249,7 @@ ru.akman.znotes.Options = function() {
     }
     return 0;
   };
-  
+
   function isShortcutExists( name, shortcut ) {
     var shortcuts;
     for ( var tab in optionsPrefs ) {
@@ -271,7 +271,7 @@ ru.akman.znotes.Options = function() {
     }
     return 0;
   };
-  
+
   /**
    * existsFlag == 0 shortcut does not exist yet
    * existsFlag == 1 shortcut exists in current shrortcuts
@@ -301,7 +301,7 @@ ru.akman.znotes.Options = function() {
       1200
     );
   };
-  
+
   function updateTextboxStyle( shortcuts, textbox ) {
     var name = Utils.getNameFromId( textbox.getAttribute( "id" ) );
     textbox.inputField.style.setProperty( "letter-spacing", "1px" );
@@ -319,9 +319,9 @@ ru.akman.znotes.Options = function() {
       textbox.style.removeProperty( "font-weight" );
     }
   };
-  
+
   // SHORTCUTS
-  
+
   function loadShortcuts( keyset, shortcuts, origPrefs, currPrefs ) {
     var doc = keyset.ownerDocument;
     var originalShortcuts = ( "shortcuts" in origPrefs ) ?
@@ -372,9 +372,9 @@ ru.akman.znotes.Options = function() {
       node = node.nextSibling;
     }
   };
-  
+
   // VIEW
-  
+
   function createItem( doc, shortcuts, name, suffix ) {
     var cmd = doc.getElementById(
       shortcuts[name].command );
@@ -431,7 +431,7 @@ ru.akman.znotes.Options = function() {
       textbox: textbox
     };
   };
-  
+
   function populateShortcutsListBox( shortcuts, listbox, appendix ) {
     var suffix = ( appendix === undefined ) ? "" : appendix;
     var doc = listbox.ownerDocument;
@@ -446,7 +446,7 @@ ru.akman.znotes.Options = function() {
       updateTextboxStyle( shortcuts, item.textbox );
     }
   };
-  
+
   function populateDocumentTypePopup() {
     var docs = DocumentManager.getInstance().getDocuments();
     var doc, types, contentType, tooltiptext, menuItem, style;
@@ -550,7 +550,7 @@ ru.akman.znotes.Options = function() {
     shortcuts[name]["current"] = shortcuts[name]["default"];
     updateTextboxStyle( shortcuts, textbox );
   };
-  
+
   function onAccept( event ) {
     if ( currentOptions ) {
       currentOptions.close();
@@ -560,12 +560,12 @@ ru.akman.znotes.Options = function() {
     window.removeEventListener( "close", ru.akman.znotes.Options.onClose, true );
     window.close();
   };
-  
+
   function onCancel( event ) {
     window.removeEventListener( "close", ru.akman.znotes.Options.onClose, true );
     window.close();
   };
-  
+
   function confirmSave() {
     var params = {
       input: {
@@ -587,7 +587,7 @@ ru.akman.znotes.Options = function() {
     }
     return -1;
   };
-  
+
   function onDefaults( event ) {
     if ( currentOptions ) {
       currentOptions.defaults( event );
@@ -653,11 +653,11 @@ ru.akman.znotes.Options = function() {
       clipperSaveActiveRulesOnly.setAttribute( "disabled", "true" );
     }
   };
-  
+
   function onDocTypeSelect( event ) {
     defaultDocumentType = event.target.getAttribute( "value" );
   };
-  
+
   function onTabSelect( event ) {
     if ( currentOptions ) {
       currentOptions.close();
@@ -703,9 +703,9 @@ ru.akman.znotes.Options = function() {
       }
     );
   };
-  
+
   // PREFERENCES
-  
+
   function updateShortcutPreferences( currPrefs, shortcuts ) {
     var shortcut;
     var result = {};
@@ -798,7 +798,7 @@ ru.akman.znotes.Options = function() {
       ( currentPrefs.clipperSaveActiveRulesOnly !== originalPrefs.clipperSaveActiveRulesOnly );
     return isChanged;
   };
-  
+
   function getPlatformDefaultPreferences() {
     var result = {};
     result.shortcuts = {};
@@ -844,17 +844,17 @@ ru.akman.znotes.Options = function() {
         result.shortcuts = {};
       }
     } catch ( e ) {
-      Utils.log( e + "\n" + Utils.dumpStack() );
+      log.warn( e + "\n" + Utils.dumpStack() );
       result.shortcuts = {};
     }
     return result;
   };
-  
+
   function setPlatformPreferences( prefs ) {
     prefsBundle.setCharPref( "platform_shortcuts",
       JSON.stringify( prefs.shortcuts, null, 2 ) );
   };
-  
+
   function getMainDefaultPreferences() {
     var result = {
       "placeName": "",
@@ -938,8 +938,8 @@ ru.akman.znotes.Options = function() {
         result.shortcuts = {};
       }
     } catch ( e ) {
-      Utils.log( e + "\n" + Utils.dumpStack() );
       result.shortcuts = {};
+      log.warn( e + "\n" + Utils.dumpStack() );
     }
     return result;
   };
@@ -967,9 +967,9 @@ ru.akman.znotes.Options = function() {
     prefsBundle.setBoolPref( "clipperSeparateStylesheets", prefs.clipperSeparateStylesheets );
     prefsBundle.setBoolPref( "clipperSaveActiveRulesOnly", prefs.clipperSaveActiveRulesOnly );
   };
-  
+
   // TABS
-  
+
   function createTabs() {
     platformKeyset = document.getElementById( "znotes_platform_keyset" );
     platformPrefs = {
@@ -1081,7 +1081,7 @@ ru.akman.znotes.Options = function() {
       optionsPrefs["main"].activeElement.focus();
     }
   };
-  
+
   function closeMainTab() {
     var originalPrefs = optionsPrefs["main"].original;
     var currentPrefs = optionsPrefs["main"].current;
@@ -1113,9 +1113,9 @@ ru.akman.znotes.Options = function() {
       opt.setEditorPreferences( optionsPrefs[name].current.editor );
     }
   };
-  
+
   // LISTENERS
-  
+
   function addEventListeners() {
     optionsTabs.addEventListener( "select", onTabSelect, false );
     acceptButton.addEventListener( "command", onAccept, false );
@@ -1123,9 +1123,9 @@ ru.akman.znotes.Options = function() {
     defaultsButton.addEventListener( "command", onDefaults, false );
     clipperSaveStyles.addEventListener( "command", onSaveStylesChanged, false );
   };
-  
+
   // PUBLIC
-  
+
   pub.onLoad = function() {
     Utils.initGlobals();
     prefsBundle.loadPrefs();
@@ -1196,7 +1196,7 @@ ru.akman.znotes.Options = function() {
       }
     );
   };
-  
+
   pub.onClose = function( event ) {
     var confirm, isChanged = false;
     if ( currentOptions ) {
@@ -1221,7 +1221,7 @@ ru.akman.znotes.Options = function() {
     }
     return true;
   };
-  
+
   return pub;
 
 }();

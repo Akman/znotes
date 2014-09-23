@@ -30,31 +30,31 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+const EXPORTED_SYMBOLS = ["Note"];
+
+var Cc = Components.classes;
+var Ci = Components.interfaces;
+var Cr = Components.results;
+var Cu = Components.utils;
+
 if ( !ru ) var ru = {};
 if ( !ru.akman ) ru.akman = {};
 if ( !ru.akman.znotes ) ru.akman.znotes = {};
 if ( !ru.akman.znotes.core ) ru.akman.znotes.core = {};
 
-Components.utils.import( "resource://znotes/utils.js",
-  ru.akman.znotes
-);
-Components.utils.import( "resource://znotes/event.js",
-  ru.akman.znotes.core
-);
-Components.utils.import( "resource://znotes/documentmanager.js",
-  ru.akman.znotes
-);
-
-var EXPORTED_SYMBOLS = ["Note"];
+Cu.import( "resource://znotes/utils.js", ru.akman.znotes );
+Cu.import( "resource://znotes/event.js", ru.akman.znotes.core );
+Cu.import( "resource://znotes/documentmanager.js", ru.akman.znotes );
 
 var Note = function( aBook, anEntry, aCategory, aType, aTagID ) {
 
   var Utils = ru.akman.znotes.Utils;
+  var log = Utils.getLogger( "modules.note" );
 
   this.getBook = function() {
     return this.book;
   };
-  
+
   this.getRoot = function() {
     return this.getParent().getRoot();
   };
@@ -62,7 +62,7 @@ var Note = function( aBook, anEntry, aCategory, aType, aTagID ) {
   this.getBin = function() {
     return this.getParent().getBin();
   };
-  
+
   this.getEncoding = function() {
     return this.entry.getEncoding();
   };
@@ -90,7 +90,7 @@ var Note = function( aBook, anEntry, aCategory, aType, aTagID ) {
   this.getUpdateDateTime = function() {
     return this.entry.getUpdateDateTime();
   };
-  
+
   this.getKeyWords = function() {
     var result = [];
     // name
@@ -112,8 +112,8 @@ var Note = function( aBook, anEntry, aCategory, aType, aTagID ) {
     // content
     // ...
     return result;
-  };  
-  
+  };
+
   this.getIndex = function() {
     return parseInt( this.index );
   };
@@ -130,7 +130,7 @@ var Note = function( aBook, anEntry, aCategory, aType, aTagID ) {
   this.dump = function( prefix ) {
     return prefix + this.getName() + "\n";
   };
-  
+
   this.getType = function() {
     return this.type;
   };
@@ -160,10 +160,10 @@ var Note = function( aBook, anEntry, aCategory, aType, aTagID ) {
         { parentCategory: this.getParent(), changedNote: this } )
     );
   };
-  
+
   this.loadPreference = function( name, value ) {
     if ( "prefs" in this.data ) {
-      if ( this.data.prefs == null || 
+      if ( this.data.prefs == null ||
            Array.isArray( this.data.prefs ) ||
            typeof( this.data.prefs ) !== "object" ) {
         this.data.prefs = {};
@@ -176,10 +176,10 @@ var Note = function( aBook, anEntry, aCategory, aType, aTagID ) {
     }
     return value;
   };
-  
+
   this.savePreference = function( name, value ) {
     if ( "prefs" in this.data ) {
-      if ( this.data.prefs == null || 
+      if ( this.data.prefs == null ||
            Array.isArray( this.data.prefs ) ||
            typeof( this.data.prefs ) !== "object" ) {
         this.data.prefs = {};
@@ -207,7 +207,7 @@ var Note = function( aBook, anEntry, aCategory, aType, aTagID ) {
       )
     );
   };
-  
+
   this.getDocument = function() {
     var doc = ru.akman.znotes.DocumentManager.getInstance()
                                              .getDocument( this.getType() );
@@ -221,7 +221,7 @@ var Note = function( aBook, anEntry, aCategory, aType, aTagID ) {
       this.getName()
     );
   };
-  
+
   this.setDocument = function( dom ) {
     var doc = ru.akman.znotes.DocumentManager.getInstance()
                                              .getDocument( this.getType() );
@@ -253,7 +253,7 @@ var Note = function( aBook, anEntry, aCategory, aType, aTagID ) {
       doc.importDocument( dom, this.getURI(), this.getBaseURI(), this.getName(), params ) );
     this.updateDocument();
   };
-  
+
   this.getMainContent = function() {
     return this.entry.getMainContent();
   };
@@ -273,7 +273,7 @@ var Note = function( aBook, anEntry, aCategory, aType, aTagID ) {
       )
     );
   };
-  
+
   this.loadContentDirectory = function( fromDirectoryEntry, flagMove ) {
     this.entry.loadContentDirectory( fromDirectoryEntry, flagMove );
     this.notifyStateListener(
@@ -407,7 +407,7 @@ var Note = function( aBook, anEntry, aCategory, aType, aTagID ) {
     }
     return false;
   };
-  
+
   this.rename = function( aName ) {
     if ( this.name != aName ) {
       this.entry.setName( aName );
@@ -460,7 +460,7 @@ var Note = function( aBook, anEntry, aCategory, aType, aTagID ) {
     this.updateDocument();
     aParent.moveNoteInto( this, aCategory );
   };
-  
+
   this.moveTo = function( anIndex ) {
     var aParent = this.getParent();
     aParent.moveNoteTo( this, anIndex );
@@ -571,7 +571,7 @@ var Note = function( aBook, anEntry, aCategory, aType, aTagID ) {
     }
     return color;
   };
-  
+
   this.getOrigin = function() {
     return this.origin;
   };
@@ -586,7 +586,7 @@ var Note = function( aBook, anEntry, aCategory, aType, aTagID ) {
   this.getMode = function() {
     return this.mode;
   };
-  
+
   this.setMode = function( mode ) {
     var oldValue = this.mode;
     this.mode = mode;
@@ -602,11 +602,11 @@ var Note = function( aBook, anEntry, aCategory, aType, aTagID ) {
       )
     );
   };
-  
+
   this.isLoading = function() {
     return this.loading;
   };
-  
+
   this.setLoading = function( loading ) {
     var oldValue = this.loading;
     this.loading = loading;
@@ -622,7 +622,7 @@ var Note = function( aBook, anEntry, aCategory, aType, aTagID ) {
       )
     );
   };
-  
+
   this.addStateListener = function( stateListener ) {
     if ( this.listeners.indexOf( stateListener ) < 0 ) {
       this.listeners.push( stateListener );
@@ -677,12 +677,12 @@ var Note = function( aBook, anEntry, aCategory, aType, aTagID ) {
       "loading: " + this.loading + ", " +
       "locked: " + this.locked + ", " +
       "exists: " + this.exists + "\n" +
-      "listeners:\n" + listenersNames + 
+      "listeners:\n" + listenersNames +
       "entry:\n" + this.entry;
   };
 
   // C O N S T R U C T O R
-  
+
   // for debug purpose
   this.instanceId = Utils.createUUID();
 

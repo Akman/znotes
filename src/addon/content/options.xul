@@ -65,7 +65,7 @@
   <popupset id="znotes_popupset">
     <popupset id="znotes_editor_popupset" />
   </popupset>
-  
+
   <tabbox id="optionsTabBox" flex="1">
     <tabs id="optionsTabs">
       <tab id="tab-main" label="&tab-main.label;" class="optionsTab" />
@@ -85,7 +85,7 @@
           <hbox id="docTypeHBox" align="center">
             <menulist id="docTypeMenuList" flex="1">
               <menupopup id="docTypeMenuPopup" />
-            </menulist>      
+            </menulist>
           </hbox>
         </groupbox>
         <groupbox id="clipperGroupBox">
@@ -100,7 +100,7 @@
               <radio id="clipperInlineStylesheets" label="&clipperInlineStylesheets.label;" />
               <radio id="clipperSingleStylesheet" label="&clipperSingleStylesheet.label;" />
               <radio id="clipperSeparateStylesheets" label="&clipperSeparateStylesheets.label;" />
-            </radiogroup>            
+            </radiogroup>
             <checkbox id="clipperSaveActiveRulesOnly" label="&clipperSaveActiveRulesOnly.label;" />
             <checkbox id="isCloseBrowserAfterImport" label="&isCloseBrowserAfterImport.label;" />
             <checkbox id="isClipperPlaySound" label="&isClipperPlaySound.label;" />
@@ -148,5 +148,5 @@
       label=" &defaultsButton.label;"
       tooltiptext="&defaultsButton.tooltip;" />
   </hbox>
-  
+
 </window>

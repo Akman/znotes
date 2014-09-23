@@ -45,7 +45,7 @@
   width="800"
   height="600"
   persist="width height screenX screenY sizemode">
-  
+
   <script type="application/javascript"
     src="chrome://znotes/content/common.js" />
   <script type="application/javascript"
@@ -55,7 +55,7 @@
     <stringbundle id="znotes_stringbundle"
       src="chrome://znotes/locale/browser.properties" />
   </stringbundleset>
-  
+
   <commandset id="znotes_commandset">
     <command id="znotes_prev_command" disabled="true"
       label="&znotes_prev_label;"
@@ -93,7 +93,7 @@
       key="znotes_customizetoolbar_key"
       oncommand="ru.akman.znotes.Common.goDoCommand( 'znotes_customizetoolbar_command', event.explicitOriginalTarget );"/>
   </commandset>
-  
+
   <keyset id="znotes_keyset">
     <key id="znotes_prev_key" command="znotes_prev_command"
       key="&znotes_prev_key;" modifiers="&znotes_prev_key_modifiers;"
@@ -111,7 +111,7 @@
       key="&znotes_customizetoolbar_key;" modifiers="&znotes_customizetoolbar_key_modifiers;"
       keycode="&znotes_customizetoolbar_keycode;"/>
   </keyset>
-  
+
   <popupset id="znotes_popupset">
     <menupopup id="browserToolBarContext">
       <menuitem id="znotes_customizetoolbar_menuitem"
@@ -148,7 +148,7 @@
     </toolbar>
     <toolbarset id="browserToolBarSet" context="browserToolBarContext" />
   </toolbox>
-  
+
   <vbox id="browserView" flex="1" class="browserView">
     <browser id="zBrowser" flex="1"
       src="about:blank"
@@ -160,8 +160,8 @@
     <statusbarpanel id="browserStatusBarPanel" flex="1">
       <image id="browserStatusBarImage" class="browserBlack" />
       <label id="browserStatusBarLabel" />
-      <spacer id="browserStatusBarSpacer" flex="1"/>      
+      <spacer id="browserStatusBarSpacer" flex="1"/>
     </statusbarpanel>
   </statusbar>
-  
+
 </window>

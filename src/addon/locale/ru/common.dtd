@@ -250,7 +250,7 @@
 <!ENTITY znotes_newnote_keycode "">
 
 <!ENTITY znotes_importnote_label "Веб клиппер">
-<!ENTITY znotes_importnote_tooltip "Импорт веб страницы">
+<!ENTITY znotes_importnote_tooltip "Веб клиппер">
 <!ENTITY znotes_importnote_accesskey "">
 <!ENTITY znotes_importnote_key "">
 <!ENTITY znotes_importnote_key_modifiers "">

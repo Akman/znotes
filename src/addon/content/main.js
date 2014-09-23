@@ -30,85 +30,66 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+var Cc = Components.classes;
+var Ci = Components.interfaces;
+var Cr = Components.results;
+var Cu = Components.utils;
+
 if ( !ru ) var ru = {};
 if ( !ru.akman ) ru.akman = {};
 if ( !ru.akman.znotes ) ru.akman.znotes = {};
 if ( !ru.akman.znotes.core ) ru.akman.znotes.core = {};
 
-Components.utils.import( "resource://znotes/utils.js",
-  ru.akman.znotes
-);
-Components.utils.import( "resource://znotes/domutils.js",
-  ru.akman.znotes
-);
-Components.utils.import( "resource://znotes/drivermanager.js",
-  ru.akman.znotes
-);
-Components.utils.import( "resource://znotes/documentmanager.js",
-  ru.akman.znotes
-);
-Components.utils.import( "resource://znotes/bookmanager.js",
-  ru.akman.znotes.core
-);
-Components.utils.import( "resource://znotes/event.js",
-  ru.akman.znotes.core
-);
-Components.utils.import( "resource://znotes/clipper.js",
-  ru.akman.znotes.core
-);
-Components.utils.import( "resource://znotes/tabmonitor.js",
-  ru.akman.znotes
-);
-Components.utils.import( "resource://znotes/sessionmanager.js",
-  ru.akman.znotes
-);
-Components.utils.import( "resource://znotes/prefsmanager.js",
-  ru.akman.znotes
-);
-Components.utils.import( "resource://znotes/addonsmanager.js",
-  ru.akman.znotes
-);
-Components.utils.import( "resource://znotes/updatemanager.js",
-  ru.akman.znotes
-);
-Components.utils.import( "resource://znotes/keyset.js",
-  ru.akman.znotes
-);
+Cu.import( "resource://znotes/utils.js", ru.akman.znotes );
+Cu.import( "resource://znotes/images.js", ru.akman.znotes );
+Cu.import( "resource://znotes/domutils.js", ru.akman.znotes );
+Cu.import( "resource://znotes/drivermanager.js", ru.akman.znotes );
+Cu.import( "resource://znotes/documentmanager.js", ru.akman.znotes );
+Cu.import( "resource://znotes/bookmanager.js", ru.akman.znotes.core );
+Cu.import( "resource://znotes/event.js", ru.akman.znotes.core );
+Cu.import( "resource://znotes/clipper.js", ru.akman.znotes.core );
+Cu.import( "resource://znotes/tabmonitor.js", ru.akman.znotes );
+Cu.import( "resource://znotes/sessionmanager.js", ru.akman.znotes );
+Cu.import( "resource://znotes/prefsmanager.js", ru.akman.znotes );
+Cu.import( "resource://znotes/addonsmanager.js", ru.akman.znotes );
+Cu.import( "resource://znotes/updatemanager.js", ru.akman.znotes );
+Cu.import( "resource://znotes/keyset.js", ru.akman.znotes );
 
 ru.akman.znotes.Main = function() {
 
   var pub = {};
 
   var Utils = ru.akman.znotes.Utils;
+  var Images = ru.akman.znotes.Images;
   var DOMUtils = ru.akman.znotes.DOMUtils;
   var Common = ru.akman.znotes.Common;
-  
-  var Node = Components.interfaces.nsIDOMNode;
-  
+
+  var log = Utils.getLogger( "content.main" );
+
   var observerService =
-    Components.classes["@mozilla.org/observer-service;1"]
-              .getService( Components.interfaces.nsIObserverService );
-  
+    Cc["@mozilla.org/observer-service;1"]
+    .getService( Ci.nsIObserverService );
+
   var prefsMozilla =
-    Components.classes["@mozilla.org/preferences-service;1"]
-              .getService( Components.interfaces.nsIPrefBranch );
+    Cc["@mozilla.org/preferences-service;1"]
+    .getService( Ci.nsIPrefBranch );
 
   var ioService =
-    Components.classes["@mozilla.org/network/io-service;1"]
-              .getService( Components.interfaces.nsIIOService );
-              
+    Cc["@mozilla.org/network/io-service;1"]
+    .getService( Ci.nsIIOService );
+
   var prefsBundle = ru.akman.znotes.PrefsManager.getInstance();
   var sessionManager = ru.akman.znotes.SessionManager.getInstance();
   var tabMonitor = ru.akman.znotes.TabMonitor.getInstance();
   var bookManager = ru.akman.znotes.core.BookManager.getInstance();
 
   var clipper = null;
-  
+
   var consoleWindow = null;
   var consoleFlag = false;
-  
+
   var windowsList = null;
-  
+
   var mainPanel = null;
   var mainToolBox = null;
   var mainMenuBar = null;
@@ -116,18 +97,18 @@ ru.akman.znotes.Main = function() {
   var mainKeySet = null;
   var mainAppMenu = null;
   var mainMenu = null;
-  
+
   var statusBar = null;
   var statusBarPanel = null;
   var statusBarLogo = null;
   var statusBarLabel = null;
-  
+
   var newNoteButtonMenuPopup = null;
   var selectedPopupItem = null;
-  
+
   var mutationObservers = null;
   var folderTreeOpenStateMutationObserver = null;
-  
+
   var folderBox = null;
   var bookTreeView = null;
   var bookSplitter = null;
@@ -141,7 +122,7 @@ ru.akman.znotes.Main = function() {
   var noteTreeSplitter = null;
   var noteBodyBox = null;
   var noteBodyView = null;
-  
+
   var qfButton = null;
   var qfBox = null;
 
@@ -192,17 +173,17 @@ ru.akman.znotes.Main = function() {
     row: null,
     dropEffect: null
   };
-  
+
   var booksList = null;
   var categoriesList = null;
   var tagsList = null;
   var notesList = null;
-  
+
   var currentBook = null;
   var currentCategory = null;
   var currentTag = null;
   var currentNote = null;
-  
+
   var anEditCategory = null;
   var anEditNote = null;
   var anEditTagIndex = null;
@@ -211,7 +192,7 @@ ru.akman.znotes.Main = function() {
   var oldValue = null;
   var newValue = null;
   var welcomeNote = null;
-  
+
   var body = null;
 
   //
@@ -246,7 +227,7 @@ ru.akman.znotes.Main = function() {
     /* Book.remove() */
     //onBookDeleted: onBookDeleted,
     /* Book.removeWithAllData() */
-    //onBookDeletedWithAllData: onBookDeletedWithAllData, 
+    //onBookDeletedWithAllData: onBookDeletedWithAllData,
     /* BookManager.createBook() */
     //onBookCreated: onBookCreated,
     /* BookManager.appendBook() */
@@ -273,7 +254,7 @@ ru.akman.znotes.Main = function() {
   var contentTreeStateListener = {
     /* Category.createCategory() */
     //onCategoryCreated: onCategoryCreated,
-    /* Category.remove(), in Bin */      
+    /* Category.remove(), in Bin */
     //onCategoryDeleted: onCategoryDeleted,
     /* Category.appendCategory() */
     onCategoryAppended: onCategoryAppended,
@@ -355,7 +336,7 @@ ru.akman.znotes.Main = function() {
   //
   // CLOSE
   //
-  
+
   var platformQuitObserver = {
     observe: function( aSubject, aTopic, aData ) {
       switch ( aTopic ) {
@@ -363,8 +344,8 @@ ru.akman.znotes.Main = function() {
           Utils.IS_QUIT_ENABLED = true;
           var testWindowFlag = false;
           var windowMediator =
-            Components.classes["@mozilla.org/appshell/window-mediator;1"]
-                      .getService( Components.interfaces.nsIWindowMediator );
+            Cc["@mozilla.org/appshell/window-mediator;1"]
+            .getService( Ci.nsIWindowMediator );
           var win = windowMediator.getMostRecentWindow( "znotes:test" );
           if ( win ) {
             testWindowFlag = true;
@@ -405,9 +386,9 @@ ru.akman.znotes.Main = function() {
       observerService.removeObserver( this, "znotes-quit-requested" );
     }
   };
-  
+
   // HELPER OBSERVER
-  
+
   var helperObserver = {
     observe: function( aSubject, aTopic, aData ) {
       var uri;
@@ -440,9 +421,9 @@ ru.akman.znotes.Main = function() {
       observerService.removeObserver( this, "znotes-href" );
     }
   };
-  
+
   // PREFERENCES
-  
+
   var prefsBundleObserver = {
     onPrefChanged: function( event ) {
       switch( event.data.name ) {
@@ -562,7 +543,7 @@ ru.akman.znotes.Main = function() {
       prefsBundle.removeObserver( this );
     }
   };
-  
+
   var prefsMozillaObserver = {
     observe: function( subject, topic, data ) {
       switch ( data ) {
@@ -684,8 +665,8 @@ ru.akman.znotes.Main = function() {
     },
     register: function() {
       var prefService =
-        Components.classes["@mozilla.org/preferences-service;1"]
-                  .getService( Components.interfaces.nsIPrefService );
+        Cc["@mozilla.org/preferences-service;1"]
+        .getService( Ci.nsIPrefService );
       this.branch = prefService.getBranch( "extensions.znotes.");
       this.branch.addObserver( "", this, false );
     },
@@ -693,19 +674,19 @@ ru.akman.znotes.Main = function() {
       this.branch.removeObserver( "", this );
     }
   };
-  
+
   function loadPrefs() {
     prefsBundle.loadPrefs();
     if ( Utils.IS_FIRST_RUN ) {
       prefsBundle.setBoolPref( "isFirstRun", false );
     }
     if ( Utils.IS_FIRST_RUN || Utils.IS_DEBUG_ENABLED ) {
-		  observerService.notifyObservers( null, "startupcache-invalidate", null );
-		  observerService.notifyObservers( null, "chrome-flush-skin-caches", null );
-		  observerService.notifyObservers( null, "chrome-flush-caches", null );
+      observerService.notifyObservers( null, "startupcache-invalidate", null );
+      observerService.notifyObservers( null, "chrome-flush-skin-caches", null );
+      observerService.notifyObservers( null, "chrome-flush-caches", null );
     }
   };
-  
+
   // COMMANDS
 
   var mainCommandController = {
@@ -716,27 +697,27 @@ ru.akman.znotes.Main = function() {
       try {
         // controller
         this.controller =
-          Components.classes["@mozilla.org/embedcomp/base-command-controller;1"]
+          Cc["@mozilla.org/embedcomp/base-command-controller;1"]
                     .createInstance();
         // context
-        this.context = this.controller.QueryInterface(
-          Components.interfaces.nsIControllerContext );
+        this.context =
+          this.controller.QueryInterface( Ci.nsIControllerContext );
         this.context.init( null );
         this.context.setCommandContext( aContext === undefined ? null : aContext );
         // commands
         this.commands = this.controller.QueryInterface(
-          Components.interfaces.nsIInterfaceRequestor ).getInterface(
-            Components.interfaces.nsIControllerCommandTable );
+          Ci.nsIInterfaceRequestor ).getInterface(
+            Ci.nsIControllerCommandTable );
       } catch ( e ) {
-        Components.utils.reportError(
+        log.warn(
           "An error occurred initializing controller '" + this.getName() +
-          "': " + e
+          "'\n" + e
         );
       }
     },
     getController: function() {
       if ( !this.controller ) {
-        Components.utils.reportError(
+        log.warn(
           "An error occurred accessing controller '" + this.getName() +
           "', controller was not initialized!"
         );
@@ -745,7 +726,7 @@ ru.akman.znotes.Main = function() {
     },
     getCommands: function() {
       if ( !this.commands ) {
-        Components.utils.reportError(
+        log.warn(
           "An error occurred accessing controller '" + this.getName() +
           "', controller was not initialized!"
         );
@@ -754,7 +735,7 @@ ru.akman.znotes.Main = function() {
     },
     getContext: function() {
       if ( !this.context ) {
-        Components.utils.reportError(
+        log.warn(
           "An error occurred accessing controller '" + this.getName() +
           "', controller was not initialized!"
         );
@@ -766,7 +747,7 @@ ru.akman.znotes.Main = function() {
     },
     registerCommand: function( cmd, command ) {
       if ( !this.commands ) {
-        Components.utils.reportError(
+        log.warn(
           "An error occurred registering command '" + cmd +
           "', controller was not initialized!"
         );
@@ -775,14 +756,12 @@ ru.akman.znotes.Main = function() {
       try {
         this.commands.registerCommand( cmd, command );
       } catch ( e ) {
-        Components.utils.reportError(
-          "An error occurred registering command '" + cmd + "': " + e
-        );
+        log.warn( "An error occurred registering command '" + cmd + "'\n" + e );
       }
     },
     register: function() {
       if ( !this.controller ) {
-        Components.utils.reportError(
+        log.warn(
           "An error occurred registering controller '" + this.getName() +
           "', controller was not initialized!"
         );
@@ -794,14 +773,15 @@ ru.akman.znotes.Main = function() {
           return window.controllers.getControllerId( this.controller );
         };
       } catch ( e ) {
-        Components.utils.reportError(
-          "An error occurred registering '" + this.getName() + "' controller: " + e
+        log.warn(
+          "An error occurred registering '" + this.getName() +
+          "' controller\n" + e
         );
       }
     },
     unregister: function() {
       if ( !this.controller ) {
-        Components.utils.reportError(
+        log.warn(
           "An error occurred registering controller '" + this.getName() +
           "', controller was not initialized!"
         );
@@ -810,13 +790,14 @@ ru.akman.znotes.Main = function() {
       try {
         window.controllers.removeController( this.controller );
       } catch ( e ) {
-        Components.utils.reportError(
-          "An error occurred unregistering '" + this.getName() + "' controller: " + e
+        log.warn(
+          "An error occurred unregistering '" + this.getName() +
+          "' controller\n" + e
         );
       }
     }
   };
-  
+
   var saveMessageCommand = {
     isCommandEnabled: function( cmd ) {
       return true;
@@ -869,7 +850,7 @@ ru.akman.znotes.Main = function() {
     doCommand: function( cmd ) {
     }
   };
-  
+
   var mainCommands = {
     // book
     "znotes_openbook_command": null,
@@ -918,7 +899,7 @@ ru.akman.znotes.Main = function() {
     "znotes_addons_command": null,
     "znotes_update_command": null
   };
-  
+
   var mainController = {
     supportsCommand: function( cmd ) {
       return ( cmd in mainCommands );
@@ -934,10 +915,10 @@ ru.akman.znotes.Main = function() {
         case "znotes_inspector_command":
           return Utils.IS_DEBUG_ENABLED && Utils.IS_STANDALONE && Utils.IS_INSPECTOR_INSTALLED;
         case "znotes_addons_command":
-          return Utils.IS_STANDALONE; 
+          return Utils.IS_STANDALONE;
         case "znotes_update_command":
           return Utils.IS_STANDALONE &&
-            ru.akman.znotes.UpdateManager.canUpdate(); 
+            ru.akman.znotes.UpdateManager.canUpdate();
         case "znotes_showappmenu_command":
         case "znotes_exit_command":
         case "znotes_showmainmenubar_command":
@@ -1152,8 +1133,9 @@ ru.akman.znotes.Main = function() {
           return window.controllers.getControllerId( this );
         };
       } catch ( e ) {
-        Components.utils.reportError(
-          "An error occurred registering '" + this.getName() + "' controller: " + e
+        log.warn(
+          "An error occurred registering '" + this.getName() +
+          "' controller\n" + e
         );
       }
     },
@@ -1164,8 +1146,9 @@ ru.akman.znotes.Main = function() {
       try {
         window.controllers.removeController( this );
       } catch ( e ) {
-        Components.utils.reportError(
-          "An error occurred unregistering '" + this.getName() + "' controller: " + e
+        log.warn(
+          "An error occurred unregistering '" + this.getName() +
+          "' controller\n" + e
         );
       }
     }
@@ -1190,10 +1173,7 @@ ru.akman.znotes.Main = function() {
         updaterElement.addEventListener( "commandupdate", this.onEvent, false );
         commandDispatcher.addCommandUpdater( updaterElement, "focus", "*" );
       } catch ( e ) {
-        Components.utils.reportError(
-          "An error occurred registering 'editUpdater' updater:\n" +
-          e
-        );
+        log.warn( "An error occurred registering editUpdater\n" + e );
       }
     },
     unregister: function() {
@@ -1205,17 +1185,14 @@ ru.akman.znotes.Main = function() {
           "commandupdate", this.onEvent, false );
         commandDispatcher.removeCommandUpdater( updaterElement );
       } catch ( e ) {
-        Components.utils.reportError(
-          "An error occurred unregistering 'editUpdater' updater:\n" +
-          e
-        );
+        log.warn( "An error occurred unregistering editUpdater\n" + e );
       }
     },
     onEvent: function( event ) {
       updateEditCommands();
     }
   };
-  
+
   var editController = {
     supportsCommand: function( cmd ) {
       if ( !( cmd in editCommands ) ) {
@@ -1389,8 +1366,9 @@ ru.akman.znotes.Main = function() {
           return window.controllers.getControllerId( this );
         };
       } catch ( e ) {
-        Components.utils.reportError(
-          "An error occurred registering '" + this.getName() + "' controller: " + e
+        log.warn(
+          "An error occurred registering '" + this.getName() +
+          "' controller\n" + e
         );
       }
     },
@@ -1401,8 +1379,9 @@ ru.akman.znotes.Main = function() {
       try {
         window.controllers.removeController( this );
       } catch ( e ) {
-        Components.utils.reportError(
-          "An error occurred unregistering '" + this.getName() + "' controller: " + e
+        log.warn(
+          "An error occurred unregistering '" + this.getName() +
+          "' controller\n" + e
         );
       }
     }
@@ -1415,7 +1394,7 @@ ru.akman.znotes.Main = function() {
   function updateEditCommands() {
     editController.updateCommands();
   };
-  
+
   function updateCommandsVisibility() {
     var appmenuDebugSeparator =
       document.getElementById( "znotes_appmenu_debug_separator" );
@@ -1456,7 +1435,7 @@ ru.akman.znotes.Main = function() {
     Common.goUpdateCommand( "znotes_openabout_command", mainController.getId(), window );
     Common.goUpdateCommand( "znotes_pagesetup_command", mainController.getId(), window );
   };
-  
+
   function updateBookCommands() {
     Common.goUpdateCommand( "znotes_openbook_command", mainController.getId(), window );
     Common.goUpdateCommand( "znotes_closebook_command", mainController.getId(), window );
@@ -1468,7 +1447,7 @@ ru.akman.znotes.Main = function() {
     Common.goUpdateCommand( "znotes_refreshbooktree_command", mainController.getId(), window );
     Common.goUpdateCommand( "znotes_showfilterbar_command", mainController.getId(), window );
   };
-  
+
   function updateCategoryCommands() {
     var isHidden = currentCategory && currentCategory.isBin();
     Common.goUpdateCommand( "znotes_refreshfoldertree_command", mainController.getId(), window );
@@ -1479,7 +1458,7 @@ ru.akman.znotes.Main = function() {
     Common.goSetCommandHidden( "znotes_renamecategory_command", isHidden, window );
     Common.goSetCommandHidden( "znotes_clearbin_command", !isHidden, window );
   };
-  
+
   function updateNoteCommands() {
     Common.goUpdateCommand( "znotes_newnote_command", mainController.getId(), window );
     Common.goUpdateCommand( "znotes_importnote_command", mainController.getId(), window );
@@ -1496,8 +1475,8 @@ ru.akman.znotes.Main = function() {
     Common.goUpdateCommand( "znotes_deletetag_command", mainController.getId(), window );
     Common.goUpdateCommand( "znotes_renametag_command", mainController.getId(), window );
     Common.goUpdateCommand( "znotes_colortag_command", mainController.getId(), window );
-  };  
-  
+  };
+
   // znotes_exit_command
   function doExit() {
     Utils.IS_QUIT_ENABLED = true;
@@ -1514,20 +1493,22 @@ ru.akman.znotes.Main = function() {
       }
     }
     var appStartupSvc =
-      Components.classes["@mozilla.org/toolkit/app-startup;1"]
-                .getService( Components.interfaces.nsIAppStartup );
-    appStartupSvc.quit( Components.interfaces.nsIAppStartup.eAttemptQuit );
+      Cc["@mozilla.org/toolkit/app-startup;1"].getService( Ci.nsIAppStartup );
+    appStartupSvc.quit( Ci.nsIAppStartup.eAttemptQuit );
     return true;
   };
 
   // znotes_pagesetup_command
   function doPageSetup() {
-    var printSettingsService = Components.classes["@mozilla.org/gfx/printsettings-service;1"]
-                                         .getService( Components.interfaces.nsIPrintSettingsService );
-    var printingPromptService = Components.classes["@mozilla.org/embedcomp/printingprompt-service;1"]
-                                          .getService( Components.interfaces.nsIPrintingPromptService );
-    var preferencesService = Components.classes["@mozilla.org/preferences-service;1"]
-                                       .getService( Components.interfaces.nsIPrefBranch );
+    var printSettingsService =
+      Cc["@mozilla.org/gfx/printsettings-service;1"]
+      .getService( Ci.nsIPrintSettingsService );
+    var printingPromptService =
+      Cc["@mozilla.org/embedcomp/printingprompt-service;1"]
+      .getService( Ci.nsIPrintingPromptService );
+    var preferencesService =
+      Cc["@mozilla.org/preferences-service;1"]
+      .getService( Ci.nsIPrefBranch );
     var gSavePrintSettings = false;
     var gPrintSettingsAreGlobal = false;
     var gSavePrintSettings = false;
@@ -1560,7 +1541,7 @@ ru.akman.znotes.Main = function() {
           settings = printSettingsService.newPrintSettings;
         }
       } catch (e) {
-        Utils.log( e + "\n" + Utils.dumpStack() );
+        log.warn( e + "\n" + Utils.dumpStack() );
       }
       if ( settings ) {
         settings.isCancelled = false;
@@ -1570,7 +1551,7 @@ ru.akman.znotes.Main = function() {
         printSettingsService.savePrintSettingsToPrefs( settings, true, settings.kInitSaveNativeData );
       }
     } catch (e) {
-      Utils.log( e + "\n" + Utils.dumpStack() );
+      log.warn( e + "\n" + Utils.dumpStack() );
       return false;
     }
     return true;
@@ -1635,7 +1616,7 @@ ru.akman.znotes.Main = function() {
   function doOpenUpdateManager() {
     ru.akman.znotes.UpdateManager.open();
   };
-  
+
   // znotes_addons_command
   function doOpenAddonsManager() {
     ru.akman.znotes.AddonsManager.open();
@@ -1644,11 +1625,11 @@ ru.akman.znotes.Main = function() {
   // znotes_testsuite_command
   function doOpenTestSuiteWindow() {
     var windowWatcher =
-      Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
-                .getService( Components.interfaces.nsIWindowWatcher );
+      Cc["@mozilla.org/embedcomp/window-watcher;1"]
+      .getService( Ci.nsIWindowWatcher );
     var windowMediator =
-      Components.classes["@mozilla.org/appshell/window-mediator;1"]
-                .getService( Components.interfaces.nsIWindowMediator );
+      Cc["@mozilla.org/appshell/window-mediator;1"]
+      .getService( Ci.nsIWindowMediator );
     var win = windowMediator.getMostRecentWindow( "znotes:test" );
     if ( win ) {
       windowWatcher.activeWindow = win;
@@ -1710,7 +1691,7 @@ ru.akman.znotes.Main = function() {
     }
     return true;
   };
-  
+
   // znotes_openhelp_command
   function doOpenHelp() {
     Utils.openLinkExternally(
@@ -1838,7 +1819,7 @@ ru.akman.znotes.Main = function() {
       }
     }
   };
-  
+
   // znotes_newnote_command
   function doNewNote() {
     var aCategory, aName, aType, aTagID;
@@ -2093,7 +2074,7 @@ ru.akman.znotes.Main = function() {
     }
     return true;
   };
-  
+
   // znotes_renamecategory_command
   function doRenameCategory() {
     var aRow = getFolderTreeRow( currentCategory );
@@ -2117,7 +2098,7 @@ ru.akman.znotes.Main = function() {
   };
 
   // znotes_showfilterbar_command
-  
+
   function isQuickFilterCollapsed() {
     var isCollapsed = true;
     if ( !qfBox.hasAttribute( "collapsed" ) ) {
@@ -2139,7 +2120,7 @@ ru.akman.znotes.Main = function() {
       qfButton.setAttribute( "checkState" , "1" );
     }
   };
-  
+
   function doToggleFilterBar() {
     var isCollapsed = !isQuickFilterCollapsed();
     qfBox.setAttribute( "collapsed", isCollapsed );
@@ -2153,68 +2134,68 @@ ru.akman.znotes.Main = function() {
   // edit commands
 
   // selectAll
-  
+
   function doSelectAllBook() {
   };
-  
+
   function doSelectAllCategory() {
   };
-  
+
   function doSelectAllTag() {
   };
-  
+
   function doSelectAllNote() {
   };
 
   // copy
-  
+
   function doCopyBook() {
   };
-  
+
   function doCopyCategory() {
   };
-  
+
   function doCopyTag() {
   };
-  
+
   function doCopyNote() {
   };
 
   // cut
-  
+
   function doCutBook() {
   };
-  
+
   function doCutCategory() {
   };
-  
+
   function doCutTag() {
   };
-  
+
   function doCutNote() {
   };
-  
+
   // paste
-  
+
   function doPasteBook() {
   };
-  
+
   function doPasteCategory() {
   };
-  
+
   function doPasteTag() {
   };
-  
+
   function doPasteNote() {
   };
-  
+
   // undo
-  
+
   function doUndo() {
   };
-  
+
   // redo
-  
+
   function doRedo() {
   };
 
@@ -2226,7 +2207,7 @@ ru.akman.znotes.Main = function() {
   };
 
   //
-  // COMMON EVENTS 
+  // COMMON EVENTS
   //
 
   function onSplitterDblClick( event ) {
@@ -2258,7 +2239,7 @@ ru.akman.znotes.Main = function() {
     event.stopPropagation();
     return false;
   };
-  
+
   //
   // CATEGORIES
   //
@@ -2356,7 +2337,7 @@ ru.akman.znotes.Main = function() {
   function disableCategoriesList() {
     folderTree.setAttribute( "disabled", "true" );
   };
-  
+
   function createCategoriesList() {
     var append = function( aCategory ) {
       if ( !aCategory ) {
@@ -2394,7 +2375,7 @@ ru.akman.znotes.Main = function() {
       createFolderTreeChildren( categories[i], treeChildren );
     }
   };
-  
+
   function updateFolderTreeChildren( aCategory ) {
     var treeChildren, categories;
     var treeItem = getFolderTreeItem( aCategory );
@@ -2469,7 +2450,7 @@ ru.akman.znotes.Main = function() {
     treeItem.appendChild( treeChildren );
     return treeItem;
   };
-  
+
   function updateFolderTreeItem( aCategory ) {
     var treeRow, treeCell;
     var treeItem = getFolderTreeItem( aCategory );
@@ -2540,7 +2521,7 @@ ru.akman.znotes.Main = function() {
       currentBook.getContentTree().clearBin();
     }
   };
-  
+
   function categoryMoveTo( aCategory, anIndex ) {
     aCategory.moveTo( anIndex );
   };
@@ -2566,7 +2547,7 @@ ru.akman.znotes.Main = function() {
     updateEditCommands();
     return true;
   };
-  
+
   function restoreCurrentSelection() {
     if ( !currentBook ) {
       return;
@@ -2612,7 +2593,7 @@ ru.akman.znotes.Main = function() {
     noteTree.view.selection.select( row );
     noteTree.addEventListener( "select", onNoteSelect, false );
   };
-  
+
   function onFolderSelect( event ) {
     var category, data, row;
     if ( isDragDropActive ) {
@@ -2668,7 +2649,7 @@ ru.akman.znotes.Main = function() {
       return false;
     }
     return true;
-  };  
+  };
 
   function onFolderTreeTextBoxEvent( event ) {
     var aRow = null;
@@ -2726,7 +2707,7 @@ ru.akman.znotes.Main = function() {
   };
 
   // CATEGORIES DRAG & DROP
-  
+
   function clearFolderTreeSeparator() {
     if ( folderTreeSeparatorRow != null ) {
       if ( folderTreeSeparator.parentNode != null )
@@ -3012,7 +2993,7 @@ ru.akman.znotes.Main = function() {
   function disableNotesList() {
     noteTree.setAttribute( "disabled", "true" );
   };
-  
+
   function createNotesList() {
     if ( currentBook && currentBook.isOpen() ) {
       var contentTree = currentBook.getContentTree();
@@ -3235,14 +3216,12 @@ ru.akman.znotes.Main = function() {
       getValidNoteName( aRoot, getString( "main.welcome.notename" ), aType );
     var note = aRoot.createNote( aName, aType );
     if ( !Utils.IS_STANDALONE ) {
-      abManager = Components.classes["@mozilla.org/abmanager;1"]
-                            .getService( Components.interfaces.nsIAbManager );
+      abManager = Cc["@mozilla.org/abmanager;1"].getService( Ci.nsIAbManager );
       directories = abManager.directories;
       while ( directories.hasMoreElements() ) {
         dir =
-          directories.getNext()
-                     .QueryInterface( Components.interfaces.nsIAbDirectory );
-        if ( dir instanceof Components.interfaces.nsIAbDirectory ) {
+          directories.getNext().QueryInterface( Ci.nsIAbDirectory );
+        if ( dir instanceof Ci.nsIAbDirectory ) {
           directory = dir;
           if ( directory.fileName == "abook.mab" && directory.dirType == 2 ) {
             break;
@@ -3261,9 +3240,8 @@ ru.akman.znotes.Main = function() {
         found = false;
         cards = directory.childCards;
         while ( cards.hasMoreElements() ) {
-          card = cards.getNext().QueryInterface(
-            Components.interfaces.nsIAbCard );
-          if ( card instanceof Components.interfaces.nsIAbCard ) {
+          card = cards.getNext().QueryInterface( Ci.nsIAbCard );
+          if ( card instanceof Ci.nsIAbCard ) {
             if ( card.firstName == firstName &&
                  card.lastName == lastName ) {
               found = true;
@@ -3274,8 +3252,9 @@ ru.akman.znotes.Main = function() {
           }
         }
         if ( !found ) {
-          card = Components.classes["@mozilla.org/addressbook/cardproperty;1"]
-                           .createInstance( Components.interfaces.nsIAbCard );
+          card =
+            Cc["@mozilla.org/addressbook/cardproperty;1"]
+            .createInstance( Ci.nsIAbCard );
           card.firstName = firstName;
           card.lastName = lastName;
           card.displayName = firstName + " " + lastName;
@@ -3293,9 +3272,8 @@ ru.akman.znotes.Main = function() {
           if ( card ) {
             cards = directory.childCards;
             while ( cards.hasMoreElements() ) {
-              card = cards.getNext().QueryInterface(
-                Components.interfaces.nsIAbCard );
-              if ( card instanceof Components.interfaces.nsIAbCard ) {
+              card = cards.getNext().QueryInterface( Ci.nsIAbCard );
+              if ( card instanceof Ci.nsIAbCard ) {
                 if ( card.firstName == firstName &&
                      card.lastName == lastName ) {
                   found = true;
@@ -3333,19 +3311,19 @@ ru.akman.znotes.Main = function() {
               try {
                 note.loadContentDirectory( aDirectory, true );
               } catch ( e ) {
-                Utils.log( e + "\n" + Utils.dumpStack() );
+                log.warn( e + "\n" + Utils.dumpStack() );
               }
               try {
                 if ( aFile.exists() ) {
                   aFile.remove( false );
                 }
               } catch ( e ) {
-                Utils.log( e + "\n" + Utils.dumpStack() );
+                log.warn( e + "\n" + Utils.dumpStack() );
               }
               try {
                 note.importDocument( aResultObj.value );
               } catch ( e ) {
-                Utils.log( e + "\n" + Utils.dumpStack() );
+                log.warn( e + "\n" + Utils.dumpStack() );
               }
             }
             note.setLoading( false );
@@ -3405,7 +3383,7 @@ ru.akman.znotes.Main = function() {
   function deleteNote( aNote ) {
     aNote.remove();
   };
-  
+
   function noteMoveTo( aNote, anIndex ) {
     aNote.moveTo( anIndex );
   };
@@ -3432,7 +3410,7 @@ ru.akman.znotes.Main = function() {
       try {
         result = book.open();
       } catch ( e ) {
-        Utils.log( e + "\n" + Utils.dumpStack() );
+        log.warn( e + "\n" + Utils.dumpStack() );
       }
       if ( result != 0 ) {
         var message = "";
@@ -3474,7 +3452,7 @@ ru.akman.znotes.Main = function() {
     }
     return book.getContentTree().getNoteById( noteId );
   };
-  
+
   function showNote( aNote, aBackground ) {
     if ( !aNote ) {
       return;
@@ -3495,7 +3473,7 @@ ru.akman.znotes.Main = function() {
           break;
         }
       }
-      if ( tabIndex < 0 ) { 
+      if ( tabIndex < 0 ) {
         tabMail.openTab(
           "znotesContentTab",
           {
@@ -3513,12 +3491,12 @@ ru.akman.znotes.Main = function() {
       }
     } else {
       var windowWatcher =
-        Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
-                  .getService( Components.interfaces.nsIWindowWatcher );
+        Cc["@mozilla.org/embedcomp/window-watcher;1"]
+        .getService( Ci.nsIWindowWatcher );
       var win = windowWatcher.getWindowByName( windowName, null );
       if ( win ) {
         windowWatcher.activeWindow = win;
-        win.focus();        
+        win.focus();
       } else {
         win = window.open(
           "chrome://znotes/content/viewer.xul?" + windowName,
@@ -3571,7 +3549,7 @@ ru.akman.znotes.Main = function() {
       }
     }
   };
-  
+
   // NOTES EVENTS
 
   function onNoteBlur( event ) {
@@ -3582,7 +3560,7 @@ ru.akman.znotes.Main = function() {
     updateEditCommands();
     return true;
   };
-  
+
   function onNoteSelect( event ) {
     var note, data, row;
     if ( isDragDropActive ) {
@@ -3625,7 +3603,7 @@ ru.akman.znotes.Main = function() {
     doShowNote();
     return true;
   };
-  
+
   function onNoteContextMenu( event ) {
     var aRow = noteTreeBoxObject.getRowAt( event.clientX, event.clientY );
     if ( noteTree.view.rowCount > 0 && ( aRow < 0 || aRow > noteTree.view.rowCount - 1 ) ) {
@@ -3634,7 +3612,7 @@ ru.akman.znotes.Main = function() {
       return false;
     }
     return true;
-  };  
+  };
 
   function onNoteTreeTextBoxEvent( event ) {
     var aRow = null;
@@ -3839,7 +3817,7 @@ ru.akman.znotes.Main = function() {
   function disableTagsList() {
     tagTree.setAttribute( "disabled", "true" );
   };
-  
+
   function createTagsList() {
     if ( currentBook && currentBook.isOpen() ) {
       var tagList = currentBook.getTagList();
@@ -3896,7 +3874,7 @@ ru.akman.znotes.Main = function() {
     Utils.addCSSRule(
       document,
       "treechildren::-moz-tree-image(NOTE_TAG_" + id + ")",
-      "list-style-image: url('" + Utils.makeTagImage( color, true, 16 ) + "');"
+      "list-style-image: url('" + Images.makeTagImage( color, true, 16 ) + "');"
     );
     Utils.addCSSRule(
       document,
@@ -3941,7 +3919,7 @@ ru.akman.znotes.Main = function() {
       Utils.changeCSSRule(
         document,
         "treechildren::-moz-tree-image(NOTE_TAG_" + id + ")",
-        "list-style-image: url('" + Utils.makeTagImage( color, true, 16 ) + "');"
+        "list-style-image: url('" + Images.makeTagImage( color, true, 16 ) + "');"
       );
       Utils.changeCSSRule(
         document,
@@ -3960,7 +3938,7 @@ ru.akman.znotes.Main = function() {
       updateTagCSSRules( tagsList[i] );
     }
   };
-  
+
   function updateTagCSSRules( tag ) {
     var id = tag.getId();
     var colors = Utils.getHighlightColors( tag.getColor(), "#FFFFFF" );
@@ -3995,7 +3973,7 @@ ru.akman.znotes.Main = function() {
     }
     noteTreeBoxObject.clearStyleAndImageCaches();
   };
-  
+
   function createTag( aBook, aName, aColor ) {
     var aRow = tagsList.indexOf( aBook.getTagList().createTag(
       aName,
@@ -4041,7 +4019,7 @@ ru.akman.znotes.Main = function() {
     updateEditCommands();
     return true;
   };
-  
+
   function onTagSelect( event ) {
     var tag, data, row;
     if ( isDragDropActive ) {
@@ -4086,7 +4064,7 @@ ru.akman.znotes.Main = function() {
     tagTree.view.selection.select( -1 );
     tagTree.addEventListener( "select", onTagSelect, false );
   };
-  
+
   function onTagDblClick( event ) {
     var aRow = tagTreeBoxObject.getRowAt( event.clientX, event.clientY );
     if ( !currentTag || event.button != "0" || anEditTagIndex != null ||
@@ -4108,7 +4086,7 @@ ru.akman.znotes.Main = function() {
       return false;
     }
     return true;
-  };  
+  };
 
   function onTagTreeTextBoxEvent( event ) {
     var aRow = null;
@@ -4157,7 +4135,7 @@ ru.akman.znotes.Main = function() {
             var tag = currentBook.getTagList().getTagById( treeItem.getAttribute( "value" ) );
             renameTag( tag, newValue );
           } catch ( e ) {
-            Utils.log( e + "\n" + Utils.dumpStack() );
+            log.warn( e + "\n" + Utils.dumpStack() );
             tagTree.view.setCellText( aRow, aColumn, oldValue );
           }
         }
@@ -4278,7 +4256,7 @@ ru.akman.znotes.Main = function() {
             try {
               tagMoveTo( currentTag, infoDragDrop.row );
             } catch ( e ) {
-              Utils.log( e + "\n" + Utils.dumpStack() );
+              log.warn( e + "\n" + Utils.dumpStack() );
               openErrorDialog(
                 getFormattedString( "main.errordialog.tag",
                   [ currentTag.getName() ] ),
@@ -4313,7 +4291,7 @@ ru.akman.znotes.Main = function() {
     }
     bookManager.addStateListener( booksStateListener );
   };
-  
+
   function removeStateListeners() {
     if ( !booksList ) {
       return;
@@ -4328,7 +4306,7 @@ ru.akman.znotes.Main = function() {
     }
     bookManager.removeStateListener( booksStateListener );
   };
-  
+
   function doneBooks() {
     removeStateListeners();
     if ( booksList ) {
@@ -4343,7 +4321,7 @@ ru.akman.znotes.Main = function() {
     }
     booksList = null;
   };
-  
+
   function updateBookView() {
     refreshCategoriesList();
     refreshTagsList();
@@ -4360,7 +4338,7 @@ ru.akman.znotes.Main = function() {
         break;
     }
   };
-  
+
   function createBooksList() {
     var defaultBook;
     removeStateListeners();
@@ -4380,7 +4358,7 @@ ru.akman.znotes.Main = function() {
           }
         }
       } catch ( e ) {
-        Utils.log( e + "\n" + Utils.dumpStack() );
+        log.warn( e + "\n" + Utils.dumpStack() );
       }
     }
     booksList = bookManager.getBooksAsArray();
@@ -4619,7 +4597,7 @@ ru.akman.znotes.Main = function() {
     updateEditCommands();
     return true;
   };
-  
+
   function onBookSelect( event ) {
     var book, data;
     if ( isDragDropActive ) {
@@ -4698,8 +4676,8 @@ ru.akman.znotes.Main = function() {
             var book = bookManager.getBookById( treeItem.getAttribute( "value" ) );
             renameBook( book, newValue );
           } catch ( e ) {
-            Utils.log( e + "\n" + Utils.dumpStack() );
             bookTree.view.setCellText( anEditBookIndex, aColumn, oldValue );
+            log.warn( e + "\n" + Utils.dumpStack() );
           }
         }
         anEditBookIndex = null;
@@ -4721,7 +4699,7 @@ ru.akman.znotes.Main = function() {
     doOpenBook();
     return true;
   };
-  
+
   function onBookContextMenu( event ) {
     var aRow = bookTreeBoxObject.getRowAt( event.clientX, event.clientY );
     if ( bookTree.view.rowCount > 0 && ( aRow < 0 || aRow > bookTree.view.rowCount - 1 ) ) {
@@ -4730,8 +4708,8 @@ ru.akman.znotes.Main = function() {
       return false;
     }
     return true;
-  };  
-  
+  };
+
   // BOOK DRAG & DROP
 
   function clearBookTreeSeparator() {
@@ -5065,7 +5043,7 @@ ru.akman.znotes.Main = function() {
       }
     }
   };
-  
+
   function onCategoryChanged( e ) {
     var aParent = e.data.parentCategory;
     var aCategory = e.data.changedCategory;
@@ -5078,7 +5056,7 @@ ru.akman.znotes.Main = function() {
       updateNoteTreeItem( notesList[i] );
     }
   };
-  
+
   function onNoteAppended( e ) {
     var aParent = e.data.parentCategory;
     var aNote = e.data.appendedNote;
@@ -5283,7 +5261,7 @@ ru.akman.znotes.Main = function() {
         break;
     }
   };
-  
+
   function onNoteChanged( e ) {
     var aParent = e.data.parentCategory;
     var aNote = e.data.changedNote;
@@ -5292,7 +5270,7 @@ ru.akman.znotes.Main = function() {
       updateNoteTreeItem( aNote );
     }
   };
-  
+
   function onNoteTypeChanged( e ) {
     var aParent = e.data.parentCategory;
     var aNote = e.data.changedNote;
@@ -5374,7 +5352,7 @@ ru.akman.znotes.Main = function() {
         break;
     }
   };
-  
+
   function onNoteMainTagChanged( e ) {
     var aCategory = e.data.parentCategory;
     var aNote = e.data.changedNote;
@@ -5508,7 +5486,7 @@ ru.akman.znotes.Main = function() {
     }
     tagTree.addEventListener( "select", onTagSelect, false );
   };
-  
+
   //
   // BOOKS STATE LISTENER
   //
@@ -5618,9 +5596,9 @@ ru.akman.znotes.Main = function() {
     }
     bookTree.addEventListener( "select", onBookSelect, false );
   };
-  
+
   // STATE CHANGED
-  
+
   function updateNoteView() {
     refreshNotesList();
     restoreNotesTreeSelection();
@@ -5629,7 +5607,7 @@ ru.akman.znotes.Main = function() {
   function updateBodyView( forced ) {
     body.show( currentNote, forced );
   };
-  
+
   function currentBookChanged() {
     updateEditCommands();
     updateBookCommands();
@@ -5653,7 +5631,7 @@ ru.akman.znotes.Main = function() {
     updateTagCommands();
     updateNoteView();
   };
-  
+
   function currentNoteChanged( forced ) {
     updateEditCommands();
     updateNoteCommands();
@@ -5888,7 +5866,7 @@ ru.akman.znotes.Main = function() {
   };
 
   // INIT & DONE
-  
+
   function initGlobals() {
     Utils.initGlobals();
     if ( Utils.IS_STANDALONE ) {
@@ -5897,7 +5875,7 @@ ru.akman.znotes.Main = function() {
     tabMonitor.setActive( true );
     Utils.MAIN_CONTEXT = getContext;
   };
-  
+
   function initMain() {
     document.title = getString( "main.window.title" );
     // panel
@@ -5951,8 +5929,7 @@ ru.akman.znotes.Main = function() {
     bookTreeSeparator = document.createElement( "treeseparator" );
     bookTreeSeparator.setAttribute( "properties", "booktreeseparator" );
     bookTreeBoxObject = bookTree.boxObject;
-    bookTreeBoxObject.QueryInterface(
-      Components.interfaces.nsITreeBoxObject );
+    bookTreeBoxObject.QueryInterface( Ci.nsITreeBoxObject );
     bookTree.setAttribute( "editable", "false" );
     // category
     folderTree = document.getElementById( "folderTree" );
@@ -5962,8 +5939,7 @@ ru.akman.znotes.Main = function() {
     folderTreeSeparator = document.createElement( "treeseparator" );
     folderTreeSeparator.setAttribute( "properties", "foldertreeseparator" );
     folderTreeBoxObject = folderTree.boxObject;
-    folderTreeBoxObject.QueryInterface(
-      Components.interfaces.nsITreeBoxObject );
+    folderTreeBoxObject.QueryInterface( Ci.nsITreeBoxObject );
     folderTreeMenu = document.getElementById( "folderTreeMenu" );
     folderTree.setAttribute( "editable", "false" );
     // tag
@@ -5974,8 +5950,7 @@ ru.akman.znotes.Main = function() {
     tagTreeSeparator = document.createElement( "treeseparator" );
     tagTreeSeparator.setAttribute( "properties", "tagtreeseparator" );
     tagTreeBoxObject = tagTree.boxObject;
-    tagTreeBoxObject.QueryInterface(
-      Components.interfaces.nsITreeBoxObject );
+    tagTreeBoxObject.QueryInterface( Ci.nsITreeBoxObject );
     tagTree.setAttribute( "editable", "false" );
     // note
     noteTree = document.getElementById( "noteTree" );
@@ -5985,14 +5960,13 @@ ru.akman.znotes.Main = function() {
     noteTreeSeparator = document.createElement( "treeseparator" );
     noteTreeSeparator.setAttribute( "properties", "notetreeseparator" );
     noteTreeBoxObject = noteTree.boxObject;
-    noteTreeBoxObject.QueryInterface(
-      Components.interfaces.nsITreeBoxObject );
+    noteTreeBoxObject.QueryInterface( Ci.nsITreeBoxObject );
     noteTree.setAttribute( "editable", "false" );
     // quick filter
     qfButton = document.getElementById( "znotes_showfilterbar_button" );
     qfBox = document.getElementById( "filterBox" );
   };
-  
+
   function addEventListeners() {
     // keyset
     mainKeySet.activate();
@@ -6156,15 +6130,15 @@ ru.akman.znotes.Main = function() {
     editController.unregister();
     mainController.unregister();
   };
-  
+
   function addUpdaters() {
     //editUpdater.register();
   };
-  
+
   function removeUpdaters() {
     //editUpdater.unregister();
   };
-  
+
   function connectMutationObservers() {
     mutationObservers = [];
     mutationObservers.push( connectMutationObserver(
@@ -6220,7 +6194,7 @@ ru.akman.znotes.Main = function() {
         attributes: true,
         attributeFilter: [ "open" ]
       }
-    );    
+    );
   };
 
   function connectMutationObserver( target, attrName, prefName ) {
@@ -6254,17 +6228,17 @@ ru.akman.znotes.Main = function() {
     }
     folderTreeOpenStateMutationObserver.disconnect();
   };
-  
+
   function connectPrefsObservers() {
     prefsBundleObserver.register();
     prefsMozillaObserver.register();
   };
-  
+
   function disconnectPrefsObservers() {
     prefsBundleObserver.unregister();
     prefsMozillaObserver.unregister();
   };
-  
+
   function connectPlatformObservers() {
     platformQuitObserver.register();
   };
@@ -6272,7 +6246,7 @@ ru.akman.znotes.Main = function() {
   function disconnectPlatformObservers() {
     platformQuitObserver.unregister();
   };
-  
+
   function connectHelperObservers() {
     helperObserver.register();
   };
@@ -6280,13 +6254,13 @@ ru.akman.znotes.Main = function() {
   function disconnectHelperObservers() {
     helperObserver.unregister();
   };
-  
+
   function connectConsoleObserver() {
     consoleFlag = false;
     consoleWindow =
-      Components.classes["@mozilla.org/appshell/window-mediator;1"]
-                .getService( Components.interfaces.nsIWindowMediator )
-                .getMostRecentWindow( "global:console" );
+      Cc["@mozilla.org/appshell/window-mediator;1"]
+      .getService( Ci.nsIWindowMediator )
+      .getMostRecentWindow( "global:console" );
     if ( consoleWindow ) {
       consoleFlag = true;
       consoleWindow.addEventListener( "close", onConsoleClose, true );
@@ -6305,7 +6279,7 @@ ru.akman.znotes.Main = function() {
       }
     );
   };
-  
+
   function doneBody() {
     if ( !body ) {
       return;
@@ -6313,7 +6287,7 @@ ru.akman.znotes.Main = function() {
     body.release();
     body = null;
   };
-  
+
   function updateKeyset() {
     var shortcuts = {};
     try {
@@ -6322,23 +6296,23 @@ ru.akman.znotes.Main = function() {
         shortcuts = {};
       }
     } catch ( e ) {
-      Utils.log( e + "\n" + Utils.dumpStack() );
+      log.warn( e + "\n" + Utils.dumpStack() );
       shortcuts = {};
     }
     mainKeySet.update( shortcuts );
     Utils.updateKeyAttribute( mainAppMenu );
     Utils.updateKeyAttribute( mainMenu );
   };
-  
+
   function updateUI() {
     updateNewNoteMenuPopup();
     updateMainMenubarVisibility();
     updateMainToolbarVisibility();
     updateCommandsVisibility();
     updateCommonCommands();
-    updateKeyset();    
+    updateKeyset();
   };
-  
+
   function updateFocus() {
     window.focus();
     if ( currentNote ) {
@@ -6355,7 +6329,7 @@ ru.akman.znotes.Main = function() {
     }
     bookTree.focus();
   };
-  
+
   function load() {
     // The order of calling is important !
     initGlobals();
@@ -6396,7 +6370,7 @@ ru.akman.znotes.Main = function() {
 
   function unload() {
   };
-  
+
   function quit() {
     doneBody();
     doneBooks();
@@ -6409,21 +6383,21 @@ ru.akman.znotes.Main = function() {
     disconnectPrefsObservers();
     closeWindows();
   };
-  
+
   // HELPERS
 
   function getElementId( element ) {
     if ( !element ) {
       return null;
     }
-    if ( element.nodeType == Node.ELEMENT_NODE ) {
+    if ( element.nodeType == Ci.nsIDOMNode.ELEMENT_NODE ) {
       if ( element.hasAttribute( "id" ) ) {
         return element.getAttribute( "id" );
       }
     }
     return getElementId( element.parentNode );
   };
-  
+
   function getValidNoteName( category, name, aType ) {
     var index = 0, suffix = "";
     while ( !category.canCreateNote( name + suffix, aType ) ) {
@@ -6431,37 +6405,39 @@ ru.akman.znotes.Main = function() {
     }
     return name + suffix;
   };
-  
+
   function getString( name ) {
     var str;
     try {
       str = Utils.STRINGS_BUNDLE.getString( name );
     } catch ( e ) {
       str = "?" + name + "?";
-      Utils.log( e + "\n'" + name + "'\n" + Utils.dumpStack() );
+      log.warn( "Main.getString() : '" + name + "'\n" + e + "\n" +
+        Utils.dumpStack() );
     }
     return str;
   };
-  
+
   function getFormattedString( name, values ) {
     var str;
     try {
       str = Utils.STRINGS_BUNDLE.getFormattedString( name, values );
     } catch ( e ) {
       str = "?" + name + "?";
-      Utils.log( e + "\n'" + name + "'\n" + Utils.dumpStack() );
+      log.warn( "Main.getFormattedString() : '" + name + "'\n" + e + "\n" +
+        Utils.dumpStack() );
     }
     return str;
   };
-  
+
   function updateSelectedPopupItem( event ) {
     selectedPopupItem = event.target;
   };
-  
+
   function playSound() {
     ( new Audio( "chrome://znotes_sounds/skin/notify.wav" ) ).play();
   };
-  
+
   function openErrorDialog( message1, message2 ) {
     var params = {
       input: {
@@ -6500,14 +6476,7 @@ ru.akman.znotes.Main = function() {
       createNote: createNote
     };
   };
-  
-  function dumpCategoriesList( title ) {
-    Utils.log( title );
-    for ( var i = 0; i < categoriesList.length; i++ ) {
-      Utils.log( i + ": " + categoriesList[i].getName() );
-    }
-  };
-  
+
   // XR only
   function updateWindowSizeAndPosition() {
     var win = Utils.MAIN_WINDOW;
@@ -6561,12 +6530,12 @@ ru.akman.znotes.Main = function() {
       win.resizeTo( outerWidth, outerHeight );
     }
   };
-  
+
   function closeWindows() {
     var win, windowEnumerator;
     var windowWatcher =
-      Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
-                .getService( Components.interfaces.nsIWindowWatcher );
+      Cc["@mozilla.org/embedcomp/window-watcher;1"]
+      .getService( Ci.nsIWindowWatcher );
     // consoleWindow
     if ( consoleWindow ) {
       consoleWindow.removeEventListener( "close", onConsoleClose, true );
@@ -6577,17 +6546,16 @@ ru.akman.znotes.Main = function() {
     // browserWindow
     windowEnumerator = windowWatcher.getWindowEnumerator();
     while ( windowEnumerator.hasMoreElements() ) {
-      win = windowEnumerator.getNext().QueryInterface(
-        Components.interfaces.nsIDOMWindow );
+      win = windowEnumerator.getNext().QueryInterface( Ci.nsIDOMWindow );
       if ( win.document.location.href.indexOf(
              "chrome://znotes/content/browser.xul" ) === 0 ) {
         win.close();
       };
     }
   };
-  
+
   // PUBLIC
-  
+
   pub.onLoad = function() {
     load();
   };
@@ -6604,12 +6572,12 @@ ru.akman.znotes.Main = function() {
     }
     return Utils.IS_QUIT_ENABLED;
   };
-  
+
   pub.onUnload = function() {
     unload();
     observerService.notifyObservers( window, "znotes-main-shutdown", null );
   };
-  
+
   return pub;
 
 }();

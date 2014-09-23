@@ -30,16 +30,25 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+const EXPORTED_SYMBOLS = ["Tag"];
+
+var Cc = Components.classes;
+var Ci = Components.interfaces;
+var Cr = Components.results;
+var Cu = Components.utils;
+
 if ( !ru ) var ru = {};
 if ( !ru.akman ) ru.akman = {};
 if ( !ru.akman.znotes ) ru.akman.znotes = {};
 if ( !ru.akman.znotes.core ) ru.akman.znotes.core = {};
 
-Components.utils.import( "resource://znotes/event.js"  , ru.akman.znotes.core );
-
-var EXPORTED_SYMBOLS = ["Tag"];
+Cu.import( "resource://znotes/utils.js", ru.akman.znotes );
+Cu.import( "resource://znotes/event.js", ru.akman.znotes.core );
 
 var Tag = function( list, id, name, color, index, selectedIndex ) {
+
+  var Utils = ru.akman.znotes.Utils;
+  var log = Utils.getLogger( "modules.tag" );
 
   this.getDescriptorItemInfo = function() {
     return [

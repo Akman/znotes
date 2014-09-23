@@ -45,14 +45,14 @@
   <commandset id="znotes_commandset" />
   <keyset id="znotes_keyset" />
   <popupset id="znotes_popupset" />
-    
+
   <tabs id="addonsTabs">
     <tab id="addonsTabAd" label="&ad_tab_caption;" hidden="true" />
   </tabs>
 
   <tabpanels id="addonsPanels">
     <tabpanel id="noteAdViewPanel" flex="1" hidden="true">
-      <browser id="adBrowser" 
+      <browser id="adBrowser"
         type="content-primary"
         flex="1" />
     </tabpanel>

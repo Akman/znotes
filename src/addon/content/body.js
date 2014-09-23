@@ -35,18 +35,11 @@ if ( !ru.akman ) ru.akman = {};
 if ( !ru.akman.znotes ) ru.akman.znotes = {};
 if ( !ru.akman.znotes.core ) ru.akman.znotes.core = {};
 
-Components.utils.import( "resource://znotes/utils.js",
-  ru.akman.znotes
-);
-Components.utils.import( "resource://znotes/documentmanager.js",
-  ru.akman.znotes
-);
-Components.utils.import( "resource://znotes/prefsmanager.js",
-  ru.akman.znotes
-);
-Components.utils.import( "resource://znotes/event.js",
-  ru.akman.znotes.core
-);
+Cu.import( "resource://znotes/utils.js", ru.akman.znotes );
+Cu.import( "resource://znotes/images.js", ru.akman.znotes );
+Cu.import( "resource://znotes/documentmanager.js", ru.akman.znotes );
+Cu.import( "resource://znotes/prefsmanager.js", ru.akman.znotes );
+Cu.import( "resource://znotes/event.js", ru.akman.znotes.core );
 
 ru.akman.znotes.Body = function() {
 
@@ -54,20 +47,23 @@ ru.akman.znotes.Body = function() {
   return function( anArguments ) {
 
     var Utils = ru.akman.znotes.Utils;
+    var Images = ru.akman.znotes.Images;
     var Common = ru.akman.znotes.Common;
 
+    var log = Utils.getLogger( "content.body" );
+
     var prefsBundle = ru.akman.znotes.PrefsManager.getInstance();
-    
+
     var observers = [];
 
     var self = this;
 
-    var currentWindow = null;    
+    var currentWindow = null;
     var currentName = "*unnamed*";
     var currentMode = null;
     var currentStyle = null;
     var currentToolbox = null;
-    
+
     var currentNote = null;
     var tagList = null;
 
@@ -76,7 +72,7 @@ ru.akman.znotes.Body = function() {
     var noteMainBox = null;
     var noteBodySplitter = null;
     var noteAddonsBox = null;
-    
+
     var bodyAddonsButton = null;
     var bodyTagsMenu = null;
     var bodyTagsMenuButton = null;
@@ -92,7 +88,7 @@ ru.akman.znotes.Body = function() {
     var noteStateListener = null;
     var tagListStateListener = null;
     var mutationObservers = null;
-    
+
     var prefObserver = {
       onPrefChanged: function( event ) {
         switch( event.data.name ) {
@@ -102,11 +98,11 @@ ru.akman.znotes.Body = function() {
         }
       }
     };
-    
+
     //
     // COMMANDS
     //
-    
+
     var bodyCommands = {
       "znotes_bodycustomizetoolbar_command": null,
       "znotes_bodydeletenote_command": null,
@@ -115,7 +111,7 @@ ru.akman.znotes.Body = function() {
       "znotes_bodytypesmenu_command": null,
       "znotes_bodyaddonspanel_command": null
     };
-    
+
     var bodyController = {
       supportsCommand: function( cmd ) {
         if ( !( cmd in bodyCommands ) ) {
@@ -126,7 +122,7 @@ ru.akman.znotes.Body = function() {
         var focusedWindow =
           currentWindow.top.document.commandDispatcher.focusedWindow;
         if ( focusedWindow != currentWindow ) {
-          Utils.log( focusedWindow.name + " >> " + focusedWindow.location );
+          log.debug( focusedWindow.name + " >> " + focusedWindow.location );
         }
         return ( focusedWindow == currentWindow );
         */
@@ -279,8 +275,9 @@ ru.akman.znotes.Body = function() {
             return currentWindow.controllers.getControllerId( this );
           };
         } catch ( e ) {
-          Components.utils.reportError(
-            "An error occurred registering '" + this.getName() + "' controller: " + e
+          log.warn(
+            "An error occurred registering '" + this.getName() +
+            "' controller\n" + e
           );
         }
       },
@@ -291,13 +288,14 @@ ru.akman.znotes.Body = function() {
         try {
           currentWindow.controllers.removeController( this );
         } catch ( e ) {
-          Components.utils.reportError(
-            "An error occurred unregistering '" + this.getName() + "' controller: " + e
+          log.warn(
+            "An error occurred unregistering '" + this.getName() +
+            "' controller\n" + e
           );
         }
       }
     };
-    
+
     function updateCommands() {
       var id = bodyController.getId( currentWindow );
       Common.goUpdateCommand( "znotes_bodycustomizetoolbar_command", id, currentWindow );
@@ -312,7 +310,7 @@ ru.akman.znotes.Body = function() {
         disableTagButtons();
       }
     };
-    
+
     // HELPERS
 
     function updateStyle( node, style ) {
@@ -326,9 +324,9 @@ ru.akman.znotes.Body = function() {
         updateStyle( child, style );
       }
     };
-    
+
     // PREFERENCES
-    
+
     function connectMutationObservers() {
       mutationObservers = [];
       mutationObservers.push( connectMutationObserver(
@@ -338,7 +336,7 @@ ru.akman.znotes.Body = function() {
       mutationObservers.push( connectMutationObserver(
         noteAddonsBox, "height", "noteAddonsBoxHeight" ) );
     };
-    
+
     function connectMutationObserver( target, attrName, prefName ) {
       var mutationObserver = new MutationObserver(
         function( mutations ) {
@@ -375,7 +373,7 @@ ru.akman.znotes.Body = function() {
       );
       return mutationObserver;
     };
-    
+
     function disconnectMutationObservers() {
       if ( !mutationObservers ) {
         return;
@@ -384,7 +382,7 @@ ru.akman.znotes.Body = function() {
         mutationObservers[i].disconnect();
       }
     };
-    
+
     function restoreCurrentNotePreferences() {
       noteMainBox.setAttribute( "height",
         currentNote.loadPreference( "noteMainBoxHeight", "700" ) );
@@ -429,7 +427,7 @@ ru.akman.znotes.Body = function() {
         var name = tag.getName();
         var color = tag.getColor();
         var menuItem = currentWindow.document.createElement( "menuitem" );
-        var image = ru.akman.znotes.Utils.makeTagImage( color, false, 16 );
+        var image = Images.makeTagImage( color, false, 16 );
         menuItem.setAttribute( "class", "menuitem-iconic" );
         menuItem.setAttribute( "image", image );
         menuItem.setAttribute( "label", name );
@@ -478,7 +476,7 @@ ru.akman.znotes.Body = function() {
             toolBarButton.setAttribute( "pack", "start" );
             toolBarButton.setAttribute( "tooltiptext", tag.getName() );
             toolBarButton.setAttribute( "image",
-              ru.akman.znotes.Utils.makeTagImage( tag.getColor(), true,
+              Images.makeTagImage( tag.getColor(), true,
                 ( currentStyle.iconsize == "small" ) ? 16 : 24 ) );
             toolBarButton.addEventListener( "command", aCmdTagButtonClick,
               false );
@@ -503,12 +501,12 @@ ru.akman.znotes.Body = function() {
           arr[0] = "1";
           aMenuItem.setAttribute( "value", arr.join(";") );
           aMenuItem.setAttribute( "image",
-            ru.akman.znotes.Utils.makeTagImage( color, true, 16 ) );
+            Images.makeTagImage( color, true, 16 ) );
         } else {
           arr[0] = "0";
           aMenuItem.setAttribute( "value", arr.join(";") );
           aMenuItem.setAttribute( "image",
-            ru.akman.znotes.Utils.makeTagImage( color, false, 16 ) );
+            Images.makeTagImage( color, false, 16 ) );
         }
       }
     };
@@ -547,19 +545,19 @@ ru.akman.znotes.Body = function() {
           arr[0] = ( arr[0] == "0" ) ? "1" : "0";
           aMenuItem.setAttribute( "value", arr.join(";") );
           aMenuItem.setAttribute( "image",
-            ru.akman.znotes.Utils.makeTagImage( arr[2], arr[0] == "1", 16 ) );
+            Images.makeTagImage( arr[2], arr[0] == "1", 16 ) );
           break;
         }
       }
       updateNoteTags( currentNote, bodyTagsMenu );
       return true;
     };
-    
+
     function onCmdTagMenuClear() {
       currentNote.setTags( [] );
       return true;
     };
-    
+
     function onBodyTagsMenuButtonMenuPopupShowing() {
       Common.goDoCommand( "znotes_bodytagsmenu_command", bodyTagsMenuButton );
       return false;
@@ -572,12 +570,12 @@ ru.akman.znotes.Body = function() {
              buttons[i].getAttribute( "istag" ) == "true" ) {
           buttons[i].setAttribute( "disabled", "true" );
           buttons[i].setAttribute( "image",
-            ru.akman.znotes.Utils.makeTagImage( "#C0C0C0", true,
+            Images.makeTagImage( "#C0C0C0", true,
               ( currentStyle.iconsize == "small" ) ? 16 : 24 ) );
         }
       }
     };
-    
+
     function enableTagButtons() {
       if ( currentNote ) {
         updateTagsButtons( currentNote, onCmdTagButtonClick );
@@ -624,7 +622,7 @@ ru.akman.znotes.Body = function() {
       currentNote.setType( event.target.getAttribute( "value" ) );
       return true;
     };
-    
+
     function onBodyTypesMenuButtonMenuPopupShowing() {
       Common.goDoCommand( "znotes_bodytypesmenu_command", bodyTypesMenuButton );
       return false;
@@ -645,9 +643,9 @@ ru.akman.znotes.Body = function() {
       }
       return true;
     };
-    
+
     // NOTE EVENTS
-    
+
     function onNoteDeleted( e ) {
       var aCategory = e.data.parentCategory;
       var aNote = e.data.deletedNote;
@@ -668,7 +666,7 @@ ru.akman.znotes.Body = function() {
       refreshTagMenu( bodyTagsMenu, onCmdTagMenuClear, onCmdTagMenuClick );
       updateTagMenu( aNote, bodyTagsMenu );
     };
-    
+
     function onNoteTypeChanged( e ) {
       var aCategory = e.data.parentCategory;
       var aNote = e.data.changedNote;
@@ -714,12 +712,12 @@ ru.akman.znotes.Body = function() {
           break;
       }
     };
-    
+
     function onNoteModeChanged( e ) {
       var id = bodyController.getId( currentWindow );
       Common.goUpdateCommand( "znotes_bodytypesmenu_command", id, currentWindow );
     };
-    
+
     // TAG LIST EVENTS
 
     function onTagChanged( e ) {
@@ -744,9 +742,9 @@ ru.akman.znotes.Body = function() {
       var aTag = e.data.createdTag;
       refreshTagMenu( bodyTagsMenu, onCmdTagMenuClear, onCmdTagMenuClick );
     };
-    
+
     // V I E W
-    
+
     function showCurrentView() {
       noteViewDeck.selectedIndex = 0; // or 1 or 2 or ...
       refreshTagMenu( bodyTagsMenu, onCmdTagMenuClear, onCmdTagMenuClick );
@@ -766,7 +764,7 @@ ru.akman.znotes.Body = function() {
       noteBodyView.setAttribute( "disabled", "true" );
       updateTagsButtons( currentNote, onCmdTagButtonClick );
     };
-    
+
     // L I S T E N E R S
 
     function addEventListeners() {
@@ -780,7 +778,7 @@ ru.akman.znotes.Body = function() {
         onSplitterDblClick, false );
       connectMutationObservers();
     };
-    
+
     function removeEventListeners() {
       if ( !currentNote ) {
         return;
@@ -791,9 +789,9 @@ ru.akman.znotes.Body = function() {
       tagList.removeStateListener( tagListStateListener );
       currentNote.removeStateListener( noteStateListener );
     };
-    
+
     // TOOLBAR
-    
+
     function restoreToolbarCurrentSet() {
       var toolbar = currentToolbox.querySelector( "#znotes_bodytoolbar" );
       var currentset = toolbar.getAttribute( "defaultset" );
@@ -832,7 +830,7 @@ ru.akman.znotes.Body = function() {
         );
       }
     };
-    
+
     function saveToolbarCurrentSet() {
       var toolbar = currentToolbox.querySelector( "#znotes_bodytoolbar" );
       var currentset = toolbar.currentSet;
@@ -845,7 +843,7 @@ ru.akman.znotes.Body = function() {
     };
 
     // OBSERVERS
-    
+
     function notifyObservers( event ) {
       for ( var i = 0; i < observers.length; i++ ) {
         if ( observers[i][ "on" + event.type ] ) {
@@ -859,7 +857,7 @@ ru.akman.znotes.Body = function() {
         observers.push( aObserver );
       }
     };
-    
+
     function removeObserver( aObserver ) {
       var index = observers.indexOf( aObserver );
       if ( index < 0 ) {
@@ -867,13 +865,13 @@ ru.akman.znotes.Body = function() {
       }
       observers.splice( index, 1 );
     };
-    
+
     // PUBLIC
-    
+
     this.notify = function( event ) {
       notifyObservers( event );
     };
-    
+
     this.updateStyle = function( style ) {
       if ( !Utils.cloneObject( style, currentStyle ) ) {
         return;
@@ -889,7 +887,7 @@ ru.akman.znotes.Body = function() {
         )
       );
     };
-    
+
     this.show = function( aNote, aForced ) {
       if ( currentNote && currentNote == aNote && !aForced ) {
         return;
@@ -925,7 +923,7 @@ ru.akman.znotes.Body = function() {
       prefsBundle.removeObserver( prefObserver );
       bodyController.unregister();
     };
-    
+
     // CONSTRUCTOR
 
     if ( anArguments.window ) {
@@ -1007,7 +1005,7 @@ ru.akman.znotes.Body = function() {
     addObserver( new ru.akman.znotes.Content( currentWindow, currentStyle ) );
     addObserver( new ru.akman.znotes.Relator( currentWindow, currentStyle ) );
     addObserver( new ru.akman.znotes.Editor( currentWindow, currentMode, currentStyle ) );
-    
+
   };
 
 }();

@@ -3,17 +3,17 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<!-- 
+<!--
    - Original code: chrome://global/content/alerts/alert.js
-   - This fixed version created by 
+   - This fixed version created by
    -   Alexander Kapitman <akman.ru@gmail.com>
    -
    - Portions created by Alexander Kapitman are Copyright (C) 2014
    - Alexander Kapitman. All Rights Reserved.
-   - 
-   - Portions created by Alexander Kapitman marked as AK:FIXED:
+   -
+   - Portions created by Alexander Kapitman marked as AK:FIXED:BEGIN/END
 -->
-   
+
 <!DOCTYPE window [
 <!ENTITY % alertDTD SYSTEM "chrome://alerts/locale/alert.dtd">
 %alertDTD;
@@ -33,8 +33,10 @@
         onclick="onAlertClick();"
         onbeforeunload="onAlertBeforeUnload();">
 
-  <!-- AK:FIXED: replaced src to fixed version -->
+  <!-- AK:FIXED:BEGIN
+       replaced src to fixed version -->
   <script type="application/javascript" src="chrome://znotes/content/alert.js"/>
+  <!-- AK:FIXED:END -->
 
   <box id="alertBox" class="alertBox">
     <box>

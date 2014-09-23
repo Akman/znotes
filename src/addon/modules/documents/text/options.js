@@ -30,17 +30,24 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+const EXPORTED_SYMBOLS = ["Options"];
+
+var Cc = Components.classes;
+var Ci = Components.interfaces;
+var Cr = Components.results;
+var Cu = Components.utils;
+
 if ( !ru ) var ru = {};
 if ( !ru.akman ) ru.akman = {};
 if ( !ru.akman.znotes ) ru.akman.znotes = {};
 
-Components.utils.import( "resource://znotes/utils.js", ru.akman.znotes );
-
-var EXPORTED_SYMBOLS = ["Options"];
+Cu.import( "resource://znotes/utils.js", ru.akman.znotes );
 
 var Options = function() {
 
   var Utils = ru.akman.znotes.Utils;
+  var log = Utils.getLogger( "documents.text.options" );
+
   var Common = null;
 
   var pub = {};
@@ -51,7 +58,7 @@ var Options = function() {
   var currentDocument = null;
   var currentPreferences = null;
   var currentName = null;
-  
+
   var defaultEditorPrefs = null;
   var originalEditorPrefs = null;
   var currentEditorPrefs = null;
@@ -59,25 +66,25 @@ var Options = function() {
   var defaultDocPrefs = null;
   var originalDocPrefs = null;
   var currentDocPrefs = null;
-  
+
   var editorShortcuts = {};
   var editorSuffix = null;
-  
+
   var isSpellcheckEnabled = null;
   //var fileExtension = null;
-  
+
   // HELPERS
-  
+
   function getString( name ) {
     return Utils.STRINGS_BUNDLE.getString( name );
   };
-  
+
   function isShortcutChanged( shortcuts, name ) {
     var value = ( shortcuts[name]["original"] === null ) ?
       shortcuts[name]["default"] : shortcuts[name]["original"];
     return shortcuts[name]["current"] !== value;
   };
-  
+
   function getTabShortcuts( defaultShortcuts, currentShortcuts ) {
     var name, result = {};
     for ( var id in defaultShortcuts ) {
@@ -94,7 +101,7 @@ var Options = function() {
     }
     return result;
   };
-  
+
   function getEditorShortcuts() {
     var name, result = {};
     for ( var name in editorShortcuts ) {
@@ -102,7 +109,7 @@ var Options = function() {
     }
     return result;
   };
-  
+
   function checkShortcut( shortcuts, name, shortcut ) {
     for ( var n in shortcuts ) {
       if ( n != name && shortcuts[n] === shortcut ) {
@@ -111,7 +118,7 @@ var Options = function() {
     }
     return false;
   };
-  
+
   function isShortcutExists( name, shortcut ) {
     var shortcuts;
     for ( var tab in currentPreferences ) {
@@ -170,7 +177,7 @@ var Options = function() {
       1200
     );
   };
-  
+
   function updateTextboxStyle( shortcuts, textbox ) {
     var name = Utils.getNameFromId( textbox.getAttribute( "id" ) );
     textbox.inputField.style.setProperty( "letter-spacing", "1px" );
@@ -190,7 +197,7 @@ var Options = function() {
   };
 
   // SHORTCUTS
-  
+
   function loadShortcuts( shortcuts, deftPrefs, origPrefs, currPrefs ) {
     var defaultShortcuts = ( "shortcuts" in deftPrefs ) ?
       deftPrefs.shortcuts : {};
@@ -226,9 +233,9 @@ var Options = function() {
       }
     }
   };
-  
+
   // VIEW
-  
+
   function createItem( doc, shortcuts, name, suffix ) {
     var cmd = doc.getElementById(
       shortcuts[name].command );
@@ -288,7 +295,7 @@ var Options = function() {
       textbox: textbox
     };
   };
-  
+
   function populateShortcuts( shortcuts, listbox, appendix ) {
     var suffix = ( appendix === undefined ) ? "" : appendix;
     var doc = listbox.ownerDocument;
@@ -302,9 +309,9 @@ var Options = function() {
       updateTextboxStyle( shortcuts, item.textbox );
     }
   };
-  
+
   // EVENTS
-  
+
   function onKeyPress( event ) {
     var id = event.target.getAttribute( "id" );
     var name = Utils.getNameFromId( id );
@@ -352,7 +359,7 @@ var Options = function() {
     editorShortcuts[name]["current"] = editorShortcuts[name]["default"];
     updateTextboxStyle( editorShortcuts, textbox );
   };
-  
+
   function onDefaults( event ) {
     isSpellcheckEnabled.checked = defaultEditorPrefs.isSpellcheckEnabled;
     //fileExtension.value = defaultDocPrefs.fileExtension;
@@ -374,7 +381,7 @@ var Options = function() {
     var textbox = doc.getElementById(
       "znotes_" + name + "_textbox" + editorSuffix );
   };
-  
+
   // PREFERENCES
 
   function updateDocPreferences( currPrefs, origPrefs ) {
@@ -384,7 +391,7 @@ var Options = function() {
     //  ( currPrefs.fileExtension !== origPrefs.fileExtension );
     return isChanged;
   };
-  
+
   function updateEditorPreferences( currPrefs, origPrefs ) {
     var isChanged = false;
     currPrefs.isSpellcheckEnabled = isSpellcheckEnabled.checked;
@@ -392,7 +399,7 @@ var Options = function() {
       ( currPrefs.isSpellcheckEnabled !== origPrefs.isSpellcheckEnabled );
     return isChanged;
   };
-  
+
   function updateShortcutPreferences( currPrefs, shortcuts ) {
     var shortcut;
     var result = {};
@@ -412,9 +419,9 @@ var Options = function() {
     currPrefs.shortcuts = result;
     return isChanged;
   };
-  
+
   // INIT
-  
+
   function init() {
     isSpellcheckEnabled = currentDocument.getElementById(
       "isSpellcheckEnabled" + editorSuffix );
@@ -433,7 +440,7 @@ var Options = function() {
       currentPreferences[currentName].activeElement.focus();
     }
   };
-  
+
   // PUBLIC
 
   /**
@@ -442,7 +449,7 @@ var Options = function() {
   pub.defaults = function( event ) {
     onDefaults( event );
   };
-  
+
   /**
    * Called when closing tab
    */
@@ -461,7 +468,7 @@ var Options = function() {
     }
     return isChanged;
   };
-  
+
   /**
    * Called when opening tab
    * @param win Window in which Document live
@@ -485,14 +492,14 @@ var Options = function() {
     editorSuffix = ":" + currentName.toLowerCase();
     init();
   };
-  
+
   /**
    * Is support UI
    */
   pub.isSupported = function() {
     return true;
   };
-  
+
   return pub;
 
 }();

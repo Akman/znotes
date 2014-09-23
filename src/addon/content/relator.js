@@ -30,11 +30,16 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+var Cc = Components.classes;
+var Ci = Components.interfaces;
+var Cr = Components.results;
+var Cu = Components.utils;
+
 if ( !ru ) var ru = {};
 if ( !ru.akman ) ru.akman = {};
 if ( !ru.akman.znotes ) ru.akman.znotes = {};
 
-Components.utils.import( "resource://znotes/utils.js" , ru.akman.znotes );
+Cu.import( "resource://znotes/utils.js", ru.akman.znotes );
 
 ru.akman.znotes.Relator = function( aWindow, aStyle ) {
 
@@ -42,11 +47,13 @@ ru.akman.znotes.Relator = function( aWindow, aStyle ) {
   return function() {
 
     var Utils = ru.akman.znotes.Utils;
+    var log = Utils.getLogger( "content.relator" );
+
     var Common = ru.akman.znotes.Common;
 
     var currentWindow = null;
     var currentStyle = null;
-    
+
     var currentNote = null;
 
     var noteStateListener = null;
@@ -54,14 +61,14 @@ ru.akman.znotes.Relator = function( aWindow, aStyle ) {
     var adBrowser = null;
     var noteAdViewPanel = null;
     var addonsTabAd = null;
-    
+
     //
     // COMMANDS
     //
-    
+
     var relatorCommands = {
     };
-    
+
     var relatorController = {
       supportsCommand: function( cmd ) {
         if ( !( cmd in relatorCommands ) ) {
@@ -105,9 +112,9 @@ ru.akman.znotes.Relator = function( aWindow, aStyle ) {
             return currentWindow.controllers.getControllerId( this );
           };
         } catch ( e ) {
-          Components.utils.reportError(
+          log.warn(
             "An error occurred registering '" + this.getName() +
-            "' controller: " + e
+            "' controller\n" + e
           );
         }
       },
@@ -118,17 +125,17 @@ ru.akman.znotes.Relator = function( aWindow, aStyle ) {
         try {
           currentWindow.controllers.removeController( this );
         } catch ( e ) {
-          Components.utils.reportError(
+          log.warn(
             "An error occurred unregistering '" + this.getName() +
-            "' controller: " + e
+            "' controller\n" + e
           );
         }
       }
     };
-    
+
     function updateCommands() {
     };
-    
+
     // NOTE EVENTS
 
     function onNoteDeleted( e ) {
@@ -137,7 +144,7 @@ ru.akman.znotes.Relator = function( aWindow, aStyle ) {
       if ( currentNote && currentNote == aNote ) {
       }
     };
-    
+
     function onNoteChanged( e ) {
       var aCategory = e.data.parentCategory;
       var aNote = e.data.changedNote;
@@ -145,7 +152,7 @@ ru.akman.znotes.Relator = function( aWindow, aStyle ) {
         load();
       }
     };
-    
+
     function onNoteTagsChanged( e ) {
       var aCategory = e.data.parentCategory;
       var aNote = e.data.changedNote;
@@ -155,7 +162,7 @@ ru.akman.znotes.Relator = function( aWindow, aStyle ) {
         load();
       }
     };
-    
+
     function onNoteMainContentChanged( e ) {
       var aCategory = e.data.parentCategory;
       var aNote = e.data.changedNote;
@@ -165,7 +172,7 @@ ru.akman.znotes.Relator = function( aWindow, aStyle ) {
         load();
       }
     };
-    
+
     // BROWSER EVENTS
 
     function onClick( event ) {
@@ -181,12 +188,11 @@ ru.akman.znotes.Relator = function( aWindow, aStyle ) {
       event.stopPropagation();
       event.preventDefault();
       var svc =
-        Components.classes["@mozilla.org/uriloader/external-protocol-service;1"]
-                  .getService(
-                    Components.interfaces.nsIExternalProtocolService );
+        Cc["@mozilla.org/uriloader/external-protocol-service;1"]
+        .getService( Ci.nsIExternalProtocolService );
       var ioService =
-        Components.classes["@mozilla.org/network/io-service;1"]
-                  .getService( Components.interfaces.nsIIOService );
+        Cc["@mozilla.org/network/io-service;1"]
+        .getService( Ci.nsIIOService );
       var uri = ioService.newURI( href, null, null );
       if ( uri.schemeIs( "znotes" ) || uri.schemeIs( "chrome" ) ) {
         return false;
@@ -194,15 +200,15 @@ ru.akman.znotes.Relator = function( aWindow, aStyle ) {
       Utils.openLinkExternally( href );
       return false;
     };
-    
+
     function onLoad( event ) {
       adBrowser.removeEventListener( "load", onLoad, true );
       /*
       var serializer =
-        Components.classes["@mozilla.org/xmlextras/xmlserializer;1"]
-                  .createInstance( Components.interfaces.nsIDOMSerializer );
-      Utils.log( serializer.serializeToString( adBrowser.contentDocument ) );
-      Utils.log( "Done." );
+        Cc["@mozilla.org/xmlextras/xmlserializer;1"]
+        .createInstance( Ci.nsIDOMSerializer );
+      log.debug( serializer.serializeToString( adBrowser.contentDocument ) );
+      log.debug( "Done." );
       */
       if ( adBrowser.contentDocument.body ) {
         adBrowser.contentDocument.body.style.setProperty(
@@ -211,54 +217,53 @@ ru.akman.znotes.Relator = function( aWindow, aStyle ) {
         );
       }
     };
-    
+
     // DATA
-    
+
     function createPostData( keywords ) {
       var stringStream =
-        Components.classes["@mozilla.org/io/string-input-stream;1"]
-                  .createInstance( Components.interfaces.nsIStringInputStream );
+        Cc["@mozilla.org/io/string-input-stream;1"]
+        .createInstance( Ci.nsIStringInputStream );
       stringStream.data =
         "keywords=" + encodeURIComponent( keywords.join( " " ) );
       var result =
-        Components.classes["@mozilla.org/network/mime-input-stream;1"]
-                  .createInstance( Components.interfaces.nsIMIMEInputStream );
+        Cc["@mozilla.org/network/mime-input-stream;1"]
+        .createInstance( Ci.nsIMIMEInputStream );
       result.addHeader( "Content-Type", "application/x-www-form-urlencoded" );
       result.addContentLength = true;
       result.setData( stringStream );
       return result;
     };
-    
+
     // VIEW
 
     function load() {
-      var ciWN = Components.interfaces.nsIWebNavigation;
       var language = encodeURIComponent( Utils.getLanguage() );
       var keywords = [ "test", "advertising", "keyword" ]; //currentNote.getKeyWords();
       var url = Utils.SITE + "adv/?language=" + language;
       //"&flag=" + ( new Date() ).getTime();
-      //Utils.log( "Loading: " + url );
+      //log.debug( "Loading: " + url );
       adBrowser.addEventListener( "load", onLoad, true );
       adBrowser.webNavigation.loadURI(
         url,
-        ciWN.LOAD_FLAGS_BYPASS_CACHE,
+        Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_CACHE,
         null, // nsIURI referer
         createPostData( keywords ),
         null // nsIInputStream headers
       );
     };
-    
+
     function showCurrentView() {
       if ( Utils.IS_AD_ENABLED ) {
         load();
       }
       adBrowser.removeAttribute( "disabled" );
     };
-    
+
     function hideCurrentView() {
       adBrowser.setAttribute( "disabled", "true" );
     };
-    
+
     function show( aNote, aForced ) {
       if ( currentNote && currentNote == aNote && !aForced ) {
         return;
@@ -273,9 +278,9 @@ ru.akman.znotes.Relator = function( aWindow, aStyle ) {
       }
       updateCommands();
     };
-    
+
     // EVENT LISTENERS
-    
+
     function addEventListeners() {
       if ( !currentNote ) {
         return;
@@ -291,18 +296,18 @@ ru.akman.znotes.Relator = function( aWindow, aStyle ) {
       adBrowser.removeEventListener( "click", onClick, true );
       currentNote.removeStateListener( noteStateListener );
     };
-    
+
     // PUBLIC
 
     this.onStyleChanged = function( event ) {
     };
-    
+
     this.onNoteChanged = function( event ) {
       var aNote = event.data.note;
       var aForced = event.data.forced;
       show( aNote, aForced );
     };
-    
+
     this.onRelease = function( event ) {
       removeEventListeners();
       relatorController.unregister();

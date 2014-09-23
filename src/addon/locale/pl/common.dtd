@@ -32,7 +32,7 @@
   - ***** END LICENSE BLOCK ***** -->
 
 <!-- main -->
-  
+
 <!ENTITY znotes_showmainmenubar_label "Pasek menu">
 <!ENTITY znotes_showmainmenubar_tooltip "Pasek menu">
 <!ENTITY znotes_showmainmenubar_accesskey "M">
@@ -251,7 +251,7 @@
 <!ENTITY znotes_newnote_keycode "">
 
 <!ENTITY znotes_importnote_label "Web clipper">
-<!ENTITY znotes_importnote_tooltip "Importuj web page">
+<!ENTITY znotes_importnote_tooltip "Web clipper">
 <!ENTITY znotes_importnote_accesskey "">
 <!ENTITY znotes_importnote_key "">
 <!ENTITY znotes_importnote_key_modifiers "">

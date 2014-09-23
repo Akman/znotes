@@ -30,9 +30,23 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var EXPORTED_SYMBOLS = ["Source"];
+const EXPORTED_SYMBOLS = ["Source"];
+
+var Cc = Components.classes;
+var Ci = Components.interfaces;
+var Cr = Components.results;
+var Cu = Components.utils;
+
+if ( !ru ) var ru = {};
+if ( !ru.akman ) ru.akman = {};
+if ( !ru.akman.znotes ) ru.akman.znotes = {};
+
+Cu.import( "resource://znotes/utils.js", ru.akman.znotes );
 
 var Source = function() {
+
+  var Utils = ru.akman.znotes.Utils;
+  var log = Utils.getLogger( "documents.xhtml.source" );
 
   var editor = null;
 

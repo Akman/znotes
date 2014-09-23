@@ -72,7 +72,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var EXPORTED_SYMBOLS = ["Product"];
+const EXPORTED_SYMBOLS = ["Product"];
+
 var Product = function() {
   return {
     get Id() { return "</xsl:text><xsl:value-of select="//application/id" /><xsl:text>";      },

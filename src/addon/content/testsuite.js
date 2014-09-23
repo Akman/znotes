@@ -30,14 +30,19 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+var Cc = Components.classes;
+var Ci = Components.interfaces;
+var Cr = Components.results;
+var Cu = Components.utils;
+
 if ( !ru ) var ru = {};
 if ( !ru.akman ) ru.akman = {};
 if ( !ru.akman.znotes ) ru.akman.znotes = {};
 
-Components.utils.import( "resource://znotes/utils.js" , ru.akman.znotes );
-Components.utils.import( "resource://znotes/domutils.js" , ru.akman.znotes );
-Components.utils.import( "resource://znotes/updatemanager.js" , ru.akman.znotes );
-Components.utils.import( "resource://znotes/css.js" , ru.akman.znotes );
+Cu.import( "resource://znotes/utils.js" , ru.akman.znotes );
+Cu.import( "resource://znotes/domutils.js" , ru.akman.znotes );
+Cu.import( "resource://znotes/updatemanager.js" , ru.akman.znotes );
+Cu.import( "resource://znotes/cssutils.js" , ru.akman.znotes );
 
 ru.akman.znotes.TestSuite = function() {
 
@@ -46,9 +51,32 @@ ru.akman.znotes.TestSuite = function() {
   var Utils = ru.akman.znotes.Utils;
   var DOMUtils = ru.akman.znotes.DOMUtils;
   var CSSUtils = ru.akman.znotes.CSSUtils;
-  
-  var mozPrefs = Components.classes["@mozilla.org/preferences-service;1"]
-                           .getService( Components.interfaces.nsIPrefBranch );
+
+  var log = Utils.getLogger( "content.testsuite" );
+  var loggerLevel = Utils.LOGGER_LEVEL;
+
+  var mozPrefs =
+    Cc["@mozilla.org/preferences-service;1"].getService( Ci.nsIPrefBranch );
+
+  var consoleService =
+    Cc["@mozilla.org/consoleservice;1"].getService( Ci.nsIConsoleService );
+
+  var consoleObserver = {
+    observe: function( aMessage ) {
+      var message = aMessage instanceof Ci.nsIScriptError ?
+        aMessage.errorMessage : aMessage.message;
+      for ( var i = 0; i < 3; i++ ) {
+        message = message.replace( /[^\s]+\s+/, "" );
+      }
+      testTextBox.value += message + "\n";
+    },
+    register: function() {
+      consoleService.registerListener( this );
+    },
+    unregister: function() {
+      consoleService.unregisterListener( this );
+    }
+  };
 
   var testTextBox = null;
   var alwaysRaisedButton = null;
@@ -56,37 +84,42 @@ ru.akman.znotes.TestSuite = function() {
   var tests = [];
 
   function testCommand( event ) {
-    ctx = Utils.MAIN_CONTEXT();
     var testIndex = parseInt( event.target.value );
     var delimiter = "========" +
                     new Array( tests[testIndex].name.length + 1 ).join( "=" );
-    var header = "[BEGIN] " + tests[testIndex].name;
-    Utils.log( header );
-    Utils.log( delimiter );
+    var header = tests[testIndex].name;
+    log.trace( header );
+    log.trace( delimiter );
     try {
+      ctx = Utils.MAIN_CONTEXT();
       tests[testIndex].code( event );
     } catch ( e ) {
-      Utils.log( e + "\n" + Utils.dumpStack() );
+      log.warn( e );
     }
-    Utils.log( delimiter + "\n" );
+    log.trace( delimiter );
   };
-  
+
   pub.onLoad = function( event ) {
+    testTextBox = document.getElementById( "testTextBox" );
+    consoleObserver.register();
+    Utils.LOGGER_LEVEL = "ALL";
     Utils.IS_TEST_ACTIVE = true;
     mozPrefs.setBoolPref( "extensions.znotes.test.active", true );
-    testTextBox = document.getElementById( "testTextBox" );
-    Utils.DEBUG_TEXTBOX = testTextBox;
     alwaysRaisedButton = document.getElementById( "alwaysRaisedButton" );
     alwaysRaisedButton.checked = Utils.IS_TEST_RAISED;
     pub.alwaysRaised();
   };
-  
+
   pub.onClose = function( event ) {
-    Utils.DEBUG_TEXTBOX = null;
+    Utils.LOGGER_LEVEL = loggerLevel;
     Utils.IS_TEST_ACTIVE = false;
     mozPrefs.setBoolPref( "extensions.znotes.test.active", false );
   };
-  
+
+  pub.onUnload = function( event ) {
+    consoleObserver.unregister();
+  };
+
   pub.clearTestView = function( event ) {
     testTextBox.value = "";
     return true;
@@ -121,11 +154,11 @@ ru.akman.znotes.TestSuite = function() {
   };
 
   pub.alwaysRaised = function( event ) {
-    var xulWin = window.QueryInterface( Components.interfaces.nsIInterfaceRequestor )
-                       .getInterface( Components.interfaces.nsIWebNavigation )
-                       .QueryInterface( Components.interfaces.nsIDocShellTreeItem ).treeOwner
-                       .QueryInterface( Components.interfaces.nsIInterfaceRequestor)
-                       .getInterface( Components.interfaces.nsIXULWindow );
+    var xulWin = window.QueryInterface( Ci.nsIInterfaceRequestor )
+                       .getInterface( Ci.nsIWebNavigation )
+                       .QueryInterface( Ci.nsIDocShellTreeItem ).treeOwner
+                       .QueryInterface( Ci.nsIInterfaceRequestor)
+                       .getInterface( Ci.nsIXULWindow );
     var value = alwaysRaisedButton.checked
     Utils.IS_TEST_RAISED = value;
     mozPrefs.setBoolPref( "extensions.znotes.test.raised", value );
@@ -146,21 +179,22 @@ ru.akman.znotes.TestSuite = function() {
       name: "Locales",
       description: "Get system, application and user agent locales",
       code: function () {
-        var chromeRegistry = Components.classes ["@mozilla.org/chrome/chrome-registry;1"]
-                                       .getService( Components.interfaces.nsIXULChromeRegistry );
+        var chromeRegistry = Cc ["@mozilla.org/chrome/chrome-registry;1"]
+                                       .getService( Ci.nsIXULChromeRegistry );
         var cl3 = chromeRegistry.getSelectedLocale( "znotes" );
 
-        var localeService = Components.classes["@mozilla.org/intl/nslocaleservice;1"]
-                                      .getService( Components.interfaces.nsILocaleService );
+        var localeService = Cc["@mozilla.org/intl/nslocaleservice;1"]
+                                      .getService( Ci.nsILocaleService );
         var cl0 = localeService.getSystemLocale().getCategory( "NSILOCALE_CTYPE" );
         var cl1 = localeService.getApplicationLocale().getCategory( "NSILOCALE_CTYPE" );
         var cl2 = localeService.getLocaleComponentForUserAgent();
 
-        testTextBox.value += "selected: " + cl3 + "\n" +
-                              "system: " + cl0 + "\n" +
-                              "application: " + cl1 + "\n" +
-                              "useragent: " + cl2 + "\n\n" +
-                              "languages: " + Utils.LANGUAGES.join( ", " ) + "\n";
+        log.trace( "selected: " + cl3 );
+        log.trace( "system: " + cl0 );
+        log.trace( "application: " + cl1 );
+        log.trace( "useragent: " + cl2 );
+        log.trace( "languages: " + Utils.LANGUAGES.join( ", " ) );
+
       }
     }
   );
@@ -173,7 +207,7 @@ ru.akman.znotes.TestSuite = function() {
         if ( !ctx.note ) {
           return;
         }
-        testTextBox.value += ctx.note.getId() + "\n";
+        log.trace( ctx.note.getId() );
       }
     }
   );
@@ -187,10 +221,10 @@ ru.akman.znotes.TestSuite = function() {
           return;
         }
         var designFrame = ctx.document.getElementById( "designEditor" );
-        testTextBox.value += "getBaseURI() :: " + decodeURIComponent( ctx.note.getBaseURI().spec ) + "\n";
-        testTextBox.value += "getURI() :: " + decodeURIComponent( ctx.note.getURI().spec ) + "\n";
-        testTextBox.value += "BaseURI :: " + decodeURIComponent( designFrame.contentDocument.baseURIObject.spec ) + "\n";
-        testTextBox.value += "DocumentURI :: " + decodeURIComponent( designFrame.contentDocument.documentURIObject.spec ) + "\n";
+        log.trace( "getBaseURI() :: " + decodeURIComponent( ctx.note.getBaseURI().spec ) );
+        log.trace( "getURI() :: " + decodeURIComponent( ctx.note.getURI().spec ) );
+        log.trace( "BaseURI :: " + decodeURIComponent( designFrame.contentDocument.baseURIObject.spec ) );
+        log.trace( "DocumentURI :: " + decodeURIComponent( designFrame.contentDocument.documentURIObject.spec ) );
       }
     }
   );
@@ -201,7 +235,7 @@ ru.akman.znotes.TestSuite = function() {
       description: "Create welcome note",
       code: function () {
         var note = ctx.createWelcomeNote( ctx.book );
-        testTextBox.value += note;
+        log.trace( "\n" + note.toString() );
       }
     }
   );
@@ -211,83 +245,83 @@ ru.akman.znotes.TestSuite = function() {
       name: "Info",
       description: "Get application info",
       code: function () {
-        testTextBox.value += "\n";
-        testTextBox.value += "ID :: "  + Utils.ID + "\n";
-        testTextBox.value += "BUNDLE :: "  + Utils.BUNDLE + "\n";
-        testTextBox.value += "NAME :: "  + Utils.NAME + "\n";
-        testTextBox.value += "VENDOR :: "  + Utils.VENDOR + "\n";
-        testTextBox.value += "VERSION :: "  + Utils.VERSION + "\n";
-        testTextBox.value += "BUILD :: "  + Utils.BUILD + "\n";
-        testTextBox.value += "LANGUAGES :: "  + Utils.LANGUAGES + "\n";
-        testTextBox.value += "SITE :: "  + Utils.SITE + "\n";
-        testTextBox.value += "SITE_LANGUAGES :: "  + Utils.SITE_LANGUAGES + "\n";
-        testTextBox.value += "TITLE :: "  + Utils.decodeUTF8( Utils.TITLE ) + "\n";
-        testTextBox.value += "DESCRIPTION :: "  + Utils.decodeUTF8( Utils.DESCRIPTION ) + "\n";
-        testTextBox.value += "LICENSES :: \n";
+        log.trace( "ID :: "  + Utils.ID );
+        log.trace( "BUNDLE :: "  + Utils.BUNDLE );
+        log.trace( "NAME :: "  + Utils.NAME );
+        log.trace( "VENDOR :: "  + Utils.VENDOR );
+        log.trace( "VERSION :: "  + Utils.VERSION );
+        log.trace( "BUILD :: "  + Utils.BUILD );
+        log.trace( "LANGUAGES :: "  + Utils.LANGUAGES );
+        log.trace( "SITE :: "  + Utils.SITE );
+        log.trace( "SITE_LANGUAGES :: "  + Utils.SITE_LANGUAGES );
+        log.trace( "TITLE :: "  + Utils.decodeUTF8( Utils.TITLE ) );
+        log.trace( "DESCRIPTION :: "  + Utils.decodeUTF8( Utils.DESCRIPTION ) );
+        log.trace( "LICENSES" );
         for ( var i = 0; i < Utils.LICENSES.length; i++ ) {
           var license = Utils.LICENSES[i];
-          testTextBox.value += "[" + (i+1) + "] name = " + license.name + "\n";
-          testTextBox.value += "[" + (i+1) + "] link = " + license.link + "\n";
+          log.trace( "[" + (i+1) + "] name = " + license.name );
+          log.trace( "[" + (i+1) + "] link = " + license.link );
         }
-        testTextBox.value += "REPOSITORIES :: \n";
+        log.trace( "REPOSITORIES" );
         for ( var i = 0; i < Utils.REPOSITORIES.length; i++ ) {
           var repository = Utils.REPOSITORIES[i];
-          testTextBox.value += "[" + (i+1) + "] name = " + repository.name + "\n";
-          testTextBox.value += "[" + (i+1) + "] link = " + repository.link + "\n";
+          log.trace( "[" + (i+1) + "] name = " + repository.name );
+          log.trace( "[" + (i+1) + "] link = " + repository.link );
         }
-        testTextBox.value += "CREATORS :: \n";
+        log.trace( "CREATORS" );
         for ( var i = 0; i < Utils.CREATORS.length; i++ ) {
           var creator = Utils.CREATORS[i];
-          testTextBox.value += "[" + (i+1) + "] name = " + Utils.decodeUTF8( creator.name ) + "\n";
-          testTextBox.value += "[" + (i+1) + "] link = " + creator.link + "\n";
+          log.trace( "[" + (i+1) + "] name = " + Utils.decodeUTF8( creator.name ) );
+          log.trace( "[" + (i+1) + "] link = " + creator.link );
         }
-        testTextBox.value += "CONTRIBUTORS :: \n";
+        log.trace( "CONTRIBUTORS" );
         for ( var i = 0; i < Utils.CONTRIBUTORS.length; i++ ) {
           var contributor = Utils.CONTRIBUTORS[i];
-          testTextBox.value += "[" + (i+1) + "] name = " + Utils.decodeUTF8( contributor.name ) + "\n";
-          testTextBox.value += "[" + (i+1) + "] title = " + Utils.decodeUTF8( contributor.title ) + "\n";
-          testTextBox.value += "[" + (i+1) + "] description = " + Utils.decodeUTF8( contributor.description ) + "\n";
-          testTextBox.value += "[" + (i+1) + "] link = " + contributor.link + "\n";
-          testTextBox.value += "  LICENSES :: \n";
+          log.trace( "[" + (i+1) + "] name = " + Utils.decodeUTF8( contributor.name ) );
+          log.trace( "[" + (i+1) + "] title = " + Utils.decodeUTF8( contributor.title ) );
+          log.trace( "[" + (i+1) + "] description = " + Utils.decodeUTF8( contributor.description ) );
+          log.trace( "[" + (i+1) + "] link = " + contributor.link );
+          log.trace( "  LICENSES" );
           for ( var j = 0; j < contributor.licenses.length; j++ ) {
-            testTextBox.value += "  [" + (j+1) + "] name = " + Utils.decodeUTF8( contributor.licenses[j].name ) + "\n";
-            testTextBox.value += "  [" + (j+1) + "] link = " + contributor.licenses[j].link + "\n";
+            log.trace( "  [" + (j+1) + "] name = " + Utils.decodeUTF8( contributor.licenses[j].name ) );
+            log.trace( "  [" + (j+1) + "] link = " + contributor.licenses[j].link );
           }
         }
-        testTextBox.value += "CREDITS :: \n";
+        log.trace( "CREDITS" );
         for ( var i = 0; i < Utils.CREDITS.length; i++ ) {
           var credit = Utils.CREDITS[i];
-          testTextBox.value += "[" + (i+1) + "] name = " + Utils.decodeUTF8( credit.name ) + "\n";
-          testTextBox.value += "[" + (i+1) + "] title = " + Utils.decodeUTF8( credit.title ) + "\n";
-          testTextBox.value += "[" + (i+1) + "] description = " + Utils.decodeUTF8( credit.description ) + "\n";
-          testTextBox.value += "[" + (i+1) + "] link = " + credit.link + "\n";
-          testTextBox.value += "  LICENSES :: \n";
+          log.trace( "[" + (i+1) + "] name = " + Utils.decodeUTF8( credit.name ) );
+          log.trace( "[" + (i+1) + "] title = " + Utils.decodeUTF8( credit.title ) );
+          log.trace( "[" + (i+1) + "] description = " + Utils.decodeUTF8( credit.description ) );
+          log.trace( "[" + (i+1) + "] link = " + credit.link );
+          log.trace( "  LICENSES" );
           for ( var j = 0; j < credit.licenses.length; j++ ) {
-            testTextBox.value += "  [" + (j+1) + "] name = " + Utils.decodeUTF8( credit.licenses[j].name ) + "\n";
-            testTextBox.value += "  [" + (j+1) + "] link = " + credit.licenses[j].link + "\n";
+            log.trace( "  [" + (j+1) + "] name = " + Utils.decodeUTF8( credit.licenses[j].name ) );
+            log.trace( "  [" + (j+1) + "] link = " + credit.licenses[j].link );
           }
         }
-        testTextBox.value += "TRANSLATORS :: \n";
+        log.trace( "TRANSLATORS" );
         for ( var i = 0; i < Utils.TRANSLATORS.length; i++ ) {
           var translator = Utils.TRANSLATORS[i];
-          testTextBox.value += "[" + (i+1) + "] name = " + Utils.decodeUTF8( translator.name ) + "\n";
-          testTextBox.value += "[" + (i+1) + "] link = " + translator.link + "\n";
+          log.trace( "[" + (i+1) + "] name = " + Utils.decodeUTF8( translator.name ) );
+          log.trace( "[" + (i+1) + "] link = " + translator.link );
         }
-        testTextBox.value += "COPYRIGHTS :: \n";
+        log.trace( "COPYRIGHTS" );
         for ( var i = 0; i < Utils.COPYRIGHTS.length; i++ ) {
           var copyright = Utils.COPYRIGHTS[i];
-          testTextBox.value += "[" + (i+1) + "] prefix = " + Utils.decodeUTF8( copyright.prefix ) + "\n";
-          testTextBox.value += "[" + (i+1) + "] year = " + copyright.year + "\n";
-          testTextBox.value += "[" + (i+1) + "] author = " + Utils.decodeUTF8( copyright.author ) + "\n";
-          testTextBox.value += "[" + (i+1) + "] reserved = " + Utils.decodeUTF8( copyright.reserved ) + "\n";
+          log.trace( "[" + (i+1) + "] prefix = " + Utils.decodeUTF8( copyright.prefix ) );
+          log.trace( "[" + (i+1) + "] year = " + copyright.year );
+          log.trace( "[" + (i+1) + "] author = " + Utils.decodeUTF8( copyright.author ) );
+          log.trace( "[" + (i+1) + "] reserved = " + Utils.decodeUTF8( copyright.reserved ) );
         }
-        testTextBox.value += "URLS :: \n";
-        testTextBox.value += "index = " + Utils.SITE + Utils.URLS.index + "\n";
-        testTextBox.value += "forum = " + Utils.SITE + Utils.URLS.forum + "\n";
+        log.trace( "URLS" );
+        log.trace( "index = " + Utils.SITE + Utils.URLS.index );
+        log.trace( "forum = " + Utils.SITE + Utils.URLS.forum );
         //
-        testTextBox.value += "IS_SANITIZE_ENABLED: " + !!Utils.IS_SANITIZE_ENABLED + "\n";
-        testTextBox.value += "IS_AD_ENABLED: " + !!Utils.IS_AD_ENABLED + "\n";
-        testTextBox.value += "IS_DEBUG_ENABLED: " + !!Utils.IS_DEBUG_ENABLED + "\n";
+        log.trace( "VARS" );
+        log.trace( "IS_SANITIZE_ENABLED: " + !!Utils.IS_SANITIZE_ENABLED );
+        log.trace( "IS_AD_ENABLED: " + !!Utils.IS_AD_ENABLED );
+        log.trace( "IS_DEBUG_ENABLED: " + !!Utils.IS_DEBUG_ENABLED );
       }
     }
   );
@@ -334,7 +368,7 @@ ru.akman.znotes.TestSuite = function() {
             json += '  "properties": {\n';
             var properties = card.properties;
             while ( properties.hasMoreElements() ) {
-              var property = properties.getNext().QueryInterface( Components.interfaces.nsIProperty );
+              var property = properties.getNext().QueryInterface( Ci.nsIProperty );
               var type = typeof( property.value );
               switch ( type ) {
                 case 'function':
@@ -350,28 +384,29 @@ ru.akman.znotes.TestSuite = function() {
               }
             }
             json = json.substring( 0, json.length - 2 ) + "\n  }\n}";
-            Utils.log( json );
+            log.trace( "\n" + json );
           }
         }
       }
     }
   );
-  
+
   tests.push(
     {
       name: "Chrome URI to path",
       description: "Get chrome URI as file path",
       code: function () {
         var chromeURL = "chrome://global/locale/viewSource.dtd";
-        var ios = Components.classes["@mozilla.org/network/io-service;1"]
-                            .getService( Components.interfaces.nsIIOService );
+        var ios = Cc["@mozilla.org/network/io-service;1"]
+                            .getService( Ci.nsIIOService );
         var fph = ios.getProtocolHandler( "file" )
-                     .QueryInterface( Components.interfaces.nsIFileProtocolHandler );
-        var chr = Components.classes["@mozilla.org/chrome/chrome-registry;1"]
-                            .getService(Components.interfaces.nsIChromeRegistry);
+                     .QueryInterface( Ci.nsIFileProtocolHandler );
+        var chr = Cc["@mozilla.org/chrome/chrome-registry;1"]
+                            .getService(Ci.nsIChromeRegistry);
         var uri = ios.newURI( chromeURL, null, null );
         var file = fph.getFileFromURLSpec( chr.convertChromeURL( uri ).spec ).clone();
-        Utils.log( chromeURL + "\n" + file.path );
+        log.trace( chromeURL );
+        log.trace( file.path );
       }
     }
   );
@@ -381,15 +416,15 @@ ru.akman.znotes.TestSuite = function() {
       name: "Driver path",
       description: "Get driver path",
       code: function () {
-        var ios = Components.classes["@mozilla.org/network/io-service;1"]
-                            .getService( Components.interfaces.nsIIOService );
+        var ios = Cc["@mozilla.org/network/io-service;1"]
+                            .getService( Ci.nsIIOService );
         var fph = ios.getProtocolHandler( "file" )
-                     .QueryInterface( Components.interfaces.nsIFileProtocolHandler );
-        var chr = Components.classes["@mozilla.org/chrome/chrome-registry;1"]
-                            .getService(Components.interfaces.nsIChromeRegistry);
+                     .QueryInterface( Ci.nsIFileProtocolHandler );
+        var chr = Cc["@mozilla.org/chrome/chrome-registry;1"]
+                            .getService(Ci.nsIChromeRegistry);
         var uri = ios.newURI( "chrome://znotes_drivers/content/filename.js", null, null );
         var dir = fph.getFileFromURLSpec( chr.convertChromeURL( uri ).spec ).parent.clone();
-        Utils.log( dir.path );
+        log.trace( dir.path );
       }
     }
   );
@@ -419,9 +454,9 @@ ru.akman.znotes.TestSuite = function() {
         dom.documentElement.appendChild(
           dom.createElementNS( defaultNS, 'body' )
         );
-        var serializer = Components.classes["@mozilla.org/xmlextras/xmlserializer;1"]
-                                   .createInstance( Components.interfaces.nsIDOMSerializer );
-        Utils.log( serializer.serializeToString( dom ) );
+        var serializer = Cc["@mozilla.org/xmlextras/xmlserializer;1"]
+                                   .createInstance( Ci.nsIDOMSerializer );
+        log.trace( "\n" + serializer.serializeToString( dom ) );
       }
     }
   );
@@ -445,14 +480,13 @@ ru.akman.znotes.TestSuite = function() {
         { name: "abc", type: "text/plain" },
         { name: "abc", type: "application/xhtml+xml" },
       ];
-      var name, note;
+      var name;
       for each ( var param in params ) {
-        Utils.log( "type: '" + param.type + "'" );
-        Utils.log( "name: '" + param.name + "'" );
+        log.trace( "type: '" + param.type + "'" );
+        log.trace( "name: '" + param.name + "'" );
         name = getValidNoteName( category, param.name, param.type );
-        Utils.log( "----> '" + name + "'" );
-        note = ctx.createNote( book, category, name, param.type );
-        Utils.log( note );
+        log.trace( "----> '" + name + "'" );
+        category.createNote( name, param.type );
       }
     }
   } );
@@ -463,17 +497,17 @@ ru.akman.znotes.TestSuite = function() {
       description: "Font's prefs",
       code: function () {
         var fontMapping = Utils.getDefaultFontMapping();
-        Utils.log( "default-name: " + fontMapping.defaultName );
-        Utils.log( "default-value: " + fontMapping.defaultValue );
-        Utils.log( "" );
-        Utils.log( "serif: " + fontMapping.generics["serif"] );
-        Utils.log( "sans-serif: " + fontMapping.generics["sans-serif"] );
-        Utils.log( "cursive: " + fontMapping.generics["cursive"] );
-        Utils.log( "fantasy: " + fontMapping.generics["fantasy"] );
-        Utils.log( "monospace: " + fontMapping.generics["monospace"] );
-        Utils.log( "" );
-        Utils.log( "size-variable: " + fontMapping.varSize );
-        Utils.log( "size-fixed: " + fontMapping.fixSize );
+        log.trace( "default-name: " + fontMapping.defaultName );
+        log.trace( "default-value: " + fontMapping.defaultValue );
+        log.trace( "" );
+        log.trace( "serif: " + fontMapping.generics["serif"] );
+        log.trace( "sans-serif: " + fontMapping.generics["sans-serif"] );
+        log.trace( "cursive: " + fontMapping.generics["cursive"] );
+        log.trace( "fantasy: " + fontMapping.generics["fantasy"] );
+        log.trace( "monospace: " + fontMapping.generics["monospace"] );
+        log.trace( "" );
+        log.trace( "size-variable: " + fontMapping.varSize );
+        log.trace( "size-fixed: " + fontMapping.fixSize );
       }
     }
   );
@@ -490,14 +524,14 @@ ru.akman.znotes.TestSuite = function() {
       var outerHeight = ctx.window.outerHeight;
       var availWidth = ctx.window.screen.availWidth;
       var availHeight = ctx.window.screen.availHeight;
-      Utils.log( "screenX = " + screenX );
-      Utils.log( "screenY = " + screenY );
-      Utils.log( "availLeft = " + availLeft );
-      Utils.log( "availTop = " + availTop );
-      Utils.log( "outerWidth = " + outerWidth );
-      Utils.log( "outerHeight = " + outerHeight );
-      Utils.log( "availWidth = " + availWidth );
-      Utils.log( "availHeight = " + availHeight );
+      log.trace( "screenX = " + screenX );
+      log.trace( "screenY = " + screenY );
+      log.trace( "availLeft = " + availLeft );
+      log.trace( "availTop = " + availTop );
+      log.trace( "outerWidth = " + outerWidth );
+      log.trace( "outerHeight = " + outerHeight );
+      log.trace( "availWidth = " + availWidth );
+      log.trace( "availHeight = " + availHeight );
     }
   } );
 
@@ -507,7 +541,7 @@ ru.akman.znotes.TestSuite = function() {
     code: function () {
       var mWindow = Utils.getMail3PaneWindow();
       if ( !mWindow ) {
-        Utils.log( "TB required" );
+        log.trace( "TB required" );
         return;
       }
       var gFolderDisplay = mWindow.gFolderDisplay;
@@ -522,14 +556,14 @@ ru.akman.znotes.TestSuite = function() {
                               .messageURIToMsgHdr( uri );
         var msgFolder = msgHdr.folder;
         var name = msgHdr.mime2DecodedSubject;
-        if ( msgHdr.flags & Components.interfaces.nsMsgMessageFlags.HasRe ) {
+        if ( msgHdr.flags & Ci.nsMsgMessageFlags.HasRe ) {
           name = ( name ) ? "Re: " + name : "Re: ";
         }
-        Utils.log( uri );
-        Utils.log( name );
+        log.trace( uri );
+        log.trace( name );
         var streamListener =
-          Components.classes["@mozilla.org/network/sync-stream-listener;1"]
-                    .createInstance( Components.interfaces.nsISyncStreamListener );
+          Cc["@mozilla.org/network/sync-stream-listener;1"]
+                    .createInstance( Ci.nsISyncStreamListener );
         messenger.messageServiceFromURI( uri ).streamMessage(
           uri,
           streamListener,
@@ -549,7 +583,7 @@ ru.akman.znotes.TestSuite = function() {
           true,
           {}
         );
-        Utils.log( plainTextMessage );
+        log.trace( plainTextMessage );
       }
     }
   } );
@@ -560,26 +594,26 @@ ru.akman.znotes.TestSuite = function() {
     code: function () {
       var mgr = ru.akman.znotes.UpdateManager;
       if ( !mgr.isSupported() ) {
-        Utils.log( "Update service is not supported." );
+        log.trace( "Update service is not supported." );
         return;
       }
-      Utils.log( "Can Update: " + mgr.canUpdate() );
-      Utils.log( "Is Active: " + mgr.isActive() );
+      log.trace( "Can Update: " + mgr.canUpdate() );
+      log.trace( "Is Active: " + mgr.isActive() );
       if ( mgr.isActive() ) {
-        Utils.log( "Update name: " + mgr.getName() );
+        log.trace( "Update name: " + mgr.getName() );
       }
       switch ( mgr.getState() ) {
         case "default":
-          Utils.log( "Check for updates ..." );
+          log.trace( "Check for updates ..." );
           break;
         case "downloading":
-          Utils.log( "Downloading updates ..." );
+          log.trace( "Downloading updates ..." );
           break;
         case "paused":
-          Utils.log( "Resume downloading updates ..." );
+          log.trace( "Resume downloading updates ..." );
           break;
         case "pending":
-          Utils.log( "Apply downloaded updates now ..." );
+          log.trace( "Apply downloaded updates now ..." );
           break;
       }
     }
@@ -599,9 +633,9 @@ ru.akman.znotes.TestSuite = function() {
             cmd = node.getAttribute( "id" );
             if ( !node.hasAttribute( "disabled" ) ||
                  node.getAttribute( "disabled" ) === "false" ) {
-              Utils.log( cmd + " -> ENABLED" );
+              log.trace( cmd + " -> ENABLED" );
             } else {
-              Utils.log( cmd + " -> DISABLED" );
+              log.trace( cmd + " -> DISABLED" );
             }
           }
           node = node.nextSibling;
@@ -625,16 +659,16 @@ ru.akman.znotes.TestSuite = function() {
         [ "Alt", "Ctrl", "Meta", "Shift" ]
       ];
       for ( var i = 0; i < tests.length; i++ ) {
-        Utils.log( "[" + tests[i] + "]" );
-        Utils.log( "=========================")
-        Utils.log( "result: [" );
+        log.trace( "[" + tests[i] + "]" );
+        log.trace( "=========================")
+        log.trace( "result: [" );
         var result = Utils.getPermutations( tests[i] );
         for ( var j = 0; j < result.length; j++ ) {
-          Utils.log( "  " + Object.prototype.toString.call( result ) +
+          log.trace( "  " + Object.prototype.toString.call( result ) +
                      "[" + result[j] + "]" );
         }
-        Utils.log( "]" );
-        Utils.log( "\n")
+        log.trace( "]" );
+        log.trace( "\n")
       }
     }
   } );
@@ -683,7 +717,7 @@ ru.akman.znotes.TestSuite = function() {
       );
     }
   } );
-  
+
   tests.push( {
     name: "Open note",
     description: "Open note dialog",
@@ -707,8 +741,8 @@ ru.akman.znotes.TestSuite = function() {
       if ( !params.output ) {
         return;
       }
-      Utils.log( params.output.aBook.getName() );
-      Utils.log( params.output.aNote.getName() );
+      log.trace( params.output.aBook.getName() );
+      log.trace( params.output.aNote.getName() );
     }
   } );
 
@@ -736,11 +770,11 @@ ru.akman.znotes.TestSuite = function() {
       if ( !params.output ) {
         return;
       }
-      Utils.log( params.output.aBook.getName() );
-      Utils.log( params.output.aCategory.getName() );
-      Utils.log( params.output.aTags );
-      Utils.log( params.output.aType );
-      Utils.log( params.output.aName );
+      log.trace( params.output.aBook.getName() );
+      log.trace( params.output.aCategory.getName() );
+      log.trace( params.output.aTags );
+      log.trace( params.output.aType );
+      log.trace( params.output.aName );
     }
   } );
 
@@ -768,14 +802,14 @@ ru.akman.znotes.TestSuite = function() {
       if ( !params.output ) {
         return;
       }
-      Utils.log( params.output.aBook.getName() );
-      Utils.log( params.output.aCategory.getName() );
-      Utils.log( params.output.aTags );
-      Utils.log( params.output.aType );
-      Utils.log( params.output.aName );
+      log.trace( params.output.aBook.getName() );
+      log.trace( params.output.aCategory.getName() );
+      log.trace( params.output.aTags );
+      log.trace( params.output.aType );
+      log.trace( params.output.aName );
     }
   } );
-  
+
   tests.push( {
     name: "Open category",
     description: "Open category dialog",
@@ -799,11 +833,11 @@ ru.akman.znotes.TestSuite = function() {
       if ( !params.output ) {
         return;
       }
-      Utils.log( params.output.aBook.getName() );
-      Utils.log( params.output.aCategory.getName() );
+      log.trace( params.output.aBook.getName() );
+      log.trace( params.output.aCategory.getName() );
     }
   } );
-  
+
   tests.push( {
     name: "Save category (can overwrite)",
     description: "Save category (can overwrite) dialog",
@@ -828,11 +862,11 @@ ru.akman.znotes.TestSuite = function() {
       if ( !params.output ) {
         return;
       }
-      Utils.log( params.output.aBook.getName() );
-      Utils.log( params.output.aCategory.getName() );
-      Utils.log( params.output.aName );
-      Utils.log( params.output.aTags );
-      Utils.log( params.output.aType );
+      log.trace( params.output.aBook.getName() );
+      log.trace( params.output.aCategory.getName() );
+      log.trace( params.output.aName );
+      log.trace( params.output.aTags );
+      log.trace( params.output.aType );
     }
   } );
 
@@ -859,14 +893,14 @@ ru.akman.znotes.TestSuite = function() {
       if ( !params.output ) {
         return;
       }
-      Utils.log( params.output.aBook.getName() );
-      Utils.log( params.output.aCategory.getName() );
-      Utils.log( params.output.aName );
-      Utils.log( params.output.aTags );
-      Utils.log( params.output.aType );
+      log.trace( params.output.aBook.getName() );
+      log.trace( params.output.aCategory.getName() );
+      log.trace( params.output.aName );
+      log.trace( params.output.aTags );
+      log.trace( params.output.aType );
     }
   } );
-  
+
   tests.push( {
     name: "Parse & Serialize HTML",
     description: "Parse & serialize text/html",
@@ -874,15 +908,15 @@ ru.akman.znotes.TestSuite = function() {
       var aDOM, aText, anURI, aBaseURI, aPrincipal;
       var tmpBrowser, tmpFile, tmpURL;
       var ioService =
-        Components.classes["@mozilla.org/network/io-service;1"]
-                  .getService( Components.interfaces.nsIIOService );
+        Cc["@mozilla.org/network/io-service;1"]
+                  .getService( Ci.nsIIOService );
       var securityManager =
-        Components.classes["@mozilla.org/scriptsecuritymanager;1"]
-                  .getService( Components.interfaces.nsIScriptSecurityManager );
+        Cc["@mozilla.org/scriptsecuritymanager;1"]
+                  .getService( Ci.nsIScriptSecurityManager );
       var domParser =
-        Components.classes["@mozilla.org/xmlextras/domparser;1"]
-                  .createInstance( Components.interfaces.nsIDOMParser );
-      aText = 
+        Cc["@mozilla.org/xmlextras/domparser;1"]
+                  .createInstance( Ci.nsIDOMParser );
+      aText =
         '<!-- before document -->\n' +
         //'<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"\n' +
         //'  "http://www.w3.org/TR/html4/strict.dtd">\n' +
@@ -906,14 +940,14 @@ ru.akman.znotes.TestSuite = function() {
         '    <!-- after body -->\n' +
         '</html>\n' +
         '<!-- after document -->\n';
-      Utils.log( "SOURCE TEXT:\n" + aText + "\n" );
+      log.trace( "SOURCE TEXT:\n" + aText + "\n" );
       anURI = ioService.newURI( "file:///F:\Development/workspace/gecko/znotes/etc/Samples/sample1.html", null, null );
       aBaseURI = ioService.newURI( "file:///F:\Development/workspace/gecko/znotes/etc/Samples/sample1_files/", null, null );
       aPrincipal = securityManager.getCodebasePrincipal( anURI );
-      // TODO: anURI cause message in error console, what principal must be use?    
+      // TODO: anURI cause message in error console, what principal must be use?
       domParser.init( aPrincipal, null /* anURI */, aBaseURI, null );
       aDOM = domParser.parseFromString( aText, "text/html" );
-      Utils.log( "SERIALIZED TEXT:\n" + DOMUtils.serializeHTMLToString( aDOM ) + "\n" );
+      log.trace( "SERIALIZED TEXT:\n" + DOMUtils.serializeHTMLToString( aDOM ) + "\n" );
     }
   } );
 
@@ -921,7 +955,7 @@ ru.akman.znotes.TestSuite = function() {
     name: "Check name",
     description: "Validate XML Name",
     code: function () {
-    
+
       function checkName( name ) {
         var re = new RegExp(
           "^[\:A-Z_a-z" +
@@ -950,15 +984,15 @@ ru.akman.znotes.TestSuite = function() {
         return ( result ? result[0] : "" );
       };
 
-      Utils.log( "abc" );
-      Utils.log( checkName( "abc" ) );
+      log.trace( "abc" );
+      log.trace( checkName( "abc" ) );
 
-      Utils.log( "br=clear" );
-      Utils.log( checkName( "br=clear" ) );
+      log.trace( "br=clear" );
+      log.trace( checkName( "br=clear" ) );
 
-      Utils.log( "fb:like:xxxxx" );
-      Utils.log( checkName( "fb:like:xxxxx" ) );
-      
+      log.trace( "fb:like:xxxxx" );
+      log.trace( checkName( "fb:like:xxxxx" ) );
+
     }
   } );
 
@@ -974,7 +1008,7 @@ ru.akman.znotes.TestSuite = function() {
     name: "Clipper flags",
     description: "Show web-clipper flags",
     code: function () {
-      Utils.log( Utils.CLIPPER_FLAGS.toString( 16 ) );
+      log.trace( Utils.CLIPPER_FLAGS.toString( 16 ) );
     }
   } );
 
@@ -982,7 +1016,7 @@ ru.akman.znotes.TestSuite = function() {
     name: "Selectors",
     description: "Parse CSS selector",
     code: function () {
-    
+
       var namespaces = CSSUtils.Namespaces.create()
             .set( CSSUtils.Namespaces.knowns["html"] )
             .set( CSSUtils.Namespaces.knowns["xlink"], "xlink" )
@@ -990,18 +1024,18 @@ ru.akman.znotes.TestSuite = function() {
             .set( CSSUtils.Namespaces.knowns["fb"], "fb" )
             .set( CSSUtils.Namespaces.knowns["g"], "g" )
             .set( CSSUtils.Namespaces.knowns["svg"], "svg" )
-            .set( CSSUtils.Namespaces.knowns["math"], "math" );    
-      
+            .set( CSSUtils.Namespaces.knowns["math"], "math" );
+
       function test( str, namespaces ) {
         var selectors, space, pointer;
-        Utils.log( str );
+        log.trace( str );
         try {
           selectors = CSSUtils.parseSelectors( str, namespaces );
           if ( str === selectors.serialize() ) {
-            Utils.log( "OK" );
+            log.trace( "OK" );
           } else {
-            Utils.log( selectors.dump() );
-            Utils.log( "FAIL" );
+            log.trace( selectors.dump() );
+            log.trace( "FAIL" );
           }
         } catch ( e ) {
           if ( ( "position" in e ) && ( "length" in e ) ) {
@@ -1010,16 +1044,16 @@ ru.akman.znotes.TestSuite = function() {
             if ( !pointer ) {
               pointer = "^";
             }
-            Utils.log(
+            log.trace(
               space + pointer + "\n" +
               space + "+--- [ " + e.position + " / " + e.length + "] --- " + e.message
             );
           } else {
-            Utils.log( e );
+            log.warn( e );
           }
         }
       }
-    
+
       var selectors = [
         "LI, /* abc */\n" +
         "UL /* 123 */ LI, html|*:not(:link):not(:visited),\n" +
@@ -1124,11 +1158,11 @@ ru.akman.znotes.TestSuite = function() {
         ".error, .error > :-moz-any( .start-tag, .end-tag, .comment, .cdata)",
         ".error, .error > :-moz-any( .start-tag, .end-tag, .comment, .cdata )"
       ];
-      
+
       for ( var i = 0; i < selectors.length; i++ ) {
         test( selectors[i] );
       }
-      
+
     }
   } );
 
@@ -1136,27 +1170,31 @@ ru.akman.znotes.TestSuite = function() {
     name: "namespace at-rule",
     description: "Parse namespace at-rule",
     code: function () {
-    
+
       function test( str ) {
         var ns, space, pointer;
-        Utils.log( str );
+        log.trace( str );
         try {
           ns = CSSUtils.parseNamespaceRule( str );
-          Utils.log( ns.dump() );
-          Utils.log( str === ns.serialize() ? "OK" : "FAIL" );
+          log.trace( ns.dump() );
+          log.trace( str === ns.serialize() ? "OK" : "FAIL" );
         } catch ( e ) {
-          space = new Array( e.position + 1 ).join( " " );
-          pointer = new Array( e.length + 1 ).join( "^" );
-          if ( !pointer ) {
-            pointer = "^";
+          if ( ( "position" in e ) && ( "length" in e ) ) {
+            space = new Array( e.position + 1 ).join( " " );
+            pointer = new Array( e.length + 1 ).join( "^" );
+            if ( !pointer ) {
+              pointer = "^";
+            }
+            log.trace(
+              space + pointer + "\n" +
+              space + "+--- [ " + e.position + " / " + e.length + "] --- " + e.message
+            );
+          } else {
+            log.warn( e );
           }
-          Utils.log(
-            space + pointer + "\n" +
-            space + "+--- [ " + e.position + " / " + e.length + "] --- " + e.message
-          );
         }
       }
-    
+
       var rules = [
         '@namespace     "http://www.w3.org/1999/xhtml";',
         "@namespace     'http://base.google.com/ns/1.0';",
@@ -1177,11 +1215,11 @@ ru.akman.znotes.TestSuite = function() {
         "@namespace url('');",
         '@namespace url();'
       ];
-      
+
       for ( var i = 0; i < rules.length; i++ ) {
         test( rules[i] );
       }
-      
+
     }
   } );
 
@@ -1190,22 +1228,22 @@ ru.akman.znotes.TestSuite = function() {
     description: "Show alerts by alerts service",
     code: function () {
       var alertsService =
-        Components.classes['@mozilla.org/alerts-service;1']
-                  .getService( Components.interfaces.nsIAlertsService );
+        Cc['@mozilla.org/alerts-service;1']
+                  .getService( Ci.nsIAlertsService );
       var windowMediator =
-        Components.classes["@mozilla.org/appshell/window-mediator;1"]
-                  .getService( Components.interfaces.nsIWindowMediator );
+        Cc["@mozilla.org/appshell/window-mediator;1"]
+                  .getService( Ci.nsIWindowMediator );
       var observer = {
         observe: function( subject, topic, data ) {
           switch ( topic ) {
             case "alertshow":
-              Utils.log( "alertshow: " + data );
+              log.trace( "alertshow: " + data );
               break;
             case "alertclickcallback":
-              Utils.log( "alertclickcallback: " + data );
+              log.trace( "alertclickcallback: " + data );
               break;
             case "alertfinished":
-              Utils.log( "alertfinished: " + data );
+              log.trace( "alertfinished: " + data );
               break;
           }
         }
@@ -1232,12 +1270,12 @@ ru.akman.znotes.TestSuite = function() {
             null
           );
         } catch ( e ) {
-          Utils.log( e + "\n" + Utils.dumpStack() );
+          log.warn( e );
         }
       }
     }
   } );
-  
+
   tests.push( {
     name: "Show many alerts by window mediator",
     description: "Show popups by window mediator",
@@ -1246,8 +1284,8 @@ ru.akman.znotes.TestSuite = function() {
                           origin, bidi, lang,
                           replacedWindow, alertListener ) {
         var win, wins =
-          Components.classes["@mozilla.org/appshell/window-mediator;1"]
-                    .getService( Components.interfaces.nsIWindowMediator )
+          Cc["@mozilla.org/appshell/window-mediator;1"]
+                    .getService( Ci.nsIWindowMediator )
                     .getEnumerator( 'alert:alert' );
         while ( wins.hasMoreElements() ) {
           win = wins.getNext();
@@ -1257,13 +1295,13 @@ ru.akman.znotes.TestSuite = function() {
         }
         /*
         win =
-          Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
-                    .getService( Components.interfaces.nsIWindowWatcher )
+          Cc["@mozilla.org/embedcomp/window-watcher;1"]
+                    .getService( Ci.nsIWindowWatcher )
                     .openWindow(
             null, "chrome://znotes/content/alert.xul",
             "_blank", "chrome,titlebar=no,popup=yes", null
           );
-        */  
+        */
         win = window.open(
           "chrome://global/content/alerts/alert.xul",
           "",
@@ -1287,13 +1325,13 @@ ru.akman.znotes.TestSuite = function() {
         observe: function( subject, topic, data ) {
           switch ( topic ) {
             case "alertshow":
-              Utils.log( "alertshow: " + data );
+              log.trace( "alertshow: " + data );
               break;
             case "alertclickcallback":
-              Utils.log( "alertclickcallback: " + data );
+              log.trace( "alertclickcallback: " + data );
               break;
             case "alertfinished":
-              Utils.log( "alertfinished: " + data );
+              log.trace( "alertfinished: " + data );
               break;
           }
         }
@@ -1323,13 +1361,13 @@ ru.akman.znotes.TestSuite = function() {
         observe: function( subject, topic, data ) {
           switch ( topic ) {
             case "alertshow":
-              Utils.log( "alertshow: " + data );
+              log.trace( "alertshow: " + data );
               break;
             case "alertclickcallback":
-              Utils.log( "alertclickcallback: " + data );
+              log.trace( "alertclickcallback: " + data );
               break;
             case "alertfinished":
-              Utils.log( "alertfinished: " + data );
+              log.trace( "alertfinished: " + data );
               break;
           }
         }
@@ -1350,10 +1388,113 @@ ru.akman.znotes.TestSuite = function() {
       }
     }
   } );
+
+  tests.push( {
+    name: "Logger levels",
+    description: "Log all possible logger levels",
+    code: function () {
+      /*
+      FATAL    Severe errors that cause premature termination.
+               Expect these to be immediately visible on a status console.
+      ERROR    Other runtime errors or unexpected conditions.
+               Expect these to be immediately visible on a status console.
+      WARN     Use of deprecated APIs, poor use of API, 'almost' errors,
+               other runtime situations that are undesirable or unexpected,
+                but not necessarily "wrong". Expect these to be immediately
+                visible on a status console.
+      INFO     Interesting runtime events (startup/shutdown).
+               Expect these to be immediately visible on a console, so be
+               conservative and keep to a minimum.
+      CONFIG   Information regarding important configuration options the system
+               is using that affects how it runs.
+      DEBUG    Detailed information on the flow through the system.
+               Expect these to be written to logs only.
+      TRACE    Most detailed information. Expect these to be written to logs only.
+      */
+      log.fatal( "Fatal" );
+      log.error( "Error" );
+      log.warn( "Warn" );
+      log.trace( "Info" );
+      log.config( "Config" );
+      log.debug( "Debug" );
+      log.trace( "Trace" );
+    }
+  } );
+
+  tests.push( {
+    name: "SQLite experiments",
+    description: "SQLite with Task + Sqlite",
+    code: function () {
+      Cu.import( "resource://gre/modules/Task.jsm" );
+      Cu.import( "resource://gre/modules/Sqlite.jsm" );
+      Task.spawn( function* () {
+        let version;
+        let result, data = [
+          {
+            title: "This is a title one",
+            body: "Body one is very small"
+          },
+          {
+            title: "This is a title two",
+            body: "Body two is bigger\nBig body text in blob"
+          },
+          {
+            title: "This is a title three",
+            body: "Body three is XXL\nXXL text in blob\nXL text in blob\nAll in blob"
+          },
+          {
+            title: "Название",
+            body: "Четвертое содержимое"
+          },
+        ];
+        let conn = yield Sqlite.openConnection( {
+          path: Utils.getDBFile().path,
+          sharedMemoryCache: false
+        } );
+        try {
+          yield conn.execute( "PRAGMA synchronous = FULL" );
+          yield conn.execute( "PRAGMA case_sensitive_like = TRUE" );
+          result =
+            yield conn.execute( "SELECT sqlite_version() as version" );
+          version =
+            result.length ? result[0].getResultByName( "version" ) : null;
+          log.trace( "sqliteVersion: " + version );
+          if ( !( yield conn.tableExists( "NOTES" ) ) ) {
+            log.trace( "Table 'NOTES' does not exist" );
+            yield conn.execute(
+              "CREATE VIRTUAL TABLE NOTES USING fts4( title, body )" );
+            log.trace( "Table 'NOTES' created successfully" );
+            for ( let row of data ) {
+              yield conn.execute(
+                "INSERT INTO NOTES VALUES ( :title, :body )", row );
+            }
+            log.trace( "Table 'NOTES' populated successfully" );
+          } else {
+            log.trace( "Table 'NOTES' exists already" );
+          }
+          result = yield conn.execute(
+            "SELECT * FROM NOTES WHERE body LIKE :value",
+            { value: "%верт%" }
+          );
+          log.trace( "title\tbody" );
+          log.trace( "=============================" );
+          for ( let row of result ) {
+            log.trace( row.getResultByName( "title" ) + "\t" +
+              row.getResultByName( "body" ) );
+          }
+        } finally {
+          yield conn.close();
+        }
+      } ).catch( function( e ) {
+        log.warn( e );
+      } );
+    }
+  } );
   
   return pub;
 
 }();
 
-window.addEventListener( "load"  , function() { ru.akman.znotes.TestSuite.onLoad(); }, false );
-window.addEventListener( "close"  , function() { ru.akman.znotes.TestSuite.onClose(); }, false );
+window.addEventListener( "load", ru.akman.znotes.TestSuite.onLoad, false );
+window.addEventListener( "unload", ru.akman.znotes.TestSuite.onUnload, false );
+window.addEventListener( "close", ru.akman.znotes.TestSuite.onClose, false );

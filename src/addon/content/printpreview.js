@@ -30,24 +30,30 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+var Cc = Components.classes;
+var Ci = Components.interfaces;
+var Cr = Components.results;
+var Cu = Components.utils;
+
 if ( !ru ) var ru = {};
 if ( !ru.akman ) ru.akman = {};
 if ( !ru.akman.znotes ) ru.akman.znotes = {};
 
-Components.utils.import( "resource://znotes/utils.js", ru.akman.znotes );
+Cu.import( "resource://znotes/utils.js", ru.akman.znotes );
 
 ru.akman.znotes.PrintPreview = function() {
 
   var Utils = ru.akman.znotes.Utils;
-  
+  var log = Utils.getLogger( "content.printpreview" );
+
   var pub = {};
-  
+
   var aSourceTitle = null;
   var aSourceWindow = null;
   var aPreviewBrowser = null;
   var aContentBrowser = null;
   var aPreviewToolbox = null;
-  
+
   var PrintPreviewListener = {
     getPrintPreviewBrowser: function () {
       return aPreviewBrowser;
@@ -64,7 +70,7 @@ ru.akman.znotes.PrintPreview = function() {
       window.close();
     }
   };
-  
+
   function setupContentBrowser() {
     var contentDocument = aContentBrowser.contentDocument;
     var html = contentDocument.documentElement;
@@ -89,7 +95,7 @@ ru.akman.znotes.PrintPreview = function() {
       html.appendChild( range.cloneContents() );
     }
   };
-  
+
   pub.onLoad = function() {
     if ( !window.arguments || window.arguments[0] == null ) {
       window.close();

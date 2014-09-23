@@ -34,9 +34,7 @@ if ( !ru ) var ru = {};
 if ( !ru.akman ) ru.akman = {};
 if ( !ru.akman.znotes ) ru.akman.znotes = {};
 
-Components.utils.import( "resource://znotes/utils.js",
-  ru.akman.znotes
-);
+Cu.import( "resource://znotes/utils.js", ru.akman.znotes );
 
 ru.akman.znotes.Clipper = function() {
 
@@ -44,19 +42,13 @@ ru.akman.znotes.Clipper = function() {
 
   var Utils = ru.akman.znotes.Utils;
   var Common = ru.akman.znotes.Common;
-  
-  var nsIWebNavigation = Components.interfaces.nsIWebNavigation;
-  var nsIWebProgress = Components.interfaces.nsIWebProgress;
-  var nsIWebProgressListener = Components.interfaces.nsIWebProgressListener;
-  var nsIWebProgressListener2 = Components.interfaces.nsIWebProgressListener2;
-  var nsISupportsWeakReference = Components.interfaces.nsISupportsWeakReference;
-  var nsISupports = Components.interfaces.nsISupports;
-  
-  var ioService =
-    Components.classes["@mozilla.org/network/io-service;1"]
-              .getService( Components.interfaces.nsIIOService );
 
-  var alertObserver = null;              
+  var log = Utils.getLogger( "content.clipper" );
+
+  var ioService =
+    Cc["@mozilla.org/network/io-service;1"].getService( Ci.nsIIOService );
+
+  var alertObserver = null;
   var aContext = null;
   var aBrowser = null;
   var aBundle = null;
@@ -65,16 +57,16 @@ ru.akman.znotes.Clipper = function() {
   var aButton = null;
 
   // PROGRESS LISTENER
-  
+
   var progressListener = {
     QueryInterface: function( aIID ) {
-      if ( aIID.equals( nsIWebProgressListener ) ||
-           aIID.equals( nsIWebProgressListener2 ) ||
-           aIID.equals( nsISupportsWeakReference ) ||
-           aIID.equals( nsISupports ) ) {
+      if ( aIID.equals( Ci.nsIWebProgressListener ) ||
+           aIID.equals( Ci.nsIWebProgressListener2 ) ||
+           aIID.equals( Ci.nsISupportsWeakReference ) ||
+           aIID.equals( Ci.nsISupports ) ) {
         return this;
       }
-      throw Components.results.NS_NOINTERFACE;
+      throw Cr.NS_NOINTERFACE;
     },
     onLocationChange: function( aWebProgress, aRequest, aLocation,
                                 aFlags ) {
@@ -107,21 +99,21 @@ ru.akman.znotes.Clipper = function() {
     },
     onStateChange: function( aWebProgress, aRequest, aStateFlags,
                              aStatus ) {
-      if ( aStateFlags & nsIWebProgressListener.STATE_STOP &&
-           ( aStateFlags & nsIWebProgressListener.STATE_IS_WINDOW ||
-             aStateFlags & nsIWebProgressListener.STATE_IS_DOCUMENT ) ) {
+      if ( aStateFlags & Ci.nsIWebProgressListener.STATE_STOP &&
+           ( aStateFlags & Ci.nsIWebProgressListener.STATE_IS_WINDOW ||
+             aStateFlags & Ci.nsIWebProgressListener.STATE_IS_DOCUMENT ) ) {
         isLoading = false;
         updateCommands();
-      } else if ( aStateFlags & nsIWebProgressListener.STATE_START &&
-                  aStateFlags & nsIWebProgressListener.STATE_IS_NETWORK ) {
+      } else if ( aStateFlags & Ci.nsIWebProgressListener.STATE_START &&
+                  aStateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK ) {
         isLoading = true;
         updateCommands();
       }
     }
   };
-  
+
   // ALERT OBSERVER
-  
+
   function setupAlertObserver() {
     alertObserver = {
       observe: function( subject, topic, data ) {
@@ -145,14 +137,14 @@ ru.akman.znotes.Clipper = function() {
       }
     };
   };
-  
+
   // COMMANDS
-  
+
   var clipperCommands = {
     "znotes_clippersave_command": null,
     "znotes_clippersaveall_command": null
   };
-  
+
   var clipperController = {
     supportsCommand: function( cmd ) {
       if ( !( cmd in clipperCommands ) ) {
@@ -210,9 +202,9 @@ ru.akman.znotes.Clipper = function() {
           return window.controllers.getControllerId( this );
         };
       } catch ( e ) {
-        Components.utils.reportError(
+        log.warn(
           "An error occurred registering '" + this.getName() +
-          "' controller: " + e
+          "' controller\n" + e
         );
       }
     },
@@ -223,18 +215,18 @@ ru.akman.znotes.Clipper = function() {
       try {
         window.controllers.removeController( this );
       } catch ( e ) {
-        Components.utils.reportError(
+        log.warn(
           "An error occurred unregistering '" + this.getName() +
-          "' controller: " + e
+          "' controller\n" + e
         );
       }
     }
   };
-  
+
   function updateCommands() {
     clipperController.updateCommands();
   };
-  
+
   function doSaveDocument() {
     var aParams, anIndex, aSuffix, aNote = null;
     var anInfo = selectNote();
@@ -245,7 +237,7 @@ ru.akman.znotes.Clipper = function() {
       if ( !anInfo.aCategory.canCreateNote( anInfo.aName, anInfo.aType ) ) {
         aNote = anInfo.aCategory.getNoteByName( anInfo.aName );
         if ( !aNote ) {
-          throw Components.results.NS_ERROR_UNEXPECTED;
+          throw Cr.NS_ERROR_UNEXPECTED;
         }
         aParams = {
           input: {
@@ -298,14 +290,12 @@ ru.akman.znotes.Clipper = function() {
     }
     saveDocument( aBrowser.contentDocument, aNote );
   };
-  
+
   // CLIPPER
-  
+
   function saveDocument( aDocument, aNote ) {
     var id, contentEntries, contentExtension, contentFile, contentDirectory;
-    var mimeService =
-      Components.classes["@mozilla.org/mime;1"]
-                .getService( Components.interfaces.nsIMIMEService );
+    var mimeService = Cc["@mozilla.org/mime;1"].getService( Ci.nsIMIMEService );
     contentExtension =
       mimeService.getPrimaryExtension( aDocument.contentType, null );
     contentExtension = ( contentExtension ? contentExtension : "html" );
@@ -359,10 +349,10 @@ ru.akman.znotes.Clipper = function() {
         }
       ).focus();
       if ( Utils.IS_CLOSE_BROWSER_AFTER_IMPORT ) {
-        window.close();                
+        window.close();
       }
     } catch ( e ) {
-      Utils.log( e + "\n" + Utils.dumpStack() );
+      log.warn( e + "\n" + Utils.dumpStack() );
     }
     // remove temp content entries
     try {
@@ -373,10 +363,10 @@ ru.akman.znotes.Clipper = function() {
         contentDirectory.remove( true );
       }
     } catch ( e ) {
-      Utils.log( e + "\n" + Utils.dumpStack() );
+      log.warn( e + "\n" + Utils.dumpStack() );
     }
   };
-  
+
   // HELPERS
 
   function playFail() {
@@ -394,7 +384,7 @@ ru.akman.znotes.Clipper = function() {
   function getString( name ) {
     return aBundle.getString( name );
   };
-  
+
   function selectNote() {
     var aName = aBrowser.contentDocument.title.trim();
     if ( !aName ) {
@@ -421,9 +411,9 @@ ru.akman.znotes.Clipper = function() {
     ).focus();
     return params.output;
   };
-  
+
   // PUBLIC
-  
+
   pub.onLoad = function() {
     aContext = Utils.MAIN_CONTEXT ? Utils.MAIN_CONTEXT() : null;
     aBrowser = document.getElementById( "zBrowser" );
@@ -431,13 +421,13 @@ ru.akman.znotes.Clipper = function() {
     aButton = document.getElementById( "znotes_clippersave_button" );
     aBundle = document.getElementById( "znotes_clipper_stringbundle" );
     clipperController.register();
-    aBrowser.docShell.QueryInterface( nsIWebProgress );
+    aBrowser.docShell.QueryInterface( Ci.nsIWebProgress );
     aBrowser.docShell.addProgressListener( progressListener,
-      nsIWebProgress.NOTIFY_ALL );
+      Ci.nsIWebProgress.NOTIFY_ALL );
     setupAlertObserver();
     updateCommands();
   };
-  
+
   pub.onUnload = function() {
     if ( aBrowser && aBrowser.docShell ) {
       aBrowser.docShell.removeProgressListener( progressListener );
@@ -446,7 +436,7 @@ ru.akman.znotes.Clipper = function() {
       clipperController.unregister();
     }
   };
-  
+
   return pub;
 
 }();

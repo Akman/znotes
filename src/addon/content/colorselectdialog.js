@@ -36,11 +36,14 @@ if ( !ru.akman.znotes ) ru.akman.znotes = {};
 
 ru.akman.znotes.ColorSelectDialog = function() {
 
+  var Utils = ru.akman.znotes.Utils;
+  var log = Utils.getLogger( "content.colorselectdialog" );
+
   var args = null;
   var message = null;
   var colorPicker = null;
   var textBox = null;
-  
+
   var pub = {};
 
   pub.onLoad = function() {

@@ -30,20 +30,24 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+var Cc = Components.classes;
+var Ci = Components.interfaces;
+var Cr = Components.results;
+var Cu = Components.utils;
+
 if ( !ru ) var ru = {};
 if ( !ru.akman ) ru.akman = {};
 if ( !ru.akman.znotes ) ru.akman.znotes = {};
 
-Components.utils.import( "resource://znotes/utils.js",
-  ru.akman.znotes
-);
+Cu.import( "resource://znotes/utils.js", ru.akman.znotes );
 
 ru.akman.znotes.Info = function() {
 
   var Utils = ru.akman.znotes.Utils;
+  var log = Utils.getLogger( "content.info" );
   var ioService =
-    Components.classes["@mozilla.org/network/io-service;1"]
-              .getService( Components.interfaces.nsIIOService );
+    Cc["@mozilla.org/network/io-service;1"]
+    .getService( Ci.nsIIOService );
 
   var infoBrowser = null;
   var infoURL = null;
@@ -73,7 +77,7 @@ ru.akman.znotes.Info = function() {
     event.preventDefault();
     return false;
   };
-  
+
   pub.onLoad = function() {
     var args = window.arguments[0];
     if ( args.contentPage ) {

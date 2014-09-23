@@ -30,20 +30,26 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+const EXPORTED_SYMBOLS = ["ContentTree"];
+
+var Cc = Components.classes;
+var Ci = Components.interfaces;
+var Cr = Components.results;
+var Cu = Components.utils;
+
 if ( !ru ) var ru = {};
 if ( !ru.akman ) ru.akman = {};
 if ( !ru.akman.znotes ) ru.akman.znotes = {};
 if ( !ru.akman.znotes.core ) ru.akman.znotes.core = {};
 
-Components.utils.import( "resource://znotes/utils.js", ru.akman.znotes );
-Components.utils.import( "resource://znotes/category.js", ru.akman.znotes.core );
-Components.utils.import( "resource://znotes/note.js", ru.akman.znotes.core );
-
-var EXPORTED_SYMBOLS = ["ContentTree"];
+Cu.import( "resource://znotes/utils.js", ru.akman.znotes );
+Cu.import( "resource://znotes/category.js", ru.akman.znotes.core );
+Cu.import( "resource://znotes/note.js", ru.akman.znotes.core );
 
 var ContentTree = function( book, rootCategoryEntry ) {
 
   var Utils = ru.akman.znotes.Utils;
+  var log = Utils.getLogger( "modules.contenttree" );
 
   this.getBook = function() {
     return this.book;
@@ -52,11 +58,11 @@ var ContentTree = function( book, rootCategoryEntry ) {
   this.getRoot = function() {
     return this.root;
   };
-  
+
   this.getBin = function() {
     return this.bin;
   };
-  
+
   this.clearBin = function() {
     var bin = this.getBin();
     if ( !bin ) {
@@ -153,7 +159,7 @@ var ContentTree = function( book, rootCategoryEntry ) {
       return null;
     }
   };
-  
+
   this.getNoteByName = function( aName ) {
     var result = [];
     var getNoteByNameProcessor = {

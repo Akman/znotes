@@ -30,59 +30,58 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+const EXPORTED_SYMBOLS = ["Editor"];
+
+var Cc = Components.classes;
+var Ci = Components.interfaces;
+var Cr = Components.results;
+var Cu = Components.utils;
+
 if ( !ru ) var ru = {};
 if ( !ru.akman ) ru.akman = {};
 if ( !ru.akman.znotes ) ru.akman.znotes = {};
 if ( !ru.akman.znotes.core ) ru.akman.znotes.core = {};
 if ( !ru.akman.znotes.spellchecker ) ru.akman.znotes.spellchecker = {};
 
-Components.utils.import( "resource://znotes/utils.js",
-  ru.akman.znotes
-);
-Components.utils.import( "resource://znotes/domutils.js",
-  ru.akman.znotes
-);
-Components.utils.import( "resource://znotes/event.js",
-  ru.akman.znotes.core
-);
-Components.utils.import( "resource://znotes/prefsmanager.js",
-  ru.akman.znotes
-);
-Components.utils.import( "resource://gre/modules/InlineSpellChecker.jsm",
-  ru.akman.znotes.spellchecker
-);
-Components.utils.import( "resource://znotes/keyset.js",
-  ru.akman.znotes
-);
-
-var EXPORTED_SYMBOLS = ["Editor"];
+Cu.import( "resource://znotes/utils.js", ru.akman.znotes );
+Cu.import( "resource://znotes/images.js", ru.akman.znotes );
+Cu.import( "resource://znotes/domutils.js", ru.akman.znotes );
+Cu.import( "resource://znotes/event.js", ru.akman.znotes.core );
+Cu.import( "resource://znotes/prefsmanager.js", ru.akman.znotes );
+Cu.import( "resource://gre/modules/InlineSpellChecker.jsm",
+  ru.akman.znotes.spellchecker );
+Cu.import( "resource://znotes/keyset.js", ru.akman.znotes );
 
 var Editor = function() {
 
   return function() {
 
     var Utils = ru.akman.znotes.Utils;
+    var Images = ru.akman.znotes.Images;
     var DOMUtils = ru.akman.znotes.DOMUtils;
-    var Node = Components.interfaces.nsIDOMNode;
-    var Module = this.getDocument().getNamespace().Module;
+
+    var log = Utils.getLogger( "documents.xhtml.editor" );
+
+    // get module `Sample`
+    var SampleModule = this.getDocument().getNamespace().Sample;
 
     // can't be initialized at once
-    var Common = null; 
+    var Common = null;
     var prefsBundle = null;
     var stringsBundle = null;
 
     var atomService =
-      Components.classes["@mozilla.org/atom-service;1"]
-                .getService( Components.interfaces.nsIAtomService );
+      Cc["@mozilla.org/atom-service;1"]
+      .getService( Ci.nsIAtomService );
     var observerService =
-      Components.classes["@mozilla.org/observer-service;1"]
-                .getService( Components.interfaces.nsIObserverService );
+      Cc["@mozilla.org/observer-service;1"]
+      .getService( Ci.nsIObserverService );
     var ioService =
-      Components.classes["@mozilla.org/network/io-service;1"]
-                .getService( Components.interfaces.nsIIOService );
-    
+      Cc["@mozilla.org/network/io-service;1"]
+      .getService( Ci.nsIIOService );
+
     var self = this;
-    
+
     var EditorException = function( message ) {
       this.name = "EditorException";
       this.message = message;
@@ -92,7 +91,7 @@ var Editor = function() {
     };
 
     var listeners = [];
-    
+
     var currentWindow = null;
     var currentDocument = null;
     var currentNote = null;
@@ -101,24 +100,24 @@ var Editor = function() {
     var currentPreferences = null;
 
     var currentBookTagList = null;
-    
+
     var noteStateListener = null;
     var tagListStateListener = null;
     var documentStateListener = null;
-    
+
     var isDesignEditingActive = false;
     var isSourceEditingActive = false;
     var isEditorDirty = false;
     var isParseError = false;
     var isParseModified = false;
     var isEditorReady = false;
-    
+
     var isTagsModeActive = false;
     var tagsSheetURL = "chrome://znotes/skin/documents/xhtml/tags.css";
-    
+
     var selectionChunks = null;
     var initialCaretPosition = null;
-    
+
     var undoState = {
       modifications: null,
       index: -1,
@@ -156,12 +155,12 @@ var Editor = function() {
         return this.getLast().source != this.getCurrent().source;
       }
     };
-    
+
     var nodeIndexiesCache = [];
-    
+
     var editorTabs = null;
     var editorTabSource = null;
-    
+
     var designFrame = null;
     var designEditor = null;
     var designEditorTM = null;
@@ -179,7 +178,7 @@ var Editor = function() {
     var sourceToolBox = null;
     var sourceToolBar1 = null;
     var sourceToolBar2 = null;
-    
+
     var editMenuPopup = null;
     var editSpellMenuPopup = null;
     var spellCheckerUI = null;
@@ -194,9 +193,9 @@ var Editor = function() {
 
     var foreColorButton = null;
     var backColorButton = null;
-    
+
     // PREFERENCES
-    
+
     var prefsMozillaObserver = {
       observe: function( subject, topic, data ) {
         switch ( data ) {
@@ -210,8 +209,8 @@ var Editor = function() {
       },
       register: function() {
         var prefService =
-          Components.classes["@mozilla.org/preferences-service;1"]
-                    .getService( Components.interfaces.nsIPrefService );
+          Cc["@mozilla.org/preferences-service;1"]
+          .getService( Ci.nsIPrefService );
         this.branch = prefService.getBranch( "extensions.znotes." );
         if ( this.branch ) {
           this.branch.addObserver( "", this, false );
@@ -223,7 +222,7 @@ var Editor = function() {
         }
       }
     };
-    
+
     var prefObserver = {
       onPrefChanged: function( event ) {
         var docName = self.getDocument().getName();
@@ -236,7 +235,7 @@ var Editor = function() {
             break;
           case "isReplaceBackground":
             Utils.IS_REPLACE_BACKGROUND =
-              prefsBundle.getBoolPref( "isReplaceBackground" );          
+              prefsBundle.getBoolPref( "isReplaceBackground" );
             if ( !isDesignEditingActive && !isSourceEditingActive ) {
               setBackgroundColor();
             }
@@ -249,15 +248,15 @@ var Editor = function() {
       onEditorPreferencesChanged: onEditorPreferencesChanged,
       onDocumentPreferencesChanged: onDocumentPreferencesChanged
     };
-    
+
     // SPELL CONTROLLER
-    
+
     var spellEditCommands = {
       "znotes_addtodictionary_command": null,
       "znotes_undoaddtodictionary_command": null,
       "znotes_spellcheckenabled_command": null
     };
-    
+
     var spellEditController = {
       supportsCommand: function( cmd ) {
         return ( cmd in spellEditCommands ) && isInEditorWindow() &&
@@ -265,7 +264,7 @@ var Editor = function() {
       },
       isCommandEnabled: function( cmd ) {
         return spellCheckerUI;
-      },                                                                           
+      },
       doCommand: function( cmd ) {
         if ( !spellCheckerUI ) {
           return;
@@ -309,9 +308,9 @@ var Editor = function() {
             return currentWindow.controllers.getControllerId( this );
           };
         } catch ( e ) {
-          Components.utils.reportError(
+          log.warn(
             "An error occurred registering '" + this.getName() +
-            "' controller: " + e
+            "' controller\n" + e
           );
         }
       },
@@ -322,7 +321,7 @@ var Editor = function() {
         }
       }
     };
-    
+
     function updateSpellCommands() {
       spellEditController.updateCommands();
     };
@@ -399,7 +398,7 @@ var Editor = function() {
         spelldictionariesmenu.setAttribute( "hidden", "true" );
       }
     };
-    
+
     function onEditSpellMenuPopupHiding() {
       if ( !spellCheckerUI ) {
         return;
@@ -409,7 +408,7 @@ var Editor = function() {
     };
 
     // EDIT CONTROLLER
-    
+
     var editCommands = {
       "znotes_undo_command": null,
       "znotes_redo_command": null,
@@ -419,7 +418,7 @@ var Editor = function() {
       "znotes_delete_command": null,
       "znotes_selectall_command": null
     };
-    
+
     var editController = {
       supportsCommand: function( cmd ) {
         return ( cmd in editCommands ) && isInEditorWindow();
@@ -455,10 +454,10 @@ var Editor = function() {
               return !isParseError && designEditor.canPaste( 1 );
             } else if ( isSourceEditingActive ) {
               clipboard =
-                Components.classes['@mozilla.org/widget/clipboard;1']
-                          .createInstance( Components.interfaces.nsIClipboard );
+                Cc['@mozilla.org/widget/clipboard;1']
+                .createInstance( Ci.nsIClipboard );
               return clipboard.hasDataMatchingFlavors(
-                [ "text/unicode" ], 1, clipboard.kGlobalClipboard );            
+                [ "text/unicode" ], 1, clipboard.kGlobalClipboard );
             }
             return false;
           case "znotes_copy_command":
@@ -531,9 +530,9 @@ var Editor = function() {
             return currentWindow.controllers.getControllerId( this );
           };
         } catch ( e ) {
-          Components.utils.reportError(
+          log.warn(
             "An error occurred registering '" + this.getName() +
-            "' controller: " + e
+            "' controller\n" + e
           );
         }
       },
@@ -544,7 +543,7 @@ var Editor = function() {
         }
       }
     };
-    
+
     function updateEditCommands() {
       editController.updateCommands();
     };
@@ -552,7 +551,7 @@ var Editor = function() {
     function onEditMenuPopupShowing() {
       updateEditCommands();
     };
-    
+
     function doSelectAll() {
       if ( isDesignEditingActive ) {
         designEditor.selectAll();
@@ -560,7 +559,7 @@ var Editor = function() {
         var doc = sourceEditor.getDoc();
         var lastLineIndex = doc.lastLine();
         doc.setSelection(
-          { line: 0, ch: 0 }, 
+          { line: 0, ch: 0 },
           { line: lastLineIndex , ch: doc.getLine( lastLineIndex ).length }
         );
       } else {
@@ -570,22 +569,19 @@ var Editor = function() {
       }
       return true;
     };
-    
+
     function doCopy() {
       var info, data = [];
       try {
         var clipboard =
-          Components.classes['@mozilla.org/widget/clipboard;1']
-                    .createInstance( Components.interfaces.nsIClipboard );
+          Cc['@mozilla.org/widget/clipboard;1']
+          .createInstance( Ci.nsIClipboard );
         var transferable = Components.Constructor(
           "@mozilla.org/widget/transferable;1",
           "nsITransferable"
         )();
-        transferable.init(
-          currentWindow.QueryInterface(
-            Components.interfaces.nsIInterfaceRequestor
-          ).getInterface( Components.interfaces.nsIWebNavigation )
-        );
+        transferable.init( currentWindow.QueryInterface(
+          Ci.nsIInterfaceRequestor ).getInterface( Ci.nsIWebNavigation ) );
         if ( isSourceEditingActive ) {
           info = {
             flavor: "text/unicode",
@@ -610,8 +606,8 @@ var Editor = function() {
           info.supstr.data = info.srcstr;
           data.push( info );
           var serializer =
-            Components.classes["@mozilla.org/xmlextras/xmlserializer;1"]
-                      .createInstance( Components.interfaces.nsIDOMSerializer );
+            Cc["@mozilla.org/xmlextras/xmlserializer;1"]
+            .createInstance( Ci.nsIDOMSerializer );
           info = {
             flavor: "text/html",
             srcstr: serializer.serializeToString( fragment ),
@@ -632,11 +628,11 @@ var Editor = function() {
           clipboard.setData( transferable, null, clipboard.kGlobalClipboard );
         }
       } catch ( e ) {
-        Utils.log( e + "\n" + Utils.dumpStack() );
+        log.warn( e + "\n" + Utils.dumpStack() );
       }
       return true;
     };
-    
+
     function doCut() {
       if ( isDesignEditingActive ) {
         designEditor.cut();
@@ -646,40 +642,37 @@ var Editor = function() {
       }
       return true;
     };
-    
+
     function doPaste() {
       if ( isDesignEditingActive ) {
         designEditor.paste( 1 );
       } else if ( isSourceEditingActive ) {
         try {
           var clipboard =
-            Components.classes['@mozilla.org/widget/clipboard;1']
-                      .createInstance( Components.interfaces.nsIClipboard );
+            Cc['@mozilla.org/widget/clipboard;1']
+            .createInstance( Ci.nsIClipboard );
           var transferable = Components.Constructor(
             "@mozilla.org/widget/transferable;1",
             "nsITransferable"
           )();
-          transferable.init(
-            currentWindow.QueryInterface(
-              Components.interfaces.nsIInterfaceRequestor
-            ).getInterface( Components.interfaces.nsIWebNavigation )
-          );
+          transferable.init( currentWindow.QueryInterface(
+            Ci.nsIInterfaceRequestor ).getInterface( Ci.nsIWebNavigation ) );
           transferable.addDataFlavor( "text/unicode" );
           clipboard.getData( transferable, clipboard.kGlobalClipboard );
           var strData = {}, strLength = {};
           transferable.getTransferData( "text/unicode", strData, strLength );
           if ( strData ) {
-            var textData = strData.value.QueryInterface(
-              Components.interfaces.nsISupportsString ).data;
+            var textData =
+              strData.value.QueryInterface( Ci.nsISupportsString ).data;
             sourceEditor.getDoc().replaceSelection( textData, "around" );
           }
         } catch ( e ) {
-          Utils.log( e + "\n" + Utils.dumpStack() );
+          log.warn( e + "\n" + Utils.dumpStack() );
         }
       }
       return true;
     };
-    
+
     function doUndo() {
       var lastUndoState = undoState.getLast();
       var currentUndoState = undoState.getCurrent();
@@ -706,7 +699,7 @@ var Editor = function() {
       setDocumentEditable( !isParseError );
       return true;
     };
-    
+
     function doRedo() {
       var lastUndoState = undoState.getLast();
       var currentUndoState, count;
@@ -736,7 +729,7 @@ var Editor = function() {
       setDocumentEditable( !isParseError );
       return true;
     };
-    
+
     function doDelete() {
       if ( isDesignEditingActive ) {
         designEditor.deleteSelection( null, null );
@@ -745,9 +738,9 @@ var Editor = function() {
       }
       return true;
     };
-    
+
     // EDITOR CONTROLLER
-    
+
     var editorCommands = {
       "znotes_close_command": null,
       "znotes_editorcustomizetoolbar_command": null,
@@ -780,7 +773,7 @@ var Editor = function() {
       "znotes_sourcebeautify_command": null,
       "znotes_editordebug_command": null,
     };
-    
+
     var editorController = {
       supportsCommand: function( cmd ) {
         return ( cmd in editorCommands );
@@ -826,7 +819,7 @@ var Editor = function() {
               sourceEditor.getDoc().somethingSelected();
         }
         return false;
-      },                                                                           
+      },
       doCommand: function( cmd ) {
         switch ( cmd ) {
           case "znotes_editordebug_command":
@@ -951,9 +944,9 @@ var Editor = function() {
             return currentWindow.controllers.getControllerId( this );
           };
         } catch ( e ) {
-          Components.utils.reportError(
+          log.warn(
             "An error occurred registering '" + this.getName() +
-            "' controller: " + e
+            "' controller\n" + e
           );
         }
       },
@@ -961,32 +954,32 @@ var Editor = function() {
         try {
           currentWindow.controllers.removeController( this );
         } catch ( e ) {
-          Components.utils.reportError(
+          log.warn(
             "An error occurred unregistering '" + this.getName() +
-            "' controller: " + e
+            "' controller\n" + e
           );
         }
       }
     };
-    
+
     function updateEditorCommands() {
       editorController.updateCommands();
     };
-    
+
     // COMMON COMMANDS
-    
+
     function doClose() {
       if ( stop() ) {
         switchMode( "viewer" );
       }
     };
-    
+
     // DESIGN COMMANDS
 
     function doToggleTagsMode() {
       isTagsModeActive ? switchTagsOff() : switchTagsOn();
     };
-    
+
     // name: font-family
     // inherited: yes
     // computed value: as specified
@@ -1002,7 +995,7 @@ var Editor = function() {
         for ( var i = 0; i < nodes.length; i++ ) {
           node = nodes[i].node;
           switch ( nodes[i].kind ) {
-            case 0: 
+            case 0:
               // node is an element node and does not contain any child nodes
               break;
             case 2:
@@ -1027,7 +1020,7 @@ var Editor = function() {
               break;
             case 4:
               // node is a text node, but this shouldn't have happened here
-              Utils.log(
+              log.debug(
                 "*** Processing node is text node!\n" +
                 "*** surround: 'span'\n" +
                 "*** node: '" +
@@ -1038,7 +1031,7 @@ var Editor = function() {
           }
         }
       } catch ( e ) {
-        Utils.log( e + "\n" + Utils.dumpStack() );
+        log.warn( e + "\n" + Utils.dumpStack() );
       } finally {
         designEditor.endTransaction();
       }
@@ -1057,7 +1050,7 @@ var Editor = function() {
         for ( var i = 0; i < nodes.length; i++ ) {
           node = nodes[i].node;
           switch ( nodes[i].kind ) {
-            case 0: 
+            case 0:
               // node is an element node and does not contain any child nodes
               break;
             case 2:
@@ -1077,7 +1070,7 @@ var Editor = function() {
               break;
             case 4:
               // node is a text node, but this shouldn't have happened here
-              Utils.log(
+              log.debug(
                 "*** Processing node is text node!\n" +
                 "*** surround: 'span'\n" +
                 "*** node: '" +
@@ -1088,12 +1081,12 @@ var Editor = function() {
           }
         }
       } catch ( e ) {
-        Utils.log( e + "\n" + Utils.dumpStack() );
+        log.warn( e + "\n" + Utils.dumpStack() );
       } finally {
         designEditor.endTransaction();
       }
     };
-    
+
     // name: color
     // inherited: yes
     // computed value: as specified
@@ -1124,7 +1117,7 @@ var Editor = function() {
         for ( var i = 0; i < nodes.length; i++ ) {
           node = nodes[i].node;
           switch ( nodes[i].kind ) {
-            case 0: 
+            case 0:
               // node is an element node and does not contain any child nodes
               break;
             case 2:
@@ -1151,7 +1144,7 @@ var Editor = function() {
               break;
             case 4:
               // node is a text node, but this shouldn't have happened here
-              Utils.log(
+              log.debug(
                 "*** Processing node is a text node!\n" +
                 "*** surround: 'span'\n" +
                 "*** node: '" +
@@ -1162,12 +1155,12 @@ var Editor = function() {
           }
         }
       } catch ( e ) {
-        Utils.log( e + "\n" + Utils.dumpStack() );
+        log.warn( e + "\n" + Utils.dumpStack() );
       } finally {
         designEditor.endTransaction();
       }
     };
-    
+
     // name: color
     // inherited: yes
     // computed value: as specified
@@ -1180,7 +1173,7 @@ var Editor = function() {
         for ( var i = 0; i < nodes.length; i++ ) {
           node = nodes[i].node;
           switch ( nodes[i].kind ) {
-            case 0: 
+            case 0:
               // node is an element node and does not contain any child nodes
               break;
             case 2:
@@ -1198,12 +1191,12 @@ var Editor = function() {
           }
         }
       } catch ( e ) {
-        Utils.log( e + "\n" + Utils.dumpStack() );
+        log.warn( e + "\n" + Utils.dumpStack() );
       } finally {
         designEditor.endTransaction();
       }
     };
-    
+
     // name: background-color
     // inherited: no
     // computed value: as specified
@@ -1235,7 +1228,7 @@ var Editor = function() {
         for ( var i = 0; i < nodes.length; i++ ) {
           node = nodes[i].node;
           switch ( nodes[i].kind ) {
-            case 0: 
+            case 0:
               // node is an element node and does not contain any child nodes
               break;
             case 2:
@@ -1243,7 +1236,7 @@ var Editor = function() {
               removeCSSInlineProperty( node, "background-color" );
               element = node;
               while ( element &&
-                      element.nodeType == Node.ELEMENT_NODE ) {
+                      element.nodeType === Ci.nsIDOMNode.ELEMENT_NODE ) {
                 color = getComputedStyle( element ).backgroundColor;
                 if ( color !== "transparent" ) {
                   break;
@@ -1273,7 +1266,7 @@ var Editor = function() {
               break;
             case 4:
               // node is a text node, but this shouldn't have happened here
-              Utils.log(
+              log.debug(
                 "*** Processing node is a text node!\n" +
                 "*** surround: 'span'\n" +
                 "*** node: '" +
@@ -1284,12 +1277,12 @@ var Editor = function() {
           }
         }
       } catch ( e ) {
-        Utils.log( e + "\n" + Utils.dumpStack() );
+        log.warn( e + "\n" + Utils.dumpStack() );
       } finally {
         designEditor.endTransaction();
       }
     };
-    
+
     // name: background-color
     // inherited: no
     // computed value: as specified
@@ -1302,7 +1295,7 @@ var Editor = function() {
         for ( var i = 0; i < nodes.length; i++ ) {
           node = nodes[i].node;
           switch ( nodes[i].kind ) {
-            case 0: 
+            case 0:
               // node is an element node and does not contain any child nodes
               break;
             case 2:
@@ -1320,12 +1313,12 @@ var Editor = function() {
           }
         }
       } catch ( e ) {
-        Utils.log( e + "\n" + Utils.dumpStack() );
+        log.warn( e + "\n" + Utils.dumpStack() );
       } finally {
         designEditor.endTransaction();
       }
     };
-    
+
     // name: font-weight
     // inherited: yes
     // computed value: '100' - '900'
@@ -1339,7 +1332,7 @@ var Editor = function() {
         for ( var i = 0; i < nodes.length; i++ ) {
           node = nodes[i].node;
           switch ( nodes[i].kind ) {
-            case 0: 
+            case 0:
               // node is an element node and does not contain any child nodes
               break;
             case 2:
@@ -1363,7 +1356,7 @@ var Editor = function() {
               break;
             case 4:
               // node is a text node, but this shouldn't have happened here
-              Utils.log(
+              log.debug(
                 "*** Processing node is a text node!\n" +
                 "*** surround: 'span'\n" +
                 "*** node: '" +
@@ -1374,12 +1367,12 @@ var Editor = function() {
           }
         }
       } catch ( e ) {
-        Utils.log( e + "\n" + Utils.dumpStack() );
+        log.warn( e + "\n" + Utils.dumpStack() );
       } finally {
         designEditor.endTransaction();
       }
     };
-    
+
     // name: font-style
     // inherited: yes
     // computed value: as specified
@@ -1394,7 +1387,7 @@ var Editor = function() {
         for ( var i = 0; i < nodes.length; i++ ) {
           node = nodes[i].node;
           switch ( nodes[i].kind ) {
-            case 0: 
+            case 0:
               // node is an element node and does not contain any child nodes
               break;
             case 2:
@@ -1418,7 +1411,7 @@ var Editor = function() {
               break;
             case 4:
               // node is a text node, but this shouldn't have happened here
-              Utils.log(
+              log.debug(
                 "*** Processing node is a text node!\n" +
                 "*** surround: 'span'\n" +
                 "*** node: '" +
@@ -1429,12 +1422,12 @@ var Editor = function() {
           }
         }
       } catch ( e ) {
-        Utils.log( e + "\n" + Utils.dumpStack() );
+        log.warn( e + "\n" + Utils.dumpStack() );
       } finally {
         designEditor.endTransaction();
       }
     };
-    
+
     // name: text-decoration
     // inherited: no
     // computed value: as specified
@@ -1449,7 +1442,7 @@ var Editor = function() {
         for ( var i = 0; i < nodes.length; i++ ) {
           node = nodes[i].node;
           switch ( nodes[i].kind ) {
-            case 0: 
+            case 0:
               // node is an element node and does not contain any child nodes
               break;
             case 2:
@@ -1476,7 +1469,7 @@ var Editor = function() {
               }
               break;
             case 4:
-              Utils.log(
+              log.debug(
                 "*** Processing node is a text node!\n" +
                 "*** surround: 'span'\n" +
                 "*** node: '" +
@@ -1488,12 +1481,12 @@ var Editor = function() {
           }
         }
       } catch ( e ) {
-        Utils.log( e + "\n" + Utils.dumpStack() );
+        log.warn( e + "\n" + Utils.dumpStack() );
       } finally {
         designEditor.endTransaction();
       }
     };
-    
+
     // name: text-decoration
     // inherited: no
     // computed value: as specified
@@ -1509,7 +1502,7 @@ var Editor = function() {
         for ( var i = 0; i < nodes.length; i++ ) {
           node = nodes[i].node;
           switch ( nodes[i].kind ) {
-            case 0: 
+            case 0:
               // node is an element node and does not contain any child nodes
               break;
             case 2:
@@ -1537,7 +1530,7 @@ var Editor = function() {
               break;
             case 4:
               // node is a text node, but this shouldn't have happened here
-              Utils.log(
+              log.debug(
                 "*** Processing node is a text node!\n" +
                 "*** surround: 'span'\n" +
                 "*** node: '" +
@@ -1548,12 +1541,12 @@ var Editor = function() {
           }
         }
       } catch ( e ) {
-        Utils.log( e + "\n" + Utils.dumpStack() );
+        log.warn( e + "\n" + Utils.dumpStack() );
       } finally {
         designEditor.endTransaction();
       }
     };
-    
+
     // remove style attribute
     function doRemoveFormat() {
       try {
@@ -1562,20 +1555,20 @@ var Editor = function() {
         for ( var i = 0; i < nodes.length; i++ ) {
           node = nodes[i].node;
           switch ( nodes[i].kind ) {
-            case 0: 
+            case 0:
               // node is an element node and does not contain any child nodes
-              designEditor.removeAttribute( node, "style", false );              
+              designEditor.removeAttribute( node, "style", false );
               break;
             case 2:
               // node is an element node and contains exactly one child text node
-              designEditor.removeAttribute( node, "style", false );              
+              designEditor.removeAttribute( node, "style", false );
               if ( node.nodeName === "span" && !node.hasAttribute( "id" ) ) {
                 stripNode( node );
               }
               break;
             case 4:
               // node is a text node and exactly has one or more siblings
-              designEditor.removeAttribute( node.parentNode, "style", false );              
+              designEditor.removeAttribute( node.parentNode, "style", false );
               if ( node.parentNode.nodeName === "span" &&
                    !node.parentNode.hasAttribute( "id" ) ) {
                 stripNode( node.parentNode );
@@ -1584,12 +1577,12 @@ var Editor = function() {
           }
         }
       } catch ( e ) {
-        Utils.log( e + "\n" + Utils.dumpStack() );
+        log.warn( e + "\n" + Utils.dumpStack() );
       } finally {
         designEditor.endTransaction();
       }
     };
-    
+
     function doLink() {
       var params = {
         input: {
@@ -1620,7 +1613,7 @@ var Editor = function() {
         for ( var i = 0; i < nodes.length; i++ ) {
           node = nodes[i].node;
           switch ( nodes[i].kind ) {
-            case 0: 
+            case 0:
               // node is an element node and does not contain any child nodes
               designEditor.setAttribute( surroundNode( node, "a" ), "href",
                 url );
@@ -1642,12 +1635,12 @@ var Editor = function() {
           }
         }
       } catch ( e ) {
-        Utils.log( e + "\n" + Utils.dumpStack() );
+        log.warn( e + "\n" + Utils.dumpStack() );
       } finally {
         designEditor.endTransaction();
       }
     };
-    
+
     function doUnlink() {
       try {
         designEditor.beginTransaction();
@@ -1655,7 +1648,7 @@ var Editor = function() {
         for ( var i = 0; i < nodes.length; i++ ) {
           node = nodes[i].node;
           switch ( nodes[i].kind ) {
-            case 0: 
+            case 0:
               // node is an element node and does not contain any child nodes
               while ( node ) {
                 if ( node.nodeName === "a" ) {
@@ -1689,12 +1682,12 @@ var Editor = function() {
           }
         }
       } catch ( e ) {
-        Utils.log( e + "\n" + Utils.dumpStack() );
+        log.warn( e + "\n" + Utils.dumpStack() );
       } finally {
         designEditor.endTransaction();
       }
     };
-    
+
     function doSubScript() {
       var flag = !getCommandState( "znotes_subscript_command" );
       try {
@@ -1705,7 +1698,7 @@ var Editor = function() {
           node = nodes[i].node;
           kind = nodes[i].kind;
           switch ( kind ) {
-            case 0: 
+            case 0:
               // node is an element node and does not contain any child nodes
               break;
             case 2:
@@ -1738,7 +1731,7 @@ var Editor = function() {
           }
         }
       } catch ( e ) {
-        Utils.log( e + "\n" + Utils.dumpStack() );
+        log.warn( e + "\n" + Utils.dumpStack() );
       } finally {
         designEditor.endTransaction();
       }
@@ -1754,7 +1747,7 @@ var Editor = function() {
           node = nodes[i].node;
           kind = nodes[i].kind;
           switch ( kind ) {
-            case 0: 
+            case 0:
               // node is an element node and does not contain any child nodes
               break;
             case 2:
@@ -1787,7 +1780,7 @@ var Editor = function() {
           }
         }
       } catch ( e ) {
-        Utils.log( e + "\n" + Utils.dumpStack() );
+        log.warn( e + "\n" + Utils.dumpStack() );
       } finally {
         designEditor.endTransaction();
       }
@@ -1814,7 +1807,7 @@ var Editor = function() {
       designEditor.endTransaction();
       */
     };
-    
+
     // name: text-align
     // inherited: yes
     // computed value: the initial value or as specified
@@ -1835,7 +1828,7 @@ var Editor = function() {
       designEditor.endTransaction();
       */
     };
-    
+
     // name: text-align
     // inherited: yes
     // computed value: the initial value or as specified
@@ -1856,7 +1849,7 @@ var Editor = function() {
       designEditor.endTransaction();
       */
     };
-    
+
     // name: text-align
     // inherited: yes
     // computed value: the initial value or as specified
@@ -1877,7 +1870,7 @@ var Editor = function() {
       designEditor.endTransaction();
       */
     };
-    
+
     // name: margin-left
     // inherited: no
     // computed value: the percentage as specified or the absolute length
@@ -1893,7 +1886,7 @@ var Editor = function() {
       designEditor.endTransaction();
       */
     };
-    
+
     // name: margin-left
     // inherited: no
     // computed value: the percentage as specified or the absolute length
@@ -1909,7 +1902,7 @@ var Editor = function() {
       designEditor.endTransaction();
       */
     };
-    
+
     // name: display
     // inherited: no
     // computed value: inline | block | list-item | inline-block | table |
@@ -1924,7 +1917,7 @@ var Editor = function() {
       designEditor.setParagraphFormat( aBlockFormat );
       designEditor.endTransaction();
     };
-    
+
     function doInsertParagraph() {
       designFrame.contentDocument.execCommand( 'insertParagraph', false, null );
       /*
@@ -1933,7 +1926,7 @@ var Editor = function() {
       designEditor.endTransaction();
       */
     };
-    
+
     function doInsertOL() {
       designFrame.contentDocument.execCommand( 'insertOrderedList', false, null );
       /*
@@ -1947,13 +1940,13 @@ var Editor = function() {
           designEditor.removeList( "ol" );
         }
       } catch ( e ) {
-        Utils.log( e + "\n" + Utils.dumpStack() );
+        log.warn( e + "\n" + Utils.dumpStack() );
       } finally {
         designEditor.endTransaction();
       }
       */
     };
-    
+
     function doInsertUL() {
       designFrame.contentDocument.execCommand( 'insertUnorderedList', false, null );
       /*
@@ -1967,13 +1960,13 @@ var Editor = function() {
           designEditor.removeList( "ul" );
         }
       } catch ( e ) {
-        Utils.log( e + "\n" + Utils.dumpStack() );
+        log.warn( e + "\n" + Utils.dumpStack() );
       } finally {
         designEditor.endTransaction();
       }
       */
     };
-    
+
     function doInsertHR() {
       designFrame.contentDocument.execCommand( 'insertHorizontalRule', false, null );
       /*
@@ -2001,7 +1994,7 @@ var Editor = function() {
       designEditor.endTransaction();
       designEditor.selectElement( aTable );
     };
-    
+
     function doInsertImage() {
       var params = {
         input: {
@@ -2039,9 +2032,9 @@ var Editor = function() {
       designEditor.selectElement( anImage );
       return true;
     };
-    
+
     // SOURCE COMMANDS
-    
+
     function doSourceBeautify() {
       var ranges = sourceEditor.listSelections();
       var delta = 0, indexies = [];
@@ -2093,28 +2086,28 @@ var Editor = function() {
         }
       }
     };
-    
+
     function getCommandState( cmd ) {
       return Common.goGetCommandAttribute( cmd, "checked", currentWindow );
     };
-    
+
     function setCommandState( cmd, flag ) {
       Common.goSetCommandAttribute( cmd, "checked", flag, currentWindow );
       Common.goSetCommandAttribute( cmd, "checkState", flag, currentWindow );
     };
-    
+
     function getEditorString( name ) {
       return stringsBundle.getString( name );
     };
-    
+
     function getString( name ) {
       return Utils.STRINGS_BUNDLE.getString( name );
     };
-    
+
     function getFormattedString( name, values ) {
       return Utils.STRINGS_BUNDLE.getFormattedString( name, values );
     };
-    
+
     function setBackgroundColor() {
       if ( !currentNote ) {
         return;
@@ -2154,10 +2147,10 @@ var Editor = function() {
         }
       }
     };
-    
+
     function setDisplayStyle() {
     };
-    
+
     function getCountOfLines( text ) {
       var result = text.length > 0 ? 1 : 0;
       var pos = text.indexOf( "\n" );
@@ -2167,11 +2160,11 @@ var Editor = function() {
       }
       return result;
     };
-    
+
     function getCountOfDigits( number ) {
       return ( "" + number ).length;
     };
-    
+
     function formatNumber( number, width ) {
       var result = "" + number;
       while ( result.length < width ) {
@@ -2179,7 +2172,7 @@ var Editor = function() {
       }
       return result;
     };
-    
+
     function replaceTabsWithSpaces( text ) {
       var col = 0, pos = 0, result = "";
       var idx, size, tabSize = 8;
@@ -2202,9 +2195,9 @@ var Editor = function() {
       }
       return result;
     };
-    
+
     // EDITOR HELPERS
- 
+
     function createFontNameMenuList() {
       var fontNameArray = Utils.getFontNameArray();
       while ( fontNameMenuPopup.firstChild ) {
@@ -2221,7 +2214,7 @@ var Editor = function() {
         fontNameMenuPopup.appendChild( menuItem );
       }
     };
-    
+
     function createFormatBlockObject() {
       formatBlockObject = {};
       formatBlockObject[ getEditorString( "formatblock.text" ) ] = "";
@@ -2237,7 +2230,7 @@ var Editor = function() {
       formatBlockObject[ getEditorString( "formatblock.blockquote" ) ] =
         "blockquote";
     };
-    
+
     function createFormatBlockMenuList() {
       while ( formatBlockMenuPopup.firstChild ) {
         formatBlockMenuPopup.removeChild( formatBlockMenuPopup.firstChild );
@@ -2253,7 +2246,7 @@ var Editor = function() {
         formatBlockMenuPopup.appendChild( menuItem );
       }
     };
- 
+
     function isDesignModified() {
       return undoState.isDesignModified();
     };
@@ -2261,15 +2254,14 @@ var Editor = function() {
     function isSourceModified() {
       return undoState.isSourceModified();
     };
-    
+
     function setDocumentEditable( isDocumentEditable ) {
-      var nsIPlaintextEditor = Components.interfaces.nsIPlaintextEditor;
-      var readOnlyMask = nsIPlaintextEditor.eEditorReadonlyMask;
+      var readOnlyMask = Ci.nsIPlaintextEditor.eEditorReadonlyMask;
       var flags = designEditor.flags;
       designEditor.flags =
         isDocumentEditable ? flags &= ~readOnlyMask : flags | readOnlyMask;
     };
- 
+
     function switchTagsOn() {
       isTagsModeActive = true;
       var currentScrollTop = designEditor.document.documentElement.scrollTop;
@@ -2285,7 +2277,7 @@ var Editor = function() {
       setCommandState( "znotes_toggletagsmode_command", false );
       designEditor.document.documentElement.scrollTop = currentScrollTop;
     };
- 
+
     function removeCSSInlineProperty( element, name ) {
       var style = DOMUtils.getElementStyle( element );
       if ( !style || !( name in style ) ) {
@@ -2316,7 +2308,7 @@ var Editor = function() {
       }
       designEditor.setAttribute( element, "style", style.toString() );
     };
-    
+
     function removeCSSInlinePropertyValue( element, name, value ) {
       var style = DOMUtils.getElementStyle( element );
       if ( !style || !( name in style ) ) {
@@ -2340,7 +2332,7 @@ var Editor = function() {
       }
       return true;
     };
-    
+
     function setCSSInlinePropertyValue( element, name, value, priority ) {
       var style = DOMUtils.getElementStyle( element );
       if ( style ) {
@@ -2371,7 +2363,7 @@ var Editor = function() {
       return element.ownerDocument.defaultView
                                   .getComputedStyle( element, null );
     };
-    
+
     function getTextProperty( property, attribute, value, firstHas, anyHas, allHas ) {
       try {
         var atom = gAtomService.getAtom( property );
@@ -2423,28 +2415,28 @@ var Editor = function() {
         designEditor.selection.addRange( range );
       }
     };
-    
+
     function scrollSelectionIntoView() {
       if ( !designEditor.selection || !designEditor.selection.rangeCount ) {
         return;
       }
       var range = designEditor.selection.getRangeAt( 0 );
       var node = range.startContainer;
-      while ( node && node.nodeType !== Node.ELEMENT_NODE ) {
+      while ( node && node.nodeType !== Ci.nsIDOMNode.ELEMENT_NODE ) {
         node = node.parentNode;
       }
       if ( node ) {
         node.scrollIntoView();
       }
     };
-    
+
     function getSelectionChunks() {
       if ( !designEditor.selection || !designEditor.selection.rangeCount ) {
         return [];
       }
       // begin
       var processSelectionNode = function( range, root, chunks ) {
-        if ( root.nodeType == Node.ELEMENT_NODE &&
+        if ( root.nodeType === Ci.nsIDOMNode.ELEMENT_NODE &&
              root == range.startContainer &&
              range.startContainer == range.endContainer &&
              range.startOffset == range.endOffset ) {
@@ -2469,19 +2461,19 @@ var Editor = function() {
           return;
         }
         switch ( root.nodeType ) {
-          case Node.ELEMENT_NODE:
+          case Ci.nsIDOMNode.ELEMENT_NODE:
             chunks.push( {
               element: root,
               info: []
             } );
             break;
-          case Node.TEXT_NODE:
+          case Ci.nsIDOMNode.TEXT_NODE:
             startOffset = ( root == range.startContainer ) ?
               range.startOffset : 0;
             endOffset = ( root == range.endContainer ) ?
               range.endOffset : root.length;
             node = root;
-            while ( node && node.nodeType != Node.ELEMENT_NODE ) {
+            while ( node && node.nodeType !== Ci.nsIDOMNode.ELEMENT_NODE ) {
               node = node.parentNode;
             }
             while ( node &&
@@ -2535,7 +2527,7 @@ var Editor = function() {
       }
       return chunks;
     };
-    
+
     function splitSelectionNodes( surround ) {
       var node, info, result = [];
       for ( var i = 0; i < selectionChunks.length; i++ ) {
@@ -2571,7 +2563,7 @@ var Editor = function() {
       }
       return result;
     };
-    
+
     function splitTextNodeByOffsets( node, offsets, surround ) {
       var result = [];
       var text, offset, delta = 0;
@@ -2591,13 +2583,13 @@ var Editor = function() {
       }
       return result;
     };
-    
+
     function surroundNode( node, tag ) {
       var txn = new SurroundNodeTransaction( node, tag );
       designEditorTM.doTransaction( txn );
       return txn.getSurround();
     };
-    
+
     function stripNode( node ) {
       var txn = new StripNodeTransaction( node );
       designEditorTM.doTransaction( txn );
@@ -2615,7 +2607,7 @@ var Editor = function() {
       designEditorTM.doTransaction( txn );
       return rightNode;
     };
-    
+
     function splitNode( rightNode, offset, suppressTxn ) {
       if ( suppressTxn ) {
         return splitNodeSuppressTransaction( rightNode, offset );
@@ -2624,7 +2616,7 @@ var Editor = function() {
       designEditorTM.doTransaction( txn );
       return txn.getLeftNode();
     };
-    
+
     function extractNode( element, index ) {
       if ( element === element.ownerDocument.body ) {
         return ( index < 0 || index >= element.childNodes.length ) ?
@@ -2641,11 +2633,11 @@ var Editor = function() {
     };
 
     function joinNodesSuppressTransaction( leftNode, rightNode ) {
-      if ( leftNode.nodeType == Node.TEXT_NODE &&
-           rightNode.nodeType == Node.TEXT_NODE ) {
+      if ( leftNode.nodeType === Ci.nsIDOMNode.TEXT_NODE &&
+           rightNode.nodeType === Ci.nsIDOMNode.TEXT_NODE ) {
         rightNode.textContent = leftNode.textContent + rightNode.textContent;
-      } else if ( leftNode.nodeType == Node.ELEMENT_NODE &&
-           rightNode.nodeType == Node.ELEMENT_NODE ) {
+      } else if ( leftNode.nodeType === Ci.nsIDOMNode.ELEMENT_NODE &&
+           rightNode.nodeType === Ci.nsIDOMNode.ELEMENT_NODE ) {
         var next, node = leftNode.firstChild, child = rightNode.firstChild;
         while ( node ) {
           next = node.nextSibling;
@@ -2655,10 +2647,10 @@ var Editor = function() {
       }
       leftNode.parentNode.removeChild( leftNode );
     };
-    
+
     function splitNodeSuppressTransaction( rightNode, offset ) {
       var leftNode;
-      if ( rightNode.nodeType == Node.ELEMENT_NODE ) {
+      if ( rightNode.nodeType === Ci.nsIDOMNode.ELEMENT_NODE ) {
         leftNode = rightNode.cloneNode( false );
         leftNode.removeAttribute( "id" );
       } else {
@@ -2667,7 +2659,7 @@ var Editor = function() {
         );
       }
       rightNode.parentNode.insertBefore( leftNode, rightNode );
-      if ( rightNode.nodeType == Node.ELEMENT_NODE ) {
+      if ( rightNode.nodeType === Ci.nsIDOMNode.ELEMENT_NODE ) {
         var i = 0, next, child = rightNode.firstChild;
         while ( child && i < offset ) {
           next = child.nextSibling;
@@ -2680,9 +2672,9 @@ var Editor = function() {
       }
       return leftNode;
     };
-    
+
     // HELPER TRANSACTIONS
-    
+
     function JoinNodesTransaction( leftNode, rightNode ) {
       this.wrappedJSObject = this;
       this.mLeftNode = leftNode;
@@ -2701,15 +2693,15 @@ var Editor = function() {
         return false;
       },
       QueryInterface: function( aIID, theResult ) {
-        if ( aIID.equals( Components.interfaces.nsITransaction ) ||
-             aIID.equals( Components.interfaces.nsISupports ) ) {
+        if ( aIID.equals( Ci.nsITransaction ) ||
+             aIID.equals( Ci.nsISupports ) ) {
           return this;
         }
-        Components.returnCode = Components.results.NS_ERROR_NO_INTERFACE;
+        Components.returnCode = Cr.NS_ERROR_NO_INTERFACE;
         return null;
       },
     };
-    
+
     function SplitNodeTransaction( rightNode, offset ) {
       this.wrappedJSObject = this;
       this.mRightNode = rightNode;
@@ -2720,8 +2712,7 @@ var Editor = function() {
       isTransient: false,
       doTransaction: function() {
         if ( !this.mLeftNode ) {
-          if ( this.mRightNode.nodeType ==
-            Node.ELEMENT_NODE ) {
+          if ( this.mRightNode.nodeType === Ci.nsIDOMNode.ELEMENT_NODE ) {
             this.mLeftNode = this.mRightNode.cloneNode( false );
             this.mLeftNode.removeAttribute( "id" );
           } else {
@@ -2730,15 +2721,14 @@ var Editor = function() {
                 this.mRightNode.textContent.substring( 0, this.mOffset )
               );
           }
-        } 
+        }
         this.redoTransaction();
       },
       redoTransaction: function() {
         var selectionRanges = getSelectionRanges();
         this.mRightNode.parentNode.insertBefore(
           this.mLeftNode, this.mRightNode );
-        if ( this.mRightNode.nodeType ==
-          Node.ELEMENT_NODE ) {
+        if ( this.mRightNode.nodeType === Ci.nsIDOMNode.ELEMENT_NODE ) {
           var i = 0, next, child = this.mRightNode.firstChild;
           while ( child && i < this.mOffset ) {
             next = child.nextSibling;
@@ -2760,16 +2750,16 @@ var Editor = function() {
           startOffset = range.startOffset;
           endContainer = range.endContainer;
           endOffset = range.endOffset;
-          if ( startContainer.nodeType == Node.ELEMENT_NODE &&
-               this.mRightNode.parentNode == startContainer ) {
+          if ( startContainer.nodeType === Ci.nsIDOMNode.ELEMENT_NODE &&
+               this.mRightNode.parentNode === startContainer ) {
             // !!! not [startOffset] but [startOffset + 1] !!!
             node = startContainer.childNodes[startOffset + 1];
             if ( DOMUtils.isRightSibling( this.mRightNode, node ) ) {
               range.startOffset++;
             }
           }
-          if ( endContainer.nodeType == Node.ELEMENT_NODE &&
-               this.mRightNode.parentNode == endContainer ) {
+          if ( endContainer.nodeType === Ci.nsIDOMNode.ELEMENT_NODE &&
+               this.mRightNode.parentNode === endContainer ) {
             // !!! not [endOffset - 1] but [endOffset] !!!
             node = endContainer.childNodes[endOffset];
             if ( DOMUtils.isRightSibling( this.mRightNode, node ) ) {
@@ -2818,15 +2808,15 @@ var Editor = function() {
           startOffset = range.startOffset;
           endContainer = range.endContainer;
           endOffset = range.endOffset;
-          if ( startContainer.nodeType == Node.ELEMENT_NODE &&
-               this.mRightNode.parentNode == startContainer ) {
+          if ( startContainer.nodeType === Ci.nsIDOMNode.ELEMENT_NODE &&
+               this.mRightNode.parentNode === startContainer ) {
             node = startContainer.childNodes[startOffset];
             if ( DOMUtils.isRightSibling( this.mRightNode, node ) ) {
               range.startOffset--;
             }
           }
-          if ( endContainer.nodeType == Node.ELEMENT_NODE &&
-               this.mRightNode.parentNode == endContainer ) {
+          if ( endContainer.nodeType === Ci.nsIDOMNode.ELEMENT_NODE &&
+               this.mRightNode.parentNode === endContainer ) {
             node = endContainer.childNodes[endOffset - 1];
             if ( DOMUtils.isRightSibling( this.mRightNode, node ) ) {
               range.endOffset--;
@@ -2859,8 +2849,7 @@ var Editor = function() {
             }
           }
         }
-        if ( this.mRightNode.nodeType ==
-          Node.ELEMENT_NODE ) {
+        if ( this.mRightNode.nodeType === Ci.nsIDOMNode.ELEMENT_NODE ) {
           var prev, child = this.mLeftNode.lastChild;
           while ( child ) {
             prev = child.previousSibling;
@@ -2879,18 +2868,18 @@ var Editor = function() {
         return false;
       },
       QueryInterface: function( aIID, theResult ) {
-        if ( aIID.equals( Components.interfaces.nsITransaction ) ||
-             aIID.equals( Components.interfaces.nsISupports ) ) {
+        if ( aIID.equals( Ci.nsITransaction ) ||
+             aIID.equals( Ci.nsISupports ) ) {
           return this;
         }
-        Components.returnCode = Components.results.NS_ERROR_NO_INTERFACE;
+        Components.returnCode = Cr.NS_ERROR_NO_INTERFACE;
         return null;
       },
       getLeftNode: function() {
         return this.mLeftNode;
       }
     };
-    
+
     function SurroundNodeTransaction( node, tag ) {
       this.wrappedJSObject = this;
       this.mNode = node;
@@ -2926,13 +2915,13 @@ var Editor = function() {
           startOffset = range.startOffset;
           endContainer = range.endContainer;
           endOffset = range.endOffset;
-          if ( startContainer.nodeType == Node.ELEMENT_NODE &&
-               startContainer.childNodes[startOffset] == this.mSurround ) {
+          if ( startContainer.nodeType === Ci.nsIDOMNode.ELEMENT_NODE &&
+               startContainer.childNodes[startOffset] === this.mSurround ) {
             range.startContainer = this.mSurround;
             range.startOffset = 0;
           }
-          if ( endContainer.nodeType == Node.ELEMENT_NODE &&
-               endContainer.childNodes[endOffset - 1] == this.mSurround ) {
+          if ( endContainer.nodeType === Ci.nsIDOMNode.ELEMENT_NODE &&
+               endContainer.childNodes[endOffset - 1] === this.mSurround ) {
             range.endContainer = this.mSurround;
             range.endOffset = 1;
           }
@@ -2973,11 +2962,11 @@ var Editor = function() {
         return false;
       },
       QueryInterface: function( aIID, theResult ) {
-        if ( aIID.equals( Components.interfaces.nsITransaction ) ||
-             aIID.equals( Components.interfaces.nsISupports ) ) {
+        if ( aIID.equals( Ci.nsITransaction ) ||
+             aIID.equals( Ci.nsISupports ) ) {
           return this;
         }
-        Components.returnCode = Components.results.NS_ERROR_NO_INTERFACE;
+        Components.returnCode = Cr.NS_ERROR_NO_INTERFACE;
         return null;
       },
       getSurround: function() {
@@ -3063,7 +3052,7 @@ var Editor = function() {
           this.mNode.insertBefore( currentNode, null );
           currentNode = nextNode;
           i++;
-        }        
+        }
         var range, count = selectionRanges.length;
         var startContainer, startOffset;
         var endContainer, endOffset;
@@ -3098,11 +3087,11 @@ var Editor = function() {
         return false;
       },
       QueryInterface: function( aIID, theResult ) {
-        if ( aIID.equals( Components.interfaces.nsITransaction ) ||
-             aIID.equals( Components.interfaces.nsISupports ) ) {
+        if ( aIID.equals( Ci.nsITransaction ) ||
+             aIID.equals( Ci.nsISupports ) ) {
           return this;
         }
-        Components.returnCode = Components.results.NS_ERROR_NO_INTERFACE;
+        Components.returnCode = Cr.NS_ERROR_NO_INTERFACE;
         return null;
       },
       getFirstChild: function() {
@@ -3112,9 +3101,9 @@ var Editor = function() {
         return this.mLength;
       }
     };
-    
+
     // TOOLBAR
-    
+
     function restoreToolbarCurrentSet() {
       var currentSet, docName = self.getDocument().getName();
       //
@@ -3150,7 +3139,7 @@ var Editor = function() {
       sourceToolBar2.setAttribute( "currentset", currentSet );
       sourceToolBar2.currentSet = currentSet;
     };
-    
+
     function saveToolbarCurrentSet() {
       var currentSet, docName = self.getDocument().getName();
       currentSet = designToolBar1.currentSet;
@@ -3176,7 +3165,7 @@ var Editor = function() {
     };
 
     // DEBUG
-    
+
     function dumpSelection( ranges ) {
       var range, commonAncestorContainer;
       var startContainer, startOffset
@@ -3188,22 +3177,22 @@ var Editor = function() {
         endContainer = range.endContainer;
         endOffset = range.endOffset;
         commonAncestorContainer = range.commonAncestorContainer;
-        Utils.log( i + ") ancestor => " + ( commonAncestorContainer.id ? commonAncestorContainer.id : commonAncestorContainer.nodeName ) );
-        Utils.log( i + ") start => " + ( startContainer.id ? startContainer.id : startContainer.nodeName ) +
+        log.debug( i + ") ancestor => " + ( commonAncestorContainer.id ? commonAncestorContainer.id : commonAncestorContainer.nodeName ) );
+        log.debug( i + ") start => " + ( startContainer.id ? startContainer.id : startContainer.nodeName ) +
           " : " + startOffset );
-        if ( startContainer.nodeType == Node.TEXT_NODE ) {
+        if ( startContainer.nodeType === Ci.nsIDOMNode.TEXT_NODE ) {
           text = startContainer.textContent
                                .substring( startOffset, ( startContainer == endContainer ? endOffset : undefined ) )
                                .replace( /\n/img, "\\n" );
-          Utils.log( i + ") '" + text + "'" );
+          log.debug( i + ") '" + text + "'" );
         }
-        Utils.log( i + ") end => " + ( endContainer.id ? endContainer.id : endContainer.nodeName ) +
+        log.debug( i + ") end => " + ( endContainer.id ? endContainer.id : endContainer.nodeName ) +
           " : " + endOffset );
-        if ( endContainer.nodeType == Node.TEXT_NODE ) {
+        if ( endContainer.nodeType === Ci.nsIDOMNode.TEXT_NODE ) {
           text = endContainer.textContent
                                .substring( ( startContainer == endContainer ? startOffset : 0 ), endOffset )
                                .replace( /\n/img, "\\n" );
-          Utils.log( i + ") '" + text + "'" );
+          log.debug( i + ") '" + text + "'" );
         }
       }
     };
@@ -3214,21 +3203,21 @@ var Editor = function() {
       for ( var i = 0; i < selectionChunks.length; i++ ) {
         element = selectionChunks[i].element;
         info = selectionChunks[i].info;
-        Utils.log( element.nodeName + ( info.length ? " TEXT" : " ELEMENT" ) );
+        log.debug( element.nodeName + ( info.length ? " TEXT" : " ELEMENT" ) );
         for ( var j = 0; j < info.length; j++ ) {
           node = info[j].node;
           offsets = info[j].offsets;
           if ( offsets.length == 1 &&
                offsets[0].startOffset == 0 &&
                offsets[0].endOffset == node.length ) {
-            Utils.log( "* : '" + node.textContent + "'" );
+            log.debug( "* : '" + node.textContent + "'" );
           } else {
             for ( var k = 0; k < offsets.length; k++ ) {
               startOffset = offsets[k].startOffset;
               endOffset = offsets[k].endOffset;
               text = node.textContent.substring( startOffset, endOffset )
                                      .replace( /\n/img, "\\n" );
-              Utils.log( k + " : '" + text + "', { " + startOffset + ", " +
+              log.debug( k + " : '" + text + "', { " + startOffset + ", " +
                 endOffset + " }" );
             }
           }
@@ -3246,32 +3235,32 @@ var Editor = function() {
           kind = nodes[i].kind;
           name = node.nodeName;
           switch ( kind ) {
-            case 0: 
+            case 0:
               // node is an element node and does not contain any child nodes
-              Utils.log( "[" + kind + "] " + name );
+              log.debug( "[" + kind + "] " + name );
               break;
             case 2:
               // node is element node and contains only one text node
               text = node.firstChild.textContent.replace( /\n/img, "\\n" );
-              Utils.log( "[" + kind + "] " + name + "\n'" + text + "'" );
+              log.debug( "[" + kind + "] " + name + "\n'" + text + "'" );
               break;
             case 4:
               // node is a text node, but this shouldn't have happened here
               text = node.textContent.replace( /\n/img, "\\n" );
-              Utils.log( "[" + kind + "] " + name + "\n'" + text + "'" );
+              log.debug( "[" + kind + "] " + name + "\n'" + text + "'" );
               break;
           }
         }
       } catch ( e ) {
-        Utils.log( e + "\n" + Utils.dumpStack() );
+        log.warn( e + "\n" + Utils.dumpStack() );
       } finally {
         designEditor.endTransaction();
       }
     };
-    
+
     function doDebug() {
+      SampleModule.run();
       /*
-      Module.run();
       dumpSelection( getSelectionRanges() );
       dumpSelectionChunks();
       dumpSelectionElements(); doUndo();
@@ -3285,7 +3274,7 @@ var Editor = function() {
           node = nodes[i].node;
           kind = nodes[i].kind;
           switch ( kind ) {
-            case 0: 
+            case 0:
               // node is an element node and does not contain any child nodes
               break;
             case 2:
@@ -3310,13 +3299,13 @@ var Editor = function() {
           }
         }
       } catch ( e ) {
-        Utils.log( e + "\n" + Utils.dumpStack() );
+        log.warn( e + "\n" + Utils.dumpStack() );
       } finally {
         designEditor.endTransaction();
       }
       */
     };
-    
+
     // DESIGN CONTROLS
 
     // name: font-family
@@ -3337,8 +3326,8 @@ var Editor = function() {
         if ( !value ) {
           value = fontMapping.defaultName;
           if ( value === null ) {
-            Utils.log( "fontMapping.defaultName: [" + fontMapping.defaultName +
-                       "] is null!" );
+            log.debug( "fontMapping.defaultName: [" + fontMapping.defaultName +
+                       "] is null" );
           }
         }
         if ( result === null ) {
@@ -3352,7 +3341,7 @@ var Editor = function() {
       }
       return result;
     };
-    
+
     // name: font-size
     // inherited: yes
     // computed value: absolute length in px
@@ -3380,7 +3369,7 @@ var Editor = function() {
       }
       return result;
     };
-    
+
     // name: font-style
     // inherited: yes
     // computed value: as specified
@@ -3406,7 +3395,7 @@ var Editor = function() {
       }
       return result;
     };
-    
+
     // name: font-weight
     // inherited: yes
     // computed value: '100' - '900'
@@ -3431,7 +3420,7 @@ var Editor = function() {
       }
       return result;
     };
-    
+
     // name: text-decoration
     // inherited: no
     // computed value: as specified
@@ -3445,7 +3434,7 @@ var Editor = function() {
       for ( var i = 0; i < selectionChunks.length; i++ ) {
         element = selectionChunks[i].element;
         value = [];
-        while ( element && element.nodeType == Node.ELEMENT_NODE ) {
+        while ( element && element.nodeType === Ci.nsIDOMNode.ELEMENT_NODE ) {
           computedStyle = getComputedStyle( element );
           value = value.concat(
             computedStyle.textDecoration.split( /\s+/ )
@@ -3465,7 +3454,7 @@ var Editor = function() {
         }
       }
     };
-    
+
     // name: text-align
     // inherited: yes
     // computed value: the initial value or as specified
@@ -3530,7 +3519,7 @@ var Editor = function() {
       }
       return result;
     };
-    
+
     // name: background-color
     // inherited: no
     // computed value: as specified
@@ -3542,7 +3531,7 @@ var Editor = function() {
       mixed.value = false;
       for ( var i = 0; i < selectionChunks.length; i++ ) {
         element = selectionChunks[i].element;
-        while ( element && element.nodeType == Node.ELEMENT_NODE ) {
+        while ( element && element.nodeType === Ci.nsIDOMNode.ELEMENT_NODE ) {
           computedStyle = getComputedStyle( element );
           value = computedStyle.backgroundColor;
           if ( value != "transparent" ) {
@@ -3586,7 +3575,7 @@ var Editor = function() {
       }
       return result;
     };
-    
+
     // name: vertical-align
     // inherited: no
     // computed value: for <percentage> and <length> the absolute length,
@@ -3616,7 +3605,7 @@ var Editor = function() {
       }
       return result;
     };
-    
+
     // name: display
     // inherited: no
     // computed value: inline | block | list-item | inline-block | table |
@@ -3632,8 +3621,8 @@ var Editor = function() {
       for ( var i = 0; i < selectionChunks.length; i++ ) {
         element = selectionChunks[i].element;
         value = "";
-        while ( element && element.nodeType == Node.ELEMENT_NODE &&
-                element != element.ownerDocument.body ) {
+        while ( element && element.nodeType === Ci.nsIDOMNode.ELEMENT_NODE &&
+                element !== element.ownerDocument.body ) {
           computedStyle = getComputedStyle( element );
           if ( computedStyle.display == "block" ) {
             found = false;
@@ -3661,7 +3650,7 @@ var Editor = function() {
       }
       return result;
     };
-    
+
     // name: margin-left
     // inherited: no
     // computed value: the percentage as specified or the absolute length
@@ -3676,7 +3665,7 @@ var Editor = function() {
       for ( var i = 0; i < selectionChunks.length; i++ ) {
         element = selectionChunks[i].element;
         value = 0;
-        while ( element && element.nodeType == Node.ELEMENT_NODE ) {
+        while ( element && element.nodeType === Ci.nsIDOMNode.ELEMENT_NODE ) {
           computedStyle = getComputedStyle( element );
           if ( computedStyle.display == "block" ) {
             value = computedStyle.marginLeft;
@@ -3712,7 +3701,7 @@ var Editor = function() {
       for ( var i = 0; i < selectionChunks.length; i++ ) {
         element = selectionChunks[i].element;
         value = false;
-        while ( element && element.nodeType == Node.ELEMENT_NODE &&
+        while ( element && element.nodeType === Ci.nsIDOMNode.ELEMENT_NODE &&
                 element != element.ownerDocument.body ) {
           if ( element.nodeName == "sup" ) {
             value = true;
@@ -3731,14 +3720,14 @@ var Editor = function() {
       }
       return result;
     };
-    
+
     function getSubscriptState( mixed ) {
       var element, value, found, result = null;
       mixed.value = false;
       for ( var i = 0; i < selectionChunks.length; i++ ) {
         element = selectionChunks[i].element;
         value = false;
-        while ( element && element.nodeType == Node.ELEMENT_NODE &&
+        while ( element && element.nodeType === Ci.nsIDOMNode.ELEMENT_NODE &&
                 element != element.ownerDocument.body ) {
           if ( element.nodeName == "sub" ) {
             value = true;
@@ -3757,7 +3746,7 @@ var Editor = function() {
       }
       return result;
     };
-    
+
     // is the selection "ol" || "ul" || "dl" element
     function getListState( mixed, ol, ul, dl ) {
       var element, value, result = null;
@@ -3768,7 +3757,7 @@ var Editor = function() {
         ul.value = false;
         dl.value = false;
         value = 0;
-        while ( element && element.nodeType == Node.ELEMENT_NODE &&
+        while ( element && element.nodeType === Ci.nsIDOMNode.ELEMENT_NODE &&
                 element != element.ownerDocument.body ) {
           switch ( element.nodeName ) {
             case "ol":
@@ -3805,7 +3794,7 @@ var Editor = function() {
         }
       }
     };
-      
+
     // is the selection "li" || "dt" || "dd" element
     function getListItemState( mixed, li, dt, dd ) {
       var element, value, result = null;
@@ -3821,7 +3810,7 @@ var Editor = function() {
         dt.value = false;
         dd.value = false;
         value = 0;
-        while ( element && element.nodeType == Node.ELEMENT_NODE &&
+        while ( element && element.nodeType === Ci.nsIDOMNode.ELEMENT_NODE &&
                 element != element.ownerDocument.body ) {
           switch ( element.nodeName ) {
             case "li":
@@ -3858,7 +3847,7 @@ var Editor = function() {
         }
       }
     };
-    
+
     function updateDesignControls() {
       var fontNameArray = Utils.getFontNameArray();
       var fontMapping = Utils.getDefaultFontMapping();
@@ -3993,12 +3982,12 @@ var Editor = function() {
       mixed = { value: null };
       value = getBackgroundColorState( mixed );
       backColorButton.setAttribute( "image",
-        Utils.makeBackColorImage( value, iconSize ) );
+        Images.makeBackColorImage( value, iconSize ) );
       // foreground && highlight colors
       fgColor = getFontColorState( mixed );
       bgColor = getHighlightColorState( mixed );
       foreColorButton.setAttribute( "image",
-        Utils.makeForeColorImage( fgColor, iconSize, bgColor ) );
+        Images.makeForeColorImage( fgColor, iconSize, bgColor ) );
       // block format
       mixed = { value: null };
       value = getBlockState( mixed );
@@ -4048,12 +4037,12 @@ var Editor = function() {
       getListItemState( mixed, li, dt, dd );
       */
     };
-    
+
     // SOURCE CONTROLS
-    
+
     function updateSourceControls() {
     };
-    
+
     function updateControls() {
       if ( isDesignEditingActive ) {
         if ( !isParseError ) {
@@ -4063,13 +4052,13 @@ var Editor = function() {
         updateSourceControls();
       }
     };
-    
+
     function updateCommandsVisibility() {
       Common.goSetCommandHidden( "znotes_editordebug_command", !Utils.IS_DEBUG_ENABLED, currentWindow );
     };
-    
+
     // SELECTION
-    
+
     function updateSelection() {
       if ( isSourceEditingActive ) {
         return;
@@ -4080,7 +4069,7 @@ var Editor = function() {
         selectionChunks = null;
       }
     };
-    
+
     function onSelectionChanged( event ) {
       if ( !currentWindow ) {
         return;
@@ -4113,25 +4102,25 @@ var Editor = function() {
         0
       );
     };
-    
+
     // TAG LIST EVENTS
-    
+
     function onTagChanged( e ) {
       var aTag = e.data.changedTag;
       if ( currentNote && !isDesignEditingActive && !isSourceEditingActive ) {
         setBackgroundColor();
       }
     };
-    
+
     function onTagDeleted( e ) {
       var aTag = e.data.deletedTag;
       if ( currentNote && !isDesignEditingActive && !isSourceEditingActive ) {
         setBackgroundColor();
       }
     };
-    
+
     // NOTE EVENTS
-    
+
     function onNoteMainTagChanged( e ) {
       var aCategory = e.data.parentCategory;
       var aNote = e.data.changedNote;
@@ -4142,7 +4131,7 @@ var Editor = function() {
         setBackgroundColor();
       }
     };
-    
+
     // @@@@ 1 onNoteMainContentChanged
     function onNoteMainContentChanged( e ) {
       var aCategory = e.data.parentCategory;
@@ -4181,7 +4170,7 @@ var Editor = function() {
         }
       }
     };
- 
+
     function onNoteDataChanged( e ) {
       var aCategory = e.data.parentCategory;
       var aNote = e.data.changedNote;
@@ -4189,21 +4178,21 @@ var Editor = function() {
         setDisplayStyle();
       }
     };
- 
+
     // VIEW EVENTS
- 
+
     function onFontNameChange( event ) {
       doFontFamily();
       onSelectionChanged();
       return true;
     };
-    
+
     function onFormatBlockChange( event ) {
       doBlockFormat();
       onSelectionChanged();
       return true;
     };
-    
+
     function onFontSizeTextBoxChange( event ) {
       var fontSize = parseInt( fontSizeTextBox.value );
       if ( !fontSize ) {
@@ -4215,12 +4204,12 @@ var Editor = function() {
       }
       return true;
     };
-    
+
     function onFontSizeTextBoxFocus( event ) {
       fontSizeTextBox.select();
       return true;
     };
-    
+
     function onEditorTabSelect( event ) {
       switch ( editorTabs.selectedIndex ) {
         case 0:
@@ -4232,7 +4221,7 @@ var Editor = function() {
       }
       return true;
     };
-    
+
     function onSourceWindowResize( event ) {
       var sourceWindowInnerHeight = sourceWindow.innerHeight;
       if ( !sourceEditorHScrollbarHeight ) {
@@ -4257,7 +4246,7 @@ var Editor = function() {
         sourceEditor.focus();
       }
     };
-    
+
     function designClickHandler( event ) {
       var href, uri, anchor;
       if ( !event.isTrusted || event.defaultPrevented || event.button ) {
@@ -4296,7 +4285,7 @@ var Editor = function() {
       event.preventDefault();
       return false;
     };
-    
+
     function designOverHandler( event ) {
       var href = "", element = event.target;
       while ( element ) {
@@ -4309,9 +4298,9 @@ var Editor = function() {
       observerService.notifyObservers( currentWindow, "znotes-href", href );
       return true;
     };
-    
+
     // DESIGN EDITOR EVENTS
-    
+
     function updateDesignEditorDirtyState() {
       if ( !designEditor ) {
         return;
@@ -4322,14 +4311,14 @@ var Editor = function() {
       designEditor.canUndo( isEnabled, canUndo );
       documentStateListener.NotifyDocumentStateChanged( canUndo.value );
     };
-    
+
     function onDesignDocumentStateChanged( nowDirty ) {
       switchState( !!nowDirty );
       return true;
     };
 
     // SOURCE EDITOR EVENTS
-    
+
     function updateSourceEditorDirtyState() {
       if ( !sourceEditor ) {
         return;
@@ -4340,18 +4329,18 @@ var Editor = function() {
     function onSourceEditorChange( instance, changeObj ) {
       onSourceDocumentStateChanged( true );
     };
-    
+
     function onSourceDocumentStateChanged( nowDirty ) {
       switchState( !!nowDirty );
       return true;
     };
-    
+
     // PREFERENCES
-    
+
     function loadPrefs() {
       currentPreferences = self.getPreferences();
     };
-    
+
     function onDocumentPreferencesChanged( event ) {
     };
 
@@ -4368,9 +4357,9 @@ var Editor = function() {
       }
       updateKeyset();
     };
-    
+
     // DESIGN & SOURCE
-    
+
     function loadDesign() {
       var doc = self.getDocument();
       var data = sourceEditor.getValue();
@@ -4402,7 +4391,7 @@ var Editor = function() {
             node = node.nextSibling;
           }
         } catch ( e ) {
-          Utils.log( e + "\n" + Utils.dumpStack() );
+          log.warn( e + "\n" + Utils.dumpStack() );
         } finally {
           designEditor.endTransaction();
         }
@@ -4421,7 +4410,7 @@ var Editor = function() {
             node = node.nextSibling;
           }
         } catch ( e ) {
-          Utils.log( e + "\n" + Utils.dumpStack() );
+          log.warn( e + "\n" + Utils.dumpStack() );
         }
       }
     };
@@ -4448,7 +4437,7 @@ var Editor = function() {
         undoState.push();
       }
     };
-    
+
     function showDesign() {
       if ( currentMode == "editor" ) {
         if ( isSourceEditingActive ) {
@@ -4462,7 +4451,7 @@ var Editor = function() {
         setBackgroundColor();
       }
     };
-    
+
     function showSource() {
       if ( currentMode == "editor" ) {
         if ( isDesignEditingActive ) {
@@ -4474,7 +4463,7 @@ var Editor = function() {
         initSourceEditing();
       }
     };
-    
+
     function initDesignEditing() {
       if ( !isDesignEditingActive ) {
         isDesignEditingActive = true;
@@ -4505,7 +4494,7 @@ var Editor = function() {
       }
       onSelectionChanged();
     };
-    
+
     function doneDesignEditing() {
       if ( isDesignEditingActive ) {
         isDesignEditingActive = false;
@@ -4515,7 +4504,7 @@ var Editor = function() {
         }
       }
     };
-    
+
     function initSourceEditing() {
       if ( !isSourceEditingActive ) {
         isSourceEditingActive = true;
@@ -4527,16 +4516,16 @@ var Editor = function() {
       }
       onSelectionChanged();
     };
-    
+
     function doneSourceEditing() {
       if ( isSourceEditingActive ) {
         isSourceEditingActive = false;
         sourceToolBox.setAttribute( "collapsed", "true" );
       }
     };
-    
+
     // MARKER HELPERS
-    
+
     function insertMarkers( ranges, markers ) {
       var range, startContainer, startOffset, endContainer, endOffset;
       var uuid, startMarker, startSplit, endMarker, endSplit;
@@ -4556,7 +4545,7 @@ var Editor = function() {
         startSplit = null;
         endSplit = null;
         switch ( startContainer.nodeType ) {
-          case Node.TEXT_NODE:
+          case Ci.nsIDOMNode.TEXT_NODE:
             if ( startOffset > 0 &&
                  startOffset < startContainer.textContent.length ) {
               startSplit = splitNode( startContainer, startOffset, true );
@@ -4581,7 +4570,7 @@ var Editor = function() {
                 startMarker, startContainer.nextSibling );
             }
             break;
-          case Node.ELEMENT_NODE:
+          case Ci.nsIDOMNode.ELEMENT_NODE:
             startContainer.insertBefore(
               startMarker, startContainer.childNodes[startOffset] );
             if ( endContainer == startContainer ) {
@@ -4598,7 +4587,7 @@ var Editor = function() {
             break;
         }
         switch ( endContainer.nodeType ) {
-          case Node.TEXT_NODE:
+          case Ci.nsIDOMNode.TEXT_NODE:
             if ( endOffset > 0 &&
                  endOffset < endContainer.textContent.length ) {
               endSplit = splitNode( endContainer, endOffset, true );
@@ -4626,7 +4615,7 @@ var Editor = function() {
               }
             }
             break;
-          case Node.ELEMENT_NODE:
+          case Ci.nsIDOMNode.ELEMENT_NODE:
             if ( endContainer == startContainer &&
                  endOffset == startOffset ) {
               endContainer.insertBefore(
@@ -4654,7 +4643,7 @@ var Editor = function() {
         } );
       }
     };
-    
+
     function removeMarkers( markers ) {
       var marker, startMarker, startSplit, endMarker, endSplit;
       for ( var i = 0; i < markers.length; i++ ) {
@@ -4673,8 +4662,8 @@ var Editor = function() {
           joinNodes( startSplit, startSplit.nextSibling, true );
         }
       }
-    };    
-    
+    };
+
     function calcMarkersIndexies( markers ) {
       var result = [];
       try {
@@ -4701,7 +4690,7 @@ var Editor = function() {
           } );
         }
       } catch ( e ) {
-        Utils.log( e + "\n" + Utils.dumpStack() );
+        log.warn( e + "\n" + Utils.dumpStack() );
       }
       return result;
     };
@@ -4709,7 +4698,7 @@ var Editor = function() {
     function clearNodeIndexiesCache() {
       nodeIndexiesCache.splice( 0, nodeIndexiesCache.length );
     };
-    
+
     function getNodeIndexiesFromCache( node ) {
       var idxs;
       for ( var i = 0; i < nodeIndexiesCache.length; i++ ) {
@@ -4724,7 +4713,7 @@ var Editor = function() {
       }
       return null;
     };
-    
+
     function putNodeIndexiesToCache( node, indexies ) {
       var idxs, index = -1;
       for ( var i = 0; i < nodeIndexiesCache.length; i++ ) {
@@ -4745,7 +4734,7 @@ var Editor = function() {
       idxs.endIndex = indexies.endIndex;
       idxs.data = indexies.data;
     };
-    
+
     function getNodeIndexies( node ) {
       var nodeIndexies = getNodeIndexiesFromCache( node );
       if ( !nodeIndexies ) {
@@ -4767,7 +4756,7 @@ var Editor = function() {
       }
       return nodeIndexies;
     };
-    
+
     // flag: 0 - start marker || 1 - end marker
     function getMarkerPosition( index, flag ) {
       var BEFORE_NODE = -1;
@@ -4796,7 +4785,7 @@ var Editor = function() {
           };
         }
         if ( !node.hasChildNodes() ) {
-          if ( node.nodeType == Node.TEXT_NODE ) {
+          if ( node.nodeType === Ci.nsIDOMNode.TEXT_NODE ) {
             offset = index - startIndex;
             data = data.substring( 0, offset );
             // fix up offset taking into consideration entities presence
@@ -4858,9 +4847,9 @@ var Editor = function() {
       }
       return result;
     };
-    
+
     // MARKERS
-    
+
     function setupSourceEditorMarkers() {
       var selectionRanges, sourceMarkers, designMarkers = [];
       selectionRanges = getSelectionRanges();
@@ -4888,7 +4877,7 @@ var Editor = function() {
       sourceEditor.scrollIntoView( { from: from, to: to },
         Math.floor( sourceEditorHeight * 0.8 ) );
     };
-    
+
     function setupDesignEditorMarkers() {
       var editorStartIndex, editorEndIndex, tmpIndex;
       var startPosition, endPosition, selectionRanges = [];
@@ -4920,20 +4909,20 @@ var Editor = function() {
       }
       setSelectionRanges( selectionRanges );
     };
-    
+
     // KEYSET
-    
+
     function setupKeyset() {
       editorKeyset = new ru.akman.znotes.Keyset(
         currentDocument.getElementById( "znotes_editor_keyset" ),
         self.getDefaultPreferences().shortcuts
       );
     };
-    
+
     function updateKeyset() {
       editorKeyset.update( currentPreferences.shortcuts );
     };
-    
+
     function activateKeyset() {
       editorKeyset.activate();
     };
@@ -4941,9 +4930,9 @@ var Editor = function() {
     function deactivateKeyset() {
       editorKeyset.deactivate();
     };
-    
+
     // LISTENERS
-    
+
     function addEventListeners() {
       editorTabs.addEventListener( "select", onEditorTabSelect, false );
       designFrame.addEventListener( "click", designClickHandler, false );
@@ -4976,7 +4965,7 @@ var Editor = function() {
       currentNote.addStateListener( noteStateListener );
       currentBookTagList.addStateListener( tagListStateListener );
     };
-    
+
     function removeEventListeners() {
       editorTabs.removeEventListener( "select", onEditorTabSelect, false );
       designFrame.removeEventListener( "click", designClickHandler, false );
@@ -5013,27 +5002,27 @@ var Editor = function() {
       currentNote.removeStateListener( noteStateListener );
       currentBookTagList.removeStateListener( tagListStateListener );
     };
-    
+
     // INIT & DONE
-    
+
     function initSourceEditor() {
       sourceWindow = sourceFrame.contentWindow;
       sourceEditorLibrary = sourceWindow.Source.getLibrary();
       sourceEditor = sourceWindow.Source.getEditor();
     };
-    
+
     function initDesignEditor() {
       designFrame.contentDocument.designMode = "on";
       designFrame.contentDocument.designMode = "off";
     };
-    
+
     function init( callback, wait ) {
       var initProgress = 0;
-      
+
       function onCallback() {
         if ( initProgress == 10 ) {
           loadPrefs();
-          prefsMozillaObserver.register();          
+          prefsMozillaObserver.register();
           prefsBundle.addObserver( prefObserver );
           self.getDocument().addObserver( docPrefObserver );
           editorController.register();
@@ -5048,12 +5037,12 @@ var Editor = function() {
           callback();
         }
       };
-      
+
       function onInitDone() {
         initProgress += 4;
         onCallback();
       };
-      
+
       currentBookTagList = currentNote.getBook().getTagList();
       noteStateListener = {
         name: "EDITOR:XHTML",
@@ -5146,7 +5135,7 @@ var Editor = function() {
       }
       onInitDone();
     };
-    
+
     function done() {
       if ( currentMode == "editor" ) {
         if ( !stop() ) {
@@ -5154,7 +5143,7 @@ var Editor = function() {
         }
         // switchMode( "viewer" );
       }
-      prefsMozillaObserver.unregister();      
+      prefsMozillaObserver.unregister();
       self.getDocument().removeObserver( docPrefObserver );
       prefsBundle.removeObserver( prefObserver );
       deactivateKeyset();
@@ -5171,7 +5160,7 @@ var Editor = function() {
     };
 
     // PRIVATE
-    
+
     function switchToDesignTab() {
       if ( editorTabs.selectedIndex == 1 ) {
         editorTabs.selectedIndex = 0;
@@ -5179,7 +5168,7 @@ var Editor = function() {
         onEditorTabSelect();
       }
     };
-    
+
     function switchMode( mode ) {
       if ( currentMode && currentMode == mode ) {
         return;
@@ -5209,7 +5198,7 @@ var Editor = function() {
         )
       );
     };
-    
+
     function load() {
       // @@@@ 1 getMainContent
       // @@@@ 1 setMainContent
@@ -5232,7 +5221,7 @@ var Editor = function() {
       sourceEditor.clearHistory();
       loadDesign();
     };
-    
+
     function start() {
       var body, tagColor;
       if ( editorTabs.hasAttribute( "hidden" ) ) {
@@ -5275,13 +5264,13 @@ var Editor = function() {
         'insertBrOnReturn', false, null );
       designEditor =
         designFrame.contentWindow
-                   .QueryInterface( Components.interfaces.nsIInterfaceRequestor )
-                   .getInterface( Components.interfaces.nsIWebNavigation )
-                   .QueryInterface( Components.interfaces.nsIInterfaceRequestor )
-                   .getInterface( Components.interfaces.nsIEditingSession )
+                   .QueryInterface( Ci.nsIInterfaceRequestor )
+                   .getInterface( Ci.nsIWebNavigation )
+                   .QueryInterface( Ci.nsIInterfaceRequestor )
+                   .getInterface( Ci.nsIEditingSession )
                    .getEditorForWindow( designFrame.contentWindow )
-                   .QueryInterface( Components.interfaces.nsIHTMLEditor )
-                   .QueryInterface( Components.interfaces.nsIEditorStyleSheets );
+                   .QueryInterface( Ci.nsIHTMLEditor )
+                   .QueryInterface( Ci.nsIEditorStyleSheets );
       designEditor.addOverrideStyleSheet( tagsSheetURL );
       currentPreferences.isTagsModeActive ? switchTagsOn() : switchTagsOff();
       spellCheckerUI = new ru.akman.znotes.spellchecker.InlineSpellChecker(
@@ -5291,8 +5280,8 @@ var Editor = function() {
       designEditor.setSpellcheckUserOverride(
         spellCheckerUI && currentPreferences.isSpellcheckEnabled );
       designEditorTM = designEditor.transactionManager;
-      designEditorTM = designEditorTM.QueryInterface(
-          Components.interfaces.nsITransactionManager );
+      designEditorTM =
+        designEditorTM.QueryInterface( Ci.nsITransactionManager );
       designEditorTM.maxTransactionCount = -1;
       designEditor.resetModificationCount();
       designEditorTM.clear();
@@ -5301,7 +5290,7 @@ var Editor = function() {
       isEditorDirty = false;
       designFrame.contentWindow.focus();
     };
-    
+
     function stop() {
       var res;
       if ( currentNote && currentNote.isExists() && isEditorDirty ) {
@@ -5350,7 +5339,7 @@ var Editor = function() {
       initialCaretPosition = null;
       return true;
     };
-    
+
     function save() {
       if ( isEditorDirty ) {
         if ( isParseModified || isDesignModified() ) {
@@ -5371,7 +5360,7 @@ var Editor = function() {
         onSelectionChanged();
       }
     };
-    
+
     function cancel( force ) {
       if ( isEditorDirty || force ) {
         if ( currentNote && currentNote.isExists() ) {
@@ -5388,7 +5377,7 @@ var Editor = function() {
         }
       }
     };
-    
+
     function confirm() {
       var params = {
         input: {
@@ -5417,7 +5406,7 @@ var Editor = function() {
       }
       return -1;
     };
-    
+
     function print() {
       var aContentWindow = designFrame.contentWindow;
       var sourceEditorText, ranges, doc, printView;
@@ -5505,7 +5494,7 @@ var Editor = function() {
         elements[i].setAttribute( "iconsize", currentStyle.iconsize );
       }
     };
-    
+
     function editorInit( win, doc, note, style, wait ) {
       currentWindow = win;
       currentDocument = doc;
@@ -5537,14 +5526,14 @@ var Editor = function() {
     this.isReady = function() {
       return isEditorReady;
     };
-    
+
     /**
      * Check editor dirty state
      */
     this.isDirty = function() {
       return isEditorDirty;
     };
-    
+
     /**
      * Open editor for a note
      * @param win Window in which Document live
@@ -5594,7 +5583,7 @@ var Editor = function() {
         );
       }
     };
-    
+
     /**
      * Close editor for current note
      */
@@ -5620,7 +5609,7 @@ var Editor = function() {
       }
       switchMode( "editor" );
     };
-    
+
     /**
      * Save changes
      */
@@ -5630,7 +5619,7 @@ var Editor = function() {
       }
       save();
     };
-    
+
     /**
      * Discard changes
      */
@@ -5651,7 +5640,7 @@ var Editor = function() {
       }
       print();
     };
-    
+
     /**
      * Update style of toolbars
      * @param style { iconsize: "small" || "normal" }
@@ -5665,7 +5654,7 @@ var Editor = function() {
       }
       updateStyle();
     };
-    
+
     /**
      * Add state listener
      * @param stateListener Listener
@@ -5675,7 +5664,7 @@ var Editor = function() {
         listeners.push( stateListener );
       }
     };
-    
+
     /**
      * Remove state listener
      * @param stateListener Listener
@@ -5687,7 +5676,7 @@ var Editor = function() {
       }
       listeners.splice( index, 1 );
     };
-    
+
   };
 
 }();

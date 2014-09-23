@@ -30,23 +30,25 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+const EXPORTED_SYMBOLS = ["Driver"];
+
+var Cc = Components.classes;
+var Ci = Components.interfaces;
+var Cr = Components.results;
+var Cu = Components.utils;
+
 if ( !ru ) var ru = {};
 if ( !ru.akman ) ru.akman = {};
 if ( !ru.akman.znotes ) ru.akman.znotes = {};
 
-Components.utils.import( "resource://znotes/utils.js",
-  ru.akman.znotes
-);
-Components.utils.import( "resource://znotes/documentmanager.js",
-  ru.akman.znotes
-);
-
-var EXPORTED_SYMBOLS = ["Driver"];
+Cu.import( "resource://znotes/utils.js", ru.akman.znotes );
+Cu.import( "resource://znotes/documentmanager.js", ru.akman.znotes );
 
 var Driver = function() {
 
   var Utils = ru.akman.znotes.Utils;
- 
+  var log = Utils.getLogger( "drivers.default.driver" );
+
   var ENTRY_DESCRIPTOR_FILENAME = ".znotes";
   var TAGS_DESCRIPTOR_FILENAME = ".ztags";
   var NOTE_CONTENT_DIRECTORY_SUFFIX = "_files";
@@ -56,9 +58,9 @@ var Driver = function() {
 
   var MAX_SAFE_INTEGER = ( "MAX_SAFE_INTEGER" in Number ) ?
     Number.MAX_SAFE_INTEGER : 9007199254740991;
-  
+
   // E X C E P T I O N
-  
+
   var DriverExceptionCodes = {
     // ----------------------------  ----     -----
     // name                          code     param
@@ -77,7 +79,7 @@ var Driver = function() {
     DRIVER_DIRECTORY_CREATE_ERROR:   2048, // path
     DRIVER_DIRECTORY_REMOVE_ERROR:   4096  // path
   };
-  
+
   var DriverException = function( name, param ) {
     this.name = "DriverException";
     this.message = pub.getBundle().getString( name );
@@ -90,7 +92,7 @@ var Driver = function() {
   };
 
   // D E S C R I P T O R
-  
+
   var Descriptor = function( entryPath, encoding, entryName ) {
 
     var parseString = function( str ) {
@@ -106,7 +108,7 @@ var Driver = function() {
     };
 
     this.readDescriptorFile = function() {
-      var content = ru.akman.znotes.Utils.readFileContent(
+      var content = Utils.readFileContent(
         this.entry,
         this.encoding
       );
@@ -114,7 +116,7 @@ var Driver = function() {
     };
 
     this.writeDescriptorFile = function( data ) {
-      ru.akman.znotes.Utils.writeFileContent(
+      Utils.writeFileContent(
         this.entry,
         this.encoding,
         data.join("\r\n")
@@ -142,7 +144,7 @@ var Driver = function() {
       this.writeDescriptorFile( arr );
       return this;
     };
-    
+
     this.addItem = function( info ) {
       var data = this.readDescriptorFile();
       var arr = [];
@@ -239,13 +241,13 @@ var Driver = function() {
       throw new DriverException( "DESCRIPTOR_NAME_ALREADY_EXISTS", entryName );
     }
     if ( !this.entry.exists() ) {
-      this.entry.create( Components.interfaces.nsIFile.NORMAL_FILE_TYPE, parseInt( "0644", 8 ) );
+      this.entry.create( Ci.nsIFile.NORMAL_FILE_TYPE, parseInt( "0644", 8 ) );
     }
 
   };
 
   // E N T R Y
-  
+
   var Entry = function( aParent, anEntry, anEncoding, anExtensions ) {
 
     var getFileNameFromNoteName = function( noteName ) {
@@ -284,7 +286,7 @@ var Driver = function() {
       }
       return "";
     };
-    
+
     var getFileName = function( leafName ) {
       return leafName.substring( 0,
         leafName.length - getFileExtension( leafName ).length );
@@ -297,7 +299,7 @@ var Driver = function() {
     var checkFileEntry = function( entry ) {
       return getFileName( entry.leafName ).length;
     };
-    
+
     var getDirectoryPrefix = function( leafName ) {
       var cLength = NOTE_CONTENT_DIRECTORY_SUFFIX.length;
       var cIndex = leafName.lastIndexOf( NOTE_CONTENT_DIRECTORY_SUFFIX );
@@ -311,7 +313,7 @@ var Driver = function() {
       }
       return "";
     };
-    
+
     var getDirectorySuffix = function( leafName ) {
       var cLength = NOTE_CONTENT_DIRECTORY_SUFFIX.length;
       var cIndex = leafName.lastIndexOf( NOTE_CONTENT_DIRECTORY_SUFFIX );
@@ -325,7 +327,7 @@ var Driver = function() {
       }
       return "";
     };
-    
+
     var getSuitableLeafName = function( entry, names ) {
       var name = getFileName( entry.leafName );
       var extension = getFileExtension( entry.leafName );
@@ -345,7 +347,7 @@ var Driver = function() {
       );
       return newName + extension;
     };
-    
+
     this.createCategory = function( aName ) {
       if ( !this.isCategory() ) {
         throw new DriverException( "ENTRY_NOTE_INVALID_OPERATION" );
@@ -357,8 +359,7 @@ var Driver = function() {
       var leafName = getFileNameFromNoteName( aName );
       entry.append( leafName );
       if ( !entry.exists() || !entry.isDirectory() ) {
-        entry.create( Components.interfaces.nsIFile.DIRECTORY_TYPE,
-          parseInt( "0755", 8 ) );
+        entry.create( Ci.nsIFile.DIRECTORY_TYPE, parseInt( "0755", 8 ) );
       } else {
         throw new DriverException( "ENTRY_CATEGORY_ALREADY_EXISTS", aName );
       }
@@ -375,8 +376,7 @@ var Driver = function() {
       var leafName = BIN_CATEGORY_DIRECTORY_NAME;
       entry.append( leafName );
       if ( !entry.exists() || !entry.isDirectory() ) {
-        entry.create( Components.interfaces.nsIFile.DIRECTORY_TYPE,
-          parseInt( "0755", 8 ) );
+        entry.create( Ci.nsIFile.DIRECTORY_TYPE, parseInt( "0755", 8 ) );
       } else {
         throw new DriverException( "ENTRY_BIN_ALREADY_EXISTS" );
       }
@@ -384,7 +384,7 @@ var Driver = function() {
       result.setName( "Trash" );
       return result;
     };
-    
+
     this.createNote = function( aName, aType ) {
       if ( !this.isCategory() )
         throw new DriverException( "ENTRY_NOTE_INVALID_OPERATION" );
@@ -397,8 +397,7 @@ var Driver = function() {
       var leafName = getFileNameFromNoteName( aName ) + ext;
       entry.append( leafName );
       if( !entry.exists() ) {
-        entry.create( Components.interfaces.nsIFile.NORMAL_FILE_TYPE,
-          parseInt( "0644", 8 ) );
+        entry.create( Ci.nsIFile.NORMAL_FILE_TYPE, parseInt( "0644", 8 ) );
       } else {
         throw new DriverException( "ENTRY_NOTE_ALREADY_EXISTS", aName );
       }
@@ -419,7 +418,7 @@ var Driver = function() {
       var categories = [], notes = [];
       while ( entries.hasMoreElements() ) {
         entry = entries.getNext();
-        entry.QueryInterface( Components.interfaces.nsIFile );
+        entry.QueryInterface( Ci.nsIFile );
         if ( entry.isDirectory() ) {
           if ( this.isRoot() &&
                entry.leafName === BIN_CATEGORY_DIRECTORY_NAME ) {
@@ -478,13 +477,13 @@ var Driver = function() {
       entry.append( leafName );
       return entry.exists();
     };
-    
+
     this.getSize = function() {
       if ( this.isCategory() )
         throw new DriverException( "ENTRY_CATEGORY_INVALID_OPERATION" );
       return this.entry.fileSize;
     };
-    
+
     this.remove = function() {
       var leafName = this.getLeafName();
       var entry = this.entry.clone();
@@ -628,7 +627,7 @@ var Driver = function() {
       var selectedIndex = -1;
       var createdDateTime = this.entry.lastModifiedTime;
       var updatedDateTime = this.entry.lastModifiedTime;
-      var id = ru.akman.znotes.Utils.createUUID();
+      var id = Utils.createUUID();
       var type = this.entry.isDirectory() ? "" : "unknown";
       var data = "{}";
       var result = false;
@@ -865,7 +864,7 @@ var Driver = function() {
       }
       return this.getDescriptorItemField( 8 );
     };
-    
+
     this.getType = function() {
       if ( this.isCategory() )
         throw new DriverException( "ENTRY_CATEGORY_INVALID_OPERATION" );
@@ -877,7 +876,7 @@ var Driver = function() {
         throw new DriverException( "ENTRY_CATEGORY_INVALID_OPERATION" );
       return this.getDescriptorItemField( 10 );
     };
-    
+
     this.setData = function( data ) {
       if ( this.isCategory() )
         throw new DriverException( "ENTRY_CATEGORY_INVALID_OPERATION" );
@@ -889,7 +888,7 @@ var Driver = function() {
         throw new DriverException( "ENTRY_CATEGORY_INVALID_OPERATION" );
       this.setDescriptorItemField( 9, type );
     };
-    
+
     this.setId = function( id ) {
       if ( this.isRoot() ) {
         throw new DriverException( "ENTRY_CATEGORY_INVALID_OPERATION" );
@@ -938,13 +937,13 @@ var Driver = function() {
     this.getMainContent = function() {
       if ( this.isCategory() )
         throw new DriverException( "ENTRY_CATEGORY_INVALID_OPERATION" );
-      return ru.akman.znotes.Utils.readFileContent( this.entry, this.encoding);
+      return Utils.readFileContent( this.entry, this.encoding);
     };
 
     this.setMainContent = function( data ) {
       if ( this.isCategory() )
         throw new DriverException( "ENTRY_CATEGORY_INVALID_OPERATION" );
-      ru.akman.znotes.Utils.writeFileContent( this.entry, this.encoding, data );
+      Utils.writeFileContent( this.entry, this.encoding, data );
       var datetime = Date.now();
       this.setUpdateDateTime( datetime );
     };
@@ -991,8 +990,9 @@ var Driver = function() {
         isItemExists = false;
       }
       var contentDirectoryEntry = this.getContentDirectory();
-      var sourceDirectoryEntry = Components.classes["@mozilla.org/file/local;1"]
-                                           .createInstance( Components.interfaces.nsIFile );
+      var sourceDirectoryEntry =
+        Cc["@mozilla.org/file/local;1"]
+        .createInstance( Ci.nsIFile );
       sourceDirectoryEntry.initWithPath( data[1] );
       if ( sourceDirectoryEntry.leafName == ENTRY_DESCRIPTOR_FILENAME ) {
         return null;
@@ -1008,7 +1008,7 @@ var Driver = function() {
           }
           srcEntry.copyTo( contentDirectoryEntry, null );
         } catch ( e ) {
-          Utils.log( e + "\n" + Utils.dumpStack() );
+          log.warn( e + "\n" + Utils.dumpStack() );
           return null;
         }
       }
@@ -1036,7 +1036,7 @@ var Driver = function() {
           fileEntry.remove( false );
         }
       } catch ( e ) {
-        Utils.log( e + "\n" + Utils.dumpStack() );
+        log.warn( e + "\n" + Utils.dumpStack() );
       }
       contentsDescriptor.removeItem( leafName );
       return info;
@@ -1088,8 +1088,9 @@ var Driver = function() {
       switch ( type ) {
         case "file" :
           var attachmentsDirectoryEntry = this.getAttachmentsDirectory();
-          var sourceDirectoryEntry = Components.classes["@mozilla.org/file/local;1"]
-                                               .createInstance( Components.interfaces.nsIFile );
+          var sourceDirectoryEntry =
+            Cc["@mozilla.org/file/local;1"]
+            .createInstance( Ci.nsIFile );
           sourceDirectoryEntry.initWithPath( data[2] );
           if ( sourceDirectoryEntry.leafName == ENTRY_DESCRIPTOR_FILENAME ) {
             return null;
@@ -1105,7 +1106,7 @@ var Driver = function() {
               }
               srcEntry.copyTo( attachmentsDirectoryEntry, null );
             } catch ( e ) {
-              Utils.log( e + "\n" + Utils.dumpStack() );
+              log.warn( e + "\n" + Utils.dumpStack() );
               return null;
             }
           }
@@ -1140,7 +1141,7 @@ var Driver = function() {
               fileEntry.remove( false );
             }
           } catch ( e ) {
-            Utils.log( e + "\n" + Utils.dumpStack() );
+            log.warn( e + "\n" + Utils.dumpStack() );
           }
           break;
         case "contact" :
@@ -1161,7 +1162,7 @@ var Driver = function() {
       var entries = this.entry.directoryEntries;
       while( entries.hasMoreElements() ) {
         entry = entries.getNext();
-        entry.QueryInterface( Components.interfaces.nsIFile );
+        entry.QueryInterface( Ci.nsIFile );
         if ( entry.isDirectory() ) {
           if ( this.isRoot() &&
                entry.leafName === BIN_CATEGORY_DIRECTORY_NAME ) {
@@ -1198,7 +1199,7 @@ var Driver = function() {
       for each ( name in names ) {
         if ( !( name in files ) ) {
           for each ( entry in dirs[name] ) {
-            entry.QueryInterface( Components.interfaces.nsIFile );
+            entry.QueryInterface( Ci.nsIFile );
             categories.push(
               new Entry( this, entry, this.encoding, this.extensions )
             );
@@ -1206,7 +1207,7 @@ var Driver = function() {
           delete dirs[name];
         } else if ( files[name].length === 1 ) {
           entry = files[name][0];
-          entry.QueryInterface( Components.interfaces.nsIFile );
+          entry.QueryInterface( Ci.nsIFile );
           notes.push( new Entry( this, entry, this.encoding, this.extensions ) );
           delete dirs[name];
           delete files[name];
@@ -1221,7 +1222,7 @@ var Driver = function() {
       for ( name in files ) {
         for ( var i = 0; i < files[name].length; i++ ) {
           fileEntry = files[name][i];
-          fileEntry.QueryInterface( Components.interfaces.nsIFile );
+          fileEntry.QueryInterface( Ci.nsIFile );
           if ( i == 0 ) {
             notes.push( new Entry( this, fileEntry, this.encoding, this.extensions ) );
           } else {
@@ -1231,7 +1232,7 @@ var Driver = function() {
             if ( name in dirs ) {
               for ( var j = 0; j < dirs[name].length; j++ ) {
                 dirEntry = dirs[name][j];
-                dirEntry.QueryInterface( Components.interfaces.nsIFile );
+                dirEntry.QueryInterface( Ci.nsIFile );
                 leafName = fileName + getDirectorySuffix( dirEntry.leafName );
                 // dirEntry.copyTo( null, leafName );
                 // method does not copy subdirectories recursively :(
@@ -1256,7 +1257,7 @@ var Driver = function() {
       }
       return result;
     };
-    
+
     this.isCategory = function() {
       if ( this.entry && this.entry.exists() ) {
         return this.entry.isDirectory();
@@ -1296,20 +1297,24 @@ var Driver = function() {
     this.getURI = function() {
       if ( this.isCategory() )
         throw new DriverException( "ENTRY_CATEGORY_INVALID_OPERATION" );
-      var ioService = Components.classes["@mozilla.org/network/io-service;1"]
-                                .getService( Components.interfaces.nsIIOService );
-      var fph = ioService.getProtocolHandler( "file" )
-                         .QueryInterface( Components.interfaces.nsIFileProtocolHandler );
+      var ioService =
+        Cc["@mozilla.org/network/io-service;1"]
+        .getService( Ci.nsIIOService );
+      var fph =
+        ioService.getProtocolHandler( "file" )
+        .QueryInterface( Ci.nsIFileProtocolHandler );
       return fph.newFileURI( this.entry );
     };
 
     this.getBaseURI = function() {
       if ( this.isCategory() )
         throw new DriverException( "ENTRY_CATEGORY_INVALID_OPERATION" );
-      var ioService = Components.classes["@mozilla.org/network/io-service;1"]
-                                .getService( Components.interfaces.nsIIOService );
-      var fph = ioService.getProtocolHandler( "file" )
-                         .QueryInterface( Components.interfaces.nsIFileProtocolHandler );
+      var ioService =
+        Cc["@mozilla.org/network/io-service;1"]
+        .getService( Ci.nsIIOService );
+      var fph =
+        ioService.getProtocolHandler( "file" )
+        .QueryInterface( Ci.nsIFileProtocolHandler );
       return fph.newFileURI( this.getContentDirectory() );
     };
 
@@ -1328,7 +1333,7 @@ var Driver = function() {
       entries = toDirectoryEntry.directoryEntries;
       while( entries && entries.hasMoreElements() ) {
         entry = entries.getNext();
-        entry.QueryInterface( Components.interfaces.nsIFile );
+        entry.QueryInterface( Ci.nsIFile );
         if ( entry.leafName !== ENTRY_DESCRIPTOR_FILENAME ) {
           entry.remove( true );
         }
@@ -1336,7 +1341,7 @@ var Driver = function() {
       entries = fromDirectoryEntry.directoryEntries;
       while( entries && entries.hasMoreElements() ) {
         entry = entries.getNext();
-        entry.QueryInterface( Components.interfaces.nsIFile );
+        entry.QueryInterface( Ci.nsIFile );
         Utils.copyEntryTo( entry, toDirectoryEntry, entry.leafName, true /* overwrite */ );
         if ( flagMove && entry.exists() ) {
           entry.remove( true );
@@ -1375,7 +1380,7 @@ var Driver = function() {
       var entries = attachmentsDirectoryEntry.directoryEntries;
       while( entries.hasMoreElements() ) {
         var entry = entries.getNext();
-        entry.QueryInterface( Components.interfaces.nsIFile );
+        entry.QueryInterface( Ci.nsIFile );
         if ( !entry.isDirectory() ) {
           var name = entry.leafName;
           if ( name != ENTRY_DESCRIPTOR_FILENAME ) {
@@ -1399,7 +1404,7 @@ var Driver = function() {
       var entries = contentDirectoryEntry.directoryEntries;
       while( entries.hasMoreElements() ) {
         var entry = entries.getNext();
-        entry.QueryInterface( Components.interfaces.nsIFile );
+        entry.QueryInterface( Ci.nsIFile );
         if ( !entry.isDirectory() ) {
           var name = entry.leafName;
           if ( name != ENTRY_DESCRIPTOR_FILENAME ) {
@@ -1443,7 +1448,8 @@ var Driver = function() {
     } else {
       var contentDirectoryEntry = this.getContentDirectory();
       if ( !contentDirectoryEntry.exists() ) {
-        contentDirectoryEntry.create( Components.interfaces.nsIFile.DIRECTORY_TYPE, parseInt( "0755", 8 ) );
+        contentDirectoryEntry.create(
+          Ci.nsIFile.DIRECTORY_TYPE, parseInt( "0755", 8 ) );
       }
       this.contentsDescriptor = new Descriptor(
         contentDirectoryEntry,
@@ -1453,7 +1459,8 @@ var Driver = function() {
       this.updateContentsDescriptor( contentDirectoryEntry );
       var attachmentsDirectoryEntry = this.getAttachmentsDirectory();
       if ( !attachmentsDirectoryEntry.exists() ) {
-        attachmentsDirectoryEntry.create( Components.interfaces.nsIFile.DIRECTORY_TYPE, parseInt( "0755", 8 ) );
+        attachmentsDirectoryEntry.create(
+          Ci.nsIFile.DIRECTORY_TYPE, parseInt( "0755", 8 ) );
       }
       this.attachmentsDescriptor = new Descriptor(
         attachmentsDirectoryEntry,
@@ -1470,7 +1477,7 @@ var Driver = function() {
   var pub = {};
 
   pub["default"] = true;
-  
+
   pub.getInfo = function() {
     return {
       name: "default",
@@ -1501,7 +1508,7 @@ var Driver = function() {
            ext !== ENTRY_DESCRIPTOR_FILENAME &&
            ext !== TAGS_DESCRIPTOR_FILENAME;
   };
-  
+
   pub.getParameters = function() {
     var docs = ru.akman.znotes.DocumentManager.getInstance().getDocuments();
     var doc, types, exts = {};
@@ -1512,9 +1519,9 @@ var Driver = function() {
         exts[t] = doc.getExtension( t );
       }
     }
-    var defaultDataPath = ru.akman.znotes.Utils.getDataPath();
+    var defaultDataPath = Utils.getDataPath();
     do {
-      var defaultDirName = ru.akman.znotes.Utils.createUUID();
+      var defaultDirName = Utils.createUUID();
       var defaultDirEntry = defaultDataPath.clone();
       defaultDirEntry.append( defaultDirName );
     } while ( defaultDirEntry.exists() );
@@ -1533,8 +1540,9 @@ var Driver = function() {
     var path = params.path;
     var encoding = params.encoding;
     var extensions = {};
-    var dataPath = Components.classes["@mozilla.org/file/local;1"]
-                             .createInstance( Components.interfaces.nsIFile );
+    var dataPath =
+      Cc["@mozilla.org/file/local;1"]
+      .createInstance( Ci.nsIFile );
     try {
       dataPath.initWithPath( path );
     } catch ( e ) {
@@ -1595,11 +1603,10 @@ var Driver = function() {
       var entry = null;
       do {
         entry = dataPath.clone();
-        entry.append( ru.akman.znotes.Utils.createUUID() );
+        entry.append( Utils.createUUID() );
       } while ( entry.exists() )
       try {
-        entry.create( Components.interfaces.nsIFile.DIRECTORY_TYPE,
-          parseInt( "0755", 8 ) );
+        entry.create( Ci.nsIFile.DIRECTORY_TYPE, parseInt( "0755", 8 ) );
         entry.remove( true );
       } catch ( e ) {
         result = false;
@@ -1610,8 +1617,7 @@ var Driver = function() {
     connection.create = function() {
       if ( !this.exists() ) {
         try {
-          dataPath.create( Components.interfaces.nsIFile.DIRECTORY_TYPE,
-            parseInt( "0755", 8 ) );
+          dataPath.create( Ci.nsIFile.DIRECTORY_TYPE, parseInt( "0755", 8 ) );
         } catch ( e ) {
           throw new DriverException( "DRIVER_DIRECTORY_CREATE_ERROR", dataPath.path );
         }

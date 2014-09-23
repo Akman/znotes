@@ -30,31 +30,38 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+const EXPORTED_SYMBOLS = ["TabMonitor"];
+
+var Cc = Components.classes;
+var Ci = Components.interfaces;
+var Cr = Components.results;
+var Cu = Components.utils;
+
 if ( !ru ) var ru = {};
 if ( !ru.akman ) ru.akman = {};
 if ( !ru.akman.znotes ) ru.akman.znotes = {};
 
-Components.utils.import( "resource://znotes/utils.js"          , ru.akman.znotes );
-Components.utils.import( "resource://znotes/sessionmanager.js" , ru.akman.znotes );
-Components.utils.import( "resource://znotes/prefsmanager.js"   , ru.akman.znotes );
-
-var EXPORTED_SYMBOLS = ["TabMonitor"];
+Cu.import( "resource://znotes/utils.js", ru.akman.znotes );
+Cu.import( "resource://znotes/sessionmanager.js", ru.akman.znotes );
+Cu.import( "resource://znotes/prefsmanager.js", ru.akman.znotes );
 
 var TabMonitor = function() {
 
   var Utils = ru.akman.znotes.Utils;
+  var log = Utils.getLogger( "modules.tabmonitor" );
+
   var sessionManager = ru.akman.znotes.SessionManager.getInstance();
   var prefsManager = ru.akman.znotes.PrefsManager.getInstance();
   var prefsMozilla =
-    Components.classes["@mozilla.org/preferences-service;1"]
-              .getService( Components.interfaces.nsIPrefBranch );
+    Cc["@mozilla.org/preferences-service;1"]
+    .getService( Ci.nsIPrefBranch );
   var browserChromeURLPrefValue;
   try {
     browserChromeURLPrefValue = prefsMozilla.getCharPref( "browser.chromeURL" );
   } catch ( e ) {
     browserChromeURLPrefValue = null;
   }
-  
+
   var pub = {
 
     monitorName: "znotesMonitor",
@@ -63,7 +70,7 @@ var TabMonitor = function() {
     setActive: function( isActive ) {
       pub.mIsActive = isActive;
     },
-    
+
     onTabTitleChanged: function( aTab ) {
       if ( aTab.mode.name == "znotesContentTab" ) {
         sessionManager.updateState( aTab );
@@ -131,7 +138,7 @@ var TabMonitor = function() {
         aNewTab.browser.contentWindow.focus();
       }
     },
-    
+
     getInstance: function() {
       return this;
     }

@@ -30,20 +30,26 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+var Cc = Components.classes;
+var Ci = Components.interfaces;
+var Cr = Components.results;
+var Cu = Components.utils;
+
 if ( !ru ) var ru = {};
 if ( !ru.akman ) ru.akman = {};
 if ( !ru.akman.znotes ) ru.akman.znotes = {};
 
-Components.utils.import( "resource://znotes/utils.js", ru.akman.znotes );
+Cu.import( "resource://znotes/utils.js", ru.akman.znotes );
 
 ru.akman.znotes.InfoTabType = function() {
 
   var Utils = ru.akman.znotes.Utils;
+  var log = Utils.getLogger( "content.infotabtype" );
 
   var pub = {
 
     __proto__: contentTabBaseType,
-    
+
     name: "znotesInfoTab",
     perTabPanel: "vbox",
     lastBrowserId: 0,
@@ -103,14 +109,14 @@ ru.akman.znotes.InfoTabType = function() {
       );
     }
     var filter =
-      Components.classes["@mozilla.org/appshell/component/browser-status-filter;1"]
-                .createInstance( Components.interfaces.nsIWebProgress );
+      Cc["@mozilla.org/appshell/component/browser-status-filter;1"]
+      .createInstance( Ci.nsIWebProgress );
     aTab.filter = filter;
     aTab.browser.webProgress.addProgressListener( filter,
-      Components.interfaces.nsIWebProgress.NOTIFY_ALL );
+      Ci.nsIWebProgress.NOTIFY_ALL );
     aTab.progressListener = new tabProgressListener( aTab, false );
     filter.addProgressListener( aTab.progressListener,
-      Components.interfaces.nsIWebProgress.NOTIFY_ALL );
+      Ci.nsIWebProgress.NOTIFY_ALL );
     if ( "onListener" in aArgs && aArgs.onListener ) {
       aArgs.onListener( aTab.browser, aTab.progressListener );
     }

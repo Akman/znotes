@@ -50,14 +50,14 @@
 <!ENTITY znotes_tbsaveasnote_key "">
 <!ENTITY znotes_tbsaveasnote_key_modifiers "">
 <!ENTITY znotes_tbsaveasnote_keycode "">
-  
+
 <!ENTITY znotes_tbopenoptionsdialog_label "Options">
 <!ENTITY znotes_tbopenoptionsdialog_tooltip "Ouvrir la fenêtre des options">
 <!ENTITY znotes_tbopenoptionsdialog_accesskey "O">
 <!ENTITY znotes_tbopenoptionsdialog_key "">
 <!ENTITY znotes_tbopenoptionsdialog_key_modifiers "">
 <!ENTITY znotes_tbopenoptionsdialog_keycode "">
-  
+
 <!ENTITY znotes_tbtestsuite_label "Tests">
 <!ENTITY znotes_tbtestsuite_tooltip "Open test suite">
 <!ENTITY znotes_tbtestsuite_accesskey "T">

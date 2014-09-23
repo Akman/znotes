@@ -65,15 +65,15 @@
     labelalign="bottom"
     defaultlabelalign="end"
     iconsize="small" />
-  
+
   <vbox id="noteBodyView" flex="1" class="noteBodyView" />
 
   <statusbar id="znotes_statusbar" class="chromeclass-status znotes_statusbar">
     <statusbarpanel id="znotes_statusbarpanel" flex="1">
       <image id="znotes_statusbarpanellogo" />
       <label id="znotes_statusbarpanellabel" />
-      <spacer id="znotes_statusbar_spacer" flex="1"/>      
+      <spacer id="znotes_statusbar_spacer" flex="1"/>
     </statusbarpanel>
   </statusbar>
-  
+
 </window>

@@ -30,39 +30,41 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+var Cc = Components.classes;
+var Ci = Components.interfaces;
+var Cr = Components.results;
+var Cu = Components.utils;
+
 if ( !ru ) var ru = {};
 if ( !ru.akman ) ru.akman = {};
 if ( !ru.akman.znotes ) ru.akman.znotes = {};
 
-Components.utils.import( "resource://znotes/utils.js",
-  ru.akman.znotes
-);
-Components.utils.import( "resource://znotes/documentmanager.js",
-  ru.akman.znotes
-);
+Cu.import( "resource://znotes/utils.js", ru.akman.znotes );
+Cu.import( "resource://znotes/documentmanager.js", ru.akman.znotes );
 
 ru.akman.znotes.Editor = function() {
 
   return function( aWindow, aMode, aStyle ) {
 
     var Utils = ru.akman.znotes.Utils;
+    var log = Utils.getLogger( "content.editor" );
     var Common = ru.akman.znotes.Common;
 
     var observerService =
-      Components.classes["@mozilla.org/observer-service;1"]
-                .getService( Components.interfaces.nsIObserverService );
+      Cc["@mozilla.org/observer-service;1"]
+      .getService( Ci.nsIObserverService );
 
     var currentWindow = null;
     var currentMode = "viewer";
     var currentStyle = {
       iconsize: "small"
     };
-    
+
     var currentEditor = null;
     var editorStateListener = null;
-    
+
     var editorView = null;
-    
+
     var currentNote = null;
     var noteStateListener = null;
 
@@ -73,7 +75,7 @@ ru.akman.znotes.Editor = function() {
       "znotes_editorsave_command": null,
       "znotes_editorprint_command": null
     };
-    
+
     var editorController = {
       supportsCommand: function( cmd ) {
         if ( !( cmd in editorCommands ) ) {
@@ -132,9 +134,9 @@ ru.akman.znotes.Editor = function() {
             return currentWindow.controllers.getControllerId( this );
           };
         } catch ( e ) {
-          Components.utils.reportError(
+          log.warn(
             "An error occurred registering '" + this.getName() +
-            "' controller: " + e
+            "' controller\n" + e
           );
         }
       },
@@ -145,14 +147,14 @@ ru.akman.znotes.Editor = function() {
         try {
           currentWindow.controllers.removeController( this );
         } catch ( e ) {
-          Components.utils.reportError(
+          log.warn(
             "An error occurred unregistering '" + this.getName() +
-            "' controller: " + e
+            "' controller\n" + e
           );
         }
       }
     };
-    
+
     function updateCommands() {
       var id = editorController.getId();
       Common.goSetCommandHidden( "znotes_editorsave_command", true, currentWindow );
@@ -161,9 +163,9 @@ ru.akman.znotes.Editor = function() {
       Common.goUpdateCommand( "znotes_editoredit_command", id, currentWindow );
       Common.goUpdateCommand( "znotes_editorprint_command", id, currentWindow );
     };
-    
+
     // HELPERS
-    
+
     function confirm() {
       var params = {
         input: {
@@ -194,7 +196,7 @@ ru.akman.znotes.Editor = function() {
     };
 
     // LISTENERS
-    
+
     function addEventListeners() {
       if ( currentNote ) {
         currentNote.addStateListener( noteStateListener );
@@ -212,7 +214,7 @@ ru.akman.znotes.Editor = function() {
         currentEditor.addStateListener( editorStateListener );
       }
     };
-    
+
     function removeEditorEventListeners() {
       if ( currentEditor ) {
         currentEditor.removeStateListener( editorStateListener );
@@ -228,9 +230,9 @@ ru.akman.znotes.Editor = function() {
         currentEditor.close();
       }
     };
-    
+
     // EDITOR EVENTS
-    
+
     function onEditorOpened( e ) {
       var aNote = e.data.note;
       if ( currentNote && currentNote == aNote && currentEditor ) {
@@ -245,7 +247,7 @@ ru.akman.znotes.Editor = function() {
       if ( currentNote && currentNote == aNote && currentEditor ) {
       }
     };
-    
+
     function onEditorModeChanged( e ) {
       var aNote = e.data.note;
       var aMode = e.data.mode;
@@ -265,7 +267,7 @@ ru.akman.znotes.Editor = function() {
           editorController.getId(), currentWindow );
       }
     };
-    
+
     // PUBLIC EVENTS
 
     this.onBeforeCurrentNoteChange = function( event ) {
@@ -322,7 +324,7 @@ ru.akman.znotes.Editor = function() {
       }
       updateCommands();
     };
-    
+
     this.onStyleChanged = function( event ) {
       var style = event.data.style;
       Utils.cloneObject( style, currentStyle );
@@ -330,7 +332,7 @@ ru.akman.znotes.Editor = function() {
         currentEditor.updateStyle( style );
       }
     };
-    
+
     this.onRelease = function( event ) {
       if ( currentEditor ) {
         currentEditor.close();
@@ -339,7 +341,7 @@ ru.akman.znotes.Editor = function() {
       removeEventListeners();
       editorController.unregister();
     };
-    
+
     // CONSTRUCTOR ( aWindow, aMode, aStyle )
 
     currentWindow = aWindow ? aWindow : window;

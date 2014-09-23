@@ -30,26 +30,32 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+const EXPORTED_SYMBOLS = ["TagList"];
+
+var Cc = Components.classes;
+var Ci = Components.interfaces;
+var Cr = Components.results;
+var Cu = Components.utils;
+
 if ( !ru ) var ru = {};
 if ( !ru.akman ) ru.akman = {};
 if ( !ru.akman.znotes ) ru.akman.znotes = {};
 if ( !ru.akman.znotes.core ) ru.akman.znotes.core = {};
 
-Components.utils.import( "resource://znotes/utils.js"  , ru.akman.znotes );
-Components.utils.import( "resource://znotes/event.js"  , ru.akman.znotes.core );
-Components.utils.import( "resource://znotes/tag.js"    , ru.akman.znotes.core );
-
-var EXPORTED_SYMBOLS = ["TagList"];
+Cu.import( "resource://znotes/utils.js", ru.akman.znotes );
+Cu.import( "resource://znotes/event.js", ru.akman.znotes.core );
+Cu.import( "resource://znotes/tag.js", ru.akman.znotes.core );
 
 var TagList = function( aBook, aDescriptor ) {
 
   var Utils = ru.akman.znotes.Utils;
+  var log = Utils.getLogger( "modules.taglist" );
 
   this.listeners = [];
   this.book = aBook;
   this.descriptor = aDescriptor;
   this.tags = [];
-  
+
   function getNoTagDefaultItemInfo() {
     return [
       "00000000000000000000000000000000", // id
@@ -59,7 +65,7 @@ var TagList = function( aBook, aDescriptor ) {
       -1 // selectedIndex
     ];
   };
-  
+
   function fillTagDefaultItemInfo( info ) {
     // name
     if ( info[1] === undefined ) {
@@ -86,7 +92,7 @@ var TagList = function( aBook, aDescriptor ) {
       info.splice( 5 );
     }
   };
-  
+
   this.getDescriptor = function() {
     return this.descriptor;
   };
@@ -210,7 +216,7 @@ var TagList = function( aBook, aDescriptor ) {
         items[i][2],
         items[i][3],
         items[i][4]
-      );      
+      );
     }
     this.getDescriptor().setItems( items );
     this.locked = false;

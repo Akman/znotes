@@ -40,7 +40,7 @@
 
   <script type="application/javascript"
     src="chrome://znotes/content/editor.js" />
-    
+
   <stringbundleset id="znotes_stringbundleset">
     <stringbundleset id="znotes_editor_stringbundleset" />
   </stringbundleset>

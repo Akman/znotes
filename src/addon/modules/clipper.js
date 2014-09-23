@@ -30,47 +30,36 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+const EXPORTED_SYMBOLS = ["Clipper"];
+
+var Cc = Components.classes;
+var Ci = Components.interfaces;
+var Cr = Components.results;
+var Cu = Components.utils;
+
 if ( !ru ) var ru = {};
 if ( !ru.akman ) ru.akman = {};
 if ( !ru.akman.znotes ) ru.akman.znotes = {};
 
-Components.utils.import( "resource://znotes/utils.js", ru.akman.znotes );
-Components.utils.import( "resource://znotes/css.js", ru.akman.znotes );
-Components.utils.import( "resource://znotes/events.js", ru.akman.znotes );
+Cu.import( "resource://znotes/utils.js", ru.akman.znotes );
+Cu.import( "resource://znotes/cssutils.js", ru.akman.znotes );
+Cu.import( "resource://znotes/domevents.js", ru.akman.znotes );
 
 var Utils = ru.akman.znotes.Utils;
 var CSSUtils = ru.akman.znotes.CSSUtils;
 var DOMEvents = ru.akman.znotes.DOMEvents;
 
+var log = Utils.getLogger( "modules.clipper" );
+
 var HTML5NS = CSSUtils.Namespaces.knowns["html"];
 var DOMEventHandlers = DOMEvents.getEventHandlers();
 
-var nsIDOMNode = Components.interfaces.nsIDOMNode;
-var nsIDOMCSSRule = Components.interfaces.nsIDOMCSSRule;
-var nsIIOService = Components.interfaces.nsIIOService;
-var nsIMIMEService = Components.interfaces.nsIMIMEService;
-var nsIScriptableInputStream = Components.interfaces.nsIScriptableInputStream;
-var nsIFileOutputStream = Components.interfaces.nsIFileOutputStream;
-var nsIBufferedOutputStream = Components.interfaces.nsIBufferedOutputStream;
-var nsISafeOutputStream = Components.interfaces.nsISafeOutputStream;
-var nsIHttpChannel = Components.interfaces.nsIHttpChannel;
-var nsIFileProtocolHandler = Components.interfaces.nsIFileProtocolHandler;
-var nsIDOMSerializer = Components.interfaces.nsIDOMSerializer;
-var nsIDocumentEncoder = Components.interfaces.nsIDocumentEncoder;
-var nsIURL = Components.interfaces.nsIURL;
-var nsIChromeRegistry = Components.interfaces.nsIChromeRegistry;
-var nsIFile = Components.interfaces.nsIFile;
-var nsIConverterOutputStream = Components.interfaces.nsIConverterOutputStream;
-var nsIConverterInputStream = Components.interfaces.nsIConverterInputStream;
-
-var ioService = Components.classes["@mozilla.org/network/io-service;1"]
-                          .getService( nsIIOService );
-var chromeService = Components.classes["@mozilla.org/chrome/chrome-registry;1"]
-                              .getService( nsIChromeRegistry );
-var mimeService = Components.classes["@mozilla.org/mime;1"]
-                            .getService( nsIMIMEService );
-
-var EXPORTED_SYMBOLS = ["Clipper"];
+var ioService = Cc["@mozilla.org/network/io-service;1"].getService(
+  Ci.nsIIOService );
+var chromeService = Cc["@mozilla.org/chrome/chrome-registry;1"].getService(
+  Ci.nsIChromeRegistry );
+var mimeService = Cc["@mozilla.org/mime;1"].getService(
+  Ci.nsIMIMEService );
 
 // Substitution
 
@@ -210,9 +199,8 @@ function createHTML5Substitutes( aSubstitution ) {
 };
 
 function getErrorName( code ) {
-  var results = Components.results;
-  for ( var name in results ) {
-    if ( results[name] == "" + code ) {
+  for ( var name in Cr ) {
+    if ( Cr[name] == "" + code ) {
       return name;
     }
   }
@@ -236,28 +224,26 @@ function createUUID() {
 };
 
 function serializeXMLToString( dom ) {
-  return Components.classes["@mozilla.org/xmlextras/xmlserializer;1"]
-                   .createInstance( nsIDOMSerializer )
-                   .serializeToString( dom );
+  return Cc["@mozilla.org/xmlextras/xmlserializer;1"].createInstance(
+    Ci.nsIDOMSerializer ).serializeToString( dom );
 };
 
 function serializeHTMLToString( dom ) {
   var documentEncoder =
-    Components.classes["@mozilla.org/layout/documentEncoder;1?type=text/html"]
-              .createInstance( nsIDocumentEncoder );
+    Cc["@mozilla.org/layout/documentEncoder;1?type=text/html"]
+    .createInstance( Ci.nsIDocumentEncoder );
   documentEncoder.init( dom, "text/html",
-    nsIDocumentEncoder.OutputLFLineBreak |
-    nsIDocumentEncoder.OutputRaw
+    Ci.nsIDocumentEncoder.OutputLFLineBreak |
+    Ci.nsIDocumentEncoder.OutputRaw
   );
   documentEncoder.setCharset( "utf-8" );
   return documentEncoder.encodeToString();
 };
 
 function getFileURI( file ) {
-  var fph =
-    ioService.getProtocolHandler( "file" )
-             .QueryInterface( nsIFileProtocolHandler );
-  return fph.newFileURI( file ).QueryInterface( nsIURL );
+  var fph = ioService.getProtocolHandler( "file" ).QueryInterface(
+    Ci.nsIFileProtocolHandler );
+  return fph.newFileURI( file ).QueryInterface( Ci.nsIURL );
 };
 
 function resolveURL( url, href ) {
@@ -266,7 +252,7 @@ function resolveURL( url, href ) {
     uri = ioService.newURI( href, null, null );
     result = uri.resolve( url );
   } catch ( e ) {
-    Utils.log( e + "\n" + Utils.dumpStack() );
+    log.warn( e + "\n" + Utils.dumpStack() );
     result = url;
   }
   return result;
@@ -313,7 +299,7 @@ function getSuitableFileName( url, contentType, defaultType ) {
   if ( uri.scheme.toLowerCase() === "mailbox" ) {
     mime = ( contentType ? contentType : ( defaultType ? defaultType : "" ) );
     try {
-      uri.QueryInterface( nsIURL );
+      uri.QueryInterface( Ci.nsIURL );
       name = getValidFileNameChunk( uri.fileBaseName );
       ext = getValidFileNameChunk( uri.fileExtension );
       query = uri.query.split( "&" );
@@ -350,7 +336,7 @@ function getSuitableFileName( url, contentType, defaultType ) {
   } else {
     mime = ( contentType ? contentType : ( defaultType ? defaultType : "" ) );
     try {
-      uri.QueryInterface( nsIURL );
+      uri.QueryInterface( Ci.nsIURL );
       name = getValidFileNameChunk( uri.fileBaseName );
       ext = getValidFileNameChunk( uri.fileExtension );
     } catch ( e ) {
@@ -383,8 +369,9 @@ function getSuitableFileName( url, contentType, defaultType ) {
 };
 
 function getFileEntryFromURL( url ) {
-  var fph = ioService.getProtocolHandler( "file" )
-                     .QueryInterface( nsIFileProtocolHandler );
+  var fph =
+    ioService.getProtocolHandler( "file" )
+             .QueryInterface( Ci.nsIFileProtocolHandler );
   var uri = ioService.newURI( url, null, null );
   uri = chromeService.convertChromeURL( uri );
   return fph.getFileFromURLSpec( uri.spec ).clone();
@@ -392,8 +379,8 @@ function getFileEntryFromURL( url ) {
 
 function createFileEntry( dir, name ) {
   var ostream =
-    Components.classes["@mozilla.org/network/file-output-stream;1"]
-              .createInstance( nsIFileOutputStream );
+    Cc["@mozilla.org/network/file-output-stream;1"]
+    .createInstance( Ci.nsIFileOutputStream );
   var entry, prefix = "";
   do {
     entry = dir.clone();
@@ -417,8 +404,8 @@ function createFileEntry( dir, name ) {
 
 function createEntriesToSaveFrame( dir, name, ext, suffix ) {
   var ostream =
-    Components.classes["@mozilla.org/network/file-output-stream;1"]
-              .createInstance( nsIFileOutputStream );
+    Cc["@mozilla.org/network/file-output-stream;1"]
+    .createInstance( Ci.nsIFileOutputStream );
   var fileEntry, dirEntry, fileExt, prefix = "";
   fileExt = ( ext ? "." + ext : ext );
   do {
@@ -443,7 +430,7 @@ function createEntriesToSaveFrame( dir, name, ext, suffix ) {
   } finally {
     ostream.close();
   }
-  dirEntry.create( nsIFile.DIRECTORY_TYPE, parseInt( "0774", 8 ) );
+  dirEntry.create( Ci.nsIFile.DIRECTORY_TYPE, parseInt( "0774", 8 ) );
   return {
     fileEntry: fileEntry.clone(),
     dirEntry: dirEntry.clone()
@@ -453,11 +440,11 @@ function createEntriesToSaveFrame( dir, name, ext, suffix ) {
 function writeFileEntry( entry, encoding, data ) {
   var isInit = false, enc = encoding;
   var cstream =
-    Components.classes["@mozilla.org/intl/converter-output-stream;1"]
-              .createInstance( nsIConverterOutputStream );
+    Cc["@mozilla.org/intl/converter-output-stream;1"]
+    .createInstance( Ci.nsIConverterOutputStream );
   var ostream =
-    Components.classes["@mozilla.org/network/file-output-stream;1"]
-              .createInstance( nsIFileOutputStream );
+    Cc["@mozilla.org/network/file-output-stream;1"]
+    .createInstance( Ci.nsIFileOutputStream );
   ostream.init(
     entry,
     // PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE
@@ -472,7 +459,7 @@ function writeFileEntry( entry, encoding, data ) {
           ostream,
           enc,
           0,
-          nsIConverterInputStream.DEFAULT_REPLACEMENT_CHARACTER
+          Ci.nsIConverterInputStream.DEFAULT_REPLACEMENT_CHARACTER
         );
         cstream.writeString( data );
         isInit = true;
@@ -499,11 +486,11 @@ function ChannelObserver( channel, ctx, entry, mode, perm, bufsize, listener ) {
   this.mBufsize = bufsize;
   this.mListener = listener;
   this.mFileOutputStream =
-    Components.classes["@mozilla.org/network/safe-file-output-stream;1"]
-              .createInstance( nsIFileOutputStream );
+    Cc["@mozilla.org/network/safe-file-output-stream;1"]
+    .createInstance( Ci.nsIFileOutputStream );
   this.mBufferedOutputStream =
-    Components.classes["@mozilla.org/network/buffered-output-stream;1"]
-              .createInstance( nsIBufferedOutputStream );
+    Cc["@mozilla.org/network/buffered-output-stream;1"]
+    .createInstance( Ci.nsIBufferedOutputStream );
   this.mStatus = -1;
 };
 ChannelObserver.prototype = {
@@ -516,7 +503,7 @@ ChannelObserver.prototype = {
          iid.equals( Components.interfaces.nsIChannelEventSink ) ) {
       return this;
     }
-    throw Components.results.NS_ERROR_NO_INTERFACE;
+    throw Cr.NS_ERROR_NO_INTERFACE;
   },
   // nsIRequestObserver
   getInterface: function( iid ) {
@@ -533,7 +520,7 @@ ChannelObserver.prototype = {
     this.mChannel = newChannel;
     this.mChannel.notificationCallbacks = this;
     this.mChannel.asyncOpen( this, this.mContext );
-    callback.onRedirectVerifyCallback( Components.results.NS_OK );
+    callback.onRedirectVerifyCallback( Cr.NS_OK );
   },
   // nsIRequestObserver
   onStartRequest: function( aRequest, aContext ) {
@@ -542,7 +529,7 @@ ChannelObserver.prototype = {
     if ( this.mListener && this.mListener.onstart ) {
       this.mListener.onstart( this.mChannel, aRequest, aContext );
     }
-    if ( this.mChannel instanceof nsIHttpChannel ) {
+    if ( this.mChannel instanceof Ci.nsIHttpChannel ) {
       try {
         isRequestSucceeded = this.mChannel.requestSucceeded;
       } catch ( e ) {
@@ -551,7 +538,7 @@ ChannelObserver.prototype = {
     }
     if ( isRequestSucceeded ) {
       this.mFileOutputStream.init( this.mEntry, this.mMode, this.mPerm,
-        nsIFileOutputStream.DEFER_OPEN );
+        Ci.nsIFileOutputStream.DEFER_OPEN );
       this.mBufferedOutputStream.init( this.mFileOutputStream, this.mBufsize );
     } else {
       aRequest.cancel( aRequest.status );
@@ -560,7 +547,7 @@ ChannelObserver.prototype = {
   onStopRequest: function( aRequest, aContext, aStatusCode ) {
     this.mStatus = 1;
     this.mBufferedOutputStream.flush();
-    if ( this.mFileOutputStream instanceof nsISafeOutputStream ) {
+    if ( this.mFileOutputStream instanceof Ci.nsISafeOutputStream ) {
       this.mFileOutputStream.finish();
     } else {
       this.mFileOutputStream.close();
@@ -609,12 +596,12 @@ function loadURLToFileEntry( url, referrer, ctx,
   try {
     uri = ioService.newURI( url, null, null );
     if ( uri.scheme.toLowerCase() === "mailbox" ) {
-      uri.QueryInterface( nsIURL );
+      uri.QueryInterface( Ci.nsIURL );
       if ( uri.query ) {
         /**
          * @see Implementation of nsIMimeEmitter in components/jsmimeemitter.js
          * @quote We need to strip our magic flags from the URL
-         * 
+         *
          * mailbox:///...?number=foo&header=filter&emitter=js&part=bar&filename=image.jpg
          *                           ^^^^^^^^^^^^^^^^^^^^^^^^^
          * mailbox:///...?number=foo&part=bar&filename=image.jpg
@@ -628,7 +615,7 @@ function loadURLToFileEntry( url, referrer, ctx,
     channel = ioService.newChannelFromURI( uri );
     if ( channel ) {
       if ( uri.scheme.toLowerCase().indexOf( "http" ) === 0 &&
-           channel instanceof nsIHttpChannel &&
+           channel instanceof Ci.nsIHttpChannel &&
            referrer ) {
         channel.referrer = ioService.newURI( referrer, null, null );
       }
@@ -638,10 +625,10 @@ function loadURLToFileEntry( url, referrer, ctx,
       channel.asyncOpen( observer, ctx );
     }
   } catch ( e ) {
-    if ( e.name && ( e.name in Components.results ) ) {
-      status = Components.results[e.name];
+    if ( e.name && ( e.name in Cr ) ) {
+      status = Cr[e.name];
     } else {
-      status = Components.results.NS_ERROR_UNEXPECTED;
+      status = Cr.NS_ERROR_UNEXPECTED;
     }
     if ( listener && listener.onstop ) {
       listener.onstop( channel, null, ctx, status );
@@ -764,14 +751,15 @@ function inspectRule( aSubstitution, aGlobalNamespaces, aLocalNamespaces,
               // At this point namespaceURI MUST be defined!
               // Otherwise it is a syntax error in style sheet i.e.,
               // used the namespace prefix defined in none at-namespace-rule.
-              Utils.log( "Clipper::inspectRule() Unknown namespaceURI: " + production.namespaceURI );
+              log.warn( "Unknown namespaceURI: " + production.namespaceURI );
             }
             break;
         }
         return null;
       } );
     } catch ( e ) {
-      Utils.log( selectorText + "\n" + e + "\n" + Utils.dumpStack() );
+      log.debug( selectorText );
+      log.warn( e + "\n" + Utils.dumpStack() );
     }
   }
   cssText =
@@ -801,7 +789,7 @@ function processRule( aRule, aRules, aSubstitution,
   @see https://developer.mozilla.org/en-US/docs/Web/API/CSSRule
   */
   switch ( aRule.type ) {
-    case nsIDOMCSSRule.STYLE_RULE:
+    case Ci.nsIDOMCSSRule.STYLE_RULE:
       if ( aRule.cssText ) {
         cssIndex = sheet.lines.length;
         cssText = inspectRule( aSubstitution, globalNamespaces, localNamespaces,
@@ -823,8 +811,8 @@ function processRule( aRule, aRules, aSubstitution,
         sheet.lines.push( cssText );
       }
       break;
-    case nsIDOMCSSRule.FONT_FACE_RULE:
-    case nsIDOMCSSRule.KEYFRAME_RULE:
+    case Ci.nsIDOMCSSRule.FONT_FACE_RULE:
+    case Ci.nsIDOMCSSRule.KEYFRAME_RULE:
       if ( aRule.cssText ) {
         cssIndex = sheet.lines.length;
         cssText = inspectRule( aSubstitution, globalNamespaces, localNamespaces,
@@ -846,7 +834,7 @@ function processRule( aRule, aRules, aSubstitution,
         sheet.lines.push( cssText );
       }
       break;
-    case nsIDOMCSSRule.IMPORT_RULE:
+    case Ci.nsIDOMCSSRule.IMPORT_RULE:
       /**
       The @import CSS at-rule allows to import style rules from other style
       sheets. These rules must precede all other types of rules, except
@@ -912,10 +900,10 @@ function processRule( aRule, aRules, aSubstitution,
         processStyleSheet( aRules, aSubstitution, aDocument, aRule.styleSheet,
                            url, aDirectory, aLoader, aFlags,
                            prefixLines, suffixLines );
-        
-      }  
+
+      }
       break;
-    case nsIDOMCSSRule.SUPPORTS_RULE:
+    case Ci.nsIDOMCSSRule.SUPPORTS_RULE:
       /**
       Gecko 22 and Gecko 21 supported this feature only if the user enables
       it by setting the config value layout.css.supports-rule.enabled to true
@@ -942,12 +930,12 @@ function processRule( aRule, aRules, aSubstitution,
           processRule( aRule.cssRules[j], aRules, aSubstitution,
                        aDocument, aSheet, aDirectory, aLoader, aFlags );
         }
-      } 
+      }
       if ( !( aFlags & 0x10000000 /* SAVE_ACTIVE_RULES_ONLY */ ) ) {
         sheet.lines.push( "}" );
       }
       break;
-    case nsIDOMCSSRule.MEDIA_RULE:
+    case Ci.nsIDOMCSSRule.MEDIA_RULE:
       /**
       The @media CSS at-rule associates a set of nested statements, in
       a CSS block, that is delimited by curly braces, with a condition
@@ -983,7 +971,7 @@ function processRule( aRule, aRules, aSubstitution,
         sheet.lines.push( "}" );
       }
       break;
-    case nsIDOMCSSRule.DOCUMENT_RULE:
+    case Ci.nsIDOMCSSRule.DOCUMENT_RULE:
       /**
       CSS4 ( deferred )
       The @document rule is an at-rule that restricts the style rules
@@ -1004,11 +992,11 @@ function processRule( aRule, aRules, aSubstitution,
       regexp(), which matches if the document URL is matched by
                 the regular expression provided. The expression must match
                 the entire URL.
-      
+
       The values provided to the url(), url-prefix(), and domain()
       functions can optionally be enclosed by single or double quotes.
       The values provided to the regexp() function must be enclosed in quotes.
-      
+
       Escaped values provided to the regexp() function must additionally
       escaped from the CSS. For example, a . (period) matches any character
       in regular expressions. To match a literal period, you would first
@@ -1025,7 +1013,7 @@ function processRule( aRule, aRules, aSubstitution,
         + Any page whose URL's host is "mozilla.org" or ends with
           ".mozilla.org"
         + Any page whose URL starts with "https:"
-      }        
+      }
       */
       if ( aRule.cssText ) {
         sheet.lines.push( aRule.cssText );
@@ -1049,17 +1037,17 @@ function processRule( aRule, aRules, aSubstitution,
         // sheet.lines.push( "}" );
       }
       break;
-    case nsIDOMCSSRule.NAMESPACE_RULE:
+    case Ci.nsIDOMCSSRule.NAMESPACE_RULE:
       /**
       Any @namespace rules must follow all @charset and @import rules and
       precede all other non-ignored at-rules and style rules in a style sheet.
-      
+
       The @namespace rule is an at-rule that defines the XML namespaces
       that will be used in the style sheet. The namespaces defined can be used
       to restrict the universal, type, and attribute selectors to only select
       elements under that namespace. The @namespace rule is generally only
       useful when dealing with an XML document containing multiple
-      namespaces - for example, an XHTML document with SVG embedded.      
+      namespaces - for example, an XHTML document with SVG embedded.
       @namespace url(http://www.w3.org/1999/xhtml);
       @namespace svg url(http://www.w3.org/2000/svg);
       This matches all XHTML <a> elements, as XHTML is the default namespace
@@ -1078,7 +1066,7 @@ function processRule( aRule, aRules, aSubstitution,
         sheet.lines.push( aRule.cssText );
       }
       break;
-    case nsIDOMCSSRule.CHARSET_RULE:
+    case Ci.nsIDOMCSSRule.CHARSET_RULE:
       /**
       The @charset CSS at-rule specifies the character encoding used in the
       style sheet. It must be the first element in the style sheet and not
@@ -1087,14 +1075,14 @@ function processRule( aRule, aRules, aSubstitution,
       If several @charset at-rules are defined, only the first one is used,
       and it cannot be used inside a style attribute on an HTML element
       or inside the <style> element where the character set of the HTML page
-      is relevant.      
+      is relevant.
       @charset charset;
       Set the encoding of the style sheet to Unicode UTF-8
       @charset "UTF-8";
       */
       // skip, always utf-8
       break;
-    case nsIDOMCSSRule.KEYFRAMES_RULE:
+    case Ci.nsIDOMCSSRule.KEYFRAMES_RULE:
       /**
         Describes the aspect of intermediate steps in a CSS animation sequence
         interface CSSKeyframesRule {
@@ -1106,7 +1094,7 @@ function processRule( aRule, aRules, aSubstitution,
         its keyframe list. Each @keyframes rule contains a style list of
         keyframe selectors, each of which is comprised of a percentage
         along the animation at which the keyframe occurs as well as
-        a block containing the style information for that keyframe.        
+        a block containing the style information for that keyframe.
         @keyframes <identifier> {
           [ [ from | to | <percentage> ] [, from | to | <percentage> ]* block ]*
         }
@@ -1124,7 +1112,7 @@ function processRule( aRule, aRules, aSubstitution,
       }
       sheet.lines.push( "}" );
       break;
-    case nsIDOMCSSRule.PAGE_RULE:
+    case Ci.nsIDOMCSSRule.PAGE_RULE:
       /**
         interface CSSPageRule {
           attribute DOMString selectorText;
@@ -1143,7 +1131,7 @@ function processRule( aRule, aRules, aSubstitution,
         sheet.lines.push( aRule.cssText );
       }
       break;
-    case nsIDOMCSSRule.REGION_STYLE_RULE:
+    case Ci.nsIDOMCSSRule.REGION_STYLE_RULE:
       /**
       @see http://www.w3.org/TR/css3-regions/
       */
@@ -1151,7 +1139,7 @@ function processRule( aRule, aRules, aSubstitution,
         sheet.lines.push( aRule.cssText );
       }
       break;
-    case nsIDOMCSSRule.VIEWPORT_RULE:
+    case Ci.nsIDOMCSSRule.VIEWPORT_RULE:
       /**
       @see http://www.w3.org/TR/css-device-adapt/
       */
@@ -1159,7 +1147,7 @@ function processRule( aRule, aRules, aSubstitution,
         sheet.lines.push( aRule.cssText );
       }
       break;
-    case nsIDOMCSSRule.COUNTER_STYLE_RULE:
+    case Ci.nsIDOMCSSRule.COUNTER_STYLE_RULE:
       /**
       @see http://www.w3.org/TR/css-counter-styles-3/
       */
@@ -1167,7 +1155,7 @@ function processRule( aRule, aRules, aSubstitution,
         sheet.lines.push( aRule.cssText );
       }
       break;
-    case nsIDOMCSSRule.FONT_FEATURE_VALUES_RULE:
+    case Ci.nsIDOMCSSRule.FONT_FEATURE_VALUES_RULE:
       /**
       @see http://www.w3.org/TR/css-fonts-3/
       */
@@ -1175,7 +1163,7 @@ function processRule( aRule, aRules, aSubstitution,
         sheet.lines.push( aRule.cssText );
       }
       break;
-    case nsIDOMCSSRule.UNKNOWN_RULE:
+    case Ci.nsIDOMCSSRule.UNKNOWN_RULE:
     default:
       if ( aRule.cssText ) {
         sheet.lines.push( aRule.cssText );
@@ -1201,12 +1189,12 @@ function collectSheetNamespaces( aNamespaces, aSheet ) {
   var info, rule;
   for ( var i = 0; i < aSheet.cssRules.length; i++ ) {
     rule = aSheet.cssRules[i];
-    if ( rule.type === nsIDOMCSSRule.NAMESPACE_RULE ) {
+    if ( rule.type === Ci.nsIDOMCSSRule.NAMESPACE_RULE ) {
       try {
         info = CSSUtils.parseNamespaceRule( rule.cssText );
         aNamespaces.set( info.namespaceURI, info.prefix );
       } catch ( e ) {
-        Utils.log( e + "\n" + Utils.dumpStack() );
+        log.warn( e + "\n" + Utils.dumpStack() );
       }
     }
   }
@@ -1296,11 +1284,10 @@ function setElementAttribute( anElement, aName, aValue ) {
   } catch ( e ) {
     // TODO: Set attribute "data" of "object" element throws NS_ERROR_UNEXPECTED
     // TODO: Set attribute "src" of "embed" element throws NS_ERROR_UNEXPECTED
-    Utils.log(
-      "setElementAttribute()\n" +
-      Utils.dumpStack() + "\n" +
+    log.warn(
+      e + "\n" +
       anElement.nodeName + "." + aName + ": " + aValue + "\n" +
-      e
+      Utils.dumpStack()
     );
   }
 };
@@ -1316,11 +1303,10 @@ function replaceAttribute( element, attr, prefix, localName ) {
       value
     );
   } catch ( e ) {
-    Utils.log(
-      "replaceAttribute()\n" +
-      Utils.dumpStack() + "\n" +
+    log.warn(
+      e + "\n" +
       element.nodeName + "." + name + ": " + value + "\n" +
-      e
+      Utils.dumpStack()
     );
   }
 };
@@ -1549,7 +1535,7 @@ function inspectElement( aLinks, aRules, aSubstitution, anElement, aDocumentURL,
                          aBaseURL, aFrames, aDirectory, aLoader, aFlags ) {
   var anURI, anURL, aContentType, aDocument, aRelList;
   var frameEntries, fileNameObj, oldCSSText, newCSSText;
-  if ( anElement.nodeType !== nsIDOMNode.ELEMENT_NODE ) {
+  if ( anElement.nodeType !== Ci.nsIDOMNode.ELEMENT_NODE ) {
     return anElement;
   }
   if ( !( aFlags & 0x00000001 /* SAVE_SCRIPTS */ ) && anElement.href ) {
@@ -1560,7 +1546,11 @@ function inspectElement( aLinks, aRules, aSubstitution, anElement, aDocumentURL,
         anElement.removeAttribute( "href" );
       }
     } catch ( e ) {
-      Utils.log( e + "\n" + anElement.localName + ".href = " + anElement.href );
+      log.warn(
+        e + "\n" +
+        anElement.localName + ".href = " + anElement.href + "\n" +
+        Utils.dumpStack()
+      );
     }
   }
   if ( anElement.namespaceURI === HTML5NS ) {
@@ -1611,7 +1601,7 @@ function inspectElement( aLinks, aRules, aSubstitution, anElement, aDocumentURL,
                     if ( entry.exists() ) {
                       entry.remove( false );
                     }
-                    Utils.log( getErrorName( status ) + " : " + job.getURL() );
+                    log.debug( "script/noscript : " + getErrorName( status ) + " : " + job.getURL() );
                   } else {
                     setElementAttribute(
                       anElement,
@@ -1657,7 +1647,7 @@ function inspectElement( aLinks, aRules, aSubstitution, anElement, aDocumentURL,
                       if ( entry.exists() ) {
                         entry.remove( false );
                       }
-                      Utils.log( getErrorName( status ) + " : " + job.getURL() );
+                      log.debug( "link rel icon/shortcut : " + getErrorName( status ) + " : " + job.getURL() );
                     } else {
                       setElementAttribute(
                         anElement,
@@ -1688,7 +1678,7 @@ function inspectElement( aLinks, aRules, aSubstitution, anElement, aDocumentURL,
                     if ( entry.exists() ) {
                       entry.remove( false );
                     }
-                    Utils.log( getErrorName( status ) + " : " + job.getURL() );
+                    log.debug( "link type xml : " + getErrorName( status ) + " : " + job.getURL() );
                   } else {
                     setElementAttribute(
                       anElement,
@@ -1724,7 +1714,7 @@ function inspectElement( aLinks, aRules, aSubstitution, anElement, aDocumentURL,
                   if ( entry.exists() ) {
                     entry.remove( false );
                   }
-                  Utils.log( getErrorName( status ) + " : " + job.getURL() );
+                  log.debug( "img : " + getErrorName( status ) + " : " + job.getURL() );
                 } else {
                   setElementAttribute(
                     anElement,
@@ -1754,7 +1744,7 @@ function inspectElement( aLinks, aRules, aSubstitution, anElement, aDocumentURL,
                   if ( entry.exists() ) {
                     entry.remove( false );
                   }
-                  Utils.log( getErrorName( status ) + " : " + job.getURL() );
+                  log.debug( "embed : " + getErrorName( status ) + " : " + job.getURL() );
                 } else {
                   setElementAttribute(
                     anElement,
@@ -1784,7 +1774,7 @@ function inspectElement( aLinks, aRules, aSubstitution, anElement, aDocumentURL,
                   if ( entry.exists() ) {
                     entry.remove( false );
                   }
-                  Utils.log( getErrorName( status ) + " : " + job.getURL() );
+                  log.debug( "object : " + getErrorName( status ) + " : " + job.getURL() );
                 } else {
                   setElementAttribute(
                     anElement,
@@ -1797,7 +1787,7 @@ function inspectElement( aLinks, aRules, aSubstitution, anElement, aDocumentURL,
             setElementAttribute( anElement, "data", anURL );
           }
         }
-      	break;
+        break;
       case "body":
       case "table":
       case "tr":
@@ -1816,7 +1806,7 @@ function inspectElement( aLinks, aRules, aSubstitution, anElement, aDocumentURL,
                   if ( entry.exists() ) {
                     entry.remove( false );
                   }
-                  Utils.log( getErrorName( status ) + " : " + job.getURL() );
+                  log.debug( ".background : " + getErrorName( status ) + " : " + job.getURL() );
                 } else {
                   setElementAttribute(
                     anElement,
@@ -1829,10 +1819,10 @@ function inspectElement( aLinks, aRules, aSubstitution, anElement, aDocumentURL,
             setElementAttribute( anElement, "background", anURL );
           }
         }
-      	break;
-      case "input" : 
-      	switch ( anElement.type.toLowerCase() ) {
-      		case "image":
+        break;
+      case "input" :
+        switch ( anElement.type.toLowerCase() ) {
+          case "image":
             if ( anElement.src ) {
               anURL = resolveURL( anElement.src, aBaseURL );
               if ( checkURL( anURL ) ) {
@@ -1846,7 +1836,7 @@ function inspectElement( aLinks, aRules, aSubstitution, anElement, aDocumentURL,
                       if ( entry.exists() ) {
                         entry.remove( false );
                       }
-                      Utils.log( getErrorName( status ) + " : " + job.getURL() );
+                      log.debug( "input image : " + getErrorName( status ) + " : " + job.getURL() );
                     } else {
                       setElementAttribute(
                         anElement,
@@ -1859,20 +1849,20 @@ function inspectElement( aLinks, aRules, aSubstitution, anElement, aDocumentURL,
                 setElementAttribute( anElement, "src", anURL );
               }
             }
-      			break;
-      		case "text":
-      			setElementAttribute( anElement, "value", anElement.value );
-      			break;
-      		case "checkbox":
-      		case "radio":
-      			if ( anElement.checked ) {
-      				setElementAttribute( anElement, "checked", "checked" );
-      			} else {
-      				anElement.removeAttribute( "checked" );
+            break;
+          case "text":
+            setElementAttribute( anElement, "value", anElement.value );
+            break;
+          case "checkbox":
+          case "radio":
+            if ( anElement.checked ) {
+              setElementAttribute( anElement, "checked", "checked" );
+            } else {
+              anElement.removeAttribute( "checked" );
             }
-      			break;
-      	}
-      	break;
+            break;
+        }
+        break;
       case "a":
       case "area":
         if ( anElement.href ) {
@@ -1881,7 +1871,7 @@ function inspectElement( aLinks, aRules, aSubstitution, anElement, aDocumentURL,
             setElementAttribute( anElement, "href", anURL );
           }
         }
-      	break;
+        break;
       case "form":
         if ( anElement.action ) {
           anURL = resolveURL( anElement.action, aBaseURL );
@@ -1889,7 +1879,7 @@ function inspectElement( aLinks, aRules, aSubstitution, anElement, aDocumentURL,
             setElementAttribute( anElement, "action", anURL );
           }
         }
-      	break;
+        break;
       case "frame":
       case "iframe":
         if ( aFlags & 0x00000010 /* SAVE_FRAMES */ ) {
@@ -1935,10 +1925,10 @@ function inspectElement( aLinks, aRules, aSubstitution, anElement, aDocumentURL,
         } else {
           return anElement.parentNode.removeChild( anElement );
         }
-      	break;
+        break;
     }
     anElement.removeAttribute( "_base_href" );
-  }  
+  }
   if ( aFlags & 0x00010000 /* SAVE_STYLES */ ) {
     if ( anElement.style && anElement.style.cssText ) {
       oldCSSText = anElement.style.cssText;
@@ -1952,7 +1942,7 @@ function inspectElement( aLinks, aRules, aSubstitution, anElement, aDocumentURL,
             if ( entry.exists() ) {
               entry.remove( false );
             }
-            Utils.log( getErrorName( status ) + " : " + job.getURL() );
+            log.debug( ".style : " + getErrorName( status ) + " : " + job.getURL() );
           } else {
             var cssText = anElement.style.cssText.replace(
               job.getURL(),
@@ -2114,7 +2104,7 @@ function processNode( aLinks, aRules, aSubstitution,
                          aDirectory, aLoader, aFlags ) {
   var aNode, aNext, anElementNamespaces;
   switch ( aRoot.nodeType ) {
-    case nsIDOMNode.ELEMENT_NODE:
+    case Ci.nsIDOMNode.ELEMENT_NODE:
       anElementNamespaces = aNamespaces.clone();
       setupElementNamespaces( aRoot, anElementNamespaces );
       aRoot = fixupElement( aRoot, anElementNamespaces, aFlags );
@@ -2125,7 +2115,7 @@ function processNode( aLinks, aRules, aSubstitution,
                                 aDirectory, aLoader, aFlags );
       }
       break;
-    case nsIDOMNode.COMMENT_NODE:
+    case Ci.nsIDOMNode.COMMENT_NODE:
       aRoot.textContent = aRoot.textContent.replace( /\-\-/gm, " - - " )
                                            .replace( /^\-/gm, " - " )
                                            .replace( /\-$/gm, " - " );
@@ -2373,7 +2363,7 @@ Job.prototype = {
             return;
           }
           var mime, fileNameObj, name, entry;
-          if ( aChannel instanceof nsIHttpChannel ) {
+          if ( aChannel instanceof Ci.nsIHttpChannel ) {
             try {
               mime = ( aChannel.requestSucceeded ? aChannel.contentType : null );
             } catch ( e ) {
@@ -2425,9 +2415,9 @@ Job.prototype = {
   abort: function() {
     if ( this.mActive ) {
       if ( this.mRequest ) {
-        this.mRequest.cancel( Components.results.NS_BINDING_ABORTED );
+        this.mRequest.cancel( Cr.NS_BINDING_ABORTED );
       }
-      this.stop( Components.results.NS_BINDING_ABORTED );
+      this.stop( Cr.NS_BINDING_ABORTED );
     }
   },
   remove: function() {

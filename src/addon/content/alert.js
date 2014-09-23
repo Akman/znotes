@@ -4,23 +4,39 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* 
+/*
  * Original code: chrome://global/content/alerts/alert.js
- * This fixed version created by 
+ * This fixed version created by
  *   Alexander Kapitman <akman.ru@gmail.com>
  *
  * Portions created by Alexander Kapitman are Copyright (C) 2014
  * Alexander Kapitman. All Rights Reserved.
- * 
- * Portions created by Alexander Kapitman marked as AK:FIXED:
+ *
+ * Portions created by Alexander Kapitman marked as AK:FIXED:BEGIN/END
  */
 
-Components.utils.import("resource://gre/modules/Services.jsm");
-const Ci = Components.interfaces;
-const Cc = Components.classes;
+var Cc = Components.classes;
+var Ci = Components.interfaces;
+var Cr = Components.results;
+var Cu = Components.utils;
 
-var windowMediator = Cc["@mozilla.org/appshell/window-mediator;1"]
-                       .getService(Ci.nsIWindowMediator);
+if ( !ru ) var ru = {};
+if ( !ru.akman ) ru.akman = {};
+if ( !ru.akman.znotes ) ru.akman.znotes = {};
+
+Cu.import( "resource://znotes/utils.js", ru.akman.znotes );
+
+var Utils = ru.akman.znotes.Utils;
+var log = Utils.getLogger( "content.alert" );
+
+var windowMediator =
+  Cc["@mozilla.org/appshell/window-mediator;1"]
+  .getService( Ci.nsIWindowMediator );
+
+var prefsService =
+  Cc["@mozilla.org/preferences-service;1"]
+  .getService( Ci.nsIPrefService )
+  .QueryInterface( Ci.nsIPrefBranch );
 
 // Copied from nsILookAndFeel.h, see comments on eMetric_AlertNotificationOrigin
 const NS_ALERT_HORIZONTAL = 1;
@@ -63,11 +79,13 @@ function prefillAlertInfo() {
       gAlertTextClickable = window.arguments[3];
       if (gAlertTextClickable) {
         document.getElementById('alertNotification').setAttribute('clickable', true);
-        document.getElementById('alertTextLabel').setAttribute('clickable', true);
-        // AK:FIXED: removed "plain" class, added "text-link" class
+        // AK:FIXED:BEGIN
+        // removed "plain" class, added "text-link" class
         let alertTextLabel = document.getElementById('alertTextLabel');
+        alertTextLabel.setAttribute('clickable', true);
         alertTextLabel.classList.remove( "plain" );
         alertTextLabel.classList.add( "text-link" );
+        // AK:FIXED:END
       }
     case 3:
       document.getElementById('alertTextLabel').textContent = window.arguments[2];
@@ -101,10 +119,10 @@ function onAlertLoad() {
 
   window.addEventListener("XULAlertClose", function() { window.close(); });
 
-  if (Services.prefs.getBoolPref("alerts.disableSlidingEffect")) {
+  if ( prefsService.getBoolPref("alerts.disableSlidingEffect")) {
     setTimeout(function() { window.close(); }, ALERT_DURATION_IMMEDIATE);
   }
-  
+
   let alertBox = document.getElementById("alertBox");
   alertBox.addEventListener("animationend", function hideAlert(event) {
     if (event.animationName == "alert-animation") {
@@ -113,16 +131,18 @@ function onAlertLoad() {
     }
   }, false);
   alertBox.setAttribute("animate", true);
-  
+
   if (gAlertListener) {
     gAlertListener.observe(null, "alertshow", gAlertCookie);
   }
 }
 
-// AK:FIXED: added helper function checkAlertWindow()
+// AK:FIXED:BEGIN
+// added helper function checkAlertWindow()
 function checkAlertWindow( aWindow ) {
   return ( aWindow.outerHeight > WINDOW_MARGIN );
 }
+// AK:FIXED:END
 
 function moveWindowToReplace(aReplacedAlert) {
   let heightDelta = window.outerHeight - aReplacedAlert.outerHeight;
@@ -132,8 +152,10 @@ function moveWindowToReplace(aReplacedAlert) {
     let windows = windowMediator.getEnumerator('alert:alert');
     while (windows.hasMoreElements()) {
       let alertWindow = windows.getNext();
-      // AK:FIXED: added if ( checkAlertWindow() ...
+      // AK:FIXED:BEGIN
+      // added if ( checkAlertWindow() ...
       if ( checkAlertWindow( alertWindow ) ) {
+      // AK:FIXED:END
         // boolean to determine if the alert window is after the replaced alert.
         let alertIsAfter = gOrigin & NS_ALERT_TOP ?
                            alertWindow.screenY > aReplacedAlert.screenY :
@@ -165,9 +187,11 @@ function moveWindowToEnd() {
   let windows = windowMediator.getEnumerator('alert:alert');
   while (windows.hasMoreElements()) {
     let alertWindow = windows.getNext();
-    // AK:FIXED: added checkAlertWindow()
+    // AK:FIXED:BEGIN
+    // added checkAlertWindow()
     //if (alertWindow != window) {
     if (alertWindow !== window && checkAlertWindow( alertWindow ) ) {
+    // AK:FIXED:END
       if (gOrigin & NS_ALERT_TOP) {
         y = Math.max(y, alertWindow.screenY + alertWindow.outerHeight);
       } else {
@@ -175,7 +199,7 @@ function moveWindowToEnd() {
       }
     }
   }
-  
+
   // Offset the alert by WINDOW_MARGIN pixels from the edge of the screen
   y += gOrigin & NS_ALERT_TOP ? WINDOW_MARGIN : -WINDOW_MARGIN;
   x += gOrigin & NS_ALERT_LEFT ? WINDOW_MARGIN : -WINDOW_MARGIN;
@@ -190,9 +214,11 @@ function onAlertBeforeUnload() {
     let windows = windowMediator.getEnumerator('alert:alert');
     while (windows.hasMoreElements()) {
       let alertWindow = windows.getNext();
-      // AK:FIXED: added checkAlertWindow()
+      // AK:FIXED:BEGIN
+      // added checkAlertWindow()
       //if (alertWindow != window) {
       if (alertWindow !== window && checkAlertWindow( alertWindow ) ) {
+      // AK:FIXED:END
         if (gOrigin & NS_ALERT_TOP) {
           if (alertWindow.screenY > window.screenY) {
             alertWindow.moveTo(alertWindow.screenX, alertWindow.screenY - heightDelta);

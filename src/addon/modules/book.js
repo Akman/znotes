@@ -30,33 +30,29 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+const EXPORTED_SYMBOLS = ["Book"];
+
+var Cc = Components.classes;
+var Ci = Components.interfaces;
+var Cr = Components.results;
+var Cu = Components.utils;
+
 if ( !ru ) var ru = {};
 if ( !ru.akman ) ru.akman = {};
 if ( !ru.akman.znotes ) ru.akman.znotes = {};
 if ( !ru.akman.znotes.core ) ru.akman.znotes.core = {};
 
-Components.utils.import( "resource://znotes/utils.js",
-  ru.akman.znotes
-);
-Components.utils.import( "resource://znotes/event.js",
-  ru.akman.znotes.core
-);
-Components.utils.import( "resource://znotes/drivermanager.js",
-  ru.akman.znotes
-);
-Components.utils.import( "resource://znotes/contenttree.js",
-  ru.akman.znotes.core
-);
-Components.utils.import( "resource://znotes/taglist.js",
-  ru.akman.znotes.core
-);
-
-var EXPORTED_SYMBOLS = ["Book"];
+Cu.import( "resource://znotes/utils.js", ru.akman.znotes );
+Cu.import( "resource://znotes/event.js", ru.akman.znotes.core );
+Cu.import( "resource://znotes/drivermanager.js", ru.akman.znotes );
+Cu.import( "resource://znotes/contenttree.js", ru.akman.znotes.core );
+Cu.import( "resource://znotes/taglist.js", ru.akman.znotes.core );
 
 var Book = function( aManager, anId, aName, aDescription, aDriver, aConnection,
                      aPreferences, anIndex, anOpened ) {
 
   var Utils = ru.akman.znotes.Utils;
+  var log = Utils.getLogger( "modules.book" );
 
   this.updateRegistryObject = function() {
     if ( !this.isLocked() ) {
@@ -189,7 +185,7 @@ var Book = function( aManager, anId, aName, aDescription, aDriver, aConnection,
     }
     return selectedTree;
   };
-  
+
   this.setSelectedTree = function( selectedTree ) {
     switch ( selectedTree ) {
       case "Categories":
@@ -207,7 +203,7 @@ var Book = function( aManager, anId, aName, aDescription, aDriver, aConnection,
   this.getSelectedCategory = function() {
     return this.loadPreference( "currentCategory", 0 );
   };
-  
+
   this.setSelectedCategory = function( selectedCategory ) {
     if ( this.getSelectedCategory() == selectedCategory ) {
       return;
@@ -218,7 +214,7 @@ var Book = function( aManager, anId, aName, aDescription, aDriver, aConnection,
   this.getSelectedTag = function() {
     return this.loadPreference( "currentTag", 0 );
   };
-  
+
   this.setSelectedTag = function( selectedTag ) {
     if ( this.getSelectedTag() == selectedTag ) {
       return;
@@ -248,7 +244,7 @@ var Book = function( aManager, anId, aName, aDescription, aDriver, aConnection,
         driver.getConnection( this.getConnection() ).remove();
       }
     } catch ( e ) {
-      Utils.log( e + "\n" + Utils.dumpStack() );
+      log.warn( e + "\n" + Utils.dumpStack() );
     }
     if ( this.isOpen() ) {
       this.close();
@@ -270,7 +266,7 @@ var Book = function( aManager, anId, aName, aDescription, aDriver, aConnection,
       driver.getConnection( this.getConnection() ).create();
     } catch ( e ) {
       driver = null;
-      Utils.log( e + "\n" + Utils.dumpStack() );
+      log.warn( e + "\n" + Utils.dumpStack() );
     }
     return !!driver;
   };
@@ -404,7 +400,7 @@ var Book = function( aManager, anId, aName, aDescription, aDriver, aConnection,
       this.name + "', '" +
       this.description + "', driver='" +
       this.driver + "', index=" +
-      this.index + ", opened=" + this.opened + 
+      this.index + ", opened=" + this.opened +
       " }\n" +
       "{ locked = " + this.locked + ", " +
       " listeners = " + this.listeners.length +
@@ -426,7 +422,7 @@ var Book = function( aManager, anId, aName, aDescription, aDriver, aConnection,
                                    .getParameters();
     Utils.fillObject( aConnection, this.connection );
   } catch ( e ) {
-    Utils.log( e + "\n" + Utils.dumpStack() );
+    log.warn( e + "\n" + Utils.dumpStack() );
     this.connection = aConnection;
   }
   this.preferences = aPreferences;

@@ -32,14 +32,14 @@
   - ***** END LICENSE BLOCK ***** -->
 
 <?xml-stylesheet type="text/css" href="chrome://znotes/skin/common.css" ?>
-  
+
 <!DOCTYPE overlay SYSTEM "chrome://znotes/locale/common.dtd">
 
 <overlay id="common"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <stringbundleset id="znotes_stringbundleset" />
-  
+
   <commandset id="znotes_commandset">
     <!-- dummy -->
     <command id="znotes_dummy_command" />
@@ -424,7 +424,7 @@
       accesskey="&znotes_bodyaddonspanel_accesskey;"
       key="znotes_bodyaddonspanel_key"
       oncommand="ru.akman.znotes.Common.goDoCommand( 'znotes_bodyaddonspanel_command', event.explicitOriginalTarget );"/>
-    <!-- attachments -->    
+    <!-- attachments -->
     <command id="znotes_attachmentsaddcontact_command" disabled="true"
       label="&znotes_attachmentsaddcontact_label;"
       title="&znotes_attachmentsaddcontact_label;"
@@ -771,7 +771,7 @@
       key="&znotes_spellcheckenabled_key;" modifiers="&znotes_spellcheckenabled_key_modifiers;"
       keycode="&znotes_spellcheckenabled_keycode;"/>
   </keyset>
-  
+
   <popupset id="znotes_popupset">
     <menupopup id="znotes_edit_menupopup">
       <menuitem id="znotes_undo_menuitem"
