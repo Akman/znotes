@@ -1,0 +1,185 @@
+﻿/* ***** BEGIN LICENSE BLOCK *****
+ *
+ * Version: GPL 3.0
+ *
+ * ZNotes
+ * Copyright (C) 2012 Alexander Kapitman
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * The Original Code is ZNotes.
+ *
+ * Initial Developer(s):
+ *   Alexander Kapitman <akman.ru@gmail.com>
+ *
+ * Portions created by the Initial Developer are Copyright (C) 2012
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+/* ***** classic/1.0 common **** */
+
+.znotes_copy_class {
+  list-style-image: url("chrome://znotes_images/skin/edit-copy-24x24.png");
+}
+.znotes_copy_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/edit-copy-disabled-24x24.png");
+}
+toolbar[iconsize="small"] .znotes_copy_class,
+menuitem.znotes_copy_class {
+  list-style-image: url("chrome://znotes_images/skin/edit-copy-16x16.png");
+}
+toolbar[iconsize="small"] .znotes_copy_class[disabled="true"],
+menuitem.znotes_copy_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/edit-copy-disabled-16x16.png");
+}
+
+.znotes_cut_class {
+  list-style-image: url("chrome://znotes_images/skin/edit-cut-24x24.png");
+}
+.znotes_cut_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/edit-cut-disabled-24x24.png");
+}
+toolbar[iconsize="small"] .znotes_cut_class,
+menuitem.znotes_cut_class {
+  list-style-image: url("chrome://znotes_images/skin/edit-cut-16x16.png");
+}
+toolbar[iconsize="small"] .znotes_cut_class[disabled="true"],
+menuitem.znotes_cut_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/edit-cut-disabled-16x16.png");
+}
+
+.znotes_paste_class {
+  list-style-image: url("chrome://znotes_images/skin/edit-paste-24x24.png");
+}
+.znotes_paste_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/edit-paste-disabled-24x24.png");
+}
+toolbar[iconsize="small"] .znotes_paste_class,
+menuitem.znotes_paste_class {
+  list-style-image: url("chrome://znotes_images/skin/edit-paste-16x16.png");
+}
+toolbar[iconsize="small"] .znotes_paste_class[disabled="true"],
+menuitem.znotes_paste_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/edit-paste-disabled-16x16.png");
+}
+
+.znotes_delete_class {
+  list-style-image: url("chrome://znotes_images/skin/edit-delete-24x24.png");
+}
+.znotes_delete_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/edit-delete-disabled-24x24.png");
+}
+toolbar[iconsize="small"] .znotes_delete_class,
+menuitem.znotes_delete_class {
+  list-style-image: url("chrome://znotes_images/skin/edit-delete-16x16.png");
+}
+toolbar[iconsize="small"] .znotes_delete_class[disabled="true"],
+menuitem.znotes_delete_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/edit-delete-disabled-16x16.png");
+}
+
+.znotes_undo_class {
+  list-style-image: url("chrome://znotes_images/skin/edit-undo-24x24.png");
+}
+.znotes_undo_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/edit-undo-disabled-24x24.png");
+}
+toolbar[iconsize="small"] .znotes_undo_class,
+menuitem.znotes_undo_class {
+  list-style-image: url("chrome://znotes_images/skin/edit-undo-16x16.png");
+}
+toolbar[iconsize="small"] .znotes_undo_class[disabled="true"],
+menuitem.znotes_undo_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/edit-undo-disabled-16x16.png");
+}
+
+.znotes_redo_class {
+  list-style-image: url("chrome://znotes_images/skin/edit-redo-24x24.png");
+}
+.znotes_redo_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/edit-redo-disabled-24x24.png");
+}
+toolbar[iconsize="small"] .znotes_redo_class,
+menuitem.znotes_redo_class {
+  list-style-image: url("chrome://znotes_images/skin/edit-redo-16x16.png");
+}
+toolbar[iconsize="small"] .znotes_redo_class[disabled="true"],
+menuitem.znotes_redo_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/edit-redo-disabled-16x16.png");
+}
+
+.znotes_selectall_class {
+  list-style-image: url("chrome://znotes_images/skin/edit-select-24x24.png");
+}
+.znotes_selectall_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/edit-select-disabled-24x24.png");
+}
+toolbar[iconsize="small"] .znotes_selectall_class,
+menuitem.znotes_selectall_class {
+  list-style-image: url("chrome://znotes_images/skin/edit-select-16x16.png");
+}
+toolbar[iconsize="small"] .znotes_selectall_class[disabled="true"],
+menuitem.znotes_selectall_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/edit-select-disabled-16x16.png");
+}
+
+/* spell */
+
+.znotes_addtodictionary_class {
+  list-style-image: url("chrome://znotes_images/skin/text-add-24x24.png");
+}
+.znotes_addtodictionary_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/text-add-disabled-24x24.png");
+}
+toolbar[iconsize="small"] .znotes_addtodictionary_class,
+menuitem.znotes_addtodictionary_class  {
+  list-style-image: url("chrome://znotes_images/skin/text-add-16x16.png");
+}
+toolbar[iconsize="small"] .znotes_addtodictionary_class[disabled="true"],
+menuitem.znotes_addtodictionary_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/text-add-disabled-16x16.png");
+}
+
+.znotes_undoaddtodictionary_class {
+  list-style-image: url("chrome://znotes_images/skin/text-delete-24x24.png");
+}
+.znotes_undoaddtodictionary_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/text-delete-disabled-24x24.png");
+}
+toolbar[iconsize="small"] .znotes_undoaddtodictionary_class,
+menuitem.znotes_undoaddtodictionary_class  {
+  list-style-image: url("chrome://znotes_images/skin/text-delete-16x16.png");
+}
+toolbar[iconsize="small"] .znotes_undoaddtodictionary_class[disabled="true"],
+menuitem.znotes_undoaddtodictionary_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/text-delete-disabled-16x16.png");
+}
+
+.znotes_spellcheckenabled_class {
+  list-style-image: url("chrome://znotes_images/skin/spellcheck-24x24.png");
+}
+.znotes_spellcheckenabled_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/spellcheck-disabled-24x24.png");
+}
+toolbar[iconsize="small"] .znotes_spellcheckenabled_class,
+menuitem.znotes_spellcheckenabled_class  {
+  list-style-image: url("chrome://znotes_images/skin/spellcheck-16x16.png");
+}
+toolbar[iconsize="small"] .znotes_spellcheckenabled_class[disabled="true"],
+menuitem.znotes_spellcheckenabled_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/spellcheck-disabled-16x16.png");
+}

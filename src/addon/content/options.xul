@@ -35,6 +35,7 @@
 <?xml-stylesheet type="text/css" href="chrome://znotes/skin/options.css" ?>
 
 <?xul-overlay href="chrome://znotes/content/common.xul" ?>
+<?xul-overlay href="chrome://znotes/content/common-edit.xul" ?>
 
 <!DOCTYPE window SYSTEM "chrome://znotes/locale/options.dtd">
 

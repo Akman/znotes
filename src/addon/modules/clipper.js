@@ -925,7 +925,7 @@ function processRule( aRule, aRules, aSubstitution, aDocument, aSheet,
             ];
           }
         }
-        // TODO: .disabled === true ?
+        // TODO: what if aRule.styleSheet.disabled === true ?
         if ( aRule.styleSheet && !aRule.styleSheet.disabled ) {
           processStyleSheet( aRules, aSubstitution, aDocument,
             aRule.styleSheet, url, aGroupId, aDirectory, aLoader, aFlags,
@@ -1290,7 +1290,7 @@ function processStyleSheet( aRules, aSubstitution, aDocument, aSheet, aFileName,
 function collectStyles( aRules, aSubstitution, aDocument, aGroupId, aDirectory,
   aLoader, aFlags ) {
   for ( var i = 0; i < aDocument.styleSheets.length; i++ ) {
-    // TODO: .disabled === true ?
+    // TODO: what if aDocument.styleSheets.disabled === true ?
     if ( aDocument.styleSheets[i] && !aDocument.styleSheets[i].disabled ) {
       processStyleSheet( aRules, aSubstitution, aDocument,
         aDocument.styleSheets[i], null, aGroupId, aDirectory, aLoader, aFlags );
@@ -1323,8 +1323,8 @@ function setElementAttribute( anElement, aName, aValue ) {
   try {
     anElement.setAttribute( aName, aValue );
   } catch ( e ) {
-    // TODO: Set attribute "data" of "object" element throws NS_ERROR_UNEXPECTED
-    // TODO: Set attribute "src" of "embed" element throws NS_ERROR_UNEXPECTED
+    // TODO: set attribute "data" of "object" element throws NS_ERROR_UNEXPECTED
+    // TODO: set attribute "src" of "embed" element throws NS_ERROR_UNEXPECTED
     log.warn(
       e + "\n" +
       anElement.nodeName + "." + aName + ": " + aValue + "\n" +
@@ -1628,13 +1628,10 @@ function inspectElement( aLinks, aRules, aSubstitution, anElement, aDocumentURL,
                     if ( entry.exists() ) {
                       entry.remove( false );
                     }
+                    // TODO: set `referer` or `request method` or `header`
+                    // TODO: after the channel has been opened then throws
                     // TODO: NS_ERROR_IN_PROGRESS
-                    // http://cdn.api.twitter.com/1/urls/count.json?url=http%3A%2F%2Fwww.wikihow.com%2FDownload-Google-Books&callback=twttr.receiveCount
-                    /*
-                    If set nsIHttpChannel.referer after the channel has been opened.
-                    If set nsIHttpChannel.requestMethod after the channel has been opened.
-                    If called nsIHttpChannel.setRequestHeader() after the channel has been opened.
-                    */
+                    // TODO: http://cdn.api.twitter.com/1/urls/count.json?url=http%3A%2F%2Fwww.wikihow.com%2FDownload-Google-Books&callback=twttr.receiveCount
                     log.debug( "script/noscript : " + getErrorName( status ) + "\n" + job.getURL() );
                   } else {
                     setElementAttribute(
@@ -1676,7 +1673,7 @@ function inspectElement( aLinks, aRules, aSubstitution, anElement, aDocumentURL,
               disabled: anElement.disabled,
               title: anElement.getAttribute( "title" )
             }
-            // TODO: links
+            // TODO: links with rel="alternate stylesheet"
             /*
             type: text/css
             href: http://css-tricks.com/examples/AlternateStyleSheets/stylealt2.css
@@ -2176,7 +2173,7 @@ function createStyles( aDocument, aLinks, aRules, aBaseURL, aFile, aDirectory,
       prefix = "";
       do {
         aCSSFile = aDirectory.clone();
-        // TODO: sheet fileName must corresponded to document fileName
+        // TODO: stylesheet fileName must corresponds to document fileName
         aCSSFile.append( prefix + "styles.css" );
         prefix += "_";
       } while ( aCSSFile.exists() && !aCSSFile.isDirectory() );
