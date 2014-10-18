@@ -2182,6 +2182,8 @@ var CSSUtils = function() {
     }
   }
 
+  // PUBLIC
+  
   function Namespaces( uri ) {
     this.mDefault = uri;
     this.mPrefixies = {};
@@ -2261,15 +2263,16 @@ var CSSUtils = function() {
     }
   }
   Namespaces.knowns = {
-    "xml"   : "http://www.w3.org/XML/1998/namespace",
-    "xmlns" : "http://www.w3.org/2000/xmlns/",
-    "html"  : "http://www.w3.org/1999/xhtml",
-    "math"  : "http://www.w3.org/1998/Math/MathML",
-    "svg"   : "http://www.w3.org/2000/svg",
-    "xlink" : "http://www.w3.org/1999/xlink",
-    "og"    : "http://ogp.me/ns#", // "http://ogp.me/ns/fb#"
-    "fb"    : "http://ogp.me/ns/fb#", // "http://www.facebook.com/2008/fbml"
-    "g"     : "http://base.google.com/ns/1.0"
+    "xml"     : "http://www.w3.org/XML/1998/namespace",
+    "xmlns"   : "http://www.w3.org/2000/xmlns/",
+    "html"    : "http://www.w3.org/1999/xhtml",
+    "math"    : "http://www.w3.org/1998/Math/MathML",
+    "svg"     : "http://www.w3.org/2000/svg",
+    "xlink"   : "http://www.w3.org/1999/xlink",
+    "og"      : "http://ogp.me/ns#",
+    "fb"      : "http://ogp.me/ns/fb#",
+    "article" : "http://ogp.me/ns/article#",
+    "g"       : "http://base.google.com/ns/1.0"
   }
   Namespaces.create = function( uri ) {
     var result = new Namespaces( uri );

@@ -269,33 +269,22 @@ function checkURL( url ) {
 };
 
 function getValidFileNameChunk( name ) {
-  name = decodeURIComponent( name );
-  name = name.replace( /\u005C/g, "\u0000" )  // '\'
-             .replace( /\u002F/g, "\u0000" )  // '/'
-             .replace( /\u003A/g, "\u0000" )  // ':'
-             .replace( /\u002A/g, "\u0000" )  // '*'
-             .replace( /\u003F/g, "\u0000" )  // '?'
-             .replace( /\u0022/g, "\u0000" )  // '"'
-             .replace( /\u003C/g, "\u0000" )  // '<'
-             .replace( /\u003E/g, "\u0000" )  // '>'
-             .replace( /\u007C/g, "\u0000" ); // '|'
-             /*
-             .replace( /[\"\?!~`]+/g,    "" )
-             .replace( /[\*\&]+/g,      "+" )
-             .replace( /[\\\/\|\:;]+/g, "-" )
-             .replace( /[\<]+/g,        "(" )
-             .replace( /[\>]+/g,        ")" )
-             .replace( /[\s]+/g,        "_" )
-             .replace( /[%]+/g,         "@" )
-             */
+  name = decodeURIComponent( name ).replace( /\u005C/g, "\u0000" )  // '\'
+                                   .replace( /\u002F/g, "\u0000" )  // '/'
+                                   .replace( /\u003A/g, "\u0000" )  // ':'
+                                   .replace( /\u002A/g, "\u0000" )  // '*'
+                                   .replace( /\u003F/g, "\u0000" )  // '?'
+                                   .replace( /\u0022/g, "\u0000" )  // '"'
+                                   .replace( /\u003C/g, "\u0000" )  // '<'
+                                   .replace( /\u003E/g, "\u0000" )  // '>'
+                                   .replace( /\u007C/g, "\u0000" ); // '|'
   name = name.split( "\u0000" );
   return name[name.length - 1];
 };
 
-// TODO: must returns URL-encoded name
 function getSuitableFileName( url, contentType, defaultType ) {
   var uri = ioService.newURI( url, null, null );
-  var query, name, mime, path, ext, mime_ext, index;
+  var query, name, mime, path, ext, mime_ext, index, file_name;
   if ( uri.scheme.toLowerCase() === "mailbox" ) {
     mime = ( contentType ? contentType : ( defaultType ? defaultType : "" ) );
     try {
@@ -333,6 +322,14 @@ function getSuitableFileName( url, contentType, defaultType ) {
     mime = path.substring( path.indexOf( ":" ) + 1, index );
     name = "data_" + createUUID().toLowerCase();
     ext = "";
+  } else if ( uri.scheme.toLowerCase() === "about" ) {
+    mime = ( contentType ? contentType : ( defaultType ? defaultType : "" ) );
+    name = "noname_" + createUUID().toLowerCase();
+    ext = "";
+  } else if ( uri.scheme.toLowerCase() === "javascript" ) {
+    mime = ( contentType ? contentType : ( defaultType ? defaultType : "" ) );
+    name = "noname_" + createUUID().toLowerCase();
+    ext = "";
   } else {
     mime = ( contentType ? contentType : ( defaultType ? defaultType : "" ) );
     try {
@@ -361,6 +358,17 @@ function getSuitableFileName( url, contentType, defaultType ) {
   }
   if ( mime_ext.length ) {
     ext = mime_ext;
+  }
+  /**
+  Maximum Path Length Limitation
+  @see http://msdn.microsoft.com/en-us/library/aa365247.aspx#maxpath
+  */
+  var MAXIMUM_COMPONENT_LENGTH = 256;
+  name = name.substring( 0, MAXIMUM_COMPONENT_LENGTH - 1 );
+  ext = ext.substring( 0, MAXIMUM_COMPONENT_LENGTH - 1 );
+  if ( ( name.length + ext.length ) > ( MAXIMUM_COMPONENT_LENGTH - 1 ) ) {
+    ext = ext.substring( 0, 3 );
+    name = name.substring( 0, MAXIMUM_COMPONENT_LENGTH - ext.length - 1 );
   }
   return {
     name: name,
@@ -396,6 +404,8 @@ function createFileEntry( dir, name ) {
       parseInt( "0644", 8 ),
       0
     );
+  } catch ( e ) {
+    log.warn( e );
   } finally {
     ostream.close();
   }
@@ -427,10 +437,16 @@ function createEntriesToSaveFrame( dir, name, ext, suffix ) {
       parseInt( "0644", 8 ),
       0
     );
+  } catch ( e ) {
+    log.warn( e );
   } finally {
     ostream.close();
   }
-  dirEntry.create( Ci.nsIFile.DIRECTORY_TYPE, parseInt( "0774", 8 ) );
+  try {
+    dirEntry.create( Ci.nsIFile.DIRECTORY_TYPE, parseInt( "0774", 8 ) );
+  } catch ( e ) {
+    log.warn( e );
+  }
   return {
     fileEntry: fileEntry.clone(),
     dirEntry: dirEntry.clone()
@@ -546,11 +562,20 @@ ChannelObserver.prototype = {
   },
   onStopRequest: function( aRequest, aContext, aStatusCode ) {
     this.mStatus = 1;
-    this.mBufferedOutputStream.flush();
-    if ( this.mFileOutputStream instanceof Ci.nsISafeOutputStream ) {
-      this.mFileOutputStream.finish();
-    } else {
-      this.mFileOutputStream.close();
+    try {
+      this.mBufferedOutputStream.flush();
+    } catch ( e ) {
+      log.warn( e );
+    }
+    // TODO: NS_ERROR_FILE_NOT_FOUND
+    try {
+      if ( this.mFileOutputStream instanceof Ci.nsISafeOutputStream ) {
+        this.mFileOutputStream.finish();
+      } else {
+        this.mFileOutputStream.close();
+      }
+    } catch ( e ) {
+      log.warn( e );
     }
     if ( this.mListener && this.mListener.onstop ) {
       this.mListener.onstop( this.mChannel, aRequest, aContext, aStatusCode );
@@ -652,7 +677,7 @@ function parsePrefixAttribute( value ) {
   return Object.keys( result ).length ? result : null;
 };
 
-function setupElementNamespaces( anElement, aNamespaces ) {
+function collectElementNamespaces( anElement, aNamespaces ) {
   var uri, prefix, prefixies = null;
   for ( var name, i = anElement.attributes.length - 1; i >= 0; i-- ) {
     name = anElement.attributes[i].name.toLowerCase();
@@ -687,7 +712,7 @@ function splitNodeName( nodeName ) {
 };
 
 function inspectRule( aSubstitution, aGlobalNamespaces, aLocalNamespaces,
-                      aRule, aSheetURL, aDocumentURL, aDirectory, aLoader,
+                      aRule, aSheetURL, aGroupId, aDirectory, aLoader,
                       aFlags, aCallback, aLines, anIndex ) {
   var selectors, selector, substitute, prefix, ns, flag = false;
   var selectorText = aRule.selectorText ? aRule.selectorText : "";
@@ -701,8 +726,8 @@ function inspectRule( aSubstitution, aGlobalNamespaces, aLocalNamespaces,
       var url = resolveURL( s2, aSheetURL );
       if ( checkURL( url ) ) {
         addJobObserver(
-          aLoader.createJob( aDirectory, url, aSheetURL, "",
-                             aDocumentURL ),
+          aLoader.createJob( aDirectory, url, aSheetURL, "" /* contentType */,
+                             aGroupId ),
           aCallback,
           aLines,
           anIndex
@@ -758,8 +783,8 @@ function inspectRule( aSubstitution, aGlobalNamespaces, aLocalNamespaces,
         return null;
       } );
     } catch ( e ) {
-      log.debug( selectorText );
-      log.warn( e + "\n" + Utils.dumpStack() );
+      log.warn( "inspectRule()\n" + selectorText + "\n" +
+        e + "\n" + Utils.dumpStack() );
     }
   }
   cssText =
@@ -767,14 +792,13 @@ function inspectRule( aSubstitution, aGlobalNamespaces, aLocalNamespaces,
   return cssText;
 };
 
-function processRule( aRule, aRules, aSubstitution,
-                      aDocument, aSheet, aDirectory, aLoader, aFlags ) {
+function processRule( aRule, aRules, aSubstitution, aDocument, aSheet,
+  aGroupId, aDirectory, aLoader, aFlags ) {
   var sheet, matchMedia, matchSupports, matchDocument;
   var fileName, filePrefix, sheetFile, url;
   var cssIndex, cssText;
   var prefixLines = null, suffixLines = null;
   var globalNamespaces, localNamespaces;
-  var aDocumentURL = aDocument.documentURI;
   var aSheetURL = resolveSheetURL( aDocument, aSheet );
   globalNamespaces = aRules.namespaces;
   // get current sheet
@@ -793,7 +817,7 @@ function processRule( aRule, aRules, aSubstitution,
       if ( aRule.cssText ) {
         cssIndex = sheet.lines.length;
         cssText = inspectRule( aSubstitution, globalNamespaces, localNamespaces,
-                               aRule, aSheetURL, aDocumentURL,
+                               aRule, aSheetURL, aGroupId,
                                aDirectory, aLoader, aFlags,
           function( job, lines, index ) {
             if ( job.getStatus() ) {
@@ -816,7 +840,7 @@ function processRule( aRule, aRules, aSubstitution,
       if ( aRule.cssText ) {
         cssIndex = sheet.lines.length;
         cssText = inspectRule( aSubstitution, globalNamespaces, localNamespaces,
-                               aRule, aSheetURL, aDocumentURL,
+                               aRule, aSheetURL, aGroupId,
                                aDirectory, aLoader, aFlags,
           function( job, lines, index ) {
             if ( job.getStatus() ) {
@@ -862,6 +886,8 @@ function processRule( aRule, aRules, aSubstitution,
       }
       if ( matchMedia && aRule.styleSheet ) {
         url = null;
+        prefixLines = null;
+        suffixLines = null;
         if ( aFlags & 0x01000000 /* SAVE_STYLESHEETS_IN_SEPARATE_FILES */ ) {
           fileName = getSuitableFileName( aRule.styleSheet.href, "text/css" );
           filePrefix = "";
@@ -873,12 +899,14 @@ function processRule( aRule, aRules, aSubstitution,
           writeFileEntry( sheetFile, "utf-8", "" );
           url = sheetFile.leafName;
           cssText = '@import url( "' + url + '" )';
-          if ( aRule.media && aRule.media.mediaText ) {
+          if ( !( aFlags & 0x10000000 /* SAVE_ACTIVE_RULES_ONLY */ ) &&
+            aRule.media && aRule.media.mediaText ) {
             cssText += " " + aRule.media.mediaText;
           }
           sheet.lines.push( cssText + ";" );
         } else if ( aFlags & 0x00100000 /* SAVE_STYLESHEETS_IN_SINGLE_FILE */ ) {
-          if ( aRule.media && aRule.media.mediaText ) {
+          if ( !( aFlags & 0x10000000 /* SAVE_ACTIVE_RULES_ONLY */ ) &&
+            aRule.media && aRule.media.mediaText ) {
             prefixLines = [
               "@media " + aRule.media.mediaText + " {"
             ];
@@ -888,19 +916,21 @@ function processRule( aRule, aRules, aSubstitution,
           }
         } else {
           if ( !( aFlags & 0x10000000 /* SAVE_ACTIVE_RULES_ONLY */ ) &&
-               aRule.media && aRule.media.mediaText ) {
-              prefixLines = [
-                "@media " + aRule.media.mediaText + " {"
-              ];
-              suffixLines = [
-                "}"
-              ];
+            aRule.media && aRule.media.mediaText ) {
+            prefixLines = [
+              "@media " + aRule.media.mediaText + " {"
+            ];
+            suffixLines = [
+              "}"
+            ];
           }
         }
-        processStyleSheet( aRules, aSubstitution, aDocument, aRule.styleSheet,
-                           url, aDirectory, aLoader, aFlags,
-                           prefixLines, suffixLines );
-
+        // TODO: .disabled === true ?
+        if ( aRule.styleSheet && !aRule.styleSheet.disabled ) {
+          processStyleSheet( aRules, aSubstitution, aDocument,
+            aRule.styleSheet, url, aGroupId, aDirectory, aLoader, aFlags,
+            prefixLines, suffixLines );
+        }
       }
       break;
     case Ci.nsIDOMCSSRule.SUPPORTS_RULE:
@@ -927,8 +957,8 @@ function processRule( aRule, aRules, aSubstitution,
       }
       if ( matchSupports ) {
         for ( var j = 0; j < aRule.cssRules.length; j++ ) {
-          processRule( aRule.cssRules[j], aRules, aSubstitution,
-                       aDocument, aSheet, aDirectory, aLoader, aFlags );
+          processRule( aRule.cssRules[j], aRules, aSubstitution, aDocument,
+            aSheet, aGroupId, aDirectory, aLoader, aFlags );
         }
       }
       if ( !( aFlags & 0x10000000 /* SAVE_ACTIVE_RULES_ONLY */ ) ) {
@@ -963,8 +993,8 @@ function processRule( aRule, aRules, aSubstitution,
       }
       if ( matchMedia ) {
         for ( var j = 0; j < aRule.cssRules.length; j++ ) {
-          processRule( aRule.cssRules[j], aRules, aSubstitution,
-                       aDocument, aSheet, aDirectory, aLoader, aFlags );
+          processRule( aRule.cssRules[j], aRules, aSubstitution, aDocument,
+            aSheet, aGroupId, aDirectory, aLoader, aFlags );
         }
       }
       if ( !( aFlags & 0x10000000 /* SAVE_ACTIVE_RULES_ONLY */ ) ) {
@@ -1029,8 +1059,8 @@ function processRule( aRule, aRules, aSubstitution,
       }
       if ( matchDocument ) {
         for ( var j = 0; j < aRule.cssRules.length; j++ ) {
-          processRule( aRule.cssRules[j], aRules, aSubstitution,
-                       aDocument, aSheet, aDirectory, aLoader, aFlags );
+          processRule( aRule.cssRules[j], aRules, aSubstitution, aDocument,
+            aSheet, aGroupId, aDirectory, aLoader, aFlags );
         }
       }
       if ( !( aFlags & 0x10000000 /* SAVE_ACTIVE_RULES_ONLY */ ) ) {
@@ -1107,8 +1137,8 @@ function processRule( aRule, aRules, aSubstitution,
       */
       sheet.lines.push( "@keyframes " + aRule.name + " {" );
       for ( var j = 0; j < aRule.cssRules.length; j++ ) {
-        processRule( aRule.cssRules[j], aRules, aSubstitution,
-                     aDocument, aSheet, aDirectory, aLoader, aFlags );
+        processRule( aRule.cssRules[j], aRules, aSubstitution, aDocument,
+          aSheet, aGroupId, aDirectory, aLoader, aFlags );
       }
       sheet.lines.push( "}" );
       break;
@@ -1200,13 +1230,9 @@ function collectSheetNamespaces( aNamespaces, aSheet ) {
   }
 };
 
-function processStyleSheet( aRules, aSubstitution, aDocument, aSheet,
-                            aSheetURL, aDirectory, aLoader, aFlags,
-                            aPrefixLines, aSuffixLines ) {
-  var sheet, namespaces;
-  if ( !aSheet || aSheet.disabled ) {
-    return;
-  }
+function processStyleSheet( aRules, aSubstitution, aDocument, aSheet, aFileName,
+  aGroupId, aDirectory, aLoader, aFlags, aPrefixLines, aSuffixLines ) {
+  var sheet, namespaces, matchMedia;
   if ( aSheet.href ) {
     for ( var i = 0; i < aRules.sheets.length; i++ ) {
       if ( aRules.sheets[i].href === aSheet.href ) {
@@ -1214,12 +1240,32 @@ function processStyleSheet( aRules, aSubstitution, aDocument, aSheet,
       }
     }
   }
-  namespaces = CSSUtils.Namespaces.create( aDocument.documentElement.namespaceURI );
+  matchMedia = true;
+  if ( aFlags & 0x10000000 /* SAVE_ACTIVE_RULES_ONLY */ ) {
+    if ( aDocument.defaultView &&
+         aSheet.media && aSheet.media.mediaText ) {
+      matchMedia = aDocument.defaultView.matchMedia( aSheet.media.mediaText );
+      matchMedia = matchMedia && matchMedia.matches;
+    }
+  }
+  if ( !matchMedia ) {
+    return;
+  }
+  namespaces = CSSUtils.Namespaces.create(
+    aDocument.documentElement.namespaceURI );
   collectSheetNamespaces( namespaces, aSheet );
+  if ( !( aFlags & 0x01000000 /* SAVE_STYLESHEETS_IN_SEPARATE_FILES */ ) ) {
+    if ( !aRules.namespaces ) {
+      aRules.namespaces = namespaces.clone();
+    } else {
+      aRules.namespaces.mixin( namespaces );
+    }
+  }
   sheet = {
+    media: aSheet.media,
     sheet: aSheet,
     owner: !!aSheet.ownerRule,
-    url: aSheetURL,
+    fname: aFileName,
     href: aSheet.href,
     namespaces: namespaces,
     lines: []
@@ -1230,16 +1276,9 @@ function processStyleSheet( aRules, aSubstitution, aDocument, aSheet,
       sheet.lines.push( line );
     }
   }
-  if ( !( aFlags & 0x01000000 /* SAVE_STYLESHEETS_IN_SEPARATE_FILES */ ) ) {
-    if ( !aRules.namespaces ) {
-      aRules.namespaces = namespaces.clone();
-    } else {
-      aRules.namespaces.mixin( namespaces );
-    }
-  }
   for ( var i = 0; i < aSheet.cssRules.length; i++ ) {
-    processRule( aSheet.cssRules[i], aRules, aSubstitution,
-                 aDocument, aSheet, aDirectory, aLoader, aFlags );
+    processRule( aSheet.cssRules[i], aRules, aSubstitution, aDocument,
+      aSheet, aGroupId, aDirectory, aLoader, aFlags );
   }
   if ( aSuffixLines ) {
     for each ( var line in aSuffixLines ) {
@@ -1248,12 +1287,14 @@ function processStyleSheet( aRules, aSubstitution, aDocument, aSheet,
   }
 };
 
-function collectStyles( aRules, aSubstitution, aDocument, aDirectory, aLoader,
-                        aFlags ) {
+function collectStyles( aRules, aSubstitution, aDocument, aGroupId, aDirectory,
+  aLoader, aFlags ) {
   for ( var i = 0; i < aDocument.styleSheets.length; i++ ) {
-    processStyleSheet( aRules, aSubstitution, aDocument,
-                       aDocument.styleSheets[i], null,
-                       aDirectory, aLoader, aFlags );
+    // TODO: .disabled === true ?
+    if ( aDocument.styleSheets[i] && !aDocument.styleSheets[i].disabled ) {
+      processStyleSheet( aRules, aSubstitution, aDocument,
+        aDocument.styleSheets[i], null, aGroupId, aDirectory, aLoader, aFlags );
+    }
   }
 };
 
@@ -1522,8 +1563,8 @@ function addJobObserver( aJob, aCallback, aLines, anIndex ) {
   var anObserver = {
     onJobStopped: function( anEvent ) {
       if ( anEvent.getData().job === aJob ) {
-        aCallback( aJob, aLines, anIndex )
         aLoader.removeObserver( anObserver );
+        aCallback( aJob, aLines, anIndex )
       }
     }
   };
@@ -1532,8 +1573,8 @@ function addJobObserver( aJob, aCallback, aLines, anIndex ) {
 };
 
 function inspectElement( aLinks, aRules, aSubstitution, anElement, aDocumentURL,
-                         aBaseURL, aFrames, aDirectory, aLoader, aFlags ) {
-  var anURI, anURL, aContentType, aDocument, aRelList;
+  aBaseURL, aFrames, aGroupId, aDirectory, aLoader, aFlags ) {
+  var anURI, anURL, aContentType, aFrame, aDocument, aRelList, aLink;
   var frameEntries, fileNameObj, oldCSSText, newCSSText;
   if ( anElement.nodeType !== Ci.nsIDOMNode.ELEMENT_NODE ) {
     return anElement;
@@ -1569,20 +1610,6 @@ function inspectElement( aLinks, aRules, aSubstitution, anElement, aDocumentURL,
         break;
       case "base":
       case "style":
-        /*
-        HTMLStyleElement
-        .media - a DOMString representing the intended destination
-                 medium for style information
-        .type - a DOMString representing the type of style being applied
-                by this statement
-        .disabled - a Boolean value, with true if the stylesheet is disabled,
-                    and false if not
-        .sheet - read only - returns the StyleSheet object associated with
-                 the given element, or null if there is none
-        .scoped - a Boolean value indicating if the element applies to
-                  the whole document (false) or only to the
-                  parent's sub-tree (true)
-        */
         return anElement.parentNode.removeChild( anElement );
       case "script":
       case "noscript":
@@ -1592,8 +1619,8 @@ function inspectElement( aLinks, aRules, aSubstitution, anElement, aDocumentURL,
             anURL = resolveURL( anElement.src, aBaseURL );
             if ( checkURL( anURL ) ) {
               addJobObserver(
-                aLoader.createJob( aDirectory, anURL, aDocumentURL, aContentType,
-                                   aDocumentURL /* groupId */ ),
+                aLoader.createJob( aDirectory, anURL, aDocumentURL,
+                  aContentType, aGroupId ),
                 function( job ) {
                   var entry = job.getEntry();
                   var status = job.getStatus();
@@ -1601,7 +1628,14 @@ function inspectElement( aLinks, aRules, aSubstitution, anElement, aDocumentURL,
                     if ( entry.exists() ) {
                       entry.remove( false );
                     }
-                    log.debug( "script/noscript : " + getErrorName( status ) + " : " + job.getURL() );
+                    // TODO: NS_ERROR_IN_PROGRESS
+                    // http://cdn.api.twitter.com/1/urls/count.json?url=http%3A%2F%2Fwww.wikihow.com%2FDownload-Google-Books&callback=twttr.receiveCount
+                    /*
+                    If set nsIHttpChannel.referer after the channel has been opened.
+                    If set nsIHttpChannel.requestMethod after the channel has been opened.
+                    If called nsIHttpChannel.setRequestHeader() after the channel has been opened.
+                    */
+                    log.debug( "script/noscript : " + getErrorName( status ) + "\n" + job.getURL() );
                   } else {
                     setElementAttribute(
                       anElement,
@@ -1623,14 +1657,62 @@ function inspectElement( aLinks, aRules, aSubstitution, anElement, aDocumentURL,
           anElement.getAttribute( "rel" ).toLowerCase().split( /\s+/ ) : [];
         if ( aRelList.length ) {
           if ( aRelList.indexOf( "stylesheet" ) !== -1 ) {
-            if ( anElement.href && anElement.media &&
-                 !( aFlags & 0x10000000 /* SAVE_ACTIVE_RULES_ONLY */ ) ) {
-              aLinks.push( {
-                href: anElement.href,
-                media: anElement.media
-              } );
+            if ( !anElement.disabled && anElement.sheet &&
+              !anElement.sheet.disabled ) {
+              return anElement.parentNode.removeChild( anElement );
             }
-            return anElement.parentNode.removeChild( anElement );
+            if ( anElement.href ) {
+              anURL = resolveURL( anElement.href, aBaseURL );
+              if ( checkURL( anURL ) ) {
+                setElementAttribute( anElement, "href", anURL );
+              }
+            }
+            aLink = {
+              type: aContentType,
+              href: anElement.href,
+              hreflang: anElement.hreflang,
+              media: anElement.media,
+              rel: aRelList.join( " " ),
+              disabled: anElement.disabled,
+              title: anElement.getAttribute( "title" )
+            }
+            // TODO: links
+            /*
+            type: text/css
+            href: http://css-tricks.com/examples/AlternateStyleSheets/stylealt2.css
+            hreflang: 
+            rel: alternate stylesheet
+            media: ''
+            disabled: false
+            title: alternate 2
+            ----------
+            type: text/css
+            href: http://css-tricks.com/examples/AlternateStyleSheets/stylealt1.css
+            hreflang: 
+            rel: alternate stylesheet
+            media: ''
+            disabled: false
+            title: alternate 1
+            ----------
+            type: text/css
+            href: http://css-tricks.com/examples/AlternateStyleSheets/style.css
+            hreflang: 
+            rel: stylesheet
+            media: ''
+            disabled: false
+            title: null
+            */
+            log.debug( "LINK:\n" + 
+              "type: '" + aLink.type + "'\n" +
+              "href: '" + aLink.href + "'\n" +
+              "hreflang: '" + aLink.hreflang + "'\n" +
+              "rel: '" + aLink.rel + "'\n" +
+              "media: '" + ( aLink.media ? aLink.media.mediaText : "" ) + "'\n" +
+              "disabled: " + aLink.disabled + "\n" +
+              "title: '" + aLink.title + "'"
+            );
+            aLinks.push( aLink );
+            return anElement;
           }
           if ( aRelList.indexOf( "icon" ) !== -1 ||
                aRelList.indexOf( "shortcut" ) !== -1 ) {
@@ -1639,7 +1721,7 @@ function inspectElement( aLinks, aRules, aSubstitution, anElement, aDocumentURL,
               if ( checkURL( anURL ) ) {
                 addJobObserver(
                   aLoader.createJob( aDirectory, anURL, aDocumentURL,
-                                     aContentType, aDocumentURL /* groupId */ ),
+                    aContentType, aGroupId ),
                   function( job ) {
                     var entry = job.getEntry();
                     var status = job.getStatus();
@@ -1663,14 +1745,19 @@ function inspectElement( aLinks, aRules, aSubstitution, anElement, aDocumentURL,
             return anElement;
           }
         }
+        // @see http://www.w3.org/TR/html5/links.html#rel-alternate
+        // If the alternate keyword is used with the type attribute
+        // set to the value application/rss+xml or
+        // the value application/atom+xml
         if ( aContentType === "application/rss+xml" ||
+             aContentType === "application/atom+xml" ||
              aContentType === "application/opensearchdescription+xml" ) {
           if ( anElement.href ) {
             anURL = resolveURL( anElement.href, aBaseURL );
             if ( checkURL( anURL ) ) {
               addJobObserver(
                 aLoader.createJob( aDirectory, anURL, aDocumentURL,
-                                   aContentType, aDocumentURL /* groupId */ ),
+                  aContentType, aGroupId ),
                 function( job ) {
                   var entry = job.getEntry();
                   var status = job.getStatus();
@@ -1705,8 +1792,8 @@ function inspectElement( aLinks, aRules, aSubstitution, anElement, aDocumentURL,
           anURL = resolveURL( anElement.src, aBaseURL );
           if ( checkURL( anURL ) ) {
             addJobObserver(
-              aLoader.createJob( aDirectory, anURL, aDocumentURL, "",
-                                 aDocumentURL /* groupId */ ),
+              aLoader.createJob( aDirectory, anURL, aDocumentURL,
+                "" /* contentType */, aGroupId ),
               function( job ) {
                 var entry = job.getEntry();
                 var status = job.getStatus();
@@ -1735,8 +1822,8 @@ function inspectElement( aLinks, aRules, aSubstitution, anElement, aDocumentURL,
           anURL = resolveURL( anElement.src, aBaseURL );
           if ( checkURL( anURL ) ) {
             addJobObserver(
-              aLoader.createJob( aDirectory, anURL, aDocumentURL, aContentType,
-                                 aDocumentURL /* groupId */ ),
+              aLoader.createJob( aDirectory, anURL, aDocumentURL,
+                aContentType, aGroupId ),
               function( job ) {
                 var entry = job.getEntry();
                 var status = job.getStatus();
@@ -1766,7 +1853,7 @@ function inspectElement( aLinks, aRules, aSubstitution, anElement, aDocumentURL,
           if ( checkURL( anURL ) ) {
             addJobObserver(
               aLoader.createJob( aDirectory, anURL, aDocumentURL,
-                                 aContentType, aDocumentURL /* groupId */ ),
+                aContentType, aGroupId ),
               function( job ) {
                 var entry = job.getEntry();
                 var status = job.getStatus();
@@ -1797,8 +1884,8 @@ function inspectElement( aLinks, aRules, aSubstitution, anElement, aDocumentURL,
           anURL = resolveURL( anElement.background, aBaseURL );
           if ( checkURL( anURL ) ) {
             addJobObserver(
-              aLoader.createJob( aDirectory, anURL, aDocumentURL, "",
-                                 aDocumentURL /* groupId */ ),
+              aLoader.createJob( aDirectory, anURL, aDocumentURL,
+                "" /* contentType */, aGroupId ),
               function( job ) {
                 var entry = job.getEntry();
                 var status = job.getStatus();
@@ -1828,7 +1915,7 @@ function inspectElement( aLinks, aRules, aSubstitution, anElement, aDocumentURL,
               if ( checkURL( anURL ) ) {
                 addJobObserver(
                   aLoader.createJob( aDirectory, anURL, aDocumentURL,
-                                     "", aDocumentURL /* groupId */ ),
+                    "" /* contentType */, aGroupId ),
                   function( job ) {
                     var entry = job.getEntry();
                     var status = job.getStatus();
@@ -1882,49 +1969,42 @@ function inspectElement( aLinks, aRules, aSubstitution, anElement, aDocumentURL,
         break;
       case "frame":
       case "iframe":
-        if ( aFlags & 0x00000010 /* SAVE_FRAMES */ ) {
-          aDocument = aFrames.shift();
-          if ( aDocument ) {
-            fileNameObj = getSuitableFileName(
-              aDocument.documentURI,
-              aDocument.contentType
-            );
-            if ( aFlags & 0x00000100 /* SAVE_FRAMES_IN_SEPARATE_DIRECTORY */ ) {
-              frameEntries = createEntriesToSaveFrame(
-                aDirectory,
-                fileNameObj.name,
-                fileNameObj.ext,
-                "_files"
-              );
-            } else {
-              frameEntries = {
-                fileEntry: createFileEntry(
-                  aDirectory,
-                  fileNameObj.name +
-                  ( fileNameObj.ext ? "." + fileNameObj.ext : "" )
-                ),
-                dirEntry: aDirectory.clone()
-              };
-            }
-            saveDocument(
-              aDocument,
-              { value: null } /* aResult */,
-              frameEntries.fileEntry,
-              frameEntries.dirEntry,
-              aLoader,
-              aFlags
-            );
-            setElementAttribute(
-              anElement,
-              "src",
-              encodeURI( frameEntries.fileEntry.leafName )
-            );
-          } else {
-            return anElement.parentNode.removeChild( anElement );
-          }
-        } else {
+        if ( !( aFlags & 0x00000010 /* SAVE_FRAMES */ ) ) {
           return anElement.parentNode.removeChild( anElement );
         }
+        aDocument = aFrames.shift();
+        fileNameObj =
+          getSuitableFileName( aDocument.documentURI, aDocument.contentType );
+        if ( aFlags & 0x00000100 /* SAVE_FRAMES_IN_SEPARATE_DIRECTORY */ ) {
+          frameEntries = createEntriesToSaveFrame(
+            aDirectory,
+            fileNameObj.name,
+            fileNameObj.ext,
+            "_files"
+          );
+        } else {
+          frameEntries = {
+            fileEntry: createFileEntry(
+              aDirectory,
+              fileNameObj.name +
+              ( fileNameObj.ext ? "." + fileNameObj.ext : "" )
+            ),
+            dirEntry: aDirectory.clone()
+          };
+        }
+        setElementAttribute(
+          anElement,
+          "src",
+          encodeURI( frameEntries.fileEntry.leafName )
+        );
+        saveDocument(
+          aDocument,
+          { value: null } /* aResult */,
+          frameEntries.fileEntry,
+          frameEntries.dirEntry,
+          aLoader,
+          aFlags
+        );
         break;
     }
     anElement.removeAttribute( "_base_href" );
@@ -1933,7 +2013,7 @@ function inspectElement( aLinks, aRules, aSubstitution, anElement, aDocumentURL,
     if ( anElement.style && anElement.style.cssText ) {
       oldCSSText = anElement.style.cssText;
       newCSSText = inspectRule( aSubstitution, null /* globalNamespaces */,
-        null /* localNamespaces */, anElement.style, aBaseURL, aDocumentURL,
+        null /* localNamespaces */, anElement.style, aBaseURL, aGroupId,
         aDirectory, aLoader, aFlags,
         function( job ) {
           var entry = job.getEntry();
@@ -1964,10 +2044,11 @@ function inspectElement( aLinks, aRules, aSubstitution, anElement, aDocumentURL,
   return anElement;
 };
 
-function createStyles( aDocument, aLinks, aRules, aBaseURL, aFile, aDirectory, aFlags ) {
+function createStyles( aDocument, aLinks, aRules, aBaseURL, aFile, aDirectory,
+  aFlags ) {
   var aStyle, anURL, aText, aCSSFile, aCSSFileName;
   var prefix, prefixies;
-  var line, index, anAtLines = [];
+  var line, index, anAtLines;
   var aHead = aDocument.getElementsByTagName( "head" )[0];
   for ( var i = aRules.sheets.length - 1; i >= 0 ; i-- ) {
     for ( var j = aRules.sheets[i].lines.length - 1; j >= 0 ; j-- ) {
@@ -1976,92 +2057,118 @@ function createStyles( aDocument, aLinks, aRules, aBaseURL, aFile, aDirectory, a
         aRules.sheets[i].lines.splice( j, 1 );
       }
     }
-  }
-  if ( aRules.namespaces ) {
-    anURL = aRules.namespaces.get();
-    if ( anURL && anURL !== HTML5NS ) {
-      anAtLines.push( "@namespace url(" + anURL + ");" );
-    }
-    prefixies = aRules.namespaces.getPrefixies();
-    for ( prefix in prefixies ) {
-      if ( prefix !== "xml" && prefix !== "xmlns" ) {
-        anURL = aRules.namespaces.get( prefix );
-        anAtLines.push( "@namespace " + prefix + " url(" + anURL + ");" );
-      }
+    if ( !aRules.sheets[i].lines.length ) {
+      aRules.sheets.splice( i, 1 );
     }
   }
   aText = "";
   for ( var i = 0; i < aRules.sheets.length; i++ ) {
-    if ( aRules.sheets[i].lines.length ) {
-      anURL = aRules.sheets[i].href;
-      if ( anURL ) {
-        if ( aFlags & 0x01000000 /* SAVE_STYLESHEETS_IN_SEPARATE_FILES */ ) {
-          aText = "/***** " + anURL + " *****/\n" +
-                  aRules.sheets[i].lines.join( "\n" );
-          if ( aRules.sheets[i].url ) {
-            aCSSFile = aDirectory.clone();
-            aCSSFile.append( aRules.sheets[i].url );
-          } else {
-            aCSSFileName = getSuitableFileName( anURL, "text/css" );
-            prefix = "";
-            do {
-              aCSSFile = aDirectory.clone();
-              aCSSFile.append( prefix + aCSSFileName.name +
-                               "." + aCSSFileName.ext );
-              prefix += "_";
-            } while ( aCSSFile.exists() && !aCSSFile.isDirectory() );
-          }
-          writeFileEntry( aCSSFile, "utf-8", aText );
-          if ( !aRules.sheets[i].owner ) {
-            aStyle = aDocument.createElementNS(
-              aDocument.documentElement.namespaceURI,
-              "link"
-            );
-            aStyle.setAttribute( "rel", "stylesheet" );
-            aStyle.setAttribute( "type", "text/css" );
-            aStyle.setAttribute( "href", aCSSFile.leafName );
-            for ( var j = 0; j < aLinks.length; j++ ) {
-              if ( aLinks[j].href === anURL ) {
-                aStyle.setAttribute( "media", aLinks[j].media );
-                break;
-              }
-            }
-            aHead.appendChild( aDocument.createTextNode( "\n" ) );
-            aHead.appendChild( aStyle );
-          }
-        } else if ( aFlags & 0x00100000 /* SAVE_STYLESHEETS_IN_SINGLE_FILE */ ) {
-          aText += ( i ? "\n" : "" ) +
-                   "/***** " + anURL + " *****/\n" +
-                   aRules.sheets[i].lines.join( "\n" );
+    anURL = aRules.sheets[i].href;
+    if ( anURL ) {
+      if ( aFlags & 0x01000000 /* SAVE_STYLESHEETS_IN_SEPARATE_FILES */ ) {
+        aText = "/***** " + anURL + " *****/\n" +
+                aRules.sheets[i].lines.join( "\n" );
+        if ( aRules.sheets[i].fname /* @import ... */ ) {
+          aCSSFile = aDirectory.clone();
+          aCSSFile.append( aRules.sheets[i].fname );
         } else {
-          aText += ( i ? "\n      " : "" ) +
-                   "/***** " + anURL + " *****/\n      " +
-                   aRules.sheets[i].lines.join( "\n      " );
+          aCSSFileName = getSuitableFileName( anURL, "text/css" );
+          prefix = "";
+          do {
+            aCSSFile = aDirectory.clone();
+            aCSSFile.append( prefix + aCSSFileName.name +
+                             "." + aCSSFileName.ext );
+            prefix += "_";
+          } while ( aCSSFile.exists() && !aCSSFile.isDirectory() );
         }
-      } else {
-        if ( aFlags & 0x01000000 /* SAVE_STYLESHEETS_IN_SEPARATE_FILES */ ) {
-          aText = aRules.sheets[i].lines.join( "\n      " );
+        writeFileEntry( aCSSFile, "utf-8", aText );
+        if ( !aRules.sheets[i].owner ) {
           aStyle = aDocument.createElementNS(
             aDocument.documentElement.namespaceURI,
-            "style"
+            "link"
           );
-          aStyle.textContent = aText + "\n    ";
+          aStyle.setAttribute( "rel", "stylesheet" );
+          aStyle.setAttribute( "type", "text/css" );
+          aStyle.setAttribute( "href", aCSSFile.leafName );
+          if ( aRules.sheets[i].media && aRules.sheets[i].media.mediaText ) {
+            aStyle.setAttribute( "media", aRules.sheets[i].media.mediaText );
+          }
           aHead.appendChild( aDocument.createTextNode( "\n" ) );
           aHead.appendChild( aStyle );
-        } else if ( aFlags & 0x00100000 /* SAVE_STYLESHEETS_IN_SINGLE_FILE */ ) {
-          aText += ( i ? "\n" : "" ) +
-                   "/***** internal style sheet *****/\n" +
-                   aRules.sheets[i].lines.join( "\n" );
-        } else {
-          aText += ( i ? "\n      " : "" ) +
-                   "/***** internal style sheet *****/\n      " +
-                   aRules.sheets[i].lines.join( "\n      " );
         }
+      } else if ( aFlags & 0x00100000 /* SAVE_STYLESHEETS_IN_SINGLE_FILE */ ) {
+        aText += ( i ? "\n" : "" ) +
+                 "/***** " + anURL + " *****/\n" +
+                 (
+                   aRules.sheets[i].media && aRules.sheets[i].media.mediaText ?
+                     "@media " + aRules.sheets[i].media.mediaText + " {\n" :
+                     ""
+                 ) +
+                 aRules.sheets[i].lines.join( "\n" ) +
+                 ( aRules.sheets[i].media.mediaText ? "\n}\n" : "" );
+      } else {
+        aText += ( i ? "\n      " : "" ) +
+                 "/***** " + anURL + " *****/\n      " +
+                 (
+                   aRules.sheets[i].media && aRules.sheets[i].media.mediaText ?
+                     "@media " + aRules.sheets[i].media.mediaText + " {\n      " :
+                     ""
+                 ) +
+                 aRules.sheets[i].lines.join( "\n      " ) +
+                 ( aRules.sheets[i].media.mediaText ? "\n      }\n" : "" );
+      }
+    } else {
+      if ( aFlags & 0x01000000 /* SAVE_STYLESHEETS_IN_SEPARATE_FILES */ ) {
+        aText = aRules.sheets[i].lines.join( "\n      " );
+        aStyle = aDocument.createElementNS(
+          aDocument.documentElement.namespaceURI,
+          "style"
+        );
+        if ( aRules.sheets[i].media && aRules.sheets[i].media.mediaText ) {
+          aStyle.setAttribute( "media", aRules.sheets[i].media.mediaText );
+        }
+        aStyle.textContent = aText + "\n    ";
+        aHead.appendChild( aDocument.createTextNode( "\n" ) );
+        aHead.appendChild( aStyle );
+      } else if ( aFlags & 0x00100000 /* SAVE_STYLESHEETS_IN_SINGLE_FILE */ ) {
+        aText += ( i ? "\n" : "" ) +
+                 "/***** internal style sheet *****/\n" +
+                 (
+                   aRules.sheets[i].media && aRules.sheets[i].media.mediaText ?
+                     "@media " + aRules.sheets[i].media.mediaText + " {\n" :
+                     ""
+                 ) +
+                 aRules.sheets[i].lines.join( "\n" ) +
+                 ( aRules.sheets[i].media.mediaText ? "\n}\n" : "" );
+      } else {
+        aText += ( i ? "\n      " : "" ) +
+                 "/***** internal style sheet *****/\n      " +
+                 (
+                   aRules.sheets[i].media && aRules.sheets[i].media.mediaText ?
+                     "@media " + aRules.sheets[i].media.mediaText + " {\n      " :
+                     ""
+                 ) +
+                 aRules.sheets[i].lines.join( "\n      " ) +
+                 ( aRules.sheets[i].media.mediaText ? "\n      }\n" : "" );
       }
     }
   }
   if ( aText.length &&
        !( aFlags & 0x01000000 /* SAVE_STYLESHEETS_IN_SEPARATE_FILES */ ) ) {
+    anAtLines = [];
+    if ( aRules.namespaces ) {
+      anURL = aRules.namespaces.get();
+      if ( anURL && anURL !== HTML5NS ) {
+        anAtLines.push( "@namespace url(" + anURL + ");" );
+      }
+      prefixies = aRules.namespaces.getPrefixies();
+      for ( prefix in prefixies ) {
+        if ( prefix !== "xml" && prefix !== "xmlns" ) {
+          anURL = aRules.namespaces.get( prefix );
+          anAtLines.push( "@namespace " + prefix + " url(" + anURL + ");" );
+        }
+      }
+    }
     if ( aFlags & 0x00100000 /* SAVE_STYLESHEETS_IN_SINGLE_FILE */ ) {
       if ( anAtLines.length ) {
         aText = anAtLines.join( "\n" ) + "\n" + aText + "\n";
@@ -2069,6 +2176,7 @@ function createStyles( aDocument, aLinks, aRules, aBaseURL, aFile, aDirectory, a
       prefix = "";
       do {
         aCSSFile = aDirectory.clone();
+        // TODO: sheet fileName must corresponded to document fileName
         aCSSFile.append( prefix + "styles.css" );
         prefix += "_";
       } while ( aCSSFile.exists() && !aCSSFile.isDirectory() );
@@ -2080,7 +2188,7 @@ function createStyles( aDocument, aLinks, aRules, aBaseURL, aFile, aDirectory, a
       aStyle.setAttribute( "rel", "stylesheet" );
       aStyle.setAttribute( "type", "text/css" );
       aStyle.setAttribute( "href", aCSSFile.leafName );
-    } else {
+    } else if ( !( aFlags & 0x01000000 /* SAVE_STYLESHEETS_IN_SEPARATE_FILES */ ) ) {
       if ( anAtLines.length ) {
         aText = "\n      " + anAtLines.join( "\n      " ) +
                 "\n      " + aText;
@@ -2098,21 +2206,19 @@ function createStyles( aDocument, aLinks, aRules, aBaseURL, aFile, aDirectory, a
   }
 };
 
-function processNode( aLinks, aRules, aSubstitution,
-                         aRoot, aNamespaces,
-                         aDocumentURL, aBaseURL, aFrames,
-                         aDirectory, aLoader, aFlags ) {
+function processNode( aLinks, aRules, aSubstitution, aRoot, aNamespaces,
+  aDocumentURL, aBaseURL, aFrames, aGroupId, aDirectory, aLoader, aFlags ) {
   var aNode, aNext, anElementNamespaces;
   switch ( aRoot.nodeType ) {
     case Ci.nsIDOMNode.ELEMENT_NODE:
       anElementNamespaces = aNamespaces.clone();
-      setupElementNamespaces( aRoot, anElementNamespaces );
+      collectElementNamespaces( aRoot, anElementNamespaces );
       aRoot = fixupElement( aRoot, anElementNamespaces, aFlags );
       if ( aRoot ) {
         aRoot = substituteElement( aRoot, aSubstitution, aFlags );
         aRoot = inspectElement( aLinks, aRules, aSubstitution, aRoot,
-                                aDocumentURL, aBaseURL, aFrames,
-                                aDirectory, aLoader, aFlags );
+          aDocumentURL, aBaseURL, aFrames, aGroupId, aDirectory, aLoader,
+          aFlags );
       }
       break;
     case Ci.nsIDOMNode.COMMENT_NODE:
@@ -2127,27 +2233,29 @@ function processNode( aLinks, aRules, aSubstitution,
     aNode = aRoot.firstChild;
     while ( aNode ) {
       aNext = aNode.nextSibling;
-      processNode( aLinks, aRules, aSubstitution,
-                   aNode, anElementNamespaces,
-                   aDocumentURL, aBaseURL, aFrames,
-                   aDirectory, aLoader, aFlags );
+      processNode( aLinks, aRules, aSubstitution, aNode, anElementNamespaces,
+        aDocumentURL, aBaseURL, aFrames, aGroupId, aDirectory, aLoader, aFlags );
       aNode = aNext;
     }
   }
 };
 
 function collectFrames( aDocument ) {
-  var result = [];
+  /*
+  The following block of code does not collect all frames in a document right :(
   if ( aDocument.defaultView ) {
     frames = aDocument.defaultView.frames;
-    for ( var i = 0; i < frames.length; i++ ) {
-      result.push( frames[i].document );
-    }
+  }
+  */
+  var result = [], frames = aDocument.querySelectorAll( "frame, iframe" );
+  for each ( var frame in frames ) {
+    result.push( frame.contentDocument );
   }
   return result;
 };
 
-function doneDocument( aDocument, aResult, aLinks, aRules, aBaseURL, aFile, aDirectory, aFlags ) {
+function doneDocument( aDocument, aResult, aLinks, aRules, aBaseURL, aFile,
+  aDirectory, aFlags ) {
   var aHead, aStyle, aMeta, aCollection, aBase, aBaseTarget;
   var namespaceURI = aResult.documentElement.namespaceURI;
   if ( namespaceURI && namespaceURI === HTML5NS ) {
@@ -2177,27 +2285,28 @@ function doneDocument( aDocument, aResult, aLinks, aRules, aBaseURL, aFile, aDir
     }
     // STYLE
     if ( aFlags & 0x00010000 /* SAVE_STYLES */ ) {
-      createStyles( aResult, aLinks, aRules, aBaseURL, aFile, aDirectory, aFlags );
+      createStyles( aResult, aLinks, aRules, aBaseURL, aFile, aDirectory,
+        aFlags );
     }
   }
   // WRITE
   writeDocument( aResult, aDocument.contentType, aFile );
 };
 
-function saveDocument( aDocument, aResultObj, aFile, aDirectory, aLoader,
-                       aFlags ) {
+function saveDocument( aDocument, aResultObj, aFile, aDirectory,
+                       aLoader, aFlags ) {
   var aNode, aNext;
   var aResult = aResultObj.value = cloneDocument( aDocument );
   var isFrame = aDocument.defaultView ?
     aDocument.defaultView.top !== aDocument.defaultView.self : false;
   var aBaseURL = getFileURI( aFile.parent ).getRelativeSpec(
     getFileURI( aDirectory ) );
+  var aGroupId = createUUID();
   var aLinks = [];
   var aRules = {
     namespaces: null, // global namespaces for single sheet
     sheets: []
   };
-  var aFrames = collectFrames( aDocument );
   var aNamespaces = CSSUtils.Namespaces.create();
   var aSubstitution = Substitution.create();
   if ( !( aFlags & 0x00001000 /* PRESERVE_HTML5_TAGS */ ) ) {
@@ -2208,12 +2317,13 @@ function saveDocument( aDocument, aResultObj, aFile, aDirectory, aLoader,
       aRules,
       aSubstitution,
       aDocument,
+      aGroupId,
       aDirectory,
       aLoader,
       aFlags
     );
   }
-  setupElementNamespaces( aResult.documentElement, aNamespaces );
+  collectElementNamespaces( aResult.documentElement, aNamespaces );
   aNode = aResult.firstChild;
   while ( aNode ) {
     aNext = aNode.nextSibling;
@@ -2225,17 +2335,18 @@ function saveDocument( aDocument, aResultObj, aFile, aDirectory, aLoader,
       aNamespaces,
       aDocument.documentURI,
       aDocument.baseURI,
-      aFrames,
+      collectFrames( aDocument ),
+      aGroupId,
       aDirectory,
       aLoader,
       aFlags
     );
     aNode = aNext;
   }
-  if ( aLoader.hasGroupJobs( aDocument.documentURI ) ) {
+  if ( aLoader.hasGroupJobs( aGroupId ) ) {
     aLoader.addObserver( {
       onGroupStopped: function( anEvent ) {
-        if ( anEvent.getData().id === aDocument.documentURI ) {
+        if ( anEvent.getData().id === aGroupId ) {
           doneDocument( aDocument, aResult, aLinks, aRules, aBaseURL, aFile, aDirectory, aFlags );
         }
       }
@@ -2419,6 +2530,7 @@ Job.prototype = {
       }
       this.stop( Cr.NS_BINDING_ABORTED );
     }
+    return this;
   },
   remove: function() {
     this.getLoader()._removeJob( this );
@@ -2506,7 +2618,8 @@ Loader.prototype = {
     }
     return null;
   },
-  createJob: function( aDirectory, anURL, aReferrerURL, aContentType, aGroupId ) {
+  createJob: function( aDirectory, anURL, aReferrerURL, aContentType,
+                       aGroupId ) {
     var aJob = this.getJob( anURL );
     if ( aJob ) {
       return aJob;

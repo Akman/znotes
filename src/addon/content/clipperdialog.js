@@ -106,7 +106,7 @@ ru.akman.znotes.ClipperDialog = function() {
 
   function onJobCreated( anEvent ) {
     var id, url, uri;
-    var jobList, jobItem, jobBox, jobLabel, jobProgress;
+    var jobList, jobItem, jobBox, jobLabel;
     var jobImg, jobImage, jobSpacer1, jobSpacer2;
     var aData = anEvent.getData();
     var aJob = aData.job;
@@ -234,9 +234,10 @@ ru.akman.znotes.ClipperDialog = function() {
       jobLabel = jobBox.childNodes[0];
       jobLabel.setAttribute( "value", Utils.getErrorName( status ) );
       jobLabel.classList.add( "error" );
-      jobProgress = jobBox.childNodes[2];
-      // TODO: jobProgress is undefined
-      jobProgress.setAttribute( "collapsed", "true" );
+      if ( jobBox.childNodes.length === 3 ) {
+        jobProgress = jobBox.childNodes[2];
+        jobProgress.setAttribute( "collapsed", "true" );
+      }
     }
   };
 
@@ -265,8 +266,8 @@ ru.akman.znotes.ClipperDialog = function() {
         anObserver
       );
     } catch ( e ) {
-      log.warn( e + "\n" + Utils.dumpStack() );
       aClipper.abort();
+      log.warn( e + "\n" + Utils.dumpStack() );
     }
   };
 
