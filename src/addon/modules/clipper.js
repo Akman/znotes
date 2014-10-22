@@ -252,7 +252,7 @@ function resolveURL( url, href ) {
     uri = ioService.newURI( href, null, null );
     result = uri.resolve( url );
   } catch ( e ) {
-    log.warn( e + "\n" + Utils.dumpStack() );
+    log.warn( "resolveURL()\n" + e + "\n" + url + "\n" + href );
     result = url;
   }
   return result;
@@ -268,6 +268,20 @@ function checkURL( url ) {
   return ( uri.scheme.toLowerCase() !== "about" );
 };
 
+function parseFileName( name ) {
+  var index = name.lastIndexOf( "." );
+  if ( index !== -1 ) {
+    return {
+      name: name.substring( 0, index ),
+      extension: name.substring( index )
+    };
+  }
+  return {
+    name: name,
+    extension: ""
+  };
+};
+
 function getValidFileNameChunk( name ) {
   name = decodeURIComponent( name ).replace( /\u005C/g, "\u0000" )  // '\'
                                    .replace( /\u002F/g, "\u0000" )  // '/'
@@ -277,14 +291,22 @@ function getValidFileNameChunk( name ) {
                                    .replace( /\u0022/g, "\u0000" )  // '"'
                                    .replace( /\u003C/g, "\u0000" )  // '<'
                                    .replace( /\u003E/g, "\u0000" )  // '>'
-                                   .replace( /\u007C/g, "\u0000" ); // '|'
+                                   .replace( /\u007C/g, "\u0000" )  // '|'
+                                   // ------------------------------------
+                                   .replace( /\u003D/g, "\u0000" )  // '='
+                                   .replace( /\u0026/g, "\u0000" )  // '&'
+                                   .replace( /\u003B/g, "\u0000" )  // ';'
+                                   .replace( /\u0021/g, "\u0000" )  // '!'
+                                   .replace( /\u007E/g, "\u0000" )  // '~'
+                                   .replace( /\u0060/g, "\u0000" )  // '`'
+                                   .replace( /\u0025/g, "\u0000" ); // '%'
   name = name.split( "\u0000" );
   return name[name.length - 1];
 };
 
 function getSuitableFileName( url, contentType, defaultType ) {
   var uri = ioService.newURI( url, null, null );
-  var query, name, mime, path, ext, mime_ext, index, file_name;
+  var query, name, mime, path, ext, mime_ext, index, file_name, pattern, match;
   if ( uri.scheme.toLowerCase() === "mailbox" ) {
     mime = ( contentType ? contentType : ( defaultType ? defaultType : "" ) );
     try {
@@ -315,10 +337,9 @@ function getSuitableFileName( url, contentType, defaultType ) {
     }
   } else if ( uri.scheme.toLowerCase() === "data" ) {
     path = uri.path;
-    index = path.indexOf( ";" );
-    if ( index === -1 ) {
-      index = path.indexOf( "," );
-    }
+    pattern = /[\;\,\!]/g;
+    match = pattern.exec( path );
+    index = match ? match.index : path.length;
     mime = path.substring( path.indexOf( ":" ) + 1, index );
     name = "data_" + createUUID().toLowerCase();
     ext = "";
@@ -346,14 +367,45 @@ function getSuitableFileName( url, contentType, defaultType ) {
   }
   mime_ext = "";
   if ( mime.length ) {
-    try {
-      mime_ext = mimeService.getPrimaryExtension( mime, null ).toLowerCase();
-    } catch ( e ) {
-      if ( mime.toLowerCase().indexOf( "javascript" ) !== -1 ) {
+    mime = mime.toLowerCase();
+    switch ( mime ) {
+      case "font/ttf":
+        mime_ext = "ttf";
+        break;
+      case "application/opensearchdescription+xml":
+        mime_ext = "osdx";
+        break;
+      case "application/atom+xml":
+        mime_ext = "atom";
+        break;
+      case "application/rss+xml":
+        mime_ext = "rss";
+        break;
+      case "application/xhtml+xml":
+        mime_ext = "xhtml";
+        break;
+      case "text/html":
+        mime_ext = "html";
+        break;
+      case "text/xml":
+      case "application/xml":
+        mime_ext = "xml";
+        break;
+      case "text/javascript":
+      case "application/javascript":
         mime_ext = "js";
-      } else {
-        mime_ext = "";
-      }
+        break;
+      default:
+        try {
+          mime_ext = mimeService.getPrimaryExtension( mime, null )
+                                .toLowerCase();
+        } catch ( e ) {
+          if ( mime.indexOf( "+xml" ) !== -1 ) {
+            mime_ext = "xml";
+          } else {
+            log.info( "Unregistered mime type: '" + mime + "'" );
+          }
+        }
     }
   }
   if ( mime_ext.length ) {
@@ -395,21 +447,20 @@ function createFileEntry( dir, name ) {
     entry.append( prefix + name );
     prefix += "_";
   } while ( entry.exists() && !entry.isDirectory() );
-  try {
-    ostream.init(
-      entry,
-      parseInt( "0x02", 16 ) | // PR_WRONLY
-      parseInt( "0x08", 16 ) | // PR_CREATE_FILE
-      parseInt( "0x20", 16 ),  // PR_TRUNCATE
-      parseInt( "0644", 8 ),
-      0
-    );
-  } catch ( e ) {
-    log.warn( e );
-  } finally {
-    ostream.close();
+  // TODO: how this may throw an exception NS_ERROR_FILE_NOT_FOUND
+  if ( !dir.exists() ) {
+    log.debug( "createFileEntry() :: `dir` does not exist!" );
   }
-  return entry;
+  ostream.init(
+    entry,
+    parseInt( "0x02", 16 ) | // PR_WRONLY
+    parseInt( "0x08", 16 ) | // PR_CREATE_FILE
+    parseInt( "0x20", 16 ),  // PR_TRUNCATE
+    parseInt( "0644", 8 ),
+    0
+  );
+  ostream.close();
+  return entry.clone();
 };
 
 function createEntriesToSaveFrame( dir, name, ext, suffix ) {
@@ -428,25 +479,16 @@ function createEntriesToSaveFrame( dir, name, ext, suffix ) {
     dirEntry.exists() && dirEntry.isDirectory() ||
     fileEntry.exists() && !fileEntry.isDirectory()
   );
-  try {
-    ostream.init(
-      fileEntry,
-      parseInt( "0x02", 16 ) | // PR_WRONLY
-      parseInt( "0x08", 16 ) | // PR_CREATE_FILE
-      parseInt( "0x20", 16 ),  // PR_TRUNCATE
-      parseInt( "0644", 8 ),
-      0
-    );
-  } catch ( e ) {
-    log.warn( e );
-  } finally {
-    ostream.close();
-  }
-  try {
-    dirEntry.create( Ci.nsIFile.DIRECTORY_TYPE, parseInt( "0774", 8 ) );
-  } catch ( e ) {
-    log.warn( e );
-  }
+  ostream.init(
+    fileEntry,
+    parseInt( "0x02", 16 ) | // PR_WRONLY
+    parseInt( "0x08", 16 ) | // PR_CREATE_FILE
+    parseInt( "0x20", 16 ),  // PR_TRUNCATE
+    parseInt( "0644", 8 ),
+    0
+  );
+  ostream.close();
+  dirEntry.create( Ci.nsIFile.DIRECTORY_TYPE, parseInt( "0774", 8 ) );
   return {
     fileEntry: fileEntry.clone(),
     dirEntry: dirEntry.clone()
@@ -492,7 +534,7 @@ function writeFileEntry( entry, encoding, data ) {
   }
 };
 
-// TODO: nsIPrompt, nsIAuthPrompt/nsIAuthPrompt2
+// TODO: implementation of nsIPrompt, nsIAuthPrompt/nsIAuthPrompt2
 function ChannelObserver( channel, ctx, entry, mode, perm, bufsize, listener ) {
   this.mChannel = channel;
   this.mContext = ctx;
@@ -507,7 +549,6 @@ function ChannelObserver( channel, ctx, entry, mode, perm, bufsize, listener ) {
   this.mBufferedOutputStream =
     Cc["@mozilla.org/network/buffered-output-stream;1"]
     .createInstance( Ci.nsIBufferedOutputStream );
-  this.mStatus = -1;
 };
 ChannelObserver.prototype = {
   QueryInterface: function( iid ) {
@@ -537,81 +578,67 @@ ChannelObserver.prototype = {
     this.mChannel.notificationCallbacks = this;
     this.mChannel.asyncOpen( this, this.mContext );
     callback.onRedirectVerifyCallback( Cr.NS_OK );
+    if ( this.mListener && this.mListener.onChannelRedirect ) {
+      this.mListener.onChannelRedirect( oldChannel, newChannel, flags );
+    }
   },
   // nsIRequestObserver
   onStartRequest: function( aRequest, aContext ) {
-    var isRequestSucceeded = true;
-    this.mStatus = 0;
-    if ( this.mListener && this.mListener.onstart ) {
-      this.mListener.onstart( this.mChannel, aRequest, aContext );
+    if ( this.mListener && this.mListener.onStartRequest ) {
+      this.mListener.onStartRequest( this.mChannel, aRequest, aContext );
     }
-    if ( this.mChannel instanceof Ci.nsIHttpChannel ) {
-      try {
-        isRequestSucceeded = this.mChannel.requestSucceeded;
-      } catch ( e ) {
-        isRequestSucceeded = false;
-      }
-    }
-    if ( isRequestSucceeded ) {
+    try {
       this.mFileOutputStream.init( this.mEntry, this.mMode, this.mPerm,
         Ci.nsIFileOutputStream.DEFER_OPEN );
       this.mBufferedOutputStream.init( this.mFileOutputStream, this.mBufsize );
-    } else {
-      aRequest.cancel( aRequest.status );
+    } catch ( e ) {
+      log.warn( "onStartRequest()\n" + e + "\n" + this.mEntry.path );
     }
   },
   onStopRequest: function( aRequest, aContext, aStatusCode ) {
-    this.mStatus = 1;
     try {
       this.mBufferedOutputStream.flush();
-    } catch ( e ) {
-      log.warn( e );
-    }
-    // TODO: NS_ERROR_FILE_NOT_FOUND
-    try {
       if ( this.mFileOutputStream instanceof Ci.nsISafeOutputStream ) {
         this.mFileOutputStream.finish();
       } else {
         this.mFileOutputStream.close();
       }
     } catch ( e ) {
-      log.warn( e );
+      log.warn( "onStopRequest()\n" + e + "\n" + this.mEntry.path );
     }
-    if ( this.mListener && this.mListener.onstop ) {
-      this.mListener.onstop( this.mChannel, aRequest, aContext, aStatusCode );
+    if ( this.mListener && this.mListener.onStopRequest ) {
+      this.mListener.onStopRequest( this.mChannel, aRequest, aContext,
+        aStatusCode );
     }
   },
   // nsIStreamListener
   onDataAvailable: function( aRequest, aContext, aStream, aOffset, aCount ) {
-    var count = aCount;
-    while ( count > 0 ) {
-      count -= this.mBufferedOutputStream.writeFrom( aStream, count );
+    var count;
+    try {
+      count = aCount;
+      while ( count > 0 ) {
+        count -= this.mBufferedOutputStream.writeFrom( aStream, count );
+      }
+    } catch ( e ) {
+      log.warn( "onDataAvailable()\n" + e + "\n" + this.mEntry.path );
     }
-    if ( this.mListener && this.mListener.onprogress ) {
-      this.mListener.onprogress( this.mChannel, aRequest, aContext, aOffset,
-        aCount );
+    if ( this.mListener && this.mListener.onDataAvailable ) {
+      this.mListener.onDataAvailable( this.mChannel, aRequest, aContext,
+        aStream, aOffset, aCount );
     }
   },
   // nsIProgressEventSink
   onProgress: function( aRequest, aContext, aProgress, aProgressMax ) {
-    /*
-    aProgress - Numeric value in the range 0 to aProgressMax indicating
-                the number of bytes transfered thus far.
-    aProgressMax - Numeric value indicating maximum number of bytes that will
-                   be transfered (or 0xFFFFFFFFFFFFFFFF if total is unknown).
-    */
+    if ( this.mListener && this.mListener.onProgress ) {
+      this.mListener.onProgress( this.mChannel, aRequest, aContext, aProgress,
+        aProgressMax );
+    }
   },
   onStatus: function( aRequest, aContext, aStatus, aStatusArg ) {
-    /*
-    aStatus - Status code (not necessarily an error code) indicating the state
-              of the channel (usually the state of the underlying transport).
-              @see nsISocketTransport for socket specific status codes.
-    aStatusArg - Status code argument to be used with the string bundle service
-                 to convert the status message into localized, human readable
-                 text. the meaning of this parameter is specific to the value
-                 of the status code. for socket status codes, this parameter
-                 indicates the host:port associated with the status code.
-    */
+    if ( this.mListener && this.mListener.onStatus ) {
+      this.mListener.onStatus( this.mChannel, aRequest, aContext, aStatus,
+        aStatusArg );
+    }
   }
 };
 
@@ -655,8 +682,8 @@ function loadURLToFileEntry( url, referrer, ctx,
     } else {
       status = Cr.NS_ERROR_UNEXPECTED;
     }
-    if ( listener && listener.onstop ) {
-      listener.onstop( channel, null, ctx, status );
+    if ( listener && listener.onStopRequest ) {
+      listener.onStopRequest( channel, null, ctx, status );
     }
   }
 };
@@ -776,15 +803,15 @@ function inspectRule( aSubstitution, aGlobalNamespaces, aLocalNamespaces,
               // At this point namespaceURI MUST be defined!
               // Otherwise it is a syntax error in style sheet i.e.,
               // used the namespace prefix defined in none at-namespace-rule.
-              log.warn( "Unknown namespaceURI: " + production.namespaceURI );
+              log.warn( "inspectRule()\nUnknown namespaceURI: " +
+                production.namespaceURI + "\n" + selectorText );
             }
             break;
         }
         return null;
       } );
     } catch ( e ) {
-      log.warn( "inspectRule()\n" + selectorText + "\n" +
-        e + "\n" + Utils.dumpStack() );
+      log.warn( "inspectRule()\n" + e + "\n" + selectorText );
     }
   }
   cssText =
@@ -925,7 +952,7 @@ function processRule( aRule, aRules, aSubstitution, aDocument, aSheet,
             ];
           }
         }
-        // TODO: what if aRule.styleSheet.disabled === true ?
+        // TODO: what if aRule.styleSheet.disabled === true ? alternate ?
         if ( aRule.styleSheet && !aRule.styleSheet.disabled ) {
           processStyleSheet( aRules, aSubstitution, aDocument,
             aRule.styleSheet, url, aGroupId, aDirectory, aLoader, aFlags,
@@ -1049,7 +1076,7 @@ function processRule( aRule, aRules, aSubstitution, aDocument, aSheet,
         sheet.lines.push( aRule.cssText );
       }
       break;
-      // TODO: implementation of matchDocument()
+      // TODO: implementation of matchDocument() CSS4 feature
       matchDocument = true;
       if ( aDocument.defaultView &&
            ( aFlags & 0x10000000 /* SAVE_ACTIVE_RULES_ONLY */ ) ) {
@@ -1224,7 +1251,7 @@ function collectSheetNamespaces( aNamespaces, aSheet ) {
         info = CSSUtils.parseNamespaceRule( rule.cssText );
         aNamespaces.set( info.namespaceURI, info.prefix );
       } catch ( e ) {
-        log.warn( e + "\n" + Utils.dumpStack() );
+        log.warn( "collectSheetNamespaces()\n" + e + "\n" + rule.cssText );
       }
     }
   }
@@ -1290,7 +1317,7 @@ function processStyleSheet( aRules, aSubstitution, aDocument, aSheet, aFileName,
 function collectStyles( aRules, aSubstitution, aDocument, aGroupId, aDirectory,
   aLoader, aFlags ) {
   for ( var i = 0; i < aDocument.styleSheets.length; i++ ) {
-    // TODO: what if aDocument.styleSheets.disabled === true ?
+    // TODO: what if aDocument.styleSheets.disabled === true ? alternate ?
     if ( aDocument.styleSheets[i] && !aDocument.styleSheets[i].disabled ) {
       processStyleSheet( aRules, aSubstitution, aDocument,
         aDocument.styleSheets[i], null, aGroupId, aDirectory, aLoader, aFlags );
@@ -1323,13 +1350,7 @@ function setElementAttribute( anElement, aName, aValue ) {
   try {
     anElement.setAttribute( aName, aValue );
   } catch ( e ) {
-    // TODO: set attribute "data" of "object" element throws NS_ERROR_UNEXPECTED
-    // TODO: set attribute "src" of "embed" element throws NS_ERROR_UNEXPECTED
-    log.warn(
-      e + "\n" +
-      anElement.nodeName + "." + aName + ": " + aValue + "\n" +
-      Utils.dumpStack()
-    );
+    // Successful assignment to OBJECT.DATA or EMBED.SRC throws exception
   }
 };
 
@@ -1344,11 +1365,8 @@ function replaceAttribute( element, attr, prefix, localName ) {
       value
     );
   } catch ( e ) {
-    log.warn(
-      e + "\n" +
-      element.nodeName + "." + name + ": " + value + "\n" +
-      Utils.dumpStack()
-    );
+    log.warn( "replaceAttribute()\n" + e + "\n" +
+      element.nodeName + "." + name + ": " + value );
   }
 };
 
@@ -1560,21 +1578,25 @@ function substituteElement( anElement, aSubstitution, aFlags ) {
 
 function addJobObserver( aJob, aCallback, aLines, anIndex ) {
   var aLoader = aJob.getLoader();
-  var anObserver = {
-    onJobStopped: function( anEvent ) {
-      if ( anEvent.getData().job === aJob ) {
-        aLoader.removeObserver( anObserver );
-        aCallback( aJob, aLines, anIndex )
+  if ( aJob.isDone() ) {
+    aCallback( aJob, aLines, anIndex );
+  } else {
+    aLoader.addObserver( {
+      onJobStopped: function( anEvent ) {
+        if ( anEvent.getData().job === aJob ) {
+          aLoader.removeObserver( this );
+          aCallback( aJob, aLines, anIndex );
+        }
       }
-    }
-  };
-  aLoader.addObserver( anObserver );
+    } );
+  }
   return aJob;
 };
 
 function inspectElement( aLinks, aRules, aSubstitution, anElement, aDocumentURL,
   aBaseURL, aFrames, aGroupId, aDirectory, aLoader, aFlags ) {
   var anURI, anURL, aContentType, aFrame, aDocument, aRelList, aLink;
+  var aName, aValue;
   var frameEntries, fileNameObj, oldCSSText, newCSSText;
   if ( anElement.nodeType !== Ci.nsIDOMNode.ELEMENT_NODE ) {
     return anElement;
@@ -1587,11 +1609,7 @@ function inspectElement( aLinks, aRules, aSubstitution, anElement, aDocumentURL,
         anElement.removeAttribute( "href" );
       }
     } catch ( e ) {
-      log.warn(
-        e + "\n" +
-        anElement.localName + ".href = " + anElement.href + "\n" +
-        Utils.dumpStack()
-      );
+      log.warn( "inspectElement()\n" + e + "\n" + anURL );
     }
   }
   if ( anElement.namespaceURI === HTML5NS ) {
@@ -1628,11 +1646,6 @@ function inspectElement( aLinks, aRules, aSubstitution, anElement, aDocumentURL,
                     if ( entry.exists() ) {
                       entry.remove( false );
                     }
-                    // TODO: set `referer` or `request method` or `header`
-                    // TODO: after the channel has been opened then throws
-                    // TODO: NS_ERROR_IN_PROGRESS
-                    // TODO: http://cdn.api.twitter.com/1/urls/count.json?url=http%3A%2F%2Fwww.wikihow.com%2FDownload-Google-Books&callback=twttr.receiveCount
-                    log.debug( "script/noscript : " + getErrorName( status ) + "\n" + job.getURL() );
                   } else {
                     setElementAttribute(
                       anElement,
@@ -1649,7 +1662,7 @@ function inspectElement( aLinks, aRules, aSubstitution, anElement, aDocumentURL,
         }
         return anElement.parentNode.removeChild( anElement );
       case "link":
-        aContentType = anElement.type.toLowerCase();
+        aContentType = anElement.type ? anElement.type.toLowerCase() : "";
         aRelList = anElement.hasAttribute( "rel" ) ?
           anElement.getAttribute( "rel" ).toLowerCase().split( /\s+/ ) : [];
         if ( aRelList.length ) {
@@ -1673,31 +1686,42 @@ function inspectElement( aLinks, aRules, aSubstitution, anElement, aDocumentURL,
               disabled: anElement.disabled,
               title: anElement.getAttribute( "title" )
             }
-            // TODO: links with rel="alternate stylesheet"
+            // TODO: so many kinds of a link tag including alternate stylesheets
             /*
-            type: text/css
-            href: http://css-tricks.com/examples/AlternateStyleSheets/stylealt2.css
-            hreflang: 
-            rel: alternate stylesheet
-            media: ''
-            disabled: false
-            title: alternate 2
-            ----------
-            type: text/css
-            href: http://css-tricks.com/examples/AlternateStyleSheets/stylealt1.css
-            hreflang: 
-            rel: alternate stylesheet
-            media: ''
-            disabled: false
-            title: alternate 1
-            ----------
-            type: text/css
-            href: http://css-tricks.com/examples/AlternateStyleSheets/style.css
-            hreflang: 
-            rel: stylesheet
-            media: ''
-            disabled: false
-            title: null
+            <link hreflang="ru" rel="alternate" />
+            <link media="media" rel="alternate" />
+            
+            <link rel="edit" title="title" />
+            <link rel="apple-touch-icon" />
+            <link rel="shortcut icon" />
+
+            <link type="application/opensearchdescription+xml" rel="search" title="title" />
+            <link type="application/rsd+xml" rel="EditURI" />
+
+            <link type="application/x-wiki" rel="alternate" title="title" />
+            <link type="application/atom+xml" rel="alternate" title="title" />		
+            <link type="application/rss+xml" rel="alternate" title="title" />
+            */
+            /*
+            href: 'https://key.disney.ru/api/mini-portals/style.css?12'
+            href: 'https://key.disney.ru/dev/api.css?5'
+            href: 'http://www.disney.ru/api/mini-portals/root/style.css?11'
+            href: 'http://www.disney.ru/css/noflash.css'
+            href: 'http://www.disney.ru/css/root.css'
+            href: 'http://www.disney.ru/css/disney.css'
+            ===========================================================
+            <link href="http://www.disney.ru/css/disney.css" rel="stylesheet" />
+            <link href="http://www.disney.ru/css/root.css" rel="stylesheet" />
+            <link href="http://www.disney.ru/css/noflash.css" rel="stylesheet" />
+            <link rel="stylesheet" type="text/css" href="http://www.disney.ru/api/mini-portals/root/style.css?11" />
+            <link rel="stylesheet" type="text/css" href="https://key.disney.ru/dev/api.css?5" />
+            <link rel="stylesheet" type="text/css" href="https://key.disney.ru/api/mini-portals/style.css?12" />
+            <link rel="stylesheet" type="text/css" href="disney.css" />
+            <link rel="stylesheet" type="text/css" href="root.css" />
+            <link rel="stylesheet" type="text/css" href="noflash.css" />
+            <link rel="stylesheet" type="text/css" href="style.css" />
+            <link rel="stylesheet" type="text/css" href="api.css" />
+            <link rel="stylesheet" type="text/css" href="_style.css" />
             */
             log.debug( "LINK:\n" + 
               "type: '" + aLink.type + "'\n" +
@@ -1718,7 +1742,7 @@ function inspectElement( aLinks, aRules, aSubstitution, anElement, aDocumentURL,
               if ( checkURL( anURL ) ) {
                 addJobObserver(
                   aLoader.createJob( aDirectory, anURL, aDocumentURL,
-                    aContentType, aGroupId ),
+                    "image/x-icon", aGroupId ),
                   function( job ) {
                     var entry = job.getEntry();
                     var status = job.getStatus();
@@ -1726,7 +1750,6 @@ function inspectElement( aLinks, aRules, aSubstitution, anElement, aDocumentURL,
                       if ( entry.exists() ) {
                         entry.remove( false );
                       }
-                      log.debug( "link rel icon/shortcut : " + getErrorName( status ) + " : " + job.getURL() );
                     } else {
                       setElementAttribute(
                         anElement,
@@ -1745,7 +1768,8 @@ function inspectElement( aLinks, aRules, aSubstitution, anElement, aDocumentURL,
         // @see http://www.w3.org/TR/html5/links.html#rel-alternate
         // If the alternate keyword is used with the type attribute
         // set to the value application/rss+xml or
-        // the value application/atom+xml
+        // the value application/atom+xml or
+        // the value application/opensearchdescription+xml
         if ( aContentType === "application/rss+xml" ||
              aContentType === "application/atom+xml" ||
              aContentType === "application/opensearchdescription+xml" ) {
@@ -1762,7 +1786,6 @@ function inspectElement( aLinks, aRules, aSubstitution, anElement, aDocumentURL,
                     if ( entry.exists() ) {
                       entry.remove( false );
                     }
-                    log.debug( "link type xml : " + getErrorName( status ) + " : " + job.getURL() );
                   } else {
                     setElementAttribute(
                       anElement,
@@ -1798,7 +1821,6 @@ function inspectElement( aLinks, aRules, aSubstitution, anElement, aDocumentURL,
                   if ( entry.exists() ) {
                     entry.remove( false );
                   }
-                  log.debug( "img : " + getErrorName( status ) + " : " + job.getURL() );
                 } else {
                   setElementAttribute(
                     anElement,
@@ -1814,6 +1836,20 @@ function inspectElement( aLinks, aRules, aSubstitution, anElement, aDocumentURL,
         anElement.removeAttribute( "livesrc" );
         break;
       case "embed":
+        anURL = anElement.getAttribute( "pluginspage" );
+        if ( anURL ) {
+          anURL = resolveURL( anURL, aBaseURL );
+          if ( checkURL( anURL ) ) {
+            setElementAttribute( anElement, "pluginspage", anURL );
+          }
+        }
+        anURL = anElement.getAttribute( "base" );
+        if ( anURL ) {
+          anURL = resolveURL( anURL, aBaseURL );
+          if ( checkURL( anURL ) ) {
+            setElementAttribute( anElement, "base", anURL );
+          }
+        }
         if ( anElement.src ) {
           aContentType = anElement.type ? anElement.type : "";
           anURL = resolveURL( anElement.src, aBaseURL );
@@ -1828,7 +1864,6 @@ function inspectElement( aLinks, aRules, aSubstitution, anElement, aDocumentURL,
                   if ( entry.exists() ) {
                     entry.remove( false );
                   }
-                  log.debug( "embed : " + getErrorName( status ) + " : " + job.getURL() );
                 } else {
                   setElementAttribute(
                     anElement,
@@ -1844,6 +1879,20 @@ function inspectElement( aLinks, aRules, aSubstitution, anElement, aDocumentURL,
         anElement.removeAttribute( "livesrc" );
         break;
       case "object":
+        anURL = anElement.getAttribute( "codebase" );
+        if ( anURL ) {
+          anURL = resolveURL( anURL, aBaseURL );
+          if ( checkURL( anURL ) ) {
+            setElementAttribute( anElement, "codebase", anURL );
+          }
+        }
+        anURL = anElement.getAttribute( "base" );
+        if ( anURL ) {
+          anURL = resolveURL( anURL, aBaseURL );
+          if ( checkURL( anURL ) ) {
+            setElementAttribute( anElement, "base", anURL );
+          }
+        }
         if ( anElement.data ) {
           aContentType = anElement.type ? anElement.type : "";
           anURL = resolveURL( anElement.data, aBaseURL );
@@ -1858,7 +1907,6 @@ function inspectElement( aLinks, aRules, aSubstitution, anElement, aDocumentURL,
                   if ( entry.exists() ) {
                     entry.remove( false );
                   }
-                  log.debug( "object : " + getErrorName( status ) + " : " + job.getURL() );
                 } else {
                   setElementAttribute(
                     anElement,
@@ -1869,6 +1917,50 @@ function inspectElement( aLinks, aRules, aSubstitution, anElement, aDocumentURL,
               }
             );
             setElementAttribute( anElement, "data", anURL );
+          }
+        }
+        break;
+      case "param":
+        if ( anElement.parentNode.nodeName.toLowerCase() === "object" ) {
+          aName = anElement.getAttribute( "name" );
+          switch ( aName ) {
+            case "movie":
+              anURL = anElement.getAttribute( "value" );
+              aContentType = anElement.parentNode.type ?
+                anElement.parentNode.type : "";
+              anURL = resolveURL( anURL, aBaseURL );
+              if ( checkURL( anURL ) ) {
+                addJobObserver(
+                  aLoader.createJob( aDirectory, anURL, aDocumentURL,
+                    aContentType, aGroupId ),
+                  function( job ) {
+                    var entry = job.getEntry();
+                    var status = job.getStatus();
+                    if ( status ) {
+                      if ( entry.exists() ) {
+                        entry.remove( false );
+                      }
+                    } else {
+                      setElementAttribute(
+                        anElement,
+                        "value",
+                        encodeURI( entry.leafName )
+                      );
+                    }
+                  }
+                );
+                setElementAttribute( anElement, "value", anURL );
+              }
+              break;
+            case "base":
+              anURL = anElement.getAttribute( "value" );
+              if ( anURL ) {
+                anURL = resolveURL( anURL, aBaseURL );
+                if ( checkURL( anURL ) ) {
+                  setElementAttribute( anElement, "value", anURL );
+                }
+              }
+              break;
           }
         }
         break;
@@ -1890,7 +1982,6 @@ function inspectElement( aLinks, aRules, aSubstitution, anElement, aDocumentURL,
                   if ( entry.exists() ) {
                     entry.remove( false );
                   }
-                  log.debug( ".background : " + getErrorName( status ) + " : " + job.getURL() );
                 } else {
                   setElementAttribute(
                     anElement,
@@ -1920,7 +2011,6 @@ function inspectElement( aLinks, aRules, aSubstitution, anElement, aDocumentURL,
                       if ( entry.exists() ) {
                         entry.remove( false );
                       }
-                      log.debug( "input image : " + getErrorName( status ) + " : " + job.getURL() );
                     } else {
                       setElementAttribute(
                         anElement,
@@ -2019,7 +2109,6 @@ function inspectElement( aLinks, aRules, aSubstitution, anElement, aDocumentURL,
             if ( entry.exists() ) {
               entry.remove( false );
             }
-            log.debug( ".style : " + getErrorName( status ) + " : " + job.getURL() );
           } else {
             var cssText = anElement.style.cssText.replace(
               job.getURL(),
@@ -2044,7 +2133,7 @@ function inspectElement( aLinks, aRules, aSubstitution, anElement, aDocumentURL,
 function createStyles( aDocument, aLinks, aRules, aBaseURL, aFile, aDirectory,
   aFlags ) {
   var aStyle, anURL, aText, aCSSFile, aCSSFileName;
-  var prefix, prefixies;
+  var name, prefix, prefixies;
   var line, index, anAtLines;
   var aHead = aDocument.getElementsByTagName( "head" )[0];
   for ( var i = aRules.sheets.length - 1; i >= 0 ; i-- ) {
@@ -2171,10 +2260,10 @@ function createStyles( aDocument, aLinks, aRules, aBaseURL, aFile, aDirectory,
         aText = anAtLines.join( "\n" ) + "\n" + aText + "\n";
       }
       prefix = "";
+      name = parseFileName( aFile.leafName ).name + ".css";
       do {
         aCSSFile = aDirectory.clone();
-        // TODO: stylesheet fileName must corresponds to document fileName
-        aCSSFile.append( prefix + "styles.css" );
+        aCSSFile.append( prefix + name );
         prefix += "_";
       } while ( aCSSFile.exists() && !aCSSFile.isDirectory() );
       writeFileEntry( aCSSFile, "utf-8", aText );
@@ -2414,9 +2503,11 @@ var Job = function( aLoader, aDirectory, anURL, aReferrerURL, aContentType,
   this.mEntry = this.mDirectory.clone();
   this.mEntry.append( this.mId );
   this.mStatus = -1;
+  this.mStatusText = null;
   this.mActive = false;
-  this.mInitialized = false;
+  this.mDone = false;
   this.mRequest = null;
+  this.mCount = 0;
 };
 Job.prototype = {
   getLoader: function() {
@@ -2440,8 +2531,14 @@ Job.prototype = {
   getStatus: function() {
     return this.mStatus;
   },
+  getStatusText: function() {
+    return this.mStatusText;
+  },
   isActive: function() {
     return this.mActive;
+  },
+  isDone: function() {
+    return this.mDone;
   },
   start: function() {
     if ( this.mActive ) {
@@ -2465,58 +2562,91 @@ Job.prototype = {
       entryPermissions,
       bufferSize,
       {
-        // TODO: onstart() may be called again and again ...
-        onstart: function( aChannel, aRequest, aContext ) {
-          if ( self.mInitialized ) {
-            return;
+        onStartRequest: function( aChannel, aRequest, aContext ) {
+          var mime, contentType, fileNameObj, name, entry;
+          if ( ++self.mCount > 1 ) {
+            log.debug( "START: [ " + self.mCount + " ] " + self.mURL );
           }
-          var mime, fileNameObj, name, entry;
+          mime = null;
           if ( aChannel instanceof Ci.nsIHttpChannel ) {
             try {
               mime = ( aChannel.requestSucceeded ? aChannel.contentType : null );
             } catch ( e ) {
-              mime = null;
+              // aChannel.requestSucceeded
+              // aChannel.contentType
+              // NS_ERROR_NOT_AVAILABLE
             }
-          } else {
-            mime = null;
           }
-          if ( mime && !self.mContentType ) {
-            self.mContentType = mime;
+          contentType = self.mContentType;
+          if ( mime && !contentType ) {
+            contentType = mime;
           }
-          fileNameObj = getSuitableFileName(
-            aChannel.URI.spec,
-            self.mContentType
-          );
+          fileNameObj = getSuitableFileName( aChannel.URI.spec, contentType );
           name = fileNameObj.name;
           if ( fileNameObj.ext ) {
             name += "." + fileNameObj.ext;
           }
-          entry = createFileEntry( self.getDirectory(), name );
-          self.mEntry.initWithFile( entry );
+          // TODO: sometimes throws an exception NS_ERROR_FILE_NOT_FOUND
+          // @see createFileEntry() for details
+          try {
+            entry = createFileEntry( self.getDirectory(), name );
+            self.mEntry.initWithFile( entry );
+          } catch ( e ) {
+            log.warn( "Job::start()\n" + e + "\n" +
+              self.getDirectory().path + "\n" + name + "\n" +
+              self.mEntry.path );
+          }
           self.mRequest = aRequest;
-          self.mInitialized = true;
           self.getLoader()._startJob( self );
         },
-        onprogress: function( aChannel, aRequest, aContext, aOffset, aCount ) {
+        onDataAvailable: function( aChannel, aRequest, aContext, aStream,
+          aOffset, aCount ) {
+          var contentLength = -1;
+          try {
+            contentLength = aChannel.contentLength;
+          } catch ( e ) {
+            // aChannel.contentLength
+            // NS_ERROR_NOT_AVAILABLE
+          }
           self.mRequest = aRequest;
-          self.getLoader()._progressJob( self, aCount, aChannel.contentLength,
-                                         aOffset, aChannel.contentLength );
+          self.getLoader()._progressJob( self, aCount, contentLength, aOffset,
+            contentLength );
         },
-        onstop: function( aChannel, aRequest, aContext, aStatusCode ) {
+        onStopRequest: function( aChannel, aRequest, aContext, aStatusCode ) {
+          var aStatusText = null;
+          if ( aStatusCode === 0x804B000F /* NS_ERROR_IN_PROGRESS */ ) {
+            log.debug( "STOP: [ NS_ERROR_IN_PROGRESS ] " + self.mURL );
+            return;
+          }
+          try {
+            if ( aChannel instanceof Ci.nsIHttpChannel && 
+              !aChannel.requestSucceeded ) {
+              aStatusCode = 0x8000FFFF; // NS_ERROR_UNEXPECTED
+              aStatusText = aChannel.responseStatusText.toUpperCase();
+            }
+          } catch ( e ) {
+            // aChannel.requestSucceeded
+            // NS_ERROR_NOT_AVAILABLE
+          }
+          if ( aStatusCode && self.mEntry.exists() ) {
+            self.mEntry.remove( false );
+          }
           self.mRequest = aRequest;
-          self.stop( aStatusCode );
+          self.stop( aStatusCode, aStatusText );
         }
       }
     );
     return this;
   },
-  stop: function( aStatus ) {
+  stop: function( aStatus, aStatusText ) {
     if ( !this.mActive ) {
       return;
     }
     this.mActive = false;
+    this.mDone = true;
     this.mRequest = null;
     this.mStatus = aStatus;
+    this.mStatusText = ( aStatusText ? aStatusText : null );
     this.getLoader()._stopJob( this );
     return this;
   },
@@ -2701,23 +2831,24 @@ Loader.prototype = {
     return false;
   },
   notifyObservers: function( anEvent ) {
-    var aName = "on" + anEvent.getName();
-    for ( var i = 0; i < this.mObservers.length; i++ ) {
-      if ( this.mObservers[i][ aName ] ) {
-        this.mObservers[i][ aName ]( anEvent );
+    var observers = this.mObservers.slice( 0 );
+    var name = "on" + anEvent.getName();
+    for ( var i = 0; i < observers.length; i++ ) {
+      if ( observers[i][ name ] ) {
+        observers[i][ name ]( anEvent );
       }
     }
     return this;
   },
   addObserver: function( anObserver ) {
-    if ( this.mObservers.indexOf( anObserver ) == -1 ) {
+    if ( this.mObservers.indexOf( anObserver ) === -1 ) {
       this.mObservers.push( anObserver );
     }
     return this;
   },
   removeObserver: function( anObserver ) {
     var anIndex = this.mObservers.indexOf( anObserver );
-    if ( anIndex != -1 ) {
+    if ( anIndex !== -1 ) {
       this.mObservers.splice( anIndex, 1 );
     }
     return this;

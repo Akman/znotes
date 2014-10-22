@@ -222,6 +222,7 @@ ru.akman.znotes.ZNotes = function() {
       tmpfile.append( anAttachments[i].name );
       urls[ anAttachments[i].url ] = tmpfile.leafName;
       try {
+        // TODO: @see clipper.js :: loadURLToFileEntry()
         Utils.saveURLToFile(
           tmpfile, // file entry
           -1, // file mode

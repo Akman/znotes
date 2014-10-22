@@ -177,6 +177,29 @@ ru.akman.znotes.Main = function() {
   var booksList = null;
   var categoriesList = null;
   var tagsList = null;
+  
+  /*
+  {} saveMessageCommand
+  () createNote
+  () 
+  () onNoteAppended
+  () onNoteRemoved
+  () onNoteMovedTo
+  () onNoteMovedInto
+  () onNoteTagsChanged
+  () onTagChanged
+  () onCategoryChanged
+  () 
+  () createNotesList
+  () showNotesList
+  () updateNoteView
+  () 
+  () onNoteSelect
+  () 
+  () getNoteTreeItemAndIndex
+  () saveNotesTreeSelection  
+  () restoreCurrentSelection
+  */
   var notesList = null;
 
   var currentBook = null;

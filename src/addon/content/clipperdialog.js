@@ -352,6 +352,7 @@ ru.akman.znotes.ClipperDialog = function() {
     var aJob = aData.job;
     var id = aJob.getId();
     var status = aJob.getStatus();
+    var statusText = aJob.getStatusText();
     var jobLabel, jobProgress;
     var jobItem = document.getElementById( id );
     var jobImage = jobItem.childNodes[0].childNodes[1];
@@ -365,7 +366,8 @@ ru.akman.znotes.ClipperDialog = function() {
     } else {
       jobImage.setAttribute( "class", "fail" );
       jobLabel = jobBox.childNodes[0];
-      jobLabel.setAttribute( "value", Utils.getErrorName( status ) );
+      jobLabel.setAttribute( "value",
+        statusText ? statusText : Utils.getErrorName( status ) );
       jobLabel.classList.add( "error" );
       if ( jobBox.childNodes.length === 3 ) {
         jobProgress = jobBox.childNodes[2];
@@ -490,6 +492,8 @@ ru.akman.znotes.ClipperDialog = function() {
     jobList = document.getElementById( "jobList" );
     jobList.addEventListener( "dblclick", onJobListDblClick, true );
     jobList.addEventListener( "contextmenu", onJobListContextMenu, true );
+    jobList.selectedIndex = -1;
+    jobList.currentIndex = -1;
     dialogKeyset.setup();
     dialogKeyset.update();
     dialogKeyset.activate();
