@@ -72,16 +72,16 @@ ru.akman.znotes.Options = function() {
   var isConfirmExit = null;
   var isExitQuitTB = null;
   var isClipperPlaySound = null;
+  
   var clipperSaveScripts = null;
   var clipperSaveFrames = null;
   var clipperSeparateFrames = null;
   var clipperPreserveHTML5Tags = null;
+  var clipperSaveInlineResources = null;
   var clipperSaveStyles = null;
-  var clipperSaveStylesGroup = null;
   var clipperInlineStylesheets = null;
-  var clipperSingleStylesheet = null;
-  var clipperSeparateStylesheets = null;
   var clipperSaveActiveRulesOnly = null;
+
   var docTypeMenuList = null;
   var docTypeMenuPopup = null;
   var keysPlatformGroupBox = null;
@@ -604,19 +604,16 @@ ru.akman.znotes.Options = function() {
     isHighlightRow.checked = optionsPrefs["main"]["default"].isHighlightRow;
     isCloseBrowserAfterImport.checked = optionsPrefs["main"]["default"].isCloseBrowserAfterImport;
     isClipperPlaySound.checked = optionsPrefs["main"]["default"].isClipperPlaySound;
+    
     clipperSaveScripts.checked = optionsPrefs["main"]["default"].clipperSaveScripts;
     clipperSaveFrames.checked = optionsPrefs["main"]["default"].clipperSaveFrames;
     clipperSeparateFrames.checked = optionsPrefs["main"]["default"].clipperSeparateFrames;
     clipperPreserveHTML5Tags.checked = optionsPrefs["main"]["default"].clipperPreserveHTML5Tags;
+    clipperSaveInlineResources.checked = optionsPrefs["main"]["default"].clipperSaveInlineResources;
     clipperSaveStyles.checked = optionsPrefs["main"]["default"].clipperSaveStyles;
-    if ( optionsPrefs["main"]["default"].clipperSingleStylesheet ) {
-      clipperSaveStylesGroup.selectedItem = clipperSingleStylesheet;
-    } else if ( optionsPrefs["main"]["default"].clipperSeparateStylesheets ) {
-      clipperSaveStylesGroup.selectedItem = clipperSeparateStylesheets;
-    } else {
-      clipperSaveStylesGroup.selectedItem = clipperInlineStylesheets;
-    }
+    clipperInlineStylesheets.checked = optionsPrefs["main"]["default"].clipperInlineStylesheets;
     clipperSaveActiveRulesOnly.checked = optionsPrefs["main"]["default"].clipperSaveActiveRulesOnly;
+    
     onSaveStylesChanged();
     defaultDocumentType = optionsPrefs["main"]["default"].defaultDocumentType;
     populateDocumentTypePopup();
@@ -640,16 +637,10 @@ ru.akman.znotes.Options = function() {
 
   function onSaveStylesChanged( event ) {
     if ( clipperSaveStyles.checked ) {
-      clipperSaveStylesGroup.removeAttribute( "disabled" );
       clipperInlineStylesheets.removeAttribute( "disabled" );
-      clipperSingleStylesheet.removeAttribute( "disabled" );
-      clipperSeparateStylesheets.removeAttribute( "disabled" );
       clipperSaveActiveRulesOnly.removeAttribute( "disabled" );
     } else {
-      clipperSaveStylesGroup.setAttribute( "disabled", "true" );
       clipperInlineStylesheets.setAttribute( "disabled", "true" );
-      clipperSingleStylesheet.setAttribute( "disabled", "true" );
-      clipperSeparateStylesheets.setAttribute( "disabled", "true" );
       clipperSaveActiveRulesOnly.setAttribute( "disabled", "true" );
     }
   };
@@ -728,6 +719,9 @@ ru.akman.znotes.Options = function() {
 
   function updateMainPreferences( currentPrefs, originalPrefs ) {
     var isChanged = false;
+    currentPrefs.defaultDocumentType = defaultDocumentType;
+    isChanged = isChanged ||
+      ( currentPrefs.defaultDocumentType !== originalPrefs.defaultDocumentType );
     currentPrefs.placeName = placeName.value;
     isChanged = isChanged ||
       ( currentPrefs.placeName !== originalPrefs.placeName );
@@ -773,26 +767,15 @@ ru.akman.znotes.Options = function() {
     currentPrefs.clipperPreserveHTML5Tags = clipperPreserveHTML5Tags.checked;
     isChanged = isChanged ||
       ( currentPrefs.clipperPreserveHTML5Tags !== originalPrefs.clipperPreserveHTML5Tags );
+    currentPrefs.clipperSaveInlineResources = clipperSaveInlineResources.checked;
+    isChanged = isChanged ||
+      ( currentPrefs.clipperSaveInlineResources !== originalPrefs.clipperSaveInlineResources );
     currentPrefs.clipperSaveStyles = clipperSaveStyles.checked;
     isChanged = isChanged ||
       ( currentPrefs.clipperSaveStyles !== originalPrefs.clipperSaveStyles );
-    if ( clipperSaveStylesGroup.selectedItem === clipperSingleStylesheet ) {
-      currentPrefs.clipperSingleStylesheet = true;
-      currentPrefs.clipperSeparateStylesheets = false;
-    } else if ( clipperSaveStylesGroup.selectedItem === clipperSeparateStylesheets ) {
-      currentPrefs.clipperSingleStylesheet = false;
-      currentPrefs.clipperSeparateStylesheets = true;
-    } else {
-      currentPrefs.clipperSingleStylesheet = false;
-      currentPrefs.clipperSeparateStylesheets = false;
-    }
+    currentPrefs.clipperInlineStylesheets = clipperInlineStylesheets.checked;
     isChanged = isChanged ||
-      ( currentPrefs.clipperSingleStylesheet !== originalPrefs.clipperSingleStylesheet );
-    isChanged = isChanged ||
-      ( currentPrefs.clipperSeparateStylesheets !== originalPrefs.clipperSeparateStylesheets );
-    currentPrefs.defaultDocumentType = defaultDocumentType;
-    isChanged = isChanged ||
-      ( currentPrefs.defaultDocumentType !== originalPrefs.defaultDocumentType );
+      ( currentPrefs.clipperInlineStylesheets !== originalPrefs.clipperInlineStylesheets );
     currentPrefs.clipperSaveActiveRulesOnly = clipperSaveActiveRulesOnly.checked;
     isChanged = isChanged ||
       ( currentPrefs.clipperSaveActiveRulesOnly !== originalPrefs.clipperSaveActiveRulesOnly );
@@ -873,9 +856,9 @@ ru.akman.znotes.Options = function() {
       "clipperSaveFrames": false,
       "clipperSeparateFrames": false,
       "clipperPreserveHTML5Tags": false,
+      "clipperSaveInlineResources": false,
       "clipperSaveStyles": true,
-      "clipperSingleStylesheet": false,
-      "clipperSeparateStylesheets": false,
+      "clipperInlineStylesheets": true,
       "clipperSaveActiveRulesOnly": true
     };
     result.shortcuts = {};
@@ -928,8 +911,8 @@ ru.akman.znotes.Options = function() {
       "clipperSeparateFrames":      !!( Utils.CLIPPER_FLAGS & 0x00000100 ),
       "clipperPreserveHTML5Tags":   !!( Utils.CLIPPER_FLAGS & 0x00001000 ),
       "clipperSaveStyles":          !!( Utils.CLIPPER_FLAGS & 0x00010000 ),
-      "clipperSingleStylesheet":    !!( Utils.CLIPPER_FLAGS & 0x00100000 ),
-      "clipperSeparateStylesheets": !!( Utils.CLIPPER_FLAGS & 0x01000000 ),
+      "clipperSaveInlineResources": !!( Utils.CLIPPER_FLAGS & 0x00100000 ),
+      "clipperInlineStylesheets":   !!( Utils.CLIPPER_FLAGS & 0x01000000 ),
       "clipperSaveActiveRulesOnly": !!( Utils.CLIPPER_FLAGS & 0x10000000 )
     };
     try {
@@ -962,9 +945,9 @@ ru.akman.znotes.Options = function() {
     prefsBundle.setBoolPref( "clipperSaveFrames", prefs.clipperSaveFrames );
     prefsBundle.setBoolPref( "clipperSeparateFrames", prefs.clipperSeparateFrames );
     prefsBundle.setBoolPref( "clipperPreserveHTML5Tags", prefs.clipperPreserveHTML5Tags );
+    prefsBundle.setBoolPref( "clipperSaveInlineResources", prefs.clipperSaveInlineResources );
     prefsBundle.setBoolPref( "clipperSaveStyles", prefs.clipperSaveStyles );
-    prefsBundle.setBoolPref( "clipperSingleStylesheet", prefs.clipperSingleStylesheet );
-    prefsBundle.setBoolPref( "clipperSeparateStylesheets", prefs.clipperSeparateStylesheets );
+    prefsBundle.setBoolPref( "clipperInlineStylesheets", prefs.clipperInlineStylesheets );
     prefsBundle.setBoolPref( "clipperSaveActiveRulesOnly", prefs.clipperSaveActiveRulesOnly );
   };
 
@@ -1060,14 +1043,9 @@ ru.akman.znotes.Options = function() {
     clipperSaveFrames.checked = currentPrefs.clipperSaveFrames;
     clipperSeparateFrames.checked = currentPrefs.clipperSeparateFrames;
     clipperPreserveHTML5Tags.checked = currentPrefs.clipperPreserveHTML5Tags;
+    clipperSaveInlineResources.checked = currentPrefs.clipperSaveInlineResources;
     clipperSaveStyles.checked = currentPrefs.clipperSaveStyles;
-    if ( currentPrefs.clipperSingleStylesheet ) {
-      clipperSaveStylesGroup.selectedItem = clipperSingleStylesheet;
-    } else if ( currentPrefs.clipperSeparateStylesheets ) {
-      clipperSaveStylesGroup.selectedItem = clipperSeparateStylesheets;
-    } else {
-      clipperSaveStylesGroup.selectedItem = clipperInlineStylesheets;
-    }
+    clipperInlineStylesheets.checked = currentPrefs.clipperInlineStylesheets;
     clipperSaveActiveRulesOnly.checked = currentPrefs.clipperSaveActiveRulesOnly;
     onSaveStylesChanged();
     defaultDocumentType = currentPrefs.defaultDocumentType;
@@ -1148,24 +1126,22 @@ ru.akman.znotes.Options = function() {
     clipperSaveFrames = document.getElementById( "clipperSaveFrames" );
     clipperSeparateFrames = document.getElementById( "clipperSeparateFrames" );
     clipperPreserveHTML5Tags = document.getElementById( "clipperPreserveHTML5Tags" );
+    clipperSaveInlineResources = document.getElementById( "clipperSaveInlineResources" );
     clipperSaveStyles = document.getElementById( "clipperSaveStyles" );
-    clipperSaveStylesGroup = document.getElementById( "clipperSaveStylesGroup" );
     clipperInlineStylesheets = document.getElementById( "clipperInlineStylesheets" );
-    clipperSingleStylesheet = document.getElementById( "clipperSingleStylesheet" );
-    clipperSeparateStylesheets = document.getElementById( "clipperSeparateStylesheets" );
     clipperSaveActiveRulesOnly = document.getElementById( "clipperSaveActiveRulesOnly" );
     clipperSeparateFrames.setAttribute( "hidden", "true" );
     if ( Utils.IS_SANITIZE_ENABLED ) {
       clipperSaveScripts.setAttribute( "hidden", "true" );
       clipperSaveFrames.setAttribute( "hidden", "true" );
       clipperPreserveHTML5Tags.setAttribute( "hidden", "true" );
-      clipperSaveStylesGroup.setAttribute( "hidden", "true" );
+      clipperInlineStylesheets.setAttribute( "hidden", "true" );
       clipperSaveActiveRulesOnly.setAttribute( "hidden", "true" );
     } else {
       clipperSaveScripts.removeAttribute( "hidden" );
       clipperSaveFrames.removeAttribute( "hidden" );
       clipperPreserveHTML5Tags.removeAttribute( "hidden" );
-      clipperSaveStylesGroup.removeAttribute( "hidden" );
+      clipperInlineStylesheets.removeAttribute( "hidden" );
       clipperSaveActiveRulesOnly.removeAttribute( "hidden" );
     }
     docTypeMenuList = document.getElementById( "docTypeMenuList" );

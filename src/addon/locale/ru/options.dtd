@@ -43,10 +43,9 @@
 <!ENTITY clipperSaveFrames.label "Сохранять фреймы">
 <!ENTITY clipperSeparateFrames.label "Сохранять фреймы в отдельных директориях">
 <!ENTITY clipperPreserveHTML5Tags.label "Сохранять теги HTML5">
+<!ENTITY clipperSaveInlineResources.label "Сохранять встроенные ресурсы в отдельных файлах">
 <!ENTITY clipperSaveStyles.label "Сохранять стили">
 <!ENTITY clipperInlineStylesheets.label "Встраивать таблицы стилей в документ">
-<!ENTITY clipperSingleStylesheet.label "Сохранять таблицы стилей в одном файле">
-<!ENTITY clipperSeparateStylesheets.label "Сохранять таблицы стилей в отдельных файлах">
 <!ENTITY clipperSaveActiveRulesOnly.label "Сохранять только активные правила">
 <!ENTITY isCloseBrowserAfterImport.label "Закрывать окно браузера когда загрузка завершена">
 <!ENTITY isClipperPlaySound.label "Воспроизводить звук когда загрузка завершена">

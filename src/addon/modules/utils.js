@@ -80,7 +80,17 @@ var Utils = function() {
   var stringsBundle = null;
   var fontNameArray = null;
   
-  var clipperFlags = 0x10010000;
+  /*
+  0x00000001 SAVE_SCRIPTS
+  0x00000010 SAVE_FRAMES
+  0x00000100 SAVE_FRAMES_IN_SEPARATE_DIRECTORY
+  0x00001000 PRESERVE_HTML5_TAGS
+  0x00010000 SAVE_STYLES
+  0x00100000 SAVE_INLINE_RESOURCES_IN_SEPARATE_FILES
+  0x01000000 INLINE_STYLESHEETS_IN_DOCUMENT
+  0x10000000 SAVE_ACTIVE_RULES_ONLY
+  */
+  var clipperFlags = 0x11010000;
   var defaultDocumentType = "application/xhtml+xml";
   
   var placeName = "";

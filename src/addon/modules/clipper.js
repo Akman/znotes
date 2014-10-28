@@ -258,14 +258,14 @@ function resolveURL( url, href ) {
   return result;
 };
 
-function checkURL( url ) {
+function getURI( url ) {
   var uri;
   try {
     uri = ioService.newURI( url, null, null );
   } catch ( e ) {
     uri = ioService.newURI( "about:blank", null, null );
   }
-  return ( uri.scheme.toLowerCase() !== "about" );
+  return uri;
 };
 
 function parseFileName( name ) {
@@ -447,10 +447,6 @@ function createFileEntry( dir, name ) {
     entry.append( prefix + name );
     prefix += "_";
   } while ( entry.exists() && !entry.isDirectory() );
-  // TODO: how this may throw an exception NS_ERROR_FILE_NOT_FOUND
-  if ( !dir.exists() ) {
-    log.debug( "createFileEntry() :: `dir` does not exist!" );
-  }
   ostream.init(
     entry,
     parseInt( "0x02", 16 ) | // PR_WRONLY
@@ -750,17 +746,24 @@ function inspectRule( aSubstitution, aGlobalNamespaces, aLocalNamespaces,
   }
   cssText = cssText.replace( /url\s*\(\s*(['"]?)(\S+)\1\s*\)/img,
     function( s0, s1, s2 ) {
-      var url = resolveURL( s2, aSheetURL );
-      if ( checkURL( url ) ) {
-        addJobObserver(
-          aLoader.createJob( aDirectory, url, aSheetURL, "" /* contentType */,
-                             aGroupId ),
-          aCallback,
-          aLines,
-          anIndex
-        );
+      var anURL = resolveURL( s2, aSheetURL );
+      switch( getURI( anURL ).scheme.toLowerCase() ) {
+        case "about":
+          break;
+        case "data":
+          if ( !( aFlags & 0x00100000 /* SAVE_INLINE_RESOURCES_IN_SEPARATE_FILES */ ) ) {
+            break;
+          }
+        default:
+          addJobObserver(
+            aLoader.createJob( aDirectory, anURL, aSheetURL, "" /* contentType */,
+                               aGroupId ),
+            aCallback,
+            aLines,
+            anIndex
+          );
       }
-      return "url(" + url + ")";
+      return "url(" + anURL + ")";
     }
   );
   if ( selectorText ) {
@@ -784,7 +787,7 @@ function inspectRule( aSubstitution, aGlobalNamespaces, aLocalNamespaces,
           case "universal":
           case "attr":
             if (
-              // save stylesheets in separate files
+              // no global namespaces
               !aGlobalNamespaces ||
               // all namespaces
               production.prefix === "*" ||
@@ -819,16 +822,16 @@ function inspectRule( aSubstitution, aGlobalNamespaces, aLocalNamespaces,
   return cssText;
 };
 
-function processRule( aRule, aRules, aSubstitution, aDocument, aSheet,
-  aGroupId, aDirectory, aLoader, aFlags ) {
+function processRule( aRule, aRules, aSubstitution, aDocument, aGroupId,
+  aDirectory, aLoader, aFlags ) {
   var sheet, matchMedia, matchSupports, matchDocument;
   var fileName, filePrefix, sheetFile, url;
   var cssIndex, cssText;
-  var prefixLines = null, suffixLines = null;
   var globalNamespaces, localNamespaces;
+  var aSheet = aRule.parentStyleSheet;
   var aSheetURL = resolveSheetURL( aDocument, aSheet );
   globalNamespaces = aRules.namespaces;
-  // get current sheet
+  // get current sheet from aRules
   for ( var i = 0; i < aRules.sheets.length; i++ ) {
     sheet = aRules.sheets[i];
     if ( sheet.sheet === aSheet ) {
@@ -843,9 +846,9 @@ function processRule( aRule, aRules, aSubstitution, aDocument, aSheet,
     case Ci.nsIDOMCSSRule.STYLE_RULE:
       if ( aRule.cssText ) {
         cssIndex = sheet.lines.length;
-        cssText = inspectRule( aSubstitution, globalNamespaces, localNamespaces,
-                               aRule, aSheetURL, aGroupId,
-                               aDirectory, aLoader, aFlags,
+        cssText = inspectRule( aSubstitution, null /* globalNamespaces */,
+          localNamespaces, aRule, aSheetURL, aGroupId, aDirectory, aLoader,
+          aFlags,
           function( job, lines, index ) {
             if ( job.getStatus() ) {
               return;
@@ -866,9 +869,9 @@ function processRule( aRule, aRules, aSubstitution, aDocument, aSheet,
     case Ci.nsIDOMCSSRule.KEYFRAME_RULE:
       if ( aRule.cssText ) {
         cssIndex = sheet.lines.length;
-        cssText = inspectRule( aSubstitution, globalNamespaces, localNamespaces,
-                               aRule, aSheetURL, aGroupId,
-                               aDirectory, aLoader, aFlags,
+        cssText = inspectRule( aSubstitution, null /* globalNamespaces */,
+          localNamespaces, aRule, aSheetURL, aGroupId, aDirectory, aLoader,
+          aFlags,
           function( job, lines, index ) {
             if ( job.getStatus() ) {
               return;
@@ -913,10 +916,9 @@ function processRule( aRule, aRules, aSubstitution, aDocument, aSheet,
       }
       if ( matchMedia && aRule.styleSheet ) {
         url = null;
-        prefixLines = null;
-        suffixLines = null;
-        if ( aFlags & 0x01000000 /* SAVE_STYLESHEETS_IN_SEPARATE_FILES */ ) {
-          fileName = getSuitableFileName( aRule.styleSheet.href, "text/css" );
+        if ( !( aFlags & 0x01000000 /* INLINE_STYLESHEETS_IN_DOCUMENT */ ) ) {
+          fileName = getSuitableFileName( aRule.styleSheet.href,
+            aRule.styleSheet.type );
           filePrefix = "";
           do {
             sheetFile = aDirectory.clone();
@@ -931,33 +933,10 @@ function processRule( aRule, aRules, aSubstitution, aDocument, aSheet,
             cssText += " " + aRule.media.mediaText;
           }
           sheet.lines.push( cssText + ";" );
-        } else if ( aFlags & 0x00100000 /* SAVE_STYLESHEETS_IN_SINGLE_FILE */ ) {
-          if ( !( aFlags & 0x10000000 /* SAVE_ACTIVE_RULES_ONLY */ ) &&
-            aRule.media && aRule.media.mediaText ) {
-            prefixLines = [
-              "@media " + aRule.media.mediaText + " {"
-            ];
-            suffixLines = [
-              "}"
-            ];
-          }
-        } else {
-          if ( !( aFlags & 0x10000000 /* SAVE_ACTIVE_RULES_ONLY */ ) &&
-            aRule.media && aRule.media.mediaText ) {
-            prefixLines = [
-              "@media " + aRule.media.mediaText + " {"
-            ];
-            suffixLines = [
-              "}"
-            ];
-          }
         }
-        // TODO: what if aRule.styleSheet.disabled === true ? alternate ?
-        if ( aRule.styleSheet && !aRule.styleSheet.disabled ) {
-          processStyleSheet( aRules, aSubstitution, aDocument,
-            aRule.styleSheet, url, aGroupId, aDirectory, aLoader, aFlags,
-            prefixLines, suffixLines );
-        }
+        processStyleSheet( aRules, aSubstitution, aDocument, sheet,
+          aRule.styleSheet, url /* aFileName */, aGroupId, aDirectory,
+          aLoader, aFlags );
       }
       break;
     case Ci.nsIDOMCSSRule.SUPPORTS_RULE:
@@ -985,7 +964,7 @@ function processRule( aRule, aRules, aSubstitution, aDocument, aSheet,
       if ( matchSupports ) {
         for ( var j = 0; j < aRule.cssRules.length; j++ ) {
           processRule( aRule.cssRules[j], aRules, aSubstitution, aDocument,
-            aSheet, aGroupId, aDirectory, aLoader, aFlags );
+            aGroupId, aDirectory, aLoader, aFlags );
         }
       }
       if ( !( aFlags & 0x10000000 /* SAVE_ACTIVE_RULES_ONLY */ ) ) {
@@ -1021,7 +1000,7 @@ function processRule( aRule, aRules, aSubstitution, aDocument, aSheet,
       if ( matchMedia ) {
         for ( var j = 0; j < aRule.cssRules.length; j++ ) {
           processRule( aRule.cssRules[j], aRules, aSubstitution, aDocument,
-            aSheet, aGroupId, aDirectory, aLoader, aFlags );
+            aGroupId, aDirectory, aLoader, aFlags );
         }
       }
       if ( !( aFlags & 0x10000000 /* SAVE_ACTIVE_RULES_ONLY */ ) ) {
@@ -1087,7 +1066,7 @@ function processRule( aRule, aRules, aSubstitution, aDocument, aSheet,
       if ( matchDocument ) {
         for ( var j = 0; j < aRule.cssRules.length; j++ ) {
           processRule( aRule.cssRules[j], aRules, aSubstitution, aDocument,
-            aSheet, aGroupId, aDirectory, aLoader, aFlags );
+            aGroupId, aDirectory, aLoader, aFlags );
         }
       }
       if ( !( aFlags & 0x10000000 /* SAVE_ACTIVE_RULES_ONLY */ ) ) {
@@ -1118,10 +1097,7 @@ function processRule( aRule, aRules, aSubstitution, aDocument, aSheet,
         readonly attribute DOMString? prefix;
       };
       */
-      if ( ( aFlags & 0x01000000 /* SAVE_STYLESHEETS_IN_SEPARATE_FILES */ ) &&
-            aRule.cssText ) {
-        sheet.lines.push( aRule.cssText );
-      }
+      sheet.lines.push( aRule.cssText );
       break;
     case Ci.nsIDOMCSSRule.CHARSET_RULE:
       /**
@@ -1165,7 +1141,7 @@ function processRule( aRule, aRules, aSubstitution, aDocument, aSheet,
       sheet.lines.push( "@keyframes " + aRule.name + " {" );
       for ( var j = 0; j < aRule.cssRules.length; j++ ) {
         processRule( aRule.cssRules[j], aRules, aSubstitution, aDocument,
-          aSheet, aGroupId, aDirectory, aLoader, aFlags );
+          aGroupId, aDirectory, aLoader, aFlags );
       }
       sheet.lines.push( "}" );
       break;
@@ -1257,9 +1233,9 @@ function collectSheetNamespaces( aNamespaces, aSheet ) {
   }
 };
 
-function processStyleSheet( aRules, aSubstitution, aDocument, aSheet, aFileName,
-  aGroupId, aDirectory, aLoader, aFlags, aPrefixLines, aSuffixLines ) {
-  var sheet, namespaces, matchMedia;
+function processStyleSheet( aRules, aSubstitution, aDocument, aParentSheet,
+  aSheet, aFileName, aGroupId, aDirectory, aLoader, aFlags ) {
+  var sheet, namespaces, matchMedia, nodeName, parentSheetIndex;
   if ( aSheet.href ) {
     for ( var i = 0; i < aRules.sheets.length; i++ ) {
       if ( aRules.sheets[i].href === aSheet.href ) {
@@ -1269,8 +1245,10 @@ function processStyleSheet( aRules, aSubstitution, aDocument, aSheet, aFileName,
   }
   matchMedia = true;
   if ( aFlags & 0x10000000 /* SAVE_ACTIVE_RULES_ONLY */ ) {
-    if ( aDocument.defaultView &&
-         aSheet.media && aSheet.media.mediaText ) {
+    if ( aSheet.disabled ) {
+      matchMedia = false;
+    } else if ( aDocument.defaultView &&
+      aSheet.media && aSheet.media.mediaText ) {
       matchMedia = aDocument.defaultView.matchMedia( aSheet.media.mediaText );
       matchMedia = matchMedia && matchMedia.matches;
     }
@@ -1281,46 +1259,49 @@ function processStyleSheet( aRules, aSubstitution, aDocument, aSheet, aFileName,
   namespaces = CSSUtils.Namespaces.create(
     aDocument.documentElement.namespaceURI );
   collectSheetNamespaces( namespaces, aSheet );
-  if ( !( aFlags & 0x01000000 /* SAVE_STYLESHEETS_IN_SEPARATE_FILES */ ) ) {
-    if ( !aRules.namespaces ) {
-      aRules.namespaces = namespaces.clone();
-    } else {
-      aRules.namespaces.mixin( namespaces );
-    }
+  if ( !aRules.namespaces ) {
+    aRules.namespaces = namespaces.clone();
+  } else {
+    aRules.namespaces.mixin( namespaces );
   }
+  nodeName = aSheet.ownerNode ?
+    aSheet.ownerNode.nodeName.toLowerCase() : null;
   sheet = {
-    media: aSheet.media,
     sheet: aSheet,
-    owner: !!aSheet.ownerRule,
-    fname: aFileName,
+    parent: aParentSheet,
+    fileName: aFileName, // @import
+    type: aSheet.type,
+    title: aSheet.title,
+    disabled: aSheet.disabled,
+    scoped: aSheet.scoped,
+    media: aSheet.media,
     href: aSheet.href,
+    hrefLang: nodeName === "link" ?
+      aSheet.ownerNode.getAttribute( "hreflang" ) : null,
+    relList: nodeName === "link" && aSheet.ownerNode.hasAttribute( "rel" ) ?
+      aSheet.ownerNode.getAttribute( "rel" ).toLowerCase().split( /\s+/ ) : [],
     namespaces: namespaces,
     lines: []
   };
-  aRules.sheets.push( sheet );
-  if ( aPrefixLines ) {
-    for each ( var line in aPrefixLines ) {
-      sheet.lines.push( line );
-    }
+  parentSheetIndex = aParentSheet ? aRules.sheets.indexOf( aParentSheet ) : -1;
+  if ( parentSheetIndex === -1 ) {
+    aRules.sheets.push( sheet );
+  } else {
+    aRules.sheets.splice( parentSheetIndex, 0, sheet );
   }
   for ( var i = 0; i < aSheet.cssRules.length; i++ ) {
     processRule( aSheet.cssRules[i], aRules, aSubstitution, aDocument,
-      aSheet, aGroupId, aDirectory, aLoader, aFlags );
-  }
-  if ( aSuffixLines ) {
-    for each ( var line in aSuffixLines ) {
-      sheet.lines.push( line );
-    }
+      aGroupId, aDirectory, aLoader, aFlags );
   }
 };
 
 function collectStyles( aRules, aSubstitution, aDocument, aGroupId, aDirectory,
   aLoader, aFlags ) {
   for ( var i = 0; i < aDocument.styleSheets.length; i++ ) {
-    // TODO: what if aDocument.styleSheets.disabled === true ? alternate ?
-    if ( aDocument.styleSheets[i] && !aDocument.styleSheets[i].disabled ) {
+    if ( aDocument.styleSheets[i] ) {
       processStyleSheet( aRules, aSubstitution, aDocument,
-        aDocument.styleSheets[i], null, aGroupId, aDirectory, aLoader, aFlags );
+        null /* aParentSheet */, aDocument.styleSheets[i], null /* aFileName */,
+        aGroupId, aDirectory, aLoader, aFlags );
     }
   }
 };
@@ -1593,7 +1574,38 @@ function addJobObserver( aJob, aCallback, aLines, anIndex ) {
   return aJob;
 };
 
-function inspectElement( aLinks, aRules, aSubstitution, anElement, aDocumentURL,
+function createLoaderJob( aLoader, aDirectory, aDocumentURL, aGroupId,
+  aContentType, anURL, anElement, anAttrName, aFlags ) {
+  switch( getURI( anURL ).scheme.toLowerCase() ) {
+    case "about":
+      break;
+    case "data":
+      if ( !( aFlags & 0x00100000 /* SAVE_INLINE_RESOURCES_IN_SEPARATE_FILES */ ) ) {
+        setElementAttribute( anElement, anAttrName, anURL );
+        break;
+      }
+    default:
+      addJobObserver(
+        aLoader.createJob( aDirectory, anURL, aDocumentURL,
+          aContentType, aGroupId ),
+        function( job ) {
+          var entry = job.getEntry();
+          var status = job.getStatus();
+          if ( status ) {
+            if ( entry.exists() ) {
+              entry.remove( false );
+            }
+          } else {
+            setElementAttribute( anElement, anAttrName,
+              encodeURI( entry.leafName ) );
+          }
+        }
+      );
+      setElementAttribute( anElement, anAttrName, anURL );
+  }
+};
+
+function inspectElement( aRules, aSubstitution, anElement, aDocumentURL,
   aBaseURL, aFrames, aGroupId, aDirectory, aLoader, aFlags ) {
   var anURI, anURL, aContentType, aFrame, aDocument, aRelList, aLink;
   var aName, aValue;
@@ -1627,6 +1639,7 @@ function inspectElement( aLinks, aRules, aSubstitution, anElement, aDocumentURL,
         }
         break;
       case "base":
+        return anElement.parentNode.removeChild( anElement );
       case "style":
         return anElement.parentNode.removeChild( anElement );
       case "script":
@@ -1635,28 +1648,8 @@ function inspectElement( aLinks, aRules, aSubstitution, anElement, aDocumentURL,
           if ( anElement.src ) {
             aContentType = anElement.type ? anElement.type : "text/javascript";
             anURL = resolveURL( anElement.src, aBaseURL );
-            if ( checkURL( anURL ) ) {
-              addJobObserver(
-                aLoader.createJob( aDirectory, anURL, aDocumentURL,
-                  aContentType, aGroupId ),
-                function( job ) {
-                  var entry = job.getEntry();
-                  var status = job.getStatus();
-                  if ( status ) {
-                    if ( entry.exists() ) {
-                      entry.remove( false );
-                    }
-                  } else {
-                    setElementAttribute(
-                      anElement,
-                      "src",
-                      encodeURI( entry.leafName )
-                    );
-                  }
-                }
-              );
-              setElementAttribute( anElement, "src", anURL );
-            }
+            createLoaderJob( aLoader, aDirectory, aDocumentURL, aGroupId,
+              aContentType, anURL, anElement, "src", aFlags );
           }
           return anElement;
         }
@@ -1665,144 +1658,35 @@ function inspectElement( aLinks, aRules, aSubstitution, anElement, aDocumentURL,
         aContentType = anElement.type ? anElement.type.toLowerCase() : "";
         aRelList = anElement.hasAttribute( "rel" ) ?
           anElement.getAttribute( "rel" ).toLowerCase().split( /\s+/ ) : [];
-        if ( aRelList.length ) {
-          if ( aRelList.indexOf( "stylesheet" ) !== -1 ) {
-            if ( !anElement.disabled && anElement.sheet &&
-              !anElement.sheet.disabled ) {
-              return anElement.parentNode.removeChild( anElement );
-            }
-            if ( anElement.href ) {
-              anURL = resolveURL( anElement.href, aBaseURL );
-              if ( checkURL( anURL ) ) {
-                setElementAttribute( anElement, "href", anURL );
-              }
-            }
-            aLink = {
-              type: aContentType,
-              href: anElement.href,
-              hreflang: anElement.hreflang,
-              media: anElement.media,
-              rel: aRelList.join( " " ),
-              disabled: anElement.disabled,
-              title: anElement.getAttribute( "title" )
-            }
-            // TODO: so many kinds of a link tag including alternate stylesheets
-            /*
-            <link hreflang="ru" rel="alternate" />
-            <link media="media" rel="alternate" />
-            
-            <link rel="edit" title="title" />
-            <link rel="apple-touch-icon" />
-            <link rel="shortcut icon" />
-
-            <link type="application/opensearchdescription+xml" rel="search" title="title" />
-            <link type="application/rsd+xml" rel="EditURI" />
-
-            <link type="application/x-wiki" rel="alternate" title="title" />
-            <link type="application/atom+xml" rel="alternate" title="title" />		
-            <link type="application/rss+xml" rel="alternate" title="title" />
-            */
-            /*
-            href: 'https://key.disney.ru/api/mini-portals/style.css?12'
-            href: 'https://key.disney.ru/dev/api.css?5'
-            href: 'http://www.disney.ru/api/mini-portals/root/style.css?11'
-            href: 'http://www.disney.ru/css/noflash.css'
-            href: 'http://www.disney.ru/css/root.css'
-            href: 'http://www.disney.ru/css/disney.css'
-            ===========================================================
-            <link href="http://www.disney.ru/css/disney.css" rel="stylesheet" />
-            <link href="http://www.disney.ru/css/root.css" rel="stylesheet" />
-            <link href="http://www.disney.ru/css/noflash.css" rel="stylesheet" />
-            <link rel="stylesheet" type="text/css" href="http://www.disney.ru/api/mini-portals/root/style.css?11" />
-            <link rel="stylesheet" type="text/css" href="https://key.disney.ru/dev/api.css?5" />
-            <link rel="stylesheet" type="text/css" href="https://key.disney.ru/api/mini-portals/style.css?12" />
-            <link rel="stylesheet" type="text/css" href="disney.css" />
-            <link rel="stylesheet" type="text/css" href="root.css" />
-            <link rel="stylesheet" type="text/css" href="noflash.css" />
-            <link rel="stylesheet" type="text/css" href="style.css" />
-            <link rel="stylesheet" type="text/css" href="api.css" />
-            <link rel="stylesheet" type="text/css" href="_style.css" />
-            */
-            log.debug( "LINK:\n" + 
-              "type: '" + aLink.type + "'\n" +
-              "href: '" + aLink.href + "'\n" +
-              "hreflang: '" + aLink.hreflang + "'\n" +
-              "rel: '" + aLink.rel + "'\n" +
-              "media: '" + ( aLink.media ? aLink.media.mediaText : "" ) + "'\n" +
-              "disabled: " + aLink.disabled + "\n" +
-              "title: '" + aLink.title + "'"
-            );
-            aLinks.push( aLink );
-            return anElement;
-          }
-          if ( aRelList.indexOf( "icon" ) !== -1 ||
-               aRelList.indexOf( "shortcut" ) !== -1 ) {
-            if ( anElement.href ) {
-              anURL = resolveURL( anElement.href, aBaseURL );
-              if ( checkURL( anURL ) ) {
-                addJobObserver(
-                  aLoader.createJob( aDirectory, anURL, aDocumentURL,
-                    "image/x-icon", aGroupId ),
-                  function( job ) {
-                    var entry = job.getEntry();
-                    var status = job.getStatus();
-                    if ( status ) {
-                      if ( entry.exists() ) {
-                        entry.remove( false );
-                      }
-                    } else {
-                      setElementAttribute(
-                        anElement,
-                        "href",
-                        encodeURI( entry.leafName )
-                      );
-                    }
-                  }
-                );
-                setElementAttribute( anElement, "href", anURL );
-              }
-            }
-            return anElement;
-          }
-        }
-        // @see http://www.w3.org/TR/html5/links.html#rel-alternate
-        // If the alternate keyword is used with the type attribute
-        // set to the value application/rss+xml or
-        // the value application/atom+xml or
-        // the value application/opensearchdescription+xml
-        if ( aContentType === "application/rss+xml" ||
-             aContentType === "application/atom+xml" ||
-             aContentType === "application/opensearchdescription+xml" ) {
+        if ( aRelList.indexOf( "stylesheet" ) !== -1 ) {
+          return anElement.parentNode.removeChild( anElement );
+        } else if ( aRelList.indexOf( "icon" ) !== -1 ||
+          aRelList.indexOf( "apple-touch-icon" ) !== -1 ||
+          aRelList.indexOf( "apple-touch-icon-precomposed" ) !== -1 ) {
           if ( anElement.href ) {
+            aContentType = "image/x-icon";
             anURL = resolveURL( anElement.href, aBaseURL );
-            if ( checkURL( anURL ) ) {
-              addJobObserver(
-                aLoader.createJob( aDirectory, anURL, aDocumentURL,
-                  aContentType, aGroupId ),
-                function( job ) {
-                  var entry = job.getEntry();
-                  var status = job.getStatus();
-                  if ( status ) {
-                    if ( entry.exists() ) {
-                      entry.remove( false );
-                    }
-                  } else {
-                    setElementAttribute(
-                      anElement,
-                      "href",
-                      encodeURI( entry.leafName )
-                    );
-                  }
-                }
-              );
-              setElementAttribute( anElement, "href", anURL );
-            }
+            createLoaderJob( aLoader, aDirectory, aDocumentURL, aGroupId,
+              aContentType, anURL, anElement, "href", aFlags );
           }
           return anElement;
+        } else {
+          if ( ( aRelList.indexOf( "search" ) !== -1 &&
+            aContentType === "application/opensearchdescription+xml" ) ||
+            ( aRelList.indexOf( "alternate" ) !== -1 && (
+            aContentType === "application/rss+xml" ||
+            aContentType === "application/atom+xml" ) ) ) {
+            if ( anElement.href ) {
+              anURL = resolveURL( anElement.href, aBaseURL );
+              createLoaderJob( aLoader, aDirectory, aDocumentURL, aGroupId,
+                aContentType, anURL, anElement, "href", aFlags );
+            }
+            return anElement;
+          }
         }
         if ( anElement.href ) {
           anURL = resolveURL( anElement.href, aBaseURL );
-          if ( checkURL( anURL ) ) {
+          if ( getURI( anURL ).scheme.toLowerCase() !== "about" ) {
             setElementAttribute( anElement, "href", anURL );
           }
         }
@@ -1810,28 +1694,8 @@ function inspectElement( aLinks, aRules, aSubstitution, anElement, aDocumentURL,
       case "img":
         if ( anElement.src ) {
           anURL = resolveURL( anElement.src, aBaseURL );
-          if ( checkURL( anURL ) ) {
-            addJobObserver(
-              aLoader.createJob( aDirectory, anURL, aDocumentURL,
-                "" /* contentType */, aGroupId ),
-              function( job ) {
-                var entry = job.getEntry();
-                var status = job.getStatus();
-                if ( status ) {
-                  if ( entry.exists() ) {
-                    entry.remove( false );
-                  }
-                } else {
-                  setElementAttribute(
-                    anElement,
-                    "src",
-                    encodeURI( entry.leafName )
-                  );
-                }
-              }
-            );
-            setElementAttribute( anElement, "src", anURL );
-          }
+          createLoaderJob( aLoader, aDirectory, aDocumentURL, aGroupId,
+            "" /* contentType */, anURL, anElement, "src", aFlags );
         }
         anElement.removeAttribute( "livesrc" );
         break;
@@ -1839,42 +1703,22 @@ function inspectElement( aLinks, aRules, aSubstitution, anElement, aDocumentURL,
         anURL = anElement.getAttribute( "pluginspage" );
         if ( anURL ) {
           anURL = resolveURL( anURL, aBaseURL );
-          if ( checkURL( anURL ) ) {
+          if ( getURI( anURL ).scheme.toLowerCase() !== "about" ) {
             setElementAttribute( anElement, "pluginspage", anURL );
           }
         }
         anURL = anElement.getAttribute( "base" );
         if ( anURL ) {
           anURL = resolveURL( anURL, aBaseURL );
-          if ( checkURL( anURL ) ) {
+          if ( getURI( anURL ).scheme.toLowerCase() !== "about" ) {
             setElementAttribute( anElement, "base", anURL );
           }
         }
         if ( anElement.src ) {
           aContentType = anElement.type ? anElement.type : "";
           anURL = resolveURL( anElement.src, aBaseURL );
-          if ( checkURL( anURL ) ) {
-            addJobObserver(
-              aLoader.createJob( aDirectory, anURL, aDocumentURL,
-                aContentType, aGroupId ),
-              function( job ) {
-                var entry = job.getEntry();
-                var status = job.getStatus();
-                if ( status ) {
-                  if ( entry.exists() ) {
-                    entry.remove( false );
-                  }
-                } else {
-                  setElementAttribute(
-                    anElement,
-                    "src",
-                    encodeURI( entry.leafName )
-                  );
-                }
-              }
-            );
-            setElementAttribute( anElement, "src", anURL );
-          }
+          createLoaderJob( aLoader, aDirectory, aDocumentURL, aGroupId,
+            aContentType, anURL, anElement, "src", aFlags );
         }
         anElement.removeAttribute( "livesrc" );
         break;
@@ -1882,42 +1726,22 @@ function inspectElement( aLinks, aRules, aSubstitution, anElement, aDocumentURL,
         anURL = anElement.getAttribute( "codebase" );
         if ( anURL ) {
           anURL = resolveURL( anURL, aBaseURL );
-          if ( checkURL( anURL ) ) {
+          if ( getURI( anURL ).scheme.toLowerCase() !== "about" ) {
             setElementAttribute( anElement, "codebase", anURL );
           }
         }
         anURL = anElement.getAttribute( "base" );
         if ( anURL ) {
           anURL = resolveURL( anURL, aBaseURL );
-          if ( checkURL( anURL ) ) {
+          if ( getURI( anURL ).scheme.toLowerCase() !== "about" ) {
             setElementAttribute( anElement, "base", anURL );
           }
         }
         if ( anElement.data ) {
           aContentType = anElement.type ? anElement.type : "";
           anURL = resolveURL( anElement.data, aBaseURL );
-          if ( checkURL( anURL ) ) {
-            addJobObserver(
-              aLoader.createJob( aDirectory, anURL, aDocumentURL,
-                aContentType, aGroupId ),
-              function( job ) {
-                var entry = job.getEntry();
-                var status = job.getStatus();
-                if ( status ) {
-                  if ( entry.exists() ) {
-                    entry.remove( false );
-                  }
-                } else {
-                  setElementAttribute(
-                    anElement,
-                    "data",
-                    encodeURI( entry.leafName )
-                  );
-                }
-              }
-            );
-            setElementAttribute( anElement, "data", anURL );
-          }
+          createLoaderJob( aLoader, aDirectory, aDocumentURL, aGroupId,
+            aContentType, anURL, anElement, "data", aFlags );
         }
         break;
       case "param":
@@ -1929,34 +1753,14 @@ function inspectElement( aLinks, aRules, aSubstitution, anElement, aDocumentURL,
               aContentType = anElement.parentNode.type ?
                 anElement.parentNode.type : "";
               anURL = resolveURL( anURL, aBaseURL );
-              if ( checkURL( anURL ) ) {
-                addJobObserver(
-                  aLoader.createJob( aDirectory, anURL, aDocumentURL,
-                    aContentType, aGroupId ),
-                  function( job ) {
-                    var entry = job.getEntry();
-                    var status = job.getStatus();
-                    if ( status ) {
-                      if ( entry.exists() ) {
-                        entry.remove( false );
-                      }
-                    } else {
-                      setElementAttribute(
-                        anElement,
-                        "value",
-                        encodeURI( entry.leafName )
-                      );
-                    }
-                  }
-                );
-                setElementAttribute( anElement, "value", anURL );
-              }
+              createLoaderJob( aLoader, aDirectory, aDocumentURL, aGroupId,
+                aContentType, anURL, anElement, "value", aFlags );
               break;
             case "base":
               anURL = anElement.getAttribute( "value" );
               if ( anURL ) {
                 anURL = resolveURL( anURL, aBaseURL );
-                if ( checkURL( anURL ) ) {
+                if ( getURI( anURL ).scheme.toLowerCase() !== "about" ) {
                   setElementAttribute( anElement, "value", anURL );
                 }
               }
@@ -1971,28 +1775,8 @@ function inspectElement( aLinks, aRules, aSubstitution, anElement, aDocumentURL,
       case "td":
         if ( anElement.background ) {
           anURL = resolveURL( anElement.background, aBaseURL );
-          if ( checkURL( anURL ) ) {
-            addJobObserver(
-              aLoader.createJob( aDirectory, anURL, aDocumentURL,
-                "" /* contentType */, aGroupId ),
-              function( job ) {
-                var entry = job.getEntry();
-                var status = job.getStatus();
-                if ( status ) {
-                  if ( entry.exists() ) {
-                    entry.remove( false );
-                  }
-                } else {
-                  setElementAttribute(
-                    anElement,
-                    "background",
-                    encodeURI( entry.leafName )
-                  );
-                }
-              }
-            );
-            setElementAttribute( anElement, "background", anURL );
-          }
+          createLoaderJob( aLoader, aDirectory, aDocumentURL, aGroupId,
+            "" /* contentType */, anURL, anElement, "background", aFlags );
         }
         break;
       case "input" :
@@ -2000,28 +1784,8 @@ function inspectElement( aLinks, aRules, aSubstitution, anElement, aDocumentURL,
           case "image":
             if ( anElement.src ) {
               anURL = resolveURL( anElement.src, aBaseURL );
-              if ( checkURL( anURL ) ) {
-                addJobObserver(
-                  aLoader.createJob( aDirectory, anURL, aDocumentURL,
-                    "" /* contentType */, aGroupId ),
-                  function( job ) {
-                    var entry = job.getEntry();
-                    var status = job.getStatus();
-                    if ( status ) {
-                      if ( entry.exists() ) {
-                        entry.remove( false );
-                      }
-                    } else {
-                      setElementAttribute(
-                        anElement,
-                        "src",
-                        encodeURI( entry.leafName )
-                      );
-                    }
-                  }
-                );
-                setElementAttribute( anElement, "src", anURL );
-              }
+              createLoaderJob( aLoader, aDirectory, aDocumentURL, aGroupId,
+                "" /* contentType */, anURL, anElement, "src", aFlags );
             }
             break;
           case "text":
@@ -2041,7 +1805,7 @@ function inspectElement( aLinks, aRules, aSubstitution, anElement, aDocumentURL,
       case "area":
         if ( anElement.href ) {
           anURL = resolveURL( anElement.href, aBaseURL );
-          if ( checkURL( anURL ) ) {
+          if ( getURI( anURL ).scheme.toLowerCase() !== "about" ) {
             setElementAttribute( anElement, "href", anURL );
           }
         }
@@ -2049,7 +1813,7 @@ function inspectElement( aLinks, aRules, aSubstitution, anElement, aDocumentURL,
       case "form":
         if ( anElement.action ) {
           anURL = resolveURL( anElement.action, aBaseURL );
-          if ( checkURL( anURL ) ) {
+          if ( getURI( anURL ).scheme.toLowerCase() !== "about" ) {
             setElementAttribute( anElement, "action", anURL );
           }
         }
@@ -2130,12 +1894,21 @@ function inspectElement( aLinks, aRules, aSubstitution, anElement, aDocumentURL,
   return anElement;
 };
 
-function createStyles( aDocument, aLinks, aRules, aBaseURL, aFile, aDirectory,
-  aFlags ) {
+function getSheetTitle( aSheet ) {
+  var sheet = aSheet;
+  while ( sheet.parent ) {
+    sheet = sheet.parent;
+  }
+  return sheet.title;
+};
+
+function createStyles( aDocument, isFrame, aRules, aBaseURL, aFile, aDirectory, aFlags ) {
   var aStyle, anURL, aText, aCSSFile, aCSSFileName;
-  var name, prefix, prefixies;
-  var line, index, anAtLines;
+  var prefix, line, title;
   var aHead = aDocument.getElementsByTagName( "head" )[0];
+  for ( var i = 0; i < aRules.sheets.length; i++ ) {
+    aRules.sheets[i].title = getSheetTitle( aRules.sheets[i] );
+  }
   for ( var i = aRules.sheets.length - 1; i >= 0 ; i-- ) {
     for ( var j = aRules.sheets[i].lines.length - 1; j >= 0 ; j-- ) {
       line = aRules.sheets[i].lines[j].trim();
@@ -2147,152 +1920,100 @@ function createStyles( aDocument, aLinks, aRules, aBaseURL, aFile, aDirectory,
       aRules.sheets.splice( i, 1 );
     }
   }
-  aText = "";
-  for ( var i = 0; i < aRules.sheets.length; i++ ) {
-    anURL = aRules.sheets[i].href;
-    if ( anURL ) {
-      if ( aFlags & 0x01000000 /* SAVE_STYLESHEETS_IN_SEPARATE_FILES */ ) {
+  if ( aFlags & 0x01000000 /* INLINE_STYLESHEETS_IN_DOCUMENT */ ) {
+    for ( var i = 0; i < aRules.sheets.length; i++ ) {
+      anURL = aRules.sheets[i].href;
+      if ( anURL ) {
+        // link || @import
+        aText = "/***** " + anURL + " *****/\n      ";
+      } else {
+        // style
+        if ( aRules.sheets[i].scoped ) {
+          // TODO: scoped style
+          continue;
+        }
+        aText = "";
+      }
+      aText += aRules.sheets[i].lines.join( "\n      " );
+      aStyle = aDocument.createElementNS(
+        aDocument.documentElement.namespaceURI, "style" );
+      aStyle.textContent = "\n    " + aText + "\n    ";
+      if ( !( aFlags & 0x10000000 /* SAVE_ACTIVE_RULES_ONLY */ ) &&
+        aRules.sheets[i].media && aRules.sheets[i].media.mediaText ) {
+        aStyle.setAttribute( "media", aRules.sheets[i].media.mediaText );
+      }
+      if ( aRules.sheets[i].title ) {
+        aStyle.setAttribute( "title", aRules.sheets[i].title );
+      }
+      aHead.appendChild( aDocument.createTextNode( "\n" ) );
+      aHead.appendChild( aStyle );
+    }
+  } else {
+    for ( var i = 0; i < aRules.sheets.length; i++ ) {
+      anURL = aRules.sheets[i].href;
+      if ( anURL ) {
+        // link || @import
         aText = "/***** " + anURL + " *****/\n" +
-                aRules.sheets[i].lines.join( "\n" );
-        if ( aRules.sheets[i].fname /* @import ... */ ) {
+          aRules.sheets[i].lines.join( "\n" );
+        if ( aRules.sheets[i].fileName ) {
+          // @import
           aCSSFile = aDirectory.clone();
-          aCSSFile.append( aRules.sheets[i].fname );
+          aCSSFile.append( aRules.sheets[i].fileName );
+          writeFileEntry( aCSSFile, "utf-8", aText );
         } else {
-          aCSSFileName = getSuitableFileName( anURL, "text/css" );
+          // link
+          aCSSFileName = getSuitableFileName( anURL, aRules.sheets[i].type );
           prefix = "";
           do {
             aCSSFile = aDirectory.clone();
-            aCSSFile.append( prefix + aCSSFileName.name +
-                             "." + aCSSFileName.ext );
+            aCSSFile.append( prefix + aCSSFileName.name + "." +
+              aCSSFileName.ext );
             prefix += "_";
           } while ( aCSSFile.exists() && !aCSSFile.isDirectory() );
-        }
-        writeFileEntry( aCSSFile, "utf-8", aText );
-        if ( !aRules.sheets[i].owner ) {
+          writeFileEntry( aCSSFile, "utf-8", aText );
           aStyle = aDocument.createElementNS(
-            aDocument.documentElement.namespaceURI,
-            "link"
-          );
-          aStyle.setAttribute( "rel", "stylesheet" );
-          aStyle.setAttribute( "type", "text/css" );
+            aDocument.documentElement.namespaceURI, "link" );
+          aStyle.setAttribute( "rel", aRules.sheets[i].relList.join( " " ) );
+          aStyle.setAttribute( "type", aRules.sheets[i].type );
           aStyle.setAttribute( "href", aCSSFile.leafName );
-          if ( aRules.sheets[i].media && aRules.sheets[i].media.mediaText ) {
+          if ( aRules.sheets[i].title ) {
+            aStyle.setAttribute( "title", aRules.sheets[i].title );
+          }
+          if ( aRules.sheets[i].hrefLang ) {
+            aStyle.setAttribute( "hreflang", aRules.sheets[i].hrefLang );
+          }
+          if ( !( aFlags & 0x10000000 /* SAVE_ACTIVE_RULES_ONLY */ ) &&
+            aRules.sheets[i].media && aRules.sheets[i].media.mediaText ) {
             aStyle.setAttribute( "media", aRules.sheets[i].media.mediaText );
           }
           aHead.appendChild( aDocument.createTextNode( "\n" ) );
           aHead.appendChild( aStyle );
         }
-      } else if ( aFlags & 0x00100000 /* SAVE_STYLESHEETS_IN_SINGLE_FILE */ ) {
-        aText += ( i ? "\n" : "" ) +
-                 "/***** " + anURL + " *****/\n" +
-                 (
-                   aRules.sheets[i].media && aRules.sheets[i].media.mediaText ?
-                     "@media " + aRules.sheets[i].media.mediaText + " {\n" :
-                     ""
-                 ) +
-                 aRules.sheets[i].lines.join( "\n" ) +
-                 ( aRules.sheets[i].media.mediaText ? "\n}\n" : "" );
       } else {
-        aText += ( i ? "\n      " : "" ) +
-                 "/***** " + anURL + " *****/\n      " +
-                 (
-                   aRules.sheets[i].media && aRules.sheets[i].media.mediaText ?
-                     "@media " + aRules.sheets[i].media.mediaText + " {\n      " :
-                     ""
-                 ) +
-                 aRules.sheets[i].lines.join( "\n      " ) +
-                 ( aRules.sheets[i].media.mediaText ? "\n      }\n" : "" );
-      }
-    } else {
-      if ( aFlags & 0x01000000 /* SAVE_STYLESHEETS_IN_SEPARATE_FILES */ ) {
+        // style
+        if ( aRules.sheets[i].scoped ) {
+          // TODO: scoped style
+          continue;
+        }
         aText = aRules.sheets[i].lines.join( "\n      " );
         aStyle = aDocument.createElementNS(
-          aDocument.documentElement.namespaceURI,
-          "style"
-        );
-        if ( aRules.sheets[i].media && aRules.sheets[i].media.mediaText ) {
+          aDocument.documentElement.namespaceURI, "style" );
+        if ( !( aFlags & 0x10000000 /* SAVE_ACTIVE_RULES_ONLY */ ) &&
+          aRules.sheets[i].media && aRules.sheets[i].media.mediaText ) {
           aStyle.setAttribute( "media", aRules.sheets[i].media.mediaText );
         }
-        aStyle.textContent = aText + "\n    ";
+        if ( aRules.sheets[i].title ) {
+          aStyle.setAttribute( "title", aRules.sheets[i].title );
+        }
+        aStyle.textContent = "\n    " + aText + "\n    ";
         aHead.appendChild( aDocument.createTextNode( "\n" ) );
         aHead.appendChild( aStyle );
-      } else if ( aFlags & 0x00100000 /* SAVE_STYLESHEETS_IN_SINGLE_FILE */ ) {
-        aText += ( i ? "\n" : "" ) +
-                 "/***** internal style sheet *****/\n" +
-                 (
-                   aRules.sheets[i].media && aRules.sheets[i].media.mediaText ?
-                     "@media " + aRules.sheets[i].media.mediaText + " {\n" :
-                     ""
-                 ) +
-                 aRules.sheets[i].lines.join( "\n" ) +
-                 ( aRules.sheets[i].media.mediaText ? "\n}\n" : "" );
-      } else {
-        aText += ( i ? "\n      " : "" ) +
-                 "/***** internal style sheet *****/\n      " +
-                 (
-                   aRules.sheets[i].media && aRules.sheets[i].media.mediaText ?
-                     "@media " + aRules.sheets[i].media.mediaText + " {\n      " :
-                     ""
-                 ) +
-                 aRules.sheets[i].lines.join( "\n      " ) +
-                 ( aRules.sheets[i].media.mediaText ? "\n      }\n" : "" );
       }
     }
-  }
-  if ( aText.length &&
-       !( aFlags & 0x01000000 /* SAVE_STYLESHEETS_IN_SEPARATE_FILES */ ) ) {
-    anAtLines = [];
-    if ( aRules.namespaces ) {
-      anURL = aRules.namespaces.get();
-      if ( anURL && anURL !== HTML5NS ) {
-        anAtLines.push( "@namespace url(" + anURL + ");" );
-      }
-      prefixies = aRules.namespaces.getPrefixies();
-      for ( prefix in prefixies ) {
-        if ( prefix !== "xml" && prefix !== "xmlns" ) {
-          anURL = aRules.namespaces.get( prefix );
-          anAtLines.push( "@namespace " + prefix + " url(" + anURL + ");" );
-        }
-      }
-    }
-    if ( aFlags & 0x00100000 /* SAVE_STYLESHEETS_IN_SINGLE_FILE */ ) {
-      if ( anAtLines.length ) {
-        aText = anAtLines.join( "\n" ) + "\n" + aText + "\n";
-      }
-      prefix = "";
-      name = parseFileName( aFile.leafName ).name + ".css";
-      do {
-        aCSSFile = aDirectory.clone();
-        aCSSFile.append( prefix + name );
-        prefix += "_";
-      } while ( aCSSFile.exists() && !aCSSFile.isDirectory() );
-      writeFileEntry( aCSSFile, "utf-8", aText );
-      aStyle = aDocument.createElementNS(
-        aDocument.documentElement.namespaceURI,
-        "link"
-      );
-      aStyle.setAttribute( "rel", "stylesheet" );
-      aStyle.setAttribute( "type", "text/css" );
-      aStyle.setAttribute( "href", aCSSFile.leafName );
-    } else if ( !( aFlags & 0x01000000 /* SAVE_STYLESHEETS_IN_SEPARATE_FILES */ ) ) {
-      if ( anAtLines.length ) {
-        aText = "\n      " + anAtLines.join( "\n      " ) +
-                "\n      " + aText;
-      } else {
-        aText = "\n      " + aText;
-      }
-      aStyle = aDocument.createElementNS(
-        aDocument.documentElement.namespaceURI,
-        "style"
-      );
-      aStyle.textContent = aText + "\n    ";
-    }
-    aHead.appendChild( aDocument.createTextNode( "\n" ) );
-    aHead.appendChild( aStyle );
   }
 };
 
-function processNode( aLinks, aRules, aSubstitution, aRoot, aNamespaces,
+function processNode( aRules, aSubstitution, aRoot, aNamespaces,
   aDocumentURL, aBaseURL, aFrames, aGroupId, aDirectory, aLoader, aFlags ) {
   var aNode, aNext, anElementNamespaces;
   switch ( aRoot.nodeType ) {
@@ -2302,7 +2023,7 @@ function processNode( aLinks, aRules, aSubstitution, aRoot, aNamespaces,
       aRoot = fixupElement( aRoot, anElementNamespaces, aFlags );
       if ( aRoot ) {
         aRoot = substituteElement( aRoot, aSubstitution, aFlags );
-        aRoot = inspectElement( aLinks, aRules, aSubstitution, aRoot,
+        aRoot = inspectElement( aRules, aSubstitution, aRoot,
           aDocumentURL, aBaseURL, aFrames, aGroupId, aDirectory, aLoader,
           aFlags );
       }
@@ -2319,7 +2040,7 @@ function processNode( aLinks, aRules, aSubstitution, aRoot, aNamespaces,
     aNode = aRoot.firstChild;
     while ( aNode ) {
       aNext = aNode.nextSibling;
-      processNode( aLinks, aRules, aSubstitution, aNode, anElementNamespaces,
+      processNode( aRules, aSubstitution, aNode, anElementNamespaces,
         aDocumentURL, aBaseURL, aFrames, aGroupId, aDirectory, aLoader, aFlags );
       aNode = aNext;
     }
@@ -2340,9 +2061,10 @@ function collectFrames( aDocument ) {
   return result;
 };
 
-function doneDocument( aDocument, aResult, aLinks, aRules, aBaseURL, aFile,
+function doneDocument( aDocument, aResult, aRules, aBaseURL, aFile,
   aDirectory, aFlags ) {
-  var aHead, aStyle, aMeta, aCollection, aBase, aBaseTarget;
+  var isFrame, aHead, aStyle, aMeta, aCollection, aBase, aBaseTarget;
+  isFrame = aDocument.defaultView.self !== aDocument.defaultView.window.top;
   var namespaceURI = aResult.documentElement.namespaceURI;
   if ( namespaceURI && namespaceURI === HTML5NS ) {
     // HEAD
@@ -2371,7 +2093,7 @@ function doneDocument( aDocument, aResult, aLinks, aRules, aBaseURL, aFile,
     }
     // STYLE
     if ( aFlags & 0x00010000 /* SAVE_STYLES */ ) {
-      createStyles( aResult, aLinks, aRules, aBaseURL, aFile, aDirectory,
+      createStyles( aResult, isFrame, aRules, aBaseURL, aFile, aDirectory,
         aFlags );
     }
   }
@@ -2388,9 +2110,8 @@ function saveDocument( aDocument, aResultObj, aFile, aDirectory,
   var aBaseURL = getFileURI( aFile.parent ).getRelativeSpec(
     getFileURI( aDirectory ) );
   var aGroupId = createUUID();
-  var aLinks = [];
   var aRules = {
-    namespaces: null, // global namespaces for single sheet
+    namespaces: null, // global namespaces
     sheets: []
   };
   var aNamespaces = CSSUtils.Namespaces.create();
@@ -2414,7 +2135,6 @@ function saveDocument( aDocument, aResultObj, aFile, aDirectory,
   while ( aNode ) {
     aNext = aNode.nextSibling;
     processNode(
-      aLinks,
       aRules,
       aSubstitution,
       aNode,
@@ -2433,12 +2153,12 @@ function saveDocument( aDocument, aResultObj, aFile, aDirectory,
     aLoader.addObserver( {
       onGroupStopped: function( anEvent ) {
         if ( anEvent.getData().id === aGroupId ) {
-          doneDocument( aDocument, aResult, aLinks, aRules, aBaseURL, aFile, aDirectory, aFlags );
+          doneDocument( aDocument, aResult, aRules, aBaseURL, aFile, aDirectory, aFlags );
         }
       }
     } );
   } else {
-    doneDocument( aDocument, aResult, aLinks, aRules, aBaseURL, aFile, aDirectory, aFlags );
+    doneDocument( aDocument, aResult, aRules, aBaseURL, aFile, aDirectory, aFlags );
   }
 };
 
@@ -2565,6 +2285,7 @@ Job.prototype = {
         onStartRequest: function( aChannel, aRequest, aContext ) {
           var mime, contentType, fileNameObj, name, entry;
           if ( ++self.mCount > 1 ) {
+            // http://cms.quantserve.com/dpixel?a=p-n5vvLvRdjg0ek&eid=0&qc_google_push=&google_gid=CAESEB3fjzopuxVRUhK5yPBQXtg&google_cver=1&google_push=AHNF13I9FLn8ICy6OU18HJ1WvadfEKJHLSdcNsI
             log.debug( "START: [ " + self.mCount + " ] " + self.mURL );
           }
           mime = null;
@@ -2586,8 +2307,7 @@ Job.prototype = {
           if ( fileNameObj.ext ) {
             name += "." + fileNameObj.ext;
           }
-          // TODO: sometimes throws an exception NS_ERROR_FILE_NOT_FOUND
-          // @see createFileEntry() for details
+          // TODO: self.getDirectory() - this dir does not exists!
           try {
             entry = createFileEntry( self.getDirectory(), name );
             self.mEntry.initWithFile( entry );

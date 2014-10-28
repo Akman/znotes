@@ -497,14 +497,14 @@ ru.akman.znotes.Main = function() {
             Utils.CLIPPER_FLAGS &= 0x11101111;
           }
           break;
-        case "clipperSingleStylesheet":
+        case "clipperSaveInlineResources":
           if ( event.data.newValue ) {
             Utils.CLIPPER_FLAGS |= 0x00100000;
           } else {
             Utils.CLIPPER_FLAGS &= 0x11011111;
           }
           break;
-        case "clipperSeparateStylesheets":
+        case "clipperInlineStylesheets":
           if ( event.data.newValue ) {
             Utils.CLIPPER_FLAGS |= 0x01000000;
           } else {
@@ -580,104 +580,97 @@ ru.akman.znotes.Main = function() {
           break;
         case "sanitize":
           Utils.IS_SANITIZE_ENABLED = this.branch.getBoolPref( "sanitize" );
-          if ( Utils.IS_SANITIZE_ENABLED ) {
-            Utils.CLIPPER_FLAGS &= 0x10010000;
-            // SAVE_STYLES
-            if ( !prefsBundle.hasPref( "clipperSaveStyles" ) ) {
-              prefsBundle.setBoolPref( "clipperSaveStyles",
-                !!( Utils.CLIPPER_FLAGS & 0x00010000 ) );
-            }
-            if ( prefsBundle.getBoolPref( "clipperSaveStyles" ) ) {
-              Utils.CLIPPER_FLAGS |= 0x00010000;
-            } else {
-              Utils.CLIPPER_FLAGS &= 0x11101111;
-            }
-            // SAVE_ACTIVE_RULES_ONLY
-            if ( !prefsBundle.hasPref( "clipperSaveActiveRulesOnly" ) ) {
-              prefsBundle.setBoolPref( "clipperSaveActiveRulesOnly",
-                !!( Utils.CLIPPER_FLAGS & 0x10000000 ) );
-            }
-            //if ( prefsBundle.getBoolPref( "clipperSaveActiveRulesOnly" ) ) {
-              Utils.CLIPPER_FLAGS |= 0x10000000;
-            //} else {
-            //  Utils.CLIPPER_FLAGS &= 0x01111111;
-            //}
+          // SAVE_SCRIPTS
+          if ( !pub.hasPref( "clipperSaveScripts" ) ) {
+            pub.setBoolPref( "clipperSaveScripts",
+              !!( Utils.CLIPPER_FLAGS & 0x00000001 ) );
+          }
+          // SAVE_FRAMES
+          if ( !pub.hasPref( "clipperSaveFrames" ) ) {
+            pub.setBoolPref( "clipperSaveFrames",
+              !!( Utils.CLIPPER_FLAGS & 0x00000010 ) );
+          }
+          // SAVE_FRAMES_IN_SEPARATE_DIRECTORY
+          if ( !pub.hasPref( "clipperSeparateFrames" ) ) {
+            pub.setBoolPref( "clipperSeparateFrames",
+              !!( Utils.CLIPPER_FLAGS & 0x00000100 ) );
+          }
+          // PRESERVE_HTML5_TAGS
+          if ( !pub.hasPref( "clipperPreserveHTML5Tags" ) ) {
+            pub.setBoolPref( "clipperPreserveHTML5Tags",
+              !!( Utils.CLIPPER_FLAGS & 0x00001000 ) );
+          }
+          // SAVE_STYLES
+          if ( !pub.hasPref( "clipperSaveStyles" ) ) {
+            pub.setBoolPref( "clipperSaveStyles",
+              !!( Utils.CLIPPER_FLAGS & 0x00010000 ) );
+          }
+          // SAVE_INLINE_RESOURCES_IN_SEPARATE_FILES
+          if ( !pub.hasPref( "clipperSaveInlineResources" ) ) {
+            pub.setBoolPref( "clipperSaveInlineResources",
+              !!( Utils.CLIPPER_FLAGS & 0x00100000 ) );
+          }
+          // INLINE_STYLESHEETS_IN_DOCUMENT
+          if ( !pub.hasPref( "clipperInlineStylesheets" ) ) {
+            pub.setBoolPref( "clipperInlineStylesheets",
+              !!( Utils.CLIPPER_FLAGS & 0x01000000 ) );
+          }
+          // SAVE_ACTIVE_RULES_ONLY
+          if ( !pub.hasPref( "clipperSaveActiveRulesOnly" ) ) {
+            pub.setBoolPref( "clipperSaveActiveRulesOnly",
+              !!( Utils.CLIPPER_FLAGS & 0x10000000 ) );
+          }
+          // SAVE_STYLES
+          if ( pub.getBoolPref( "clipperSaveStyles" ) ) {
+            Utils.CLIPPER_FLAGS |= 0x00010000;
           } else {
-            if ( !prefsBundle.hasPref( "clipperSaveScripts" ) ) {
-              prefsBundle.setBoolPref( "clipperSaveScripts",
-                !!( Utils.CLIPPER_FLAGS & 0x00000001 ) );
-            }
-            if ( prefsBundle.getBoolPref( "clipperSaveScripts" ) ) {
+            Utils.CLIPPER_FLAGS &= 0x11101111;
+          }
+          // SAVE_INLINE_RESOURCES_IN_SEPARATE_FILES
+          if ( pub.getBoolPref( "clipperSaveInlineResources" ) ) {
+            Utils.CLIPPER_FLAGS |= 0x00100000;
+          } else {
+            Utils.CLIPPER_FLAGS &= 0x11011111;
+          }
+          if ( Utils.IS_SANITIZE_ENABLED ) {
+            Utils.CLIPPER_FLAGS &= 0x11110000;
+            // INLINE_STYLESHEETS_IN_DOCUMENT
+            Utils.CLIPPER_FLAGS |= 0x01000000;
+            // SAVE_ACTIVE_RULES_ONLY
+            Utils.CLIPPER_FLAGS |= 0x10000000;
+          } else {
+            // SAVE_SCRIPTS
+            if ( pub.getBoolPref( "clipperSaveScripts" ) ) {
               Utils.CLIPPER_FLAGS |= 0x00000001;
             } else {
               Utils.CLIPPER_FLAGS &= 0x11111110;
             }
-            //
-            if ( !prefsBundle.hasPref( "clipperSaveFrames" ) ) {
-              prefsBundle.setBoolPref( "clipperSaveFrames",
-                !!( Utils.CLIPPER_FLAGS & 0x00000010 ) );
-            }
-            if ( prefsBundle.getBoolPref( "clipperSaveFrames" ) ) {
+            // SAVE_FRAMES
+            if ( pub.getBoolPref( "clipperSaveFrames" ) ) {
               Utils.CLIPPER_FLAGS |= 0x00000010;
             } else {
               Utils.CLIPPER_FLAGS &= 0x11111101;
             }
-            //
-            if ( !prefsBundle.hasPref( "clipperSeparateFrames" ) ) {
-              prefsBundle.setBoolPref( "clipperSeparateFrames",
-                !!( Utils.CLIPPER_FLAGS & 0x00000100 ) );
-            }
-            if ( prefsBundle.getBoolPref( "clipperSeparateFrames" ) ) {
+            // SAVE_FRAMES_IN_SEPARATE_DIRECTORY
+            if ( pub.getBoolPref( "clipperSeparateFrames" ) ) {
               Utils.CLIPPER_FLAGS |= 0x00000100;
             } else {
               Utils.CLIPPER_FLAGS &= 0x11111011;
             }
-            //
-            if ( !prefsBundle.hasPref( "clipperPreserveHTML5Tags" ) ) {
-              prefsBundle.setBoolPref( "clipperPreserveHTML5Tags",
-                !!( Utils.CLIPPER_FLAGS & 0x00001000 ) );
-            }
-            if ( prefsBundle.getBoolPref( "clipperPreserveHTML5Tags" ) ) {
+            // PRESERVE_HTML5_TAGS
+            if ( pub.getBoolPref( "clipperPreserveHTML5Tags" ) ) {
               Utils.CLIPPER_FLAGS |= 0x00001000;
             } else {
               Utils.CLIPPER_FLAGS &= 0x11110111;
             }
-            //
-            if ( !prefsBundle.hasPref( "clipperSaveStyles" ) ) {
-              prefsBundle.setBoolPref( "clipperSaveStyles",
-                !!( Utils.CLIPPER_FLAGS & 0x00010000 ) );
-            }
-            if ( prefsBundle.getBoolPref( "clipperSaveStyles" ) ) {
-              Utils.CLIPPER_FLAGS |= 0x00010000;
-            } else {
-              Utils.CLIPPER_FLAGS &= 0x11101111;
-            }
-            //
-            if ( !prefsBundle.hasPref( "clipperSingleStylesheet" ) ) {
-              prefsBundle.setBoolPref( "clipperSingleStylesheet",
-                !!( Utils.CLIPPER_FLAGS & 0x00100000 ) );
-            }
-            if ( prefsBundle.getBoolPref( "clipperSingleStylesheet" ) ) {
-              Utils.CLIPPER_FLAGS |= 0x00100000;
-            } else {
-              Utils.CLIPPER_FLAGS &= 0x11011111;
-            }
-            //
-            if ( !prefsBundle.hasPref( "clipperSeparateStylesheets" ) ) {
-              prefsBundle.setBoolPref( "clipperSeparateStylesheets",
-                !!( Utils.CLIPPER_FLAGS & 0x01000000 ) );
-            }
-            if ( prefsBundle.getBoolPref( "clipperSeparateStylesheets" ) ) {
+            // INLINE_STYLESHEETS_IN_DOCUMENT
+            if ( pub.getBoolPref( "clipperInlineStylesheets" ) ) {
               Utils.CLIPPER_FLAGS |= 0x01000000;
             } else {
               Utils.CLIPPER_FLAGS &= 0x10111111;
             }
-            //
-            if ( !prefsBundle.hasPref( "clipperSaveActiveRulesOnly" ) ) {
-              prefsBundle.setBoolPref( "clipperSaveActiveRulesOnly",
-                !!( Utils.CLIPPER_FLAGS & 0x10000000 ) );
-            }
-            if ( prefsBundle.getBoolPref( "clipperSaveActiveRulesOnly" ) ) {
+            // SAVE_ACTIVE_RULES_ONLY
+            if ( pub.getBoolPref( "clipperSaveActiveRulesOnly" ) ) {
               Utils.CLIPPER_FLAGS |= 0x10000000;
             } else {
               Utils.CLIPPER_FLAGS &= 0x01111111;
@@ -3368,11 +3361,11 @@ ru.akman.znotes.Main = function() {
           0x00000100 SAVE_FRAMES_IN_SEPARATE_DIRECTORY
           0x00001000 PRESERVE_HTML5_TAGS
           0x00010000 SAVE_STYLES
-          0x00100000 SAVE_STYLESHEETS_IN_SINGLE_FILE
-          0x01000000 SAVE_STYLESHEETS_IN_SEPARATE_FILES
+          0x00100000 SAVE_INLINE_RESOURCES_IN_SEPARATE_FILES
+          0x01000000 INLINE_STYLESHEETS_IN_DOCUMENT
           0x10000000 SAVE_ACTIVE_RULES_ONLY
           */
-          0x10010000,
+          0x11010000,
           anObserver
         );
       },

@@ -315,11 +315,11 @@ ru.akman.znotes.ZNotes = function() {
             0x00000100 SAVE_FRAMES_IN_SEPARATE_DIRECTORY
             0x00001000 PRESERVE_HTML5_TAGS
             0x00010000 SAVE_STYLES
-            0x00100000 SAVE_STYLESHEETS_IN_SINGLE_FILE
-            0x01000000 SAVE_STYLESHEETS_IN_SEPARATE_FILES
+            0x00100000 SAVE_INLINE_RESOURCES_IN_SEPARATE_FILES
+            0x01000000 INLINE_STYLESHEETS_IN_DOCUMENT
             0x10000000 SAVE_ACTIVE_RULES_ONLY
             */
-            0x10010000,
+            0x11110000,
             {
               onLoaderStarted: function( anEvent ) {
               },
