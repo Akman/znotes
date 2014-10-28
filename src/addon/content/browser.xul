@@ -92,6 +92,13 @@
       accesskey="&znotes_customizetoolbar_accesskey;"
       key="znotes_customizetoolbar_key"
       oncommand="ru.akman.znotes.Common.goDoCommand( 'znotes_customizetoolbar_command', event.explicitOriginalTarget );"/>
+    <command id="znotes_styles_command" disabled="true"
+      label="&znotes_styles_label;"
+      title="&znotes_styles_label;"
+      tooltiptext="&znotes_styles_tooltip;"
+      accesskey="&znotes_styles_accesskey;"
+      key="znotes_styles_key"
+      oncommand="ru.akman.znotes.Common.goDoCommand( 'znotes_styles_command', event.explicitOriginalTarget );"/>
   </commandset>
 
   <keyset id="znotes_keyset">
@@ -110,6 +117,9 @@
     <key id="znotes_customizetoolbar_key" command="znotes_customizetoolbar_command"
       key="&znotes_customizetoolbar_key;" modifiers="&znotes_customizetoolbar_key_modifiers;"
       keycode="&znotes_customizetoolbar_keycode;"/>
+    <key id="znotes_styles_key" command="znotes_styles_command"
+      key="&znotes_styles_key;" modifiers="&znotes_styles_key_modifiers;"
+      keycode="&znotes_styles_keycode;"/>
   </keyset>
 
   <popupset id="znotes_popupset">
@@ -145,6 +155,13 @@
       <toolbarbutton id="znotes_reload_button"
         class="toolbarbutton-1 znotes_reload_class"
         command="znotes_reload_command"/>
+      <toolbarbutton id="znotes_styles_button"
+        pack="end" type="menu"
+        class="toolbarbutton-1 znotes_styles_class"
+        key="znotes_styles_key"
+        command="znotes_styles_command">
+        <menupopup id="znotes_styles_menupopup" />
+      </toolbarbutton>
     </toolbar>
     <toolbarset id="browserToolBarSet" context="browserToolBarContext" />
   </toolbox>

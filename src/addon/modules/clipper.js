@@ -53,6 +53,28 @@ var log = Utils.getLogger( "modules.clipper" );
 
 var HTML5NS = CSSUtils.Namespaces.knowns["html"];
 var DOMEventHandlers = DOMEvents.getEventHandlers();
+var MIME = {
+  "application/opensearchdescription+xml": "osdx",
+  "application/atom+xml": "atom",
+  "application/rss+xml": "rss",
+  "application/xhtml+xml": "xhtml",
+  "text/html": "html",
+  "text/xml": "xml",
+  "application/xml": "xml",
+  "text/javascript": "js",
+  "application/javascript": "js",
+  "application/font-woff": "woff",
+  "application/x-woff": "woff",
+  "font/ttf": "ttf",
+  "application/octet-stream": "ttf",
+  "application/vnd.ms-fontobject": "eot",
+  "image/svg+xml": "svg"
+};
+/**
+Maximum Path Length Limitation
+@see http://msdn.microsoft.com/en-us/library/aa365247.aspx#maxpath
+*/
+var MAX_PATH = 259;
 
 var ioService = Cc["@mozilla.org/network/io-service;1"].getService(
   Ci.nsIIOService );
@@ -368,59 +390,22 @@ function getSuitableFileName( url, contentType, defaultType ) {
   mime_ext = "";
   if ( mime.length ) {
     mime = mime.toLowerCase();
-    switch ( mime ) {
-      case "font/ttf":
-        mime_ext = "ttf";
-        break;
-      case "application/opensearchdescription+xml":
-        mime_ext = "osdx";
-        break;
-      case "application/atom+xml":
-        mime_ext = "atom";
-        break;
-      case "application/rss+xml":
-        mime_ext = "rss";
-        break;
-      case "application/xhtml+xml":
-        mime_ext = "xhtml";
-        break;
-      case "text/html":
-        mime_ext = "html";
-        break;
-      case "text/xml":
-      case "application/xml":
-        mime_ext = "xml";
-        break;
-      case "text/javascript":
-      case "application/javascript":
-        mime_ext = "js";
-        break;
-      default:
-        try {
-          mime_ext = mimeService.getPrimaryExtension( mime, null )
-                                .toLowerCase();
-        } catch ( e ) {
-          if ( mime.indexOf( "+xml" ) !== -1 ) {
-            mime_ext = "xml";
-          } else {
-            log.info( "Unregistered mime type: '" + mime + "'" );
-          }
+    if ( mime in MIME ) {
+      mime_ext = MIME[mime];
+    } else {
+      try {
+        mime_ext = mimeService.getPrimaryExtension( mime, null ).toLowerCase();
+      } catch ( e ) {
+        if ( mime.indexOf( "+xml" ) !== -1 ) {
+          mime_ext = "xml";
+        } else {
+          log.info( "Unregistered mime type: '" + mime + "'" );
         }
+      }
     }
   }
   if ( mime_ext.length ) {
     ext = mime_ext;
-  }
-  /**
-  Maximum Path Length Limitation
-  @see http://msdn.microsoft.com/en-us/library/aa365247.aspx#maxpath
-  */
-  var MAXIMUM_COMPONENT_LENGTH = 256;
-  name = name.substring( 0, MAXIMUM_COMPONENT_LENGTH - 1 );
-  ext = ext.substring( 0, MAXIMUM_COMPONENT_LENGTH - 1 );
-  if ( ( name.length + ext.length ) > ( MAXIMUM_COMPONENT_LENGTH - 1 ) ) {
-    ext = ext.substring( 0, 3 );
-    name = name.substring( 0, MAXIMUM_COMPONENT_LENGTH - ext.length - 1 );
   }
   return {
     name: name,
@@ -1236,6 +1221,7 @@ function collectSheetNamespaces( aNamespaces, aSheet ) {
 function processStyleSheet( aRules, aSubstitution, aDocument, aParentSheet,
   aSheet, aFileName, aGroupId, aDirectory, aLoader, aFlags ) {
   var sheet, namespaces, matchMedia, nodeName, parentSheetIndex;
+  var scopeId, scopeEl;
   if ( aSheet.href ) {
     for ( var i = 0; i < aRules.sheets.length; i++ ) {
       if ( aRules.sheets[i].href === aSheet.href ) {
@@ -1264,8 +1250,11 @@ function processStyleSheet( aRules, aSubstitution, aDocument, aParentSheet,
   } else {
     aRules.namespaces.mixin( namespaces );
   }
-  nodeName = aSheet.ownerNode ?
-    aSheet.ownerNode.nodeName.toLowerCase() : null;
+  nodeName = aSheet.ownerNode ? aSheet.ownerNode.nodeName.toLowerCase() : null;
+  scopeId = null;
+  if ( aSheet.ownerNode && aSheet.ownerNode.hasAttribute( "scoped" ) ) {
+    scopeId = createUUID();
+  }
   sheet = {
     sheet: aSheet,
     parent: aParentSheet,
@@ -1273,7 +1262,7 @@ function processStyleSheet( aRules, aSubstitution, aDocument, aParentSheet,
     type: aSheet.type,
     title: aSheet.title,
     disabled: aSheet.disabled,
-    scoped: aSheet.scoped,
+    scopeId: scopeId,
     media: aSheet.media,
     href: aSheet.href,
     hrefLang: nodeName === "link" ?
@@ -1283,6 +1272,12 @@ function processStyleSheet( aRules, aSubstitution, aDocument, aParentSheet,
     namespaces: namespaces,
     lines: []
   };
+  if ( scopeId ) {
+    scopeEl = aDocument.createElement( "div" );
+    scopeEl.classList.add( "scope_" + scopeId );
+    aSheet.ownerNode.parentElement.insertBefore( scopeEl, aSheet.ownerNode );
+    aSheet.ownerNode.parentElement.removeChild( aSheet.ownerNode );
+  }
   parentSheetIndex = aParentSheet ? aRules.sheets.indexOf( aParentSheet ) : -1;
   if ( parentSheetIndex === -1 ) {
     aRules.sheets.push( sheet );
@@ -1904,8 +1899,8 @@ function getSheetTitle( aSheet ) {
 
 function createStyles( aDocument, isFrame, aRules, aBaseURL, aFile, aDirectory, aFlags ) {
   var aStyle, anURL, aText, aCSSFile, aCSSFileName;
-  var prefix, line, title;
-  var aHead = aDocument.getElementsByTagName( "head" )[0];
+  var prefix, line, index, title;
+  var aScoped, aHead = aDocument.getElementsByTagName( "head" )[0];
   for ( var i = 0; i < aRules.sheets.length; i++ ) {
     aRules.sheets[i].title = getSheetTitle( aRules.sheets[i] );
   }
@@ -1928,25 +1923,30 @@ function createStyles( aDocument, isFrame, aRules, aBaseURL, aFile, aDirectory, 
         aText = "/***** " + anURL + " *****/\n      ";
       } else {
         // style
-        if ( aRules.sheets[i].scoped ) {
-          // TODO: scoped style
-          continue;
-        }
+        aScoped = aRules.sheets[i].scopeId ? aDocument.querySelector(
+          ".scope_" + aRules.sheets[i].scopeId ) : null;
         aText = "";
       }
       aText += aRules.sheets[i].lines.join( "\n      " );
       aStyle = aDocument.createElementNS(
         aDocument.documentElement.namespaceURI, "style" );
       aStyle.textContent = "\n    " + aText + "\n    ";
-      if ( !( aFlags & 0x10000000 /* SAVE_ACTIVE_RULES_ONLY */ ) &&
-        aRules.sheets[i].media && aRules.sheets[i].media.mediaText ) {
-        aStyle.setAttribute( "media", aRules.sheets[i].media.mediaText );
+      if ( !( aFlags & 0x10000000 /* SAVE_ACTIVE_RULES_ONLY */ ) ) {
+        if ( aRules.sheets[i].media && aRules.sheets[i].media.mediaText ) {
+          aStyle.setAttribute( "media", aRules.sheets[i].media.mediaText );
+        }
+        if ( aRules.sheets[i].title ) {
+          aStyle.setAttribute( "title", aRules.sheets[i].title );
+        }
       }
-      if ( aRules.sheets[i].title ) {
-        aStyle.setAttribute( "title", aRules.sheets[i].title );
+      if ( !aRules.sheets[i].scopeId ) {
+        aHead.appendChild( aDocument.createTextNode( "\n" ) );
+        aHead.appendChild( aStyle );
+      } else if ( aScoped ) {
+        aStyle.setAttribute( "scoped", "true" );
+        aScoped.parentElement.insertBefore( aStyle, aScoped );
+        aScoped.parentElement.removeChild( aScoped );
       }
-      aHead.appendChild( aDocument.createTextNode( "\n" ) );
-      aHead.appendChild( aStyle );
     }
   } else {
     for ( var i = 0; i < aRules.sheets.length; i++ ) {
@@ -1973,41 +1973,50 @@ function createStyles( aDocument, isFrame, aRules, aBaseURL, aFile, aDirectory, 
           writeFileEntry( aCSSFile, "utf-8", aText );
           aStyle = aDocument.createElementNS(
             aDocument.documentElement.namespaceURI, "link" );
-          aStyle.setAttribute( "rel", aRules.sheets[i].relList.join( " " ) );
           aStyle.setAttribute( "type", aRules.sheets[i].type );
           aStyle.setAttribute( "href", aCSSFile.leafName );
-          if ( aRules.sheets[i].title ) {
-            aStyle.setAttribute( "title", aRules.sheets[i].title );
-          }
           if ( aRules.sheets[i].hrefLang ) {
             aStyle.setAttribute( "hreflang", aRules.sheets[i].hrefLang );
           }
-          if ( !( aFlags & 0x10000000 /* SAVE_ACTIVE_RULES_ONLY */ ) &&
-            aRules.sheets[i].media && aRules.sheets[i].media.mediaText ) {
-            aStyle.setAttribute( "media", aRules.sheets[i].media.mediaText );
+          if ( !( aFlags & 0x10000000 /* SAVE_ACTIVE_RULES_ONLY */ ) ) {
+            if ( aRules.sheets[i].media && aRules.sheets[i].media.mediaText ) {
+              aStyle.setAttribute( "media", aRules.sheets[i].media.mediaText );
+            }
+            if ( aRules.sheets[i].title ) {
+              aStyle.setAttribute( "title", aRules.sheets[i].title );
+            }
+            aStyle.setAttribute( "rel", aRules.sheets[i].relList.join( " " ) );
+          } else {
+            aStyle.setAttribute( "rel", aRules.sheets[i].relList.filter(
+              function( rel ) { return rel !== "alternate"; } ).join( " " ) );
           }
           aHead.appendChild( aDocument.createTextNode( "\n" ) );
           aHead.appendChild( aStyle );
         }
       } else {
         // style
-        if ( aRules.sheets[i].scoped ) {
-          // TODO: scoped style
-          continue;
-        }
+        aScoped = aRules.sheets[i].scopeId ? aDocument.querySelector(
+          ".scope_" + aRules.sheets[i].scopeId ) : null;
         aText = aRules.sheets[i].lines.join( "\n      " );
         aStyle = aDocument.createElementNS(
           aDocument.documentElement.namespaceURI, "style" );
-        if ( !( aFlags & 0x10000000 /* SAVE_ACTIVE_RULES_ONLY */ ) &&
-          aRules.sheets[i].media && aRules.sheets[i].media.mediaText ) {
-          aStyle.setAttribute( "media", aRules.sheets[i].media.mediaText );
-        }
-        if ( aRules.sheets[i].title ) {
-          aStyle.setAttribute( "title", aRules.sheets[i].title );
+        if ( !( aFlags & 0x10000000 /* SAVE_ACTIVE_RULES_ONLY */ ) ) {
+          if ( aRules.sheets[i].media && aRules.sheets[i].media.mediaText ) {
+            aStyle.setAttribute( "media", aRules.sheets[i].media.mediaText );
+          }
+          if ( aRules.sheets[i].title ) {
+            aStyle.setAttribute( "title", aRules.sheets[i].title );
+          }
         }
         aStyle.textContent = "\n    " + aText + "\n    ";
-        aHead.appendChild( aDocument.createTextNode( "\n" ) );
-        aHead.appendChild( aStyle );
+        if ( !aRules.sheets[i].scopeId ) {
+          aHead.appendChild( aDocument.createTextNode( "\n" ) );
+          aHead.appendChild( aStyle );
+        } else if ( aScoped ) {
+          aStyle.setAttribute( "scoped", "true" );
+          aScoped.parentElement.insertBefore( aStyle, aScoped );
+          aScoped.parentElement.removeChild( aScoped );
+        }
       }
     }
   }
@@ -2103,8 +2112,7 @@ function doneDocument( aDocument, aResult, aRules, aBaseURL, aFile,
 
 function saveDocument( aDocument, aResultObj, aFile, aDirectory,
                        aLoader, aFlags ) {
-  var aNode, aNext;
-  var aResult = aResultObj.value = cloneDocument( aDocument );
+  var aResult, aNode, aNext;
   var isFrame = aDocument.defaultView ?
     aDocument.defaultView.top !== aDocument.defaultView.self : false;
   var aBaseURL = getFileURI( aFile.parent ).getRelativeSpec(
@@ -2130,6 +2138,7 @@ function saveDocument( aDocument, aResultObj, aFile, aDirectory,
       aFlags
     );
   }
+  aResult = aResultObj.value = cloneDocument( aDocument );  
   collectElementNamespaces( aResult.documentElement, aNamespaces );
   aNode = aResult.firstChild;
   while ( aNode ) {
@@ -2283,10 +2292,9 @@ Job.prototype = {
       bufferSize,
       {
         onStartRequest: function( aChannel, aRequest, aContext ) {
-          var mime, contentType, fileNameObj, name, entry;
-          if ( ++self.mCount > 1 ) {
-            // http://cms.quantserve.com/dpixel?a=p-n5vvLvRdjg0ek&eid=0&qc_google_push=&google_gid=CAESEB3fjzopuxVRUhK5yPBQXtg&google_cver=1&google_push=AHNF13I9FLn8ICy6OU18HJ1WvadfEKJHLSdcNsI
-            log.debug( "START: [ " + self.mCount + " ] " + self.mURL );
+          var mime, contentType, fileNameObj, len, dir, name, ext;
+          if ( self.mCount++ ) {
+            log.debug( "START [ " + self.mCount + " ] " + self.mURL );
           }
           mime = null;
           if ( aChannel instanceof Ci.nsIHttpChannel ) {
@@ -2303,24 +2311,37 @@ Job.prototype = {
             contentType = mime;
           }
           fileNameObj = getSuitableFileName( aChannel.URI.spec, contentType );
+          dir = self.getDirectory();
+          len = MAX_PATH - dir.path.length - 1;
           name = fileNameObj.name;
-          if ( fileNameObj.ext ) {
-            name += "." + fileNameObj.ext;
+          name = name.substring( 0, len );
+          ext = fileNameObj.ext;
+          ext = ext.substring( 0, len );
+          if ( ext.length ) {
+            len--;
           }
-          // TODO: self.getDirectory() - this dir does not exists!
+          if ( name.length + ext.length > len ) {
+            ext = ext.substring( 0, 5 );
+            name = name.substring( 0, len - ext.length );
+          }
+          if ( ext.length ) {
+            name += "." + ext;
+          }
           try {
-            entry = createFileEntry( self.getDirectory(), name );
-            self.mEntry.initWithFile( entry );
+            self.mEntry.initWithFile( createFileEntry( dir , name ) );
           } catch ( e ) {
-            log.warn( "Job::start()\n" + e + "\n" +
-              self.getDirectory().path + "\n" + name + "\n" +
-              self.mEntry.path );
+            log.warn(
+              "createFileEntry()\n" +
+              "DIR: " + dir.exists() + "\n" +
+              "PATH: " + dir.path + "\\" + name + "\n"
+            );
           }
           self.mRequest = aRequest;
           self.getLoader()._startJob( self );
         },
         onDataAvailable: function( aChannel, aRequest, aContext, aStream,
           aOffset, aCount ) {
+          //log.debug( "DATA [ " + aCount + " ] " + self.mURL );
           var contentLength = -1;
           try {
             contentLength = aChannel.contentLength;
@@ -2333,13 +2354,14 @@ Job.prototype = {
             contentLength );
         },
         onStopRequest: function( aChannel, aRequest, aContext, aStatusCode ) {
-          var aStatusText = null;
+          var aStatusText = "OK";
           if ( aStatusCode === 0x804B000F /* NS_ERROR_IN_PROGRESS */ ) {
-            log.debug( "STOP: [ NS_ERROR_IN_PROGRESS ] " + self.mURL );
+            log.debug( "STOP [ 0x804B000F / NS_ERROR_IN_PROGRESS ] " + self.mURL );
             return;
           }
           try {
-            if ( aChannel instanceof Ci.nsIHttpChannel && 
+            if ( !aStatusCode &&
+              aChannel instanceof Ci.nsIHttpChannel && 
               !aChannel.requestSucceeded ) {
               aStatusCode = 0x8000FFFF; // NS_ERROR_UNEXPECTED
               aStatusText = aChannel.responseStatusText.toUpperCase();
@@ -2347,6 +2369,9 @@ Job.prototype = {
           } catch ( e ) {
             // aChannel.requestSucceeded
             // NS_ERROR_NOT_AVAILABLE
+          }
+          if ( aStatusCode ) {
+            log.debug( "STOP [ " + ( aStatusCode ? "0x" + aStatusCode.toString( 16 ) : "OK" ) + " ] " + self.mURL );
           }
           if ( aStatusCode && self.mEntry.exists() ) {
             self.mEntry.remove( false );

@@ -135,6 +135,21 @@ menuitem.znotes_customizetoolbar_class[disabled="true"] {
   list-style-image: url("chrome://znotes_images/skin/customize-toolbar-disabled-16x16.png");
 }
 
+.znotes_styles_class {
+  list-style-image: url("chrome://znotes_images/skin/styles-24x24.png");
+}
+.znotes_styles_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/styles-disabled-24x24.png");
+}
+toolbar[iconsize="small"] .znotes_styles_class,
+menuitem.znotes_styles_class  {
+  list-style-image: url("chrome://znotes_images/skin/styles-16x16.png");
+}
+toolbar[iconsize="small"] .znotes_styles_class[disabled="true"],
+menuitem.znotes_styles_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/styles-disabled-16x16.png");
+}
+
 .browserStatusBar {
   background-color: hsl(210, 75%, 92%);
 }
