@@ -40,6 +40,7 @@
 <!ENTITY docTypeCaption.label "Тип документа по умолчанию">
 <!ENTITY clipperCaption.label "Веб-клиппер">
 <!ENTITY clipperSaveScripts.label "Сохранять скрипты">
+<!ENTITY clipperSaveScripts.tooltip "Может привести к неправильному отображению сохраненного контента!">
 <!ENTITY clipperSaveFrames.label "Сохранять фреймы">
 <!ENTITY clipperSeparateFrames.label "Сохранять фреймы в отдельных директориях">
 <!ENTITY clipperPreserveHTML5Tags.label "Сохранять теги HTML5">

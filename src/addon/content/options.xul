@@ -92,7 +92,7 @@
         <groupbox id="clipperGroupBox">
           <caption id="clipperCaption" label="&clipperCaption.label;" />
           <vbox id="clipperVBox" align="start">
-            <checkbox id="clipperSaveScripts" label="&clipperSaveScripts.label;" />
+            <checkbox id="clipperSaveScripts" label="&clipperSaveScripts.label;" tooltiptext="&clipperSaveScripts.tooltip;" />
             <checkbox id="clipperSaveFrames" label="&clipperSaveFrames.label;" />
             <checkbox id="clipperSeparateFrames" label="&clipperSeparateFrames.label;" />
             <checkbox id="clipperPreserveHTML5Tags" label="&clipperPreserveHTML5Tags.label;" />

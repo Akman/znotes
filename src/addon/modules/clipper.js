@@ -222,7 +222,7 @@ function createHTML5Substitutes( aSubstitution ) {
 
 function getErrorName( code ) {
   for ( var name in Cr ) {
-    if ( Cr[name] == "" + code ) {
+    if ( Cr[name] === "" + code ) {
       return name;
     }
   }
@@ -2235,8 +2235,11 @@ var Job = function( aLoader, aDirectory, anURL, aReferrerURL, aContentType,
   this.mStatusText = null;
   this.mActive = false;
   this.mDone = false;
+  this.mDataAvailable = false;
   this.mRequest = null;
+  //
   this.mCount = 0;
+  this.mLog = [];
 };
 Job.prototype = {
   getLoader: function() {
@@ -2293,23 +2296,20 @@ Job.prototype = {
       {
         onStartRequest: function( aChannel, aRequest, aContext ) {
           var mime, contentType, fileNameObj, len, dir, name, ext;
-          if ( self.mCount++ ) {
-            log.debug( "START [ " + self.mCount + " ] " + self.mURL );
-          }
-          mime = null;
-          if ( aChannel instanceof Ci.nsIHttpChannel ) {
-            try {
-              mime = ( aChannel.requestSucceeded ? aChannel.contentType : null );
-            } catch ( e ) {
-              // aChannel.requestSucceeded
-              // aChannel.contentType
-              // NS_ERROR_NOT_AVAILABLE
-            }
+          try {
+            mime = aChannel.contentType;
+          } catch ( e ) {
+            // NS_ERROR_NOT_AVAILABLE
+            mime = null;
+            self.mLog.push( "CHANNEL [ " + e.name + " ] contentType" );
           }
           contentType = self.mContentType;
           if ( mime && !contentType ) {
             contentType = mime;
           }
+          self.mLog.push( "START [ " + ( ++self.mCount ) + " ] MIME: " +
+            ( mime ? mime : "NOT AVAILABLE" ) + " :: " +
+            ( contentType ? contentType : "NOT AVAILABLE" ) );
           fileNameObj = getSuitableFileName( aChannel.URI.spec, contentType );
           dir = self.getDirectory();
           len = MAX_PATH - dir.path.length - 1;
@@ -2327,57 +2327,149 @@ Job.prototype = {
           if ( ext.length ) {
             name += "." + ext;
           }
+          self.mLog.push( "DIR [ " +
+            ( dir.exists() ? "EXISTS" : "NOT EXISTS" ) + " ] " + dir.path );
+          self.mLog.push( "PATH [ " + ( dir.path + "/" + name ).length + " ] " +
+            dir.path + "/" + name );
           try {
             self.mEntry.initWithFile( createFileEntry( dir , name ) );
           } catch ( e ) {
-            log.warn(
-              "createFileEntry()\n" +
-              "DIR: " + dir.exists() + "\n" +
-              "PATH: " + dir.path + "\\" + name + "\n"
-            );
+            self.mCount++;
+            self.mLog.push( "FILE [ " + e.name + " ]" );
           }
           self.mRequest = aRequest;
           self.getLoader()._startJob( self );
         },
         onDataAvailable: function( aChannel, aRequest, aContext, aStream,
           aOffset, aCount ) {
-          //log.debug( "DATA [ " + aCount + " ] " + self.mURL );
-          var contentLength = -1;
+          var contentLength;
           try {
             contentLength = aChannel.contentLength;
           } catch ( e ) {
-            // aChannel.contentLength
+            self.mLog.push( "CHANNEL [ " + e.name + " ] contentLength" );
+            contentLength = -1;
             // NS_ERROR_NOT_AVAILABLE
           }
+          self.mLog.push( "DATA [ " + aCount + " / " + aOffset + " ] LENGTH: " +
+            contentLength );
+          self.mDataAvailable = true;
           self.mRequest = aRequest;
           self.getLoader()._progressJob( self, aCount, contentLength, aOffset,
             contentLength );
         },
         onStopRequest: function( aChannel, aRequest, aContext, aStatusCode ) {
-          var aStatusText = "OK";
-          if ( aStatusCode === 0x804B000F /* NS_ERROR_IN_PROGRESS */ ) {
-            log.debug( "STOP [ 0x804B000F / NS_ERROR_IN_PROGRESS ] " + self.mURL );
-            return;
-          }
-          try {
-            if ( !aStatusCode &&
-              aChannel instanceof Ci.nsIHttpChannel && 
-              !aChannel.requestSucceeded ) {
-              aStatusCode = 0x8000FFFF; // NS_ERROR_UNEXPECTED
-              aStatusText = aChannel.responseStatusText.toUpperCase();
-            }
-          } catch ( e ) {
-            // aChannel.requestSucceeded
-            // NS_ERROR_NOT_AVAILABLE
-          }
+          var aResponseStatus = 200, aResponseStatusText = "OK";
           if ( aStatusCode ) {
-            log.debug( "STOP [ " + ( aStatusCode ? "0x" + aStatusCode.toString( 16 ) : "OK" ) + " ] " + self.mURL );
+            self.mLog.push( "STOP [ 0x" + aStatusCode.toString( 16 ) + " ]" );
+            switch ( aStatusCode ) {
+              case 0x804B000F: // NS_ERROR_IN_PROGRESS
+                if ( self.mEntry.exists() ) {
+                  self.mEntry.remove( false );
+                }
+                /*
+                JOB: http://cdn.api.twitter.com/1/urls/count.json?url=http%3A%2F%2Fwww.wikihow.com%2FDownload-Google-Books&callback=twttr.receiveCount
+                CHANNEL [ NS_ERROR_NOT_AVAILABLE ] contentType
+                START [ 1 ] MIME: NOT AVAILABLE :: text/javascript
+                DIR [ EXISTS ] C:\Users\Akman\AppData\Local\Temp\4E578C1177B44BC388E158859993B16F_files
+                PATH [ 81 ] C:\Users\Akman\AppData\Local\Temp\4E578C1177B44BC388E158859993B16F_files/count.js
+                STOP [ 0x804b000f ]
+                CONTINUE [ NS_ERROR_IN_PROGRESS ]
+                START [ 2 ] MIME: application/javascript :: text/javascript
+                DIR [ EXISTS ] C:\Users\Akman\AppData\Local\Temp\4E578C1177B44BC388E158859993B16F_files
+                PATH [ 81 ] C:\Users\Akman\AppData\Local\Temp\4E578C1177B44BC388E158859993B16F_files/count.js
+                DATA [ 94 / 0 ] LENGTH: 117
+                STOP [ OK ]
+                HTTP [ DETECTED ]
+                HTTP RESPONSE: 200 OK
+                */
+                self.mLog.push( "CONTINUE [ NS_ERROR_IN_PROGRESS ]" );
+                return;
+            }
+          } else {
+            self.mLog.push( "STOP [ OK ]" );
+            if ( aChannel instanceof Ci.nsIHttpChannel ) {
+              self.mLog.push( "HTTP [ DETECTED ]" );
+              try {
+                aResponseStatus = aChannel.responseStatus;
+                aResponseStatusText = aChannel.responseStatusText.toUpperCase();
+                if ( !aChannel.requestSucceeded ) {
+                  aStatusCode = 0x8000FFFF; // NS_ERROR_UNEXPECTED
+                }
+                self.mLog.push( "HTTP RESPONSE: " +
+                  aResponseStatus + " " + aResponseStatusText );
+              } catch ( e ) {
+                // NS_ERROR_NOT_AVAILABLE
+                aResponseStatus = -1;
+                self.mLog.push( "HTTP RESPONSE: [ " + e.name + " ]" );
+              }
+            }
+          }
+          if ( aResponseStatus === -1 ) {
+            if ( self.mEntry.exists() ) {
+              self.mEntry.remove( false );
+            }
+            /*
+            JOB: http://cm.ipinyou.com/gdn/cms.gif?google_gid=CAESEFkaZl7MeJ9EM-7h0QOT_BU&google_cver=1&google_push=AHNF13J3mFuYuQdklNHIhT16ipU-1l99PAM7v9GK
+            CHANNEL [ NS_ERROR_NOT_AVAILABLE ] contentType
+            START [ 1 ] MIME: NOT AVAILABLE :: NOT AVAILABLE
+            DIR [ EXISTS ] C:\Users\Akman\AppData\Local\Temp\CA05F88DEEB944108AA457DEA09DA988_files
+            PATH [ 78 ] C:\Users\Akman\AppData\Local\Temp\CA05F88DEEB944108AA457DEA09DA988_files/pixel
+            STOP [ OK ]
+            HTTP [ DETECTED ]
+            HTTP RESPONSE: [ NS_ERROR_NOT_AVAILABLE ]
+            CONTINUE [ NS_ERROR_NOT_AVAILABLE ]
+            START [ 2 ] MIME: image/png :: image/png
+            DIR [ EXISTS ] C:\Users\Akman\AppData\Local\Temp\CA05F88DEEB944108AA457DEA09DA988_files
+            PATH [ 82 ] C:\Users\Akman\AppData\Local\Temp\CA05F88DEEB944108AA457DEA09DA988_files/pixel.png
+            DATA [ 170 / 0 ] LENGTH: 170
+            STOP [ OK ]
+            HTTP [ DETECTED ]
+            HTTP RESPONSE: 200 OK
+            
+            JOB: http://pr.ybp.yahoo.com/sync/adx?google_gid=CAESEC9vKVAWnP107RpeXJnph4o&google_cver=1&google_push=AHNF13KMw-GF6x0kwpCw3_Rj-r06wj_B6uyKnV6EXg
+            CHANNEL [ NS_ERROR_NOT_AVAILABLE ] contentType
+            START [ 1 ] MIME: NOT AVAILABLE :: NOT AVAILABLE
+            DIR [ EXISTS ] C:\Users\Akman\AppData\Local\Temp\F29A9FEB24B64B6B8355F81510ACB64D_files
+            PATH [ 78 ] C:\Users\Akman\AppData\Local\Temp\F29A9FEB24B64B6B8355F81510ACB64D_files/pixel
+            STOP [ OK ]
+            HTTP [ DETECTED ]
+            HTTP RESPONSE: [ NS_ERROR_NOT_AVAILABLE ]
+            CONTINUE [ NS_ERROR_NOT_AVAILABLE ]
+            START [ 2 ] MIME: image/png :: image/png
+            DIR [ EXISTS ] C:\Users\Akman\AppData\Local\Temp\F29A9FEB24B64B6B8355F81510ACB64D_files
+            PATH [ 82 ] C:\Users\Akman\AppData\Local\Temp\F29A9FEB24B64B6B8355F81510ACB64D_files/pixel.png
+            DATA [ 170 / 0 ] LENGTH: 170
+            STOP [ OK ]
+            HTTP [ DETECTED ]
+            HTTP RESPONSE: 200 OK
+            */
+            self.mLog.push( "CONTINUE [ NS_ERROR_NOT_AVAILABLE ]" );
+            return;
+          }          
+          if ( !aStatusCode && !self.mDataAvailable ) {
+            /*
+            JOB: http://lostfilm.info/vision/button.png
+            START [ 1 ] MIME: image/png :: image/png
+            DIR [ EXISTS ] C:\Users\Akman\AppData\Local\Temp\CA86846A4D9F4C60894830FDB4CDC811_files
+            PATH [ 83 ] C:\Users\Akman\AppData\Local\Temp\CA86846A4D9F4C60894830FDB4CDC811_files/button.png
+            STOP [ OK ]
+            HTTP [ DETECTED ]
+            HTTP RESPONSE: 200 OK
+            ERROR [ DATA NOT AVAILABLE ]
+            */
+            self.mLog.push( "ERROR [ DATA NOT AVAILABLE ]" );
+            aStatusCode = 0x8000FFFF; // NS_ERROR_UNEXPECTED
+            aResponseStatusText = "DATA NOT AVAILABLE"
+            self.mCount++;
+          }
+          if ( self.mCount !== 1 ) {
+            log.debug( "JOB: " + self.mURL + "\n" + self.mLog.join( "\n" ) );
           }
           if ( aStatusCode && self.mEntry.exists() ) {
             self.mEntry.remove( false );
           }
           self.mRequest = aRequest;
-          self.stop( aStatusCode, aStatusText );
+          self.stop( aStatusCode, aResponseStatusText );
         }
       }
     );

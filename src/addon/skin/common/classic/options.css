@@ -63,6 +63,9 @@
   list-style-image: url("chrome://znotes_images/skin/default-16x16.png");
   margin: 0px 3px 3px 3px;
 }
+#clipperSaveScripts {
+  color: red;
+}
 
 .key_list {
 }

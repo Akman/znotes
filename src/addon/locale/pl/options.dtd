@@ -41,6 +41,7 @@
 <!ENTITY docTypeCaption.label "Domyślny typ dokumentu">
 <!ENTITY clipperCaption.label "Web-clipper">
 <!ENTITY clipperSaveScripts.label "Save scripts">
+<!ENTITY clipperSaveScripts.tooltip "Can lead to incorrect display of the saved content!">
 <!ENTITY clipperSaveFrames.label "Save frames">
 <!ENTITY clipperSeparateFrames.label "Save frames in the separate folders">
 <!ENTITY clipperPreserveHTML5Tags.label "Preserve HTML5 tags">
