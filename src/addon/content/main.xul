@@ -108,6 +108,7 @@
         class="menuitem-iconic znotes_renamebook_class"
         command="znotes_renamebook_command"
         key="znotes_renamebook_key"/>
+      <menuseparator id="bookTreeMenuRefreshSeparator"/>
       <menuitem id="bookTreeMenuRefresh"
         class="menuitem-iconic znotes_refreshbooktree_class"
         command="znotes_refreshbooktree_command"
@@ -138,6 +139,7 @@
         command="znotes_renamecategory_command"
         observes="znotes_renamecategory_command"
         key="znotes_renamecategory_key"/>
+      <menuseparator id="folderTreeMenuRefreshSeparator"/>
       <menuitem id="folderTreeMenuRefresh"
         class="menuitem-iconic znotes_refreshfoldertree_class"
         command="znotes_refreshfoldertree_command"
@@ -151,10 +153,6 @@
         class="menuitem-iconic znotes_newnote_class"
         command="znotes_newnote_command"
         key="znotes_newnote_key"/>
-      <menuitem id="noteTreeMenuImport"
-        class="menuitem-iconic znotes_importnote_class"
-        command="znotes_importnote_command"
-        key="znotes_importnote_key"/>
       <menuitem id="noteTreeMenuDelete"
         class="menuitem-iconic znotes_deletenote_class"
         command="znotes_deletenote_command"
@@ -167,14 +165,15 @@
         class="menuitem-iconic znotes_processnote_class"
         command="znotes_processnote_command"
         key="znotes_processnote_key"/>
-      <menuitem id="noteTreeMenuRefresh"
-        class="menuitem-iconic znotes_refreshnotetree_class"
-        command="znotes_refreshnotetree_command"
-        key="znotes_refreshnotetree_key"/>
       <menuitem id="noteTreeMenuUpdate"
         class="menuitem-iconic znotes_updatenote_class"
         command="znotes_updatenote_command"
         key="znotes_updatenote_key"/>
+      <menuseparator id="noteTreeMenuRefreshSeparator"/>
+      <menuitem id="noteTreeMenuRefresh"
+        class="menuitem-iconic znotes_refreshnotetree_class"
+        command="znotes_refreshnotetree_command"
+        key="znotes_refreshnotetree_key"/>
     </menupopup>
 
     <!-- tag tree context -->
@@ -195,6 +194,7 @@
         class="menuitem-iconic znotes_colortag_class"
         command="znotes_colortag_command"
         key="znotes_colortag_key"/>
+      <menuseparator id="tagTreeMenuRefreshSeparator"/>
       <menuitem id="tagTreeMenuRefresh"
         class="menuitem-iconic znotes_refreshtagtree_class"
         command="znotes_refreshtagtree_command"

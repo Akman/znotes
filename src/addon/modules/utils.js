@@ -1831,6 +1831,14 @@ var Utils = function() {
     sound.beep();
   };
 
+  pub.playFail = function() {
+    ( new Audio( "chrome://znotes_sounds/skin/fail.wav" ) ).play();
+  };
+
+  pub.playSuccess = function() {
+    ( new Audio( "chrome://znotes_sounds/skin/success.wav" ) ).play();
+  };
+  
   pub.checkChromeURL = function( url ) {
     var ios =
       Cc["@mozilla.org/network/io-service;1"]

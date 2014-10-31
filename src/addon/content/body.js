@@ -163,7 +163,7 @@ ru.akman.znotes.Body = function() {
             }
             break;
           case "znotes_bodyrenamenote_command":
-            if ( currentName == "main" ) {
+            if ( currentName === "main" ) {
               Common.goDoCommand(
                 "znotes_renamenote_command",
                 this.getCommand( "znotes_bodyrenamenote_command" )

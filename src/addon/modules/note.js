@@ -208,6 +208,12 @@ var Note = function( aBook, anEntry, aCategory, aType, aTagID ) {
     );
   };
 
+  this.getExtension = function() {
+    var doc = ru.akman.znotes.DocumentManager.getInstance()
+                                             .getDocument( this.getType() );
+    return doc ? doc.getExtension( this.getType() ) : null;
+  };
+  
   this.getDocument = function() {
     var doc = ru.akman.znotes.DocumentManager.getInstance()
                                              .getDocument( this.getType() );

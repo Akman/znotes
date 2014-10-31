@@ -43,6 +43,7 @@
     <stringbundle id="znotes_editor_stringbundle"
       src="chrome://znotes/locale/documents/xhtml/editor.properties" />
   </stringbundleset>
+
   <commandset id="znotes_editor_commandset">
     <!-- common -->
     <command id="znotes_editorcustomizetoolbar_command" disabled="true"
@@ -58,6 +59,13 @@
       accesskey="&znotes_close_accesskey;"
       key="znotes_close_key"
       oncommand="ru.akman.znotes.Common.goDoCommand( 'znotes_close_command', event.explicitOriginalTarget );"/>
+    <command id="znotes_importresources_command" disabled="true"
+      label="&znotes_importresources_label;"
+      title="&znotes_importresources_label;"
+      tooltiptext="&znotes_importresources_tooltip;"
+      accesskey="&znotes_importresources_accesskey;"
+      key="znotes_importresources_key"
+      oncommand="ru.akman.znotes.Common.goDoCommand( 'znotes_importresources_command', event.explicitOriginalTarget );"/>
     <!-- design -->
     <command id="znotes_bold_command" disabled="true"
       label="&znotes_bold_label;"
@@ -262,6 +270,9 @@
     <key id="znotes_close_key" command="znotes_close_command"
       key="&znotes_close_key;" modifiers="&znotes_close_key_modifiers;"
       keycode="&znotes_close_keycode;"/>
+    <key id="znotes_importresources_key" command="znotes_importresources_command"
+      key="&znotes_importresources_key;" modifiers="&znotes_importresources_key_modifiers;"
+      keycode="&znotes_importresources_keycode;"/>
     <key id="znotes_bold_key" command="znotes_bold_command"
       key="&znotes_bold_key;" modifiers="&znotes_bold_key_modifiers;"
       keycode="&znotes_bold_keycode;"/>
@@ -350,6 +361,7 @@
       key="&znotes_sourcebeautify_key;" modifiers="&znotes_sourcebeautify_key_modifiers;"
       keycode="&znotes_sourcebeautify_keycode;"/>
   </keyset>
+
   <popupset id="znotes_editor_popupset">
     <!-- toolbox context -->
     <menupopup id="znotes_editortoolbar_menupopup">
@@ -360,6 +372,13 @@
     </menupopup>
   </popupset>
 
+  <toolbar id="znotes_editor_toolbar">
+    <toolbarbutton id="znotes_importresources_button"
+      class="menuitem-iconic toolbarbutton-1 znotes_importresources_class"
+      key="znotes_importresources_key"
+      command="znotes_importresources_command" />
+  </toolbar>
+  
   <vbox id="editorView">
     <tabbox id="editorTabBox" flex="1">
       <hbox id="editorTabsHeader">

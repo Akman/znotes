@@ -770,6 +770,7 @@ var Editor = function() {
       "znotes_insertimage_command": null,
       "znotes_insertparagraph_command": null,
       "znotes_toggletagsmode_command": null,
+      "znotes_importresources_command": null,
       "znotes_sourcebeautify_command": null,
       "znotes_editordebug_command": null,
     };
@@ -817,6 +818,8 @@ var Editor = function() {
           case "znotes_sourcebeautify_command":
             return isSourceEditingActive && sourceEditor &&
               sourceEditor.getDoc().somethingSelected();
+          case "znotes_importresources_command":
+            return !!currentNote && !isSourceEditingActive;
         }
         return false;
       },
@@ -906,6 +909,9 @@ var Editor = function() {
           case "znotes_toggletagsmode_command":
             doToggleTagsMode();
             break;
+          case "znotes_importresources_command":
+            doImportResources();
+            break;
           case "znotes_sourcebeautify_command":
             doSourceBeautify();
             break;
@@ -974,12 +980,64 @@ var Editor = function() {
       }
     };
 
+    function doImportResources() {
+      var res, doc, contentEntries, contentFile, contentDirectory;
+      if ( currentNote && currentNote.isExists() && isEditorDirty ) {
+        res = confirm();
+        if ( res === -1 ) {
+          return false;
+        }
+        if ( res ) {
+          save();
+        } else {
+          cancel();
+        }
+      } else {
+        cancel();
+      }
+      doc = currentMode === "editor" ?  designEditor.document :
+        designFrame.contentDocument;
+      try {
+        contentEntries =
+          Utils.getEntriesToSaveContent( currentNote.getExtension(), "_files" );
+        contentFile = contentEntries.fileEntry;
+        contentDirectory = contentEntries.directoryEntry;
+        currentWindow.openDialog(
+          "chrome://znotes/content/clipperdialog.xul",
+          "",
+          "chrome,dialog=yes,modal=yes,centerscreen,resizable=yes",
+          {
+            note: currentNote,
+            doc: doc,
+            file: contentFile,
+            dir: contentDirectory,
+            flags: 0x00011011, // as is
+            callback: function( aStatus ) {
+              log.debug( aStatus );
+            }
+          }
+        ).focus();
+      } catch ( e ) {
+        log.warn( e + "\n" + Utils.dumpStack() );
+      }
+      try {
+        if ( contentFile.exists() ) {
+          contentFile.remove( false );
+        }
+        if ( contentDirectory.exists() ) {
+          contentDirectory.remove( true );
+        }
+      } catch ( e ) {
+        log.warn( e + "\n" + Utils.dumpStack() );
+      }
+    };
+    
     // DESIGN COMMANDS
 
     function doToggleTagsMode() {
       isTagsModeActive ? switchTagsOff() : switchTagsOn();
     };
-
+    
     // name: font-family
     // inherited: yes
     // computed value: as specified
@@ -5515,9 +5573,38 @@ var Editor = function() {
         );
         switchMode( "viewer" );
         isEditorReady = true;
+        updateEditorCommands();
       }, wait );
     };
 
+    function cleanOverlay( doc ) {
+      var node;
+      node = doc.getElementById( "znotes_editor_commandset" );
+      while ( node.firstChild ) {
+        node.removeChild( node.firstChild );
+      }
+      node = doc.getElementById( "znotes_editor_keyset" );
+      while ( node.firstChild ) {
+        node.removeChild( node.firstChild );
+      }
+      node = doc.getElementById( "znotes_editor_popupset" );
+      while ( node.firstChild ) {
+        node.removeChild( node.firstChild );
+      }
+      node = doc.getElementById( "znotes_editor_stringbundleset" );
+      while ( node.firstChild ) {
+        node.removeChild( node.firstChild );
+      }
+      node = doc.getElementById( "znotes_editor_toolbar" );
+      while ( node.firstChild ) {
+        node.removeChild( node.firstChild );
+      }
+      node = doc.getElementById( "editorView" );
+      while ( node.firstChild ) {
+        node.removeChild( node.firstChild );
+      }
+    };
+    
     // PUBLIC
 
     /**
@@ -5550,27 +5637,8 @@ var Editor = function() {
       if ( editorType == noteType ) {
         editorInit( win, doc, note, style );
       } else {
-        var node;
         editorView.setAttribute( "type", noteType );
-        node = doc.getElementById( "znotes_editor_commandset" );
-        while ( node.firstChild ) {
-          node.removeChild( node.firstChild );
-        }
-        node = doc.getElementById( "znotes_editor_keyset" );
-        while ( node.firstChild ) {
-          node.removeChild( node.firstChild );
-        }
-        node = doc.getElementById( "znotes_editor_popupset" );
-        while ( node.firstChild ) {
-          node.removeChild( node.firstChild );
-        }
-        node = doc.getElementById( "znotes_editor_stringbundleset" );
-        while ( node.firstChild ) {
-          node.removeChild( node.firstChild );
-        }
-        while ( editorView.firstChild ) {
-          editorView.removeChild( editorView.firstChild );
-        }
+        cleanOverlay( doc );
         doc.loadOverlay(
           this.getDocument().getURL() + "editor.xul",
           {
@@ -5838,6 +5906,12 @@ Editor.prototype.getDefaultPreferences = function() {
       },
       znotes_toggletagsmode_key: {
         command: "znotes_toggletagsmode_command",
+        key: "",
+        modifiers: "",
+        keycode: ""
+      },
+      znotes_importresources_key: {
+        command: "znotes_importresources_command",
         key: "",
         modifiers: "",
         keycode: ""

@@ -69,6 +69,8 @@
       command="znotes_editorprint_command" />
   </toolbarpalette>
 
+  <toolbar id="znotes_editor_toolbar" />
+  
   <vbox id="noteView" flex="1">
     <vbox id="editorView" flex="1" />
   </vbox>

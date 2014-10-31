@@ -1645,6 +1645,7 @@ var Editor = function() {
         );
         switchMode( "viewer" );
         isEditorReady = true;
+        updateCommands();
       }, wait );
     };
 
@@ -1705,6 +1706,10 @@ var Editor = function() {
           node.removeChild( node.firstChild );
         }
         node = doc.getElementById( "znotes_editor_stringbundleset" );
+        while ( node.firstChild ) {
+          node.removeChild( node.firstChild );
+        }
+        node = doc.getElementById( "znotes_editor_toolbar" );
         while ( node.firstChild ) {
           node.removeChild( node.firstChild );
         }

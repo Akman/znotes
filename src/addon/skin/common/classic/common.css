@@ -975,3 +975,18 @@ toolbar[iconsize="small"] .znotes_toggletagsmode_class[disabled="true"],
 menuitem.znotes_toggletagsmode_class[disabled="true"] {
   list-style-image: url("chrome://znotes_images/skin/tagstoggle-disabled-16x16.png");
 }
+
+.znotes_importresources_class {
+  list-style-image: url("chrome://znotes_images/skin/import-resources-24x24.png");
+}
+.znotes_importresources_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/import-resources-disabled-24x24.png");
+}
+toolbar[iconsize="small"] .znotes_importresources_class,
+menuitem.znotes_importresources_class  {
+  list-style-image: url("chrome://znotes_images/skin/import-resources-16x16.png");
+}
+toolbar[iconsize="small"] .znotes_importresources_class[disabled="true"],
+menuitem.znotes_importresources_class[disabled="true"] {
+  list-style-image: url("chrome://znotes_images/skin/import-resources-disabled-16x16.png");
+}

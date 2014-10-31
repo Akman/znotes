@@ -337,6 +337,8 @@ ru.akman.znotes.Viewer = function() {
       currentStatusbarLabel = mainWindow.document.getElementById(
         "znotes_statusbarpanellabel" );
     }
+    editorToolbar = document.getElementById( "znotes_editor_toolbar" );
+    editorToolbar.setAttribute( "viewer", "true" );
     currentNote = null;
     currentTab = getCurrentTab();
     if ( currentTab ) {

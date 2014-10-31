@@ -65,7 +65,7 @@
     <vbox id="noteMainBox" class="noteMainBox" flex="1">
       <toolbox id="znotes_bodytoolbox" class="znotes_bodytoolbox"
         defaultmode="full" mode="icons" iconsize="small"
-        labelalign="bottom" defaultlabelalign="end">
+        labelalign="bottom" defaultlabelalign="end" orient="horizontal">
         <toolbarpalette id="znotes_bodytoolbarpalette">
           <spacer id="znotes_bodytoolbar_spacer" flex="1" />
           <toolbarbutton id="znotes_bodytagsmenu_button" pack="end"
@@ -95,8 +95,12 @@
           class="inline-toolbar chromeclass-toolbar znotes_bodytoolbar"
           toolbarname="&znotes_bodytoolbar_name;" customizable="true"
           fullscreentoolbar="true" mode="icons" iconsize="small"
-          context="znotes_bodytoolbar_menupopup"
+          context="znotes_bodytoolbar_menupopup" flex="1"
           defaultset="znotes_bodytoolbar_spacer,znotes_editoredit_button,znotes_editorsave_button,znotes_bodytagsmenu_button,znotes_bodytypesmenu_button,znotes_attachmentsaddfile_button,znotes_attachmentsaddcontact_button,znotes_bodyrenamenote_button,znotes_bodydeletenote_button,znotes_editorprint_button,znotes_bodyaddonspanel_button" />
+        <toolbar id="znotes_editor_toolbar"
+          class="inline-toolbar chromeclass-toolbar znotes_editor_toolbar"
+          toolbarname="&znotes_editor_toolbar_name;"
+          mode="icons" iconsize="small"/>
         <toolbarset id="znotes_bodytoolbarset"
           context="znotes_bodytoolbar_menupopup" />
       </toolbox>

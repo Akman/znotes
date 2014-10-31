@@ -62,6 +62,7 @@
   <toolbox id="znotes_viewertoolbox"
     class="mail-toolbox znotes_viewertoolbox"
     mode="icons"
+    orient="horizontal"
     defaultmode="full"
     labelalign="bottom"
     defaultlabelalign="end"

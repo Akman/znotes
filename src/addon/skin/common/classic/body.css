@@ -62,3 +62,24 @@
 .znotes_bodytoolbar {
   padding-left: 3px;
 }
+
+.znotes_editor_toolbar {
+  margin-top: -2px;
+  padding-right: 3px;
+}
+.znotes_editor_toolbar[viewer="true"] {
+  margin-top: -1px;
+  padding-right: 0px;
+  margin-bottom: 1px;
+}
+
+.znotes_editor_toolbar[thunderbird="true"] {
+  margin-top: -1px;
+  padding-right: 0px;
+}
+.znotes_editor_toolbar[thunderbird="true"][viewer="true"] {
+  margin-top: -1px;
+  padding-right: 0px;
+  padding-bottom: 0px;
+  padding-top: 2px;
+}

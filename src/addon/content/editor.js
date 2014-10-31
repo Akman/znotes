@@ -64,6 +64,7 @@ ru.akman.znotes.Editor = function() {
     var editorStateListener = null;
 
     var editorView = null;
+    var editorToolbar = null;
 
     var currentNote = null;
     var noteStateListener = null;
@@ -303,8 +304,8 @@ ru.akman.znotes.Editor = function() {
       removeEventListeners();
       currentNote = aNote;
       if ( currentNote && currentNote.isExists() && !currentNote.isLoading() ) {
-        // currentEditor is always new instance of Editor
-        // @see documentmanager.js, line: 217
+        // currentEditor is always a new instance of Editor
+        // @see documentmanager.js
         currentEditor = ru.akman.znotes.DocumentManager
                                        .getInstance()
                                        .getDocument( currentNote.getType() )
@@ -314,13 +315,17 @@ ru.akman.znotes.Editor = function() {
         if ( editorView.hasAttribute( "hidden" ) ) {
           editorView.removeAttribute( "hidden" );
         }
+        if ( editorToolbar.hasAttribute( "hidden" ) ) {
+          editorToolbar.removeAttribute( "hidden" );
+        }
         if ( currentEditor ) {
           currentEditor.open( currentWindow, currentWindow.document,
             currentNote, currentStyle );
         }
       } else {
-        currentEditor = null;
         editorView.setAttribute( "hidden", true );
+        editorToolbar.setAttribute( "hidden", true );
+        currentEditor = null;
       }
       updateCommands();
     };
@@ -352,6 +357,12 @@ ru.akman.znotes.Editor = function() {
       Utils.cloneObject( aStyle, currentStyle );
     }
     editorView = currentWindow.document.getElementById( "editorView" );
+    editorToolbar = currentWindow.document.getElementById( "znotes_editor_toolbar" );
+    if ( Utils.IS_STANDALONE ) {
+      editorToolbar.removeAttribute( "thunderbird" );
+    } else {
+      editorToolbar.setAttribute( "thunderbird", "true" );
+    }
     noteStateListener = {
       name: "EDITOR",
       onNoteDeleted: onNoteDeleted,
