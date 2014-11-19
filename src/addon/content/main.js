@@ -5310,7 +5310,7 @@ ru.akman.znotes.Main = function() {
       updateNoteTreeItem( aNote );
       if ( currentNote && currentNote === aNote &&
            !currentNote.isLoading() ) {
-        currentNoteChanged( true );
+        currentNoteChanged( currentNote.getMode() !== "editor" );
       }
     }
   };

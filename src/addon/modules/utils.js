@@ -1830,15 +1830,15 @@ var Utils = function() {
     var sound = Cc["@mozilla.org/sound;1"].createInstance( Ci.nsISound );
     sound.beep();
   };
-
-  pub.playFail = function() {
-    ( new Audio( "chrome://znotes_sounds/skin/fail.wav" ) ).play();
-  };
-
-  pub.playSuccess = function() {
-    ( new Audio( "chrome://znotes_sounds/skin/success.wav" ) ).play();
-  };
   
+  pub.play = function( url ) {
+    var sound = Cc["@mozilla.org/sound;1"].createInstance( Ci.nsISound );
+    var uri = Cc["@mozilla.org/network/io-service;1"]
+      .getService( Ci.nsIIOService )
+      .newURI( url, null, null );
+    sound.play( uri );
+  };
+
   pub.checkChromeURL = function( url ) {
     var ios =
       Cc["@mozilla.org/network/io-service;1"]

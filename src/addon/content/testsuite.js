@@ -441,13 +441,6 @@ ru.akman.znotes.TestSuite = function() {
           'html',
           impl.createDocumentType( 'html', '', '' )
         );
-        dom.insertBefore(
-          dom.createProcessingInstruction(
-            'xml',
-            'version="1.0" encoding="UTF-8" '
-          ),
-          dom.firstChild
-        );
         dom.documentElement.appendChild(
           dom.createElementNS( defaultNS, 'head' )
         );
@@ -456,7 +449,9 @@ ru.akman.znotes.TestSuite = function() {
         );
         var serializer = Cc["@mozilla.org/xmlextras/xmlserializer;1"]
                                    .createInstance( Ci.nsIDOMSerializer );
-        log.trace( "\n" + serializer.serializeToString( dom ) );
+        log.trace( "\n" +
+          '<?xml version="1.0" encoding="UTF-8"?>\n' +
+          serializer.serializeToString( dom ) );
       }
     }
   );

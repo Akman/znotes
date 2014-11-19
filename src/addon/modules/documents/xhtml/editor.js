@@ -79,7 +79,10 @@ var Editor = function() {
     var ioService =
       Cc["@mozilla.org/network/io-service;1"]
       .getService( Ci.nsIIOService );
-
+    var xmlSerializer =
+      Cc["@mozilla.org/xmlextras/xmlserializer;1"]
+      .createInstance( Ci.nsIDOMSerializer );
+      
     var self = this;
 
     var EditorException = function( message ) {
@@ -114,6 +117,11 @@ var Editor = function() {
 
     var isTagsModeActive = false;
     var tagsSheetURL = "chrome://znotes/skin/documents/xhtml/tags.css";
+
+    var successImage = "chrome://znotes_images/skin/message-32x32.png";
+    var successAudio = "chrome://znotes_sounds/skin/success.wav";
+    var failImage = "chrome://znotes_images/skin/warning-32x32.png";
+    var failAudio = "chrome://znotes_sounds/skin/fail.wav";
 
     var selectionChunks = null;
     var initialCaretPosition = null;
@@ -605,12 +613,9 @@ var Editor = function() {
           };
           info.supstr.data = info.srcstr;
           data.push( info );
-          var serializer =
-            Cc["@mozilla.org/xmlextras/xmlserializer;1"]
-            .createInstance( Ci.nsIDOMSerializer );
           info = {
             flavor: "text/html",
-            srcstr: serializer.serializeToString( fragment ),
+            srcstr: xmlSerializer.serializeToString( fragment ),
             supstr: Components.Constructor(
               "@mozilla.org/supports-string;1",
               "nsISupportsString"
@@ -819,7 +824,7 @@ var Editor = function() {
             return isSourceEditingActive && sourceEditor &&
               sourceEditor.getDoc().somethingSelected();
           case "znotes_importresources_command":
-            return !!currentNote && !isSourceEditingActive;
+            return !!currentNote && !isSourceEditingActive && !isParseError;
         }
         return false;
       },
@@ -981,25 +986,19 @@ var Editor = function() {
     };
 
     function doImportResources() {
-      var res, doc, contentEntries, contentFile, contentDirectory;
-      if ( currentNote && currentNote.isExists() && isEditorDirty ) {
-        res = confirm();
-        if ( res === -1 ) {
-          return false;
-        }
-        if ( res ) {
-          save();
-        } else {
-          cancel();
-        }
-      } else {
-        cancel();
-      }
-      doc = currentMode === "editor" ?  designEditor.document :
-        designFrame.contentDocument;
+      saveResources( currentMode === "editor" ?  designEditor.document :
+        designFrame.contentDocument, currentNote );
+    };
+    
+    function saveResources( doc, note ) {
+      var contentEntries, contentFile, contentDirectory;
+      var res = {
+        value: null,
+        status: 0
+      };
       try {
-        contentEntries =
-          Utils.getEntriesToSaveContent( currentNote.getExtension(), "_files" );
+        contentEntries = Utils.getEntriesToSaveContent(
+          "." + note.getExtension(), "_files" );
         contentFile = contentEntries.fileEntry;
         contentDirectory = contentEntries.directoryEntry;
         currentWindow.openDialog(
@@ -1007,29 +1006,84 @@ var Editor = function() {
           "",
           "chrome,dialog=yes,modal=yes,centerscreen,resizable=yes",
           {
-            note: currentNote,
-            doc: doc,
+            document: doc,
+            result: res,
             file: contentFile,
-            dir: contentDirectory,
-            flags: 0x00011011, // as is
-            callback: function( aStatus ) {
-              log.debug( aStatus );
+            directory: contentDirectory,
+            /*
+            0x00000001 +SAVE_SCRIPTS
+            0x00000010 +SAVE_FRAMES
+            0x00000100 -SAVE_FRAMES_IN_SEPARATE_DIRECTORY
+            0x00001000 +PRESERVE_HTML5_TAGS
+            0x00010000 +SAVE_STYLES
+            0x00100000 -SAVE_INLINE_RESOURCES_IN_SEPARATE_FILES
+            0x01000000 -INLINE_STYLESHEETS_IN_DOCUMENT
+            0x10000000 -SAVE_ACTIVE_RULES_ONLY
+            */
+            flags: 0x00011011,
+            baseURI: note.getBaseURI(),
+            onstart: function( result ) {
+              note.setLoading( true );
+            },
+            onstop: function( result ) {
+              var data, node, position;
+              try {
+                note.loadContentDirectory( contentDirectory, false /* fMove */,
+                  true /* fClean */ );
+              } catch ( e ) {
+                log.warn( e + "\n" + Utils.dumpStack() );
+              }
+              if ( currentMode !== "editor" ) {
+                try {
+                  note.importDocument( result.value );
+                } catch ( e ) {
+                  log.warn( e + "\n" + Utils.dumpStack() );
+                }
+              } else {
+                data = self.getDocument().serializeToString(
+                  result.value, note.getURI(), note.getBaseURI() );
+                if ( sourceEditor.getValue() !== data ) {
+                  patchDesign( result.value );
+                }
+              }
+              note.setLoading( false );
+              try {
+                if ( contentFile.exists() ) {
+                  contentFile.remove( false );
+                }
+                if ( contentDirectory.exists() ) {
+                  contentDirectory.remove( true );
+                }
+              } catch ( e ) {
+                log.warn( e + "\n" + Utils.dumpStack() );
+              }
+              if ( result.status ) {
+                notifyFail( note.getName() );
+              } else {
+                notifySuccess( note.getName() );
+              }
             }
           }
         ).focus();
       } catch ( e ) {
         log.warn( e + "\n" + Utils.dumpStack() );
       }
-      try {
-        if ( contentFile.exists() ) {
-          contentFile.remove( false );
-        }
-        if ( contentDirectory.exists() ) {
-          contentDirectory.remove( true );
-        }
-      } catch ( e ) {
-        log.warn( e + "\n" + Utils.dumpStack() );
+    };
+    
+    function notifyFail( title ) {
+      if ( Utils.IS_CLIPPER_PLAY_SOUND ) {
+        Utils.play( failAudio );
       }
+      Utils.showPopup( failImage, getEditorString( "clipper.fail" ),
+        title, true );
+    };
+    
+    function notifySuccess( title ) {
+      if ( Utils.IS_CLIPPER_PLAY_SOUND ) {
+        Utils.play( successAudio );
+      }
+      Utils.showPopup( successImage, getEditorString( "clipper.success" ),
+        title, true );
     };
     
     // DESIGN COMMANDS
@@ -4203,28 +4257,15 @@ var Editor = function() {
           setBackgroundColor();
           return;
         }
-        if ( isEditorDirty ) {
-          reloadFlag = false;
-          params = {
-            input: {
-              title: getString( "editor.confirmReload.title" ),
-              message1: getFormattedString( "editor.confirmReload.message1", [ currentNote.getName() ] ),
-              message2: getString( "editor.confirmReload.message2" )
-            },
-            output: null
-          };
-          currentWindow.openDialog(
-            "chrome://znotes/content/confirmdialog.xul",
-            "",
-            "chrome,dialog=yes,modal=yes,centerscreen,resizable=no",
-            params
-          ).focus();
-          if ( params.output && params.output.result ) {
-            reloadFlag = true;
-          }
-        }
-        if ( reloadFlag ) {
-          cancel( true );
+        Utils.beep();
+        Utils.showPopup( successImage, getEditorString( "note.changed" ),
+          aNote.getName(), true );
+        if ( isSourceEditingActive ) {
+          sourceEditor.setValue( newContent );
+        } else if ( isDesignEditingActive ) {
+          showSource();
+          sourceEditor.setValue( newContent );
+          showDesign();
         }
       }
     };
@@ -4418,41 +4459,51 @@ var Editor = function() {
 
     // DESIGN & SOURCE
 
+    // TODO: diff/patch must be applied to DOM
+    function patchDesign( dom ) {
+      var node, index, doc = designEditor.document;
+      try {
+        designEditor.beginTransaction();
+        while ( doc.firstChild ) {
+          designEditor.deleteNode( doc.firstChild );
+        }
+        node = dom.firstChild;
+        index = 0;
+        while ( node ) {
+          designEditor.insertNode(
+            doc.importNode( node, true ),
+            doc,
+            index++
+          );
+          node = node.nextSibling;
+        }
+      } catch ( e ) {
+        log.warn( e + "\n" + Utils.dumpStack() );
+      } finally {
+        designEditor.endTransaction();
+      }
+    };
+    
+    // TODO: diff/patch must be applied to SOURCE
+    function patchSource( data ) {
+      sourceEditor.setValue( data );
+    };
+    
     function loadDesign() {
-      var doc = self.getDocument();
+      var dom, designDocument, node;
       var data = sourceEditor.getValue();
+      var doc = self.getDocument();
       var obj = doc.parseFromString(
         data,
         currentNote.getURI(),
         currentNote.getBaseURI(),
         currentNote.getName()
       );
-      var dom = obj.dom;
+      dom = obj.dom;
       isParseError = !obj.result;
       isParseModified = obj.changed;
-      var designDocument;
       if ( currentMode === "editor" ) {
-        designDocument = designEditor.document;
-        try {
-          designEditor.beginTransaction();
-          // TODO: diff/patch must be applied!
-          while ( designDocument.firstChild ) {
-            designEditor.deleteNode( designDocument.firstChild );
-          }
-          var node = dom.firstChild, position = 0;
-          while ( node ) {
-            designEditor.insertNode(
-              designDocument.importNode( node, true ),
-              designDocument,
-              position++
-            );
-            node = node.nextSibling;
-          }
-        } catch ( e ) {
-          log.warn( e + "\n" + Utils.dumpStack() );
-        } finally {
-          designEditor.endTransaction();
-        }
+        patchDesign( dom );
         undoState.push();
       } else {
         designDocument = designFrame.contentDocument;
@@ -4460,7 +4511,7 @@ var Editor = function() {
           while ( designDocument.firstChild ) {
             designDocument.removeChild( designDocument.firstChild );
           }
-          var node = dom.firstChild;
+          node = dom.firstChild;
           while ( node ) {
             designDocument.appendChild(
               designDocument.importNode( node, true )
@@ -4474,30 +4525,27 @@ var Editor = function() {
     };
 
     function loadSource() {
+      var data;
       if ( isParseError ) {
         return;
       }
-      var doc = self.getDocument();
-      var dom = designFrame.contentDocument;
-      if ( currentMode == "editor" ) {
-        dom = designEditor.document;
-      }
       isParseModified = false;
-      // TODO: diff/patch must be applied
-      sourceEditor.setValue(
-        doc.serializeToString(
-          dom,
-          currentNote.getURI(),
-          currentNote.getBaseURI()
-        )
+      data = self.getDocument().serializeToString(
+        currentMode === "editor" ?
+          designEditor.document : designFrame.contentDocument,
+        currentNote.getURI(),
+        currentNote.getBaseURI()
       );
-      if ( currentMode == "editor" ) {
+      if ( currentMode === "editor" ) {
+        patchSource( data );
         undoState.push();
+      } else {
+        sourceEditor.setValue( data );
       }
     };
 
     function showDesign() {
-      if ( currentMode == "editor" ) {
+      if ( currentMode === "editor" ) {
         if ( isSourceEditingActive ) {
           doneSourceEditing();
         }
@@ -4511,7 +4559,7 @@ var Editor = function() {
     };
 
     function showSource() {
-      if ( currentMode == "editor" ) {
+      if ( currentMode === "editor" ) {
         if ( isDesignEditingActive ) {
           doneDesignEditing();
         }
@@ -4557,9 +4605,6 @@ var Editor = function() {
       if ( isDesignEditingActive ) {
         isDesignEditingActive = false;
         designToolBox.setAttribute( "collapsed", "true" );
-        if ( !currentNote || !currentNote.isExists() ) {
-          return;
-        }
       }
     };
 
@@ -5258,24 +5303,15 @@ var Editor = function() {
     };
 
     function load() {
-      // @@@@ 1 getMainContent
-      // @@@@ 1 setMainContent
-      var data = currentNote.getMainContent();
       var res = currentNote.getDocument();
       if ( res.result && res.changed ) {
-        // TODO: ? is it really necessary
-        // if document changed (fixed up)
+        // if document changed (fixed up) then
         // save changes before load it the first time
-        data = self.getDocument().serializeToString(
-          res.dom,
-          currentNote.getURI(),
-          currentNote.getBaseURI()
-        );
         currentNote.removeStateListener( noteStateListener );
-        currentNote.setMainContent( data );
+        currentNote.setMainContent( res.data );
         currentNote.addStateListener( noteStateListener );
       }
-      sourceEditor.setValue( data );
+      sourceEditor.setValue( res.data );
       sourceEditor.clearHistory();
       loadDesign();
     };
@@ -5350,16 +5386,16 @@ var Editor = function() {
     };
 
     function stop() {
-      var res;
       if ( currentNote && currentNote.isExists() && isEditorDirty ) {
-        res = confirm();
-        if ( res === -1 ) {
-          return false;
-        }
-        if ( res ) {
-          save();
-        } else {
-          cancel();
+        switch ( confirm() ) {
+          case -1:
+            return false;
+          case 1:
+            save();
+            break;
+          case 0:
+            cancel();
+            break;
         }
       } else {
         cancel();

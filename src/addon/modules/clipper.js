@@ -246,20 +246,42 @@ function createUUID() {
 };
 
 function serializeXMLToString( dom ) {
-  return Cc["@mozilla.org/xmlextras/xmlserializer;1"].createInstance(
-    Ci.nsIDOMSerializer ).serializeToString( dom );
+  var result = Cc["@mozilla.org/xmlextras/xmlserializer;1"].createInstance(
+    Ci.nsIDOMSerializer ).serializeToString( dom ).replace( /\r\n?/g, "\n" );
+  /*
+  @see http://www.w3.org/TR/2000/REC-xml-20001006#dt-xmldecl
+  XMLDecl ::= '<?xml'
+              S 'version'	S? '=' S?
+              ( "'" VersionNum "'" | '"' VersionNum '"' )
+              EncodingDecl?
+              SDDecl?
+              S?
+              '?>'
+  VersionNum ::= ( [a-zA-Z0-9_.:] | '-' )+
+  EncodingDecl ::= S 'encoding' S? '=' S?
+                   ( '"' EncName '"' | "'" EncName "'" )
+  EncName ::= [A-Za-z] ( [A-Za-z0-9._] | '-' )*
+  SDDecl ::= S 'standalone' S? '=' S?
+             ( ( "'" ( 'yes' | 'no' ) "'" ) | ( '"' ( 'yes' | 'no' ) '"' ) )
+  S ::= ( #x20 | #x9 | #xD | #xA )+
+  */
+  if ( !/^<\?xml\s+version\s?=\s?(\'([a-zA-Z0-9_.:]|-)+\'|\"([a-zA-Z0-9_.:]|-)+\")(\s+encoding\s?=\s?(\"[A-Za-z]([A-Za-z0-9._]|-)*\"|\'[A-Za-z]([A-Za-z0-9._]|-)*\'))?(\s+standalone\s?=\s?((\'(yes|no)\')|(\"(yes|no)\")))?\s?\?>/gi.test( result ) ) {
+    result = '<?xml version="1.0" encoding="UTF-8"?>\n' + result;
+  }
+  return result;
 };
 
 function serializeHTMLToString( dom ) {
-  var documentEncoder =
+  var result, documentEncoder =
     Cc["@mozilla.org/layout/documentEncoder;1?type=text/html"]
     .createInstance( Ci.nsIDocumentEncoder );
   documentEncoder.init( dom, "text/html",
     Ci.nsIDocumentEncoder.OutputLFLineBreak |
     Ci.nsIDocumentEncoder.OutputRaw
   );
-  documentEncoder.setCharset( "utf-8" );
-  return documentEncoder.encodeToString();
+  documentEncoder.setCharset( "UTF-8" );
+  result = documentEncoder.encodeToString();
+  return result;
 };
 
 function getFileURI( file ) {
@@ -809,9 +831,8 @@ function inspectRule( aSubstitution, aGlobalNamespaces, aLocalNamespaces,
 
 function processRule( aRule, aRules, aSubstitution, aDocument, aGroupId,
   aDirectory, aLoader, aFlags ) {
-  var sheet, matchMedia, matchSupports, matchDocument;
-  var fileName, filePrefix, sheetFile, url;
-  var cssIndex, cssText;
+  var sheet, url, matchMedia, matchSupports, matchDocument;
+  var aFileName, filePrefix, sheetFile, cssIndex, cssText;
   var globalNamespaces, localNamespaces;
   var aSheet = aRule.parentStyleSheet;
   var aSheetURL = resolveSheetURL( aDocument, aSheet );
@@ -900,19 +921,29 @@ function processRule( aRule, aRules, aSubstitution, aDocument, aGroupId,
         }
       }
       if ( matchMedia && aRule.styleSheet ) {
-        url = null;
+        aFileName = null;
         if ( !( aFlags & 0x01000000 /* INLINE_STYLESHEETS_IN_DOCUMENT */ ) ) {
-          fileName = getSuitableFileName( aRule.styleSheet.href,
-            aRule.styleSheet.type );
-          filePrefix = "";
-          do {
-            sheetFile = aDirectory.clone();
-            sheetFile.append( filePrefix + fileName.name + "." + fileName.ext );
-            filePrefix += "_";
-          } while ( sheetFile.exists() && !sheetFile.isDirectory() );
-          writeFileEntry( sheetFile, "utf-8", "" );
-          url = sheetFile.leafName;
-          cssText = '@import url( "' + url + '" )';
+          url = aRule.styleSheet.href.toLowerCase();
+          if ( url in aRules.urls ) {
+            aFileName = aRules.urls[url].fileName;
+          } else {
+            aFileName = getSuitableFileName( aRule.styleSheet.href,
+              aRule.styleSheet.type );
+            filePrefix = "";
+            do {
+              sheetFile = aDirectory.clone();
+              sheetFile.append( filePrefix +
+                aFileName.name + "." + aFileName.ext );
+              filePrefix += "_";
+            } while ( sheetFile.exists() && !sheetFile.isDirectory() );
+            writeFileEntry( sheetFile, "utf-8", "" );
+            aFileName = sheetFile.leafName;
+            aRules.urls[url] = {
+              fileName: aFileName,
+              isDone: false
+            };
+          }
+          cssText = '@import url( "' + aFileName + '" )';
           if ( !( aFlags & 0x10000000 /* SAVE_ACTIVE_RULES_ONLY */ ) &&
             aRule.media && aRule.media.mediaText ) {
             cssText += " " + aRule.media.mediaText;
@@ -920,8 +951,8 @@ function processRule( aRule, aRules, aSubstitution, aDocument, aGroupId,
           sheet.lines.push( cssText + ";" );
         }
         processStyleSheet( aRules, aSubstitution, aDocument, sheet,
-          aRule.styleSheet, url /* aFileName */, aGroupId, aDirectory,
-          aLoader, aFlags );
+          aRule.styleSheet, true /* isImport */, aFileName,
+          aGroupId, aDirectory, aLoader, aFlags );
       }
       break;
     case Ci.nsIDOMCSSRule.SUPPORTS_RULE:
@@ -1219,29 +1250,10 @@ function collectSheetNamespaces( aNamespaces, aSheet ) {
 };
 
 function processStyleSheet( aRules, aSubstitution, aDocument, aParentSheet,
-  aSheet, aFileName, aGroupId, aDirectory, aLoader, aFlags ) {
-  var sheet, namespaces, matchMedia, nodeName, parentSheetIndex;
-  var scopeId, scopeEl;
-  if ( aSheet.href ) {
-    for ( var i = 0; i < aRules.sheets.length; i++ ) {
-      if ( aRules.sheets[i].href === aSheet.href ) {
-        return;
-      }
-    }
-  }
-  matchMedia = true;
-  if ( aFlags & 0x10000000 /* SAVE_ACTIVE_RULES_ONLY */ ) {
-    if ( aSheet.disabled ) {
-      matchMedia = false;
-    } else if ( aDocument.defaultView &&
-      aSheet.media && aSheet.media.mediaText ) {
-      matchMedia = aDocument.defaultView.matchMedia( aSheet.media.mediaText );
-      matchMedia = matchMedia && matchMedia.matches;
-    }
-  }
-  if ( !matchMedia ) {
-    return;
-  }
+  aSheet, isImport, aFileName, aGroupId, aDirectory, aLoader, aFlags ) {
+  var sheet, namespaces, matchMedia;
+  var headNode, ownerNode, ownerName, ownerType;
+  var parentSheetIndex, relList;
   namespaces = CSSUtils.Namespaces.create(
     aDocument.documentElement.namespaceURI );
   collectSheetNamespaces( namespaces, aSheet );
@@ -1250,33 +1262,66 @@ function processStyleSheet( aRules, aSubstitution, aDocument, aParentSheet,
   } else {
     aRules.namespaces.mixin( namespaces );
   }
-  nodeName = aSheet.ownerNode ? aSheet.ownerNode.nodeName.toLowerCase() : null;
-  scopeId = null;
-  if ( aSheet.ownerNode && aSheet.ownerNode.hasAttribute( "scoped" ) ) {
-    scopeId = createUUID();
+  try {
+    headNode = aDocument.head;
+  } catch ( e ) {
+    headNode = null;
+  }
+  ownerNode = aSheet.ownerNode;
+  ownerName = null;
+  ownerType = null;
+  relList = [];
+  if ( ownerNode ) {
+    ownerType = ownerNode.nodeType;
+    if ( ownerType === Ci.nsIDOMNode.PROCESSING_INSTRUCTION_NODE ) {
+      ownerName = ownerNode.target.toLowerCase();
+      relList = [ "stylesheet" ];
+      if ( ownerNode.data.match( /\s*alternate\s*=\s*('yes'|"yes")\s*/gm ) ) {
+        relList.unshift( "alternate" );
+      }
+    } else {
+      ownerName = ownerNode.nodeName.toLowerCase();
+      if ( ownerName === "link" && ownerNode.hasAttribute( "rel" ) ) {
+        relList = ownerNode.getAttribute( "rel" ).toLowerCase().split( /\s+/ );
+      }
+    }
   }
   sheet = {
     sheet: aSheet,
     parent: aParentSheet,
-    fileName: aFileName, // @import
+    isImport: isImport,
+    fileName: aFileName,
     type: aSheet.type,
     title: aSheet.title,
     disabled: aSheet.disabled,
-    scopeId: scopeId,
+    nodeId: ownerNode ? createUUID() : null,
+    nodeName: ownerName,
+    nodeType: ownerType,
+    scoped: ownerName === "style" && ownerNode.hasAttribute( "scoped" ),
     media: aSheet.media,
     href: aSheet.href,
-    hrefLang: nodeName === "link" ?
-      aSheet.ownerNode.getAttribute( "hreflang" ) : null,
-    relList: nodeName === "link" && aSheet.ownerNode.hasAttribute( "rel" ) ?
-      aSheet.ownerNode.getAttribute( "rel" ).toLowerCase().split( /\s+/ ) : [],
+    hrefLang: ownerName === "link" ? ownerNode.getAttribute( "hreflang" ) : null,
+    relList: relList,
     namespaces: namespaces,
     lines: []
   };
-  if ( scopeId ) {
-    scopeEl = aDocument.createElement( "div" );
-    scopeEl.classList.add( "scope_" + scopeId );
-    aSheet.ownerNode.parentElement.insertBefore( scopeEl, aSheet.ownerNode );
-    aSheet.ownerNode.parentElement.removeChild( aSheet.ownerNode );
+  if ( sheet.nodeId ) {
+    if ( sheet.nodeType === Ci.nsIDOMNode.PROCESSING_INSTRUCTION_NODE ) {
+      node = aDocument.createProcessingInstruction( "xml-data", sheet.nodeId );
+    } else {
+      if ( !aRules.id && !sheet.scoped &&
+        headNode && headNode.contains( ownerNode ) ) {
+        aRules.id = createUUID();
+        node = aDocument.createElementNS(
+          aDocument.documentElement.namespaceURI, "div" );
+        node.classList.add( "stub_" + aRules.id );
+        ownerNode.parentNode.insertBefore( node, ownerNode );
+      }
+      node = aDocument.createElementNS( aDocument.documentElement.namespaceURI,
+        "div" );
+      node.classList.add( "node_" + sheet.nodeId );
+    }
+    ownerNode.parentNode.insertBefore( node, ownerNode );
   }
   parentSheetIndex = aParentSheet ? aRules.sheets.indexOf( aParentSheet ) : -1;
   if ( parentSheetIndex === -1 ) {
@@ -1292,11 +1337,49 @@ function processStyleSheet( aRules, aSubstitution, aDocument, aParentSheet,
 
 function collectStyles( aRules, aSubstitution, aDocument, aGroupId, aDirectory,
   aLoader, aFlags ) {
+  var aSheet, aFileName, matchMedia, sheetFile, filePrefix, url;
   for ( var i = 0; i < aDocument.styleSheets.length; i++ ) {
-    if ( aDocument.styleSheets[i] ) {
-      processStyleSheet( aRules, aSubstitution, aDocument,
-        null /* aParentSheet */, aDocument.styleSheets[i], null /* aFileName */,
+    aSheet = aDocument.styleSheets[i];
+    if ( aSheet ) {
+      matchMedia = true;
+      if ( aFlags & 0x10000000 /* SAVE_ACTIVE_RULES_ONLY */ ) {
+        if ( aSheet.disabled ) {
+          matchMedia = false;
+        } else if ( aDocument.defaultView &&
+          aSheet.media && aSheet.media.mediaText ) {
+          matchMedia = aDocument.defaultView.matchMedia(
+            aSheet.media.mediaText );
+          matchMedia = matchMedia && matchMedia.matches;
+        }
+      }
+      if ( matchMedia ) {
+        aFileName = null;
+        if ( !( aFlags & 0x01000000 /* INLINE_STYLESHEETS_IN_DOCUMENT */ ) &&
+          aSheet.href ) {
+          url = aSheet.href.toLowerCase();
+          if ( url in aRules.urls ) {
+            aFileName = aRules.urls[url].fileName;
+          } else {
+            aFileName = getSuitableFileName( aSheet.href, aSheet.type );
+            filePrefix = "";
+            do {
+              sheetFile = aDirectory.clone();
+              sheetFile.append( filePrefix +
+                aFileName.name + "." + aFileName.ext );
+              filePrefix += "_";
+            } while ( sheetFile.exists() && !sheetFile.isDirectory() );
+            writeFileEntry( sheetFile, "utf-8", "" );
+            aFileName = sheetFile.leafName;
+            aRules.urls[url] = {
+              fileName: aFileName,
+              isDone: false
+            };
+          }
+        }
+        processStyleSheet( aRules, aSubstitution, aDocument,
+        null /* aParentSheet */, aSheet, false /* isImport */, aFileName,
         aGroupId, aDirectory, aLoader, aFlags );
+      }
     }
   }
 };
@@ -1601,7 +1684,7 @@ function createLoaderJob( aLoader, aDirectory, aDocumentURL, aGroupId,
 };
 
 function inspectElement( aRules, aSubstitution, anElement, aDocumentURL,
-  aBaseURL, aFrames, aGroupId, aDirectory, aLoader, aFlags ) {
+  aBaseURL, aFrames, aGroupId, aDirectory, aLoader, aFlags, aBaseURI ) {
   var anURI, anURL, aContentType, aFrame, aDocument, aRelList, aLink;
   var aName, aValue;
   var frameEntries, fileNameObj, oldCSSText, newCSSText;
@@ -1628,12 +1711,17 @@ function inspectElement( aRules, aSubstitution, anElement, aDocumentURL,
              anElement.hasAttribute( "content" ) &&
              anElement.getAttribute( "content" )
                       .toLowerCase().indexOf( "charset=" ) !== -1 ||
-             anElement.hasAttribute( "charset" )
+             anElement.hasAttribute( "charset" ) &&
+             anElement.getAttribute( "charset" ).toLowerCase() !== "utf-8"
            ) {
           return anElement.parentNode.removeChild( anElement );
         }
         break;
       case "base":
+        if ( aBaseURI ) {
+          anElement.setAttribute( "href", aBaseURI.spec );
+          return anElement;
+        }
         return anElement.parentNode.removeChild( anElement );
       case "style":
         return anElement.parentNode.removeChild( anElement );
@@ -1848,8 +1936,9 @@ function inspectElement( aRules, aSubstitution, anElement, aDocumentURL,
           { value: null } /* aResult */,
           frameEntries.fileEntry,
           frameEntries.dirEntry,
-          aLoader,
-          aFlags
+          aFlags,
+          null /* aBaseURI */,
+          aLoader
         );
         break;
     }
@@ -1889,115 +1978,239 @@ function inspectElement( aRules, aSubstitution, anElement, aDocumentURL,
   return anElement;
 };
 
-function getSheetTitle( aSheet ) {
-  var sheet = aSheet;
-  while ( sheet.parent ) {
-    sheet = sheet.parent;
+function getPI( aDocument, anId ) {
+  var aNode = aDocument.firstChild;
+  while ( aNode ) {
+    if ( aNode.nodeType === Ci.nsIDOMNode.PROCESSING_INSTRUCTION_NODE &&
+      aNode.target === "xml-data" &&
+      aNode.data === anId ) {
+      return aNode;
+    }
+    aNode = aNode.nextSibling;
   }
-  return sheet.title;
+  return null;
 };
 
-function createStyles( aDocument, isFrame, aRules, aBaseURL, aFile, aDirectory, aFlags ) {
-  var aStyle, anURL, aText, aCSSFile, aCSSFileName;
-  var prefix, line, index, title;
-  var aScoped, aHead = aDocument.getElementsByTagName( "head" )[0];
-  for ( var i = 0; i < aRules.sheets.length; i++ ) {
-    aRules.sheets[i].title = getSheetTitle( aRules.sheets[i] );
+function getIndent( text ) {
+  var index = -1, result = text, pattern = /(\r|\n|\r\n)/ig;
+  while ( pattern.exec( result ) ) {
+    index = pattern.lastIndex;
   }
+  if ( index === -1 ) {
+    return "";
+  }
+  return "\n" + result.substring( index );
+};
+
+function createStyles( aDocument, isFrame, aRules, aBaseURL, aDirectory,
+  aFlags ) {
+  var aStyle, anURL, aText, aData, aCSSFile, aCSSFileName, aSheet, isNewGroup;
+  var aLine, aNode, aStub, aStubTextPrefix, anIndent, anIndentText;
+  var aHead = aDocument.getElementsByTagName( "head" )[0];
+  // clean sheet array
   for ( var i = aRules.sheets.length - 1; i >= 0 ; i-- ) {
     for ( var j = aRules.sheets[i].lines.length - 1; j >= 0 ; j-- ) {
-      line = aRules.sheets[i].lines[j].trim();
-      if ( !line.length ) {
+      aLine = aRules.sheets[i].lines[j].trim();
+      if ( !aLine.length ) {
         aRules.sheets[i].lines.splice( j, 1 );
       }
     }
-    if ( !aRules.sheets[i].lines.length ) {
-      aRules.sheets.splice( i, 1 );
+  }
+  if ( !aRules.id ) {
+    aRules.id = createUUID();
+    aNode = aDocument.createElementNS(
+      aDocument.documentElement.namespaceURI, "div" );
+    aNode.classList.add( "stub_" + aRules.id );
+    aStub = aHead.lastElementChild;
+    aStubTextPrefix = (
+      aStub &&
+      aStub.previousSibling &&
+      aStub.previousSibling.nodeType === Ci.nsIDOMNode.TEXT_NODE ?
+        getIndent( aStub.previousSibling.textContent ) : ""
+    );
+    aStub = aHead.insertBefore( aNode, aStub ? aStub.nextSibling : null );
+  } else {
+    aStub = aDocument.querySelector( ".stub_" + aRules.id );
+    aStubTextPrefix = (
+      aStub &&
+      aStub.previousSibling &&
+      aStub.previousSibling.nodeType === Ci.nsIDOMNode.TEXT_NODE ?
+        getIndent( aStub.previousSibling.textContent ) : ""
+    );
+    if ( aStubTextPrefix ) {
+      aNode = aStub.previousSibling;
+      aStub.parentNode.insertBefore( aStub.parentNode.removeChild( aStub ),
+        aNode );
     }
   }
   if ( aFlags & 0x01000000 /* INLINE_STYLESHEETS_IN_DOCUMENT */ ) {
+    aNode = null;
     for ( var i = 0; i < aRules.sheets.length; i++ ) {
+      aSheet = aRules.sheets[i];
+      while ( aSheet.parent ) {
+        aSheet = aSheet.parent;
+      }
       anURL = aRules.sheets[i].href;
-      if ( anURL ) {
-        // link || @import
-        aText = "/***** " + anURL + " *****/\n      ";
+      if ( !aNode ) {
+        isNewGroup = true;
+        if ( aSheet.nodeType === Ci.nsIDOMNode.PROCESSING_INSTRUCTION_NODE ) {
+          aNode = getPI( aDocument, aSheet.nodeId );
+          anIndentText = aStubTextPrefix;
+        } else {
+          aNode = aDocument.querySelector( ".node_" + aSheet.nodeId );
+          anIndent = aNode.previousSibling;
+          anIndentText = ( anIndent &&
+            anIndent.nodeType === Ci.nsIDOMNode.TEXT_NODE ?
+              getIndent( anIndent.textContent ) : "" );
+        }
       } else {
-        // style
-        aScoped = aRules.sheets[i].scopeId ? aDocument.querySelector(
-          ".scope_" + aRules.sheets[i].scopeId ) : null;
-        aText = "";
+        isNewGroup = false;
       }
-      aText += aRules.sheets[i].lines.join( "\n      " );
-      aStyle = aDocument.createElementNS(
-        aDocument.documentElement.namespaceURI, "style" );
-      aStyle.textContent = "\n    " + aText + "\n    ";
-      if ( !( aFlags & 0x10000000 /* SAVE_ACTIVE_RULES_ONLY */ ) ) {
-        if ( aRules.sheets[i].media && aRules.sheets[i].media.mediaText ) {
-          aStyle.setAttribute( "media", aRules.sheets[i].media.mediaText );
+      if ( aRules.sheets[i].lines.length ) {
+        aText = anIndentText + "  ";
+        if ( anURL ) {
+          aText += "/***** " + anURL + " *****/" + anIndentText + "  ";
         }
-        if ( aRules.sheets[i].title ) {
-          aStyle.setAttribute( "title", aRules.sheets[i].title );
+        aText += aRules.sheets[i].lines.join( anIndentText + "  " ) +
+          anIndentText;
+        aStyle = aDocument.createElementNS(
+          aDocument.documentElement.namespaceURI, "style" );
+        if ( !( aFlags & 0x10000000 /* SAVE_ACTIVE_RULES_ONLY */ ) ) {
+          if ( aRules.sheets[i].media && aRules.sheets[i].media.mediaText ) {
+            aStyle.setAttribute( "media", aRules.sheets[i].media.mediaText );
+          }
+          if ( aSheet.title ) {
+            aStyle.setAttribute( "title", aSheet.title );
+          }
+        }
+        if ( aSheet.scoped ) {
+          aStyle.setAttribute( "scoped", "true" );
+        }
+        aStyle.textContent = aText;
+        if ( aSheet.nodeType === Ci.nsIDOMNode.PROCESSING_INSTRUCTION_NODE ) {
+          if ( anIndentText ) {
+            aStub.parentNode.insertBefore(
+              aDocument.createTextNode( anIndentText ), aStub );
+          }
+          aStub.parentNode.insertBefore( aStyle, aStub );
+        } else {
+          if ( aRules.sheets[i].parent && anIndentText && !isNewGroup ) {
+            // when inserted the first style in the new parent group
+            // should not insert an indent
+            aNode.parentNode.insertBefore(
+              aDocument.createTextNode( anIndentText ), aNode );
+          }
+          aNode.parentNode.insertBefore( aStyle, aNode );
         }
       }
-      if ( !aRules.sheets[i].scopeId ) {
-        aHead.appendChild( aDocument.createTextNode( "\n" ) );
-        aHead.appendChild( aStyle );
-      } else if ( aScoped ) {
-        aStyle.setAttribute( "scoped", "true" );
-        aScoped.parentElement.insertBefore( aStyle, aScoped );
-        aScoped.parentElement.removeChild( aScoped );
+      if ( !aRules.sheets[i].parent ) {
+        aNode.parentNode.removeChild( aNode );
+        aNode = null;
       }
     }
-  } else {
+  } else /* NOT INLINE_STYLESHEETS_IN_DOCUMENT */ {
     for ( var i = 0; i < aRules.sheets.length; i++ ) {
+      aNode = null;
+      if ( aRules.sheets[i].nodeId ) {
+        if ( aRules.sheets[i].nodeType ===
+          Ci.nsIDOMNode.PROCESSING_INSTRUCTION_NODE ) {
+          aNode = getPI( aDocument, aRules.sheets[i].nodeId );
+        } else {
+          aNode = aDocument.querySelector( ".node_" + aRules.sheets[i].nodeId );
+        }
+      }
+      if ( !aRules.sheets[i].lines.length ) {
+        if ( aNode ) {
+          aNode.parentNode.removeChild( aNode );
+        }
+        continue;
+      }
       anURL = aRules.sheets[i].href;
       if ( anURL ) {
-        // link || @import
+        // link || xml-stylesheet || @import
         aText = "/***** " + anURL + " *****/\n" +
           aRules.sheets[i].lines.join( "\n" );
-        if ( aRules.sheets[i].fileName ) {
-          // @import
-          aCSSFile = aDirectory.clone();
-          aCSSFile.append( aRules.sheets[i].fileName );
-          writeFileEntry( aCSSFile, "utf-8", aText );
-        } else {
-          // link
-          aCSSFileName = getSuitableFileName( anURL, aRules.sheets[i].type );
-          prefix = "";
-          do {
-            aCSSFile = aDirectory.clone();
-            aCSSFile.append( prefix + aCSSFileName.name + "." +
-              aCSSFileName.ext );
-            prefix += "_";
-          } while ( aCSSFile.exists() && !aCSSFile.isDirectory() );
-          writeFileEntry( aCSSFile, "utf-8", aText );
-          aStyle = aDocument.createElementNS(
-            aDocument.documentElement.namespaceURI, "link" );
-          aStyle.setAttribute( "type", aRules.sheets[i].type );
-          aStyle.setAttribute( "href", aCSSFile.leafName );
-          if ( aRules.sheets[i].hrefLang ) {
-            aStyle.setAttribute( "hreflang", aRules.sheets[i].hrefLang );
-          }
-          if ( !( aFlags & 0x10000000 /* SAVE_ACTIVE_RULES_ONLY */ ) ) {
-            if ( aRules.sheets[i].media && aRules.sheets[i].media.mediaText ) {
-              aStyle.setAttribute( "media", aRules.sheets[i].media.mediaText );
+        aCSSFile = aDirectory.clone();
+        aCSSFile.append( aRules.sheets[i].fileName );
+        writeFileEntry( aCSSFile, "utf-8", aText );
+        if ( !aRules.sheets[i].isImport ) {
+          // link || xml-stylesheet
+          if ( aRules.sheets[i].nodeType ===
+            Ci.nsIDOMNode.PROCESSING_INSTRUCTION_NODE ) {
+            // xml-stylesheet
+            //aData = 'type="' + aRules.sheets[i].type + '" ' +
+            //  'href="' + aBaseURL + aCSSFile.leafName + '"';
+            //if ( !( aFlags & 0x10000000 /* SAVE_ACTIVE_RULES_ONLY */ ) ) {
+            //  if ( aRules.sheets[i].title ) {
+            //    aData += ' title="' + aRules.sheets[i].title + '"';
+            //  }
+            //  if ( aRules.sheets[i].relList.indexOf( "alternate" ) !== -1 ) {
+            //    aData += ' alternate="yes"';
+            //  }
+            //}
+            //aStyle = aDocument.createProcessingInstruction(
+            //  aRules.sheets[i].nodeName, aData );
+            //aNode.parentNode.insertBefore( aStyle, aNode );
+            aNode.parentNode.removeChild( aNode );
+            // replicate xml processing instruction `xml-stylesheet`
+            // as html `link` element
+            aStyle = aDocument.createElementNS(
+              aDocument.documentElement.namespaceURI, "link" );
+            aStyle.setAttribute( "type", aRules.sheets[i].type );
+            aStyle.setAttribute( "href", aCSSFile.leafName );
+            if ( aRules.sheets[i].hrefLang ) {
+              aStyle.setAttribute( "hreflang", aRules.sheets[i].hrefLang );
             }
-            if ( aRules.sheets[i].title ) {
-              aStyle.setAttribute( "title", aRules.sheets[i].title );
+            if ( !( aFlags & 0x10000000 /* SAVE_ACTIVE_RULES_ONLY */ ) ) {
+              if ( aRules.sheets[i].media && aRules.sheets[i].media.mediaText ) {
+                aStyle.setAttribute( "media", aRules.sheets[i].media.mediaText );
+              }
+              if ( aRules.sheets[i].title ) {
+                aStyle.setAttribute( "title", aRules.sheets[i].title );
+              }
+              aStyle.setAttribute( "rel", aRules.sheets[i].relList.join( " " ) );
+            } else {
+              aStyle.setAttribute( "rel", aRules.sheets[i].relList.filter(
+                function( rel ) { return rel !== "alternate"; } ).join( " " ) );
             }
-            aStyle.setAttribute( "rel", aRules.sheets[i].relList.join( " " ) );
+            if ( aStubTextPrefix ) {
+              aStub.parentNode.insertBefore(
+                aDocument.createTextNode( aStubTextPrefix ), aStub );
+            }
+            aStub.parentNode.insertBefore( aStyle, aStub );
           } else {
-            aStyle.setAttribute( "rel", aRules.sheets[i].relList.filter(
-              function( rel ) { return rel !== "alternate"; } ).join( " " ) );
+            // link
+            aStyle = aDocument.createElementNS(
+              aDocument.documentElement.namespaceURI, "link" );
+            aStyle.setAttribute( "type", aRules.sheets[i].type );
+            aStyle.setAttribute( "href", aCSSFile.leafName );
+            if ( aRules.sheets[i].hrefLang ) {
+              aStyle.setAttribute( "hreflang", aRules.sheets[i].hrefLang );
+            }
+            if ( !( aFlags & 0x10000000 /* SAVE_ACTIVE_RULES_ONLY */ ) ) {
+              if ( aRules.sheets[i].media && aRules.sheets[i].media.mediaText ) {
+                aStyle.setAttribute( "media", aRules.sheets[i].media.mediaText );
+              }
+              if ( aRules.sheets[i].title ) {
+                aStyle.setAttribute( "title", aRules.sheets[i].title );
+              }
+              aStyle.setAttribute( "rel", aRules.sheets[i].relList.join( " " ) );
+            } else {
+              aStyle.setAttribute( "rel", aRules.sheets[i].relList.filter(
+                function( rel ) { return rel !== "alternate"; } ).join( " " ) );
+            }
+            aNode.parentNode.insertBefore( aStyle, aNode );
+            aNode.parentNode.removeChild( aNode );
           }
-          aHead.appendChild( aDocument.createTextNode( "\n" ) );
-          aHead.appendChild( aStyle );
         }
       } else {
         // style
-        aScoped = aRules.sheets[i].scopeId ? aDocument.querySelector(
-          ".scope_" + aRules.sheets[i].scopeId ) : null;
-        aText = aRules.sheets[i].lines.join( "\n      " );
+        anIndent = aNode.previousSibling;
+        anIndentText = ( anIndent &&
+          anIndent.nodeType === Ci.nsIDOMNode.TEXT_NODE ?
+            getIndent( anIndent.textContent ) : "" );
+        aText = anIndentText + "  " +
+          aRules.sheets[i].lines.join( anIndentText + "  " ) + anIndentText;        
         aStyle = aDocument.createElementNS(
           aDocument.documentElement.namespaceURI, "style" );
         if ( !( aFlags & 0x10000000 /* SAVE_ACTIVE_RULES_ONLY */ ) ) {
@@ -2008,22 +2221,21 @@ function createStyles( aDocument, isFrame, aRules, aBaseURL, aFile, aDirectory, 
             aStyle.setAttribute( "title", aRules.sheets[i].title );
           }
         }
-        aStyle.textContent = "\n    " + aText + "\n    ";
-        if ( !aRules.sheets[i].scopeId ) {
-          aHead.appendChild( aDocument.createTextNode( "\n" ) );
-          aHead.appendChild( aStyle );
-        } else if ( aScoped ) {
+        if ( aRules.sheets[i].scoped ) {
           aStyle.setAttribute( "scoped", "true" );
-          aScoped.parentElement.insertBefore( aStyle, aScoped );
-          aScoped.parentElement.removeChild( aScoped );
         }
+        aStyle.textContent = aText;
+        aNode.parentNode.insertBefore( aStyle, aNode );
+        aNode.parentNode.removeChild( aNode );
       }
     }
   }
+  aStub.parentNode.removeChild( aStub );
 };
 
 function processNode( aRules, aSubstitution, aRoot, aNamespaces,
-  aDocumentURL, aBaseURL, aFrames, aGroupId, aDirectory, aLoader, aFlags ) {
+  aDocumentURL, aBaseURL, aFrames, aGroupId, aDirectory, aLoader, aFlags,
+  aBaseURI ) {
   var aNode, aNext, anElementNamespaces;
   switch ( aRoot.nodeType ) {
     case Ci.nsIDOMNode.ELEMENT_NODE:
@@ -2034,7 +2246,7 @@ function processNode( aRules, aSubstitution, aRoot, aNamespaces,
         aRoot = substituteElement( aRoot, aSubstitution, aFlags );
         aRoot = inspectElement( aRules, aSubstitution, aRoot,
           aDocumentURL, aBaseURL, aFrames, aGroupId, aDirectory, aLoader,
-          aFlags );
+          aFlags, aBaseURI );
       }
       break;
     case Ci.nsIDOMNode.COMMENT_NODE:
@@ -2050,7 +2262,8 @@ function processNode( aRules, aSubstitution, aRoot, aNamespaces,
     while ( aNode ) {
       aNext = aNode.nextSibling;
       processNode( aRules, aSubstitution, aNode, anElementNamespaces,
-        aDocumentURL, aBaseURL, aFrames, aGroupId, aDirectory, aLoader, aFlags );
+        aDocumentURL, aBaseURL, aFrames, aGroupId, aDirectory, aLoader, aFlags,
+        aBaseURI );
       aNode = aNext;
     }
   }
@@ -2071,8 +2284,9 @@ function collectFrames( aDocument ) {
 };
 
 function doneDocument( aDocument, aResult, aRules, aBaseURL, aFile,
-  aDirectory, aFlags ) {
+  aDirectory, aFlags, aBaseURI ) {
   var isFrame, aHead, aStyle, aMeta, aCollection, aBase, aBaseTarget;
+  var aNode, aBaseIndentText;
   isFrame = aDocument.defaultView.self !== aDocument.defaultView.window.top;
   var namespaceURI = aResult.documentElement.namespaceURI;
   if ( namespaceURI && namespaceURI === HTML5NS ) {
@@ -2088,21 +2302,42 @@ function doneDocument( aDocument, aResult, aRules, aBaseURL, aFile,
       aHead = aCollection[0];
     }
     // BASE
-    aCollection = aDocument.getElementsByTagName( "base" );
-    aBaseTarget = null;
-    if ( aCollection.length ) {
-      aBaseTarget = aCollection[0].hasAttribute( "target" ) ?
-        aCollection[0].getAttribute( "target" ) : null;
-    }
-    aBase = aResult.createElementNS( namespaceURI, "base" );
-    aHead.insertBefore( aBase, aHead.firstElementChild );
-    setElementAttribute( aBase, "href", aBaseURL );
-    if ( aBaseTarget ) {
-      setElementAttribute( aBase, "target", aBaseTarget );
+    if ( !aBaseURI ) {
+      aCollection = aDocument.getElementsByTagName( "base" );
+      aBaseTarget = null;
+      if ( aCollection.length ) {
+        aBaseTarget = aCollection[0].hasAttribute( "target" ) ?
+          aCollection[0].getAttribute( "target" ) : null;
+      }
+      aBase = aResult.createElementNS( namespaceURI, "base" );
+      setElementAttribute( aBase, "href", aBaseURL );
+      if ( aBaseTarget ) {
+        setElementAttribute( aBase, "target", aBaseTarget );
+      }
+      aNode = aHead.firstElementChild;
+      if ( aNode ) {
+        if ( aNode.previousSibling &&
+          aNode.previousSibling.nodeType === Ci.nsIDOMNode.TEXT_NODE ) {
+          aBaseIndentText = getIndent( aNode.previousSibling.textContent );
+        } else {
+          aBaseIndentText = "\n";
+        }
+        aHead.insertBefore( aBase, aNode );
+        aHead.insertBefore( aResult.createTextNode( aBaseIndentText ),
+          aNode );
+      } else {
+        aNode = aHead.firstChild;
+        aBaseIndentText = "\n";
+        aHead.insertBefore( aBase, aNode );
+        if ( aNode ) {
+          aHead.insertBefore( aResult.createTextNode( aBaseIndentText ),
+            aNode );
+        }
+      }
     }
     // STYLE
     if ( aFlags & 0x00010000 /* SAVE_STYLES */ ) {
-      createStyles( aResult, isFrame, aRules, aBaseURL, aFile, aDirectory,
+      createStyles( aResult, isFrame, aRules, aBaseURL, aDirectory,
         aFlags );
     }
   }
@@ -2110,8 +2345,8 @@ function doneDocument( aDocument, aResult, aRules, aBaseURL, aFile,
   writeDocument( aResult, aDocument.contentType, aFile );
 };
 
-function saveDocument( aDocument, aResultObj, aFile, aDirectory,
-                       aLoader, aFlags ) {
+function saveDocument( aDocument, aResultObj, aFile, aDirectory, aFlags,
+  aBaseURI, aLoader ) {
   var aResult, aNode, aNext;
   var isFrame = aDocument.defaultView ?
     aDocument.defaultView.top !== aDocument.defaultView.self : false;
@@ -2120,8 +2355,11 @@ function saveDocument( aDocument, aResultObj, aFile, aDirectory,
   var aGroupId = createUUID();
   var aRules = {
     namespaces: null, // global namespaces
-    sheets: []
+    sheets: [],
+    urls: {},
+    id: null
   };
+  var aFrames = collectFrames( aDocument );
   var aNamespaces = CSSUtils.Namespaces.create();
   var aSubstitution = Substitution.create();
   if ( !( aFlags & 0x00001000 /* PRESERVE_HTML5_TAGS */ ) ) {
@@ -2138,7 +2376,7 @@ function saveDocument( aDocument, aResultObj, aFile, aDirectory,
       aFlags
     );
   }
-  aResult = aResultObj.value = cloneDocument( aDocument );  
+  aResult = aResultObj.value = cloneDocument( aDocument );
   collectElementNamespaces( aResult.documentElement, aNamespaces );
   aNode = aResult.firstChild;
   while ( aNode ) {
@@ -2150,11 +2388,12 @@ function saveDocument( aDocument, aResultObj, aFile, aDirectory,
       aNamespaces,
       aDocument.documentURI,
       aDocument.baseURI,
-      collectFrames( aDocument ),
+      aFrames,
       aGroupId,
       aDirectory,
       aLoader,
-      aFlags
+      aFlags,
+      aBaseURI
     );
     aNode = aNext;
   }
@@ -2162,37 +2401,30 @@ function saveDocument( aDocument, aResultObj, aFile, aDirectory,
     aLoader.addObserver( {
       onGroupStopped: function( anEvent ) {
         if ( anEvent.getData().id === aGroupId ) {
-          doneDocument( aDocument, aResult, aRules, aBaseURL, aFile, aDirectory, aFlags );
+          doneDocument( aDocument, aResult, aRules, aBaseURL, aFile, aDirectory,
+            aFlags, aBaseURI );
         }
       }
     } );
   } else {
-    doneDocument( aDocument, aResult, aRules, aBaseURL, aFile, aDirectory, aFlags );
+    doneDocument( aDocument, aResult, aRules, aBaseURL, aFile, aDirectory,
+      aFlags, aBaseURI );
   }
 };
 
 function cloneDocument( aDocument ) {
-  var aNode, aResult = aDocument.implementation.createDocument(
-    aDocument.documentElement.namespaceURI,
-    null,
-    aDocument.doctype
-  );
-  aResult.appendChild(
-    aResult.importNode( aDocument.documentElement, true )
-  );
+  var aResult, aNode, aTop;
+  aResult = aDocument.implementation.createDocument(
+    aDocument.documentElement.namespaceURI, null, null );
+  while ( aResult.firstChild ) {
+    aResult.removeChild( aResult.firstChild );
+  }
   aNode = aDocument.firstChild;
-  while ( aNode && aNode !== aDocument.documentElement ) {
-    aResult.insertBefore(
-      aResult.importNode( aNode, true ),
-      aResult.documentElement
-    );
-    aNode = aNode.nextSibling;
-  }
-  if ( aNode ) {
-    aNode = aNode.nextSibling;
-  }
   while ( aNode ) {
-    aResult.appendChild( aResult.importNode( aNode, true ) );
+    if ( aNode.nodeType !== Ci.nsIDOMNode.PROCESSING_INSTRUCTION_NODE ||
+      aNode.target.toLowerCase() !== "xml-stylesheet" ) {
+      aResult.appendChild( aResult.importNode( aNode, true ) );
+    }
     aNode = aNode.nextSibling;
   }
   return aResult;
@@ -2696,7 +2928,7 @@ var Clipper = function() {
   this.mLoader = null;
 };
 Clipper.prototype = {
-  save: function( aDocument, aResultObj, aFile, aDirectory, aFlags,
+  save: function( aDocument, aResultObj, aFile, aDirectory, aFlags, aBaseURI,
                   anObserver ) {
     this.mLoader = new Loader();
     if ( anObserver ) {
@@ -2707,8 +2939,9 @@ Clipper.prototype = {
       aResultObj,
       aFile,
       aDirectory,
-      this.mLoader,
-      aFlags === undefined ? 0x00000000 : aFlags
+      aFlags === undefined ? 0x11010000 : aFlags,
+      aBaseURI,
+      this.mLoader
     );
     if ( this.mLoader.hasJobs() ) {
       this.mLoader.start();

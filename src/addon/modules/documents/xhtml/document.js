@@ -219,8 +219,24 @@ var Document = function() {
     return result;
   };
 
+  function getIndent( node ) {
+    var result, index = -1, pattern = /(\r|\n|\r\n)/ig;
+    if ( node && node.previousSibling &&
+      node.previousSibling.nodeType === Ci.nsIDOMNode.TEXT_NODE ) {
+      result = node.previousSibling.textContent;
+      while ( pattern.exec( result ) ) {
+        index = pattern.lastIndex;
+      }
+      if ( index === -1 ) {
+        return "";
+      }
+      return "\n" + result.substring( index );
+    }
+    return "";
+  };
+  
   function fixupDocument( aDOM, anURI, aBaseURI, aTitle, aMarkup ) {
-    var elements, element, node, next, index;
+    var elements, element, node, next, index, prefix;
     var result = false;
     var mark = aMarkup.mark + ":";
     var namespaceURI = aDOM.documentElement.namespaceURI;
@@ -297,44 +313,51 @@ var Document = function() {
       }
       node = next;
     }
-    // charset
     element = head.firstElementChild;
+    prefix = getIndent( element );
+    // charset
     node = getMeta( metas, "charset" );
     if ( !node ) {
       node = aDOM.createElementNS( namespaceURI, "meta" );
       node.setAttribute( "charset", aMarkup.characterset );
-      head.insertBefore( aDOM.createTextNode( "\n" ), element );
       head.insertBefore( node, element );
+      head.insertBefore( aDOM.createTextNode( prefix ), element );
       result = true;
     } else {
       if ( element !== node ) {
+        if ( node.previousSibling &&
+          node.previousSibling.nodeType === Ci.nsIDOMNode.TEXT_NODE ) {
+          node.parentNode.removeChild( node.previousSibling );
+        }
         head.insertBefore( node.parentNode.removeChild( node ), element );
-        head.insertBefore( aDOM.createTextNode( "\n" ), element );
+        head.insertBefore( aDOM.createTextNode( prefix ), element );
         result = true;
       } else {
         element = element.nextElementSibling;
       }
     }
-    // remove meta
+    // skip other metas
     while ( element && element.tagName.toLowerCase() === "meta" ) {
       element = element.nextElementSibling;
     }
+    prefix = getIndent( element );
     // base
     elements = aDOM.getElementsByTagNameNS( namespaceURI, "base" );
     if ( !elements.length ) {
       node = aDOM.createElementNS( namespaceURI, "base" );
       node.setAttribute( "href", aBaseURI.spec );
-      head.insertBefore( aDOM.createTextNode( "\n" ), element );
       head.insertBefore( node, element );
+      head.insertBefore( aDOM.createTextNode( prefix ), element );
       result = true;
     } else {
       node = elements[0];
       if ( element !== node ) {
         head.insertBefore( node.parentNode.removeChild( node ), element );
-        head.insertBefore( aDOM.createTextNode( "\n" ), element );
+        head.insertBefore( aDOM.createTextNode( prefix ), element );
         result = true;
       } else {
         element = element.nextElementSibling;
+        prefix = getIndent( element );
       }
     }
     // title
@@ -342,8 +365,8 @@ var Document = function() {
     if ( !elements.length ) {
       node = aDOM.createElementNS( namespaceURI, "title" );
       node.textContent = aTitle;
-      head.insertBefore( aDOM.createTextNode( "\n" ), element );
       head.insertBefore( node, element );
+      head.insertBefore( aDOM.createTextNode( prefix ), element );
       result = true;
     }
     return result;
@@ -585,10 +608,6 @@ var Document = function() {
     var namespaceURI = getDefaultNS();
     var doctype = impl.createDocumentType( 'html', '', '' );
     var dom = impl.createDocument( namespaceURI, 'html', doctype );
-    dom.insertBefore( dom.createProcessingInstruction(
-      'xml',
-      'version="1.0" encoding="UTF-8"'
-    ), dom.firstChild );
     if ( !aParams || !( "lang" in aParams ) || aParams.lang ) {
       dom.documentElement.setAttribute( "lang", Utils.getLanguage() );
     }
@@ -628,6 +647,7 @@ var Document = function() {
       head.appendChild( dom.createComment( " Insert your code here ... " ) );
       head.appendChild( dom.createTextNode( "\n  " ) );
     }
+    head.appendChild( dom.createTextNode( "\n  " ) );
     dom.documentElement.appendChild( dom.createTextNode( "\n  " ) );
     body = dom.createElementNS( namespaceURI, "body" );
     if ( aCommentFlag ) {
@@ -651,17 +671,37 @@ var Document = function() {
       base.setAttribute( "href", anURI.getRelativeSpec( aBaseURI ) );
     }
     result =
-      Cc["@mozilla.org/xmlextras/xmlserializer;1"]
-      .createInstance( Ci.nsIDOMSerializer )
-      .serializeToString( aDOM );
+      Cc["@mozilla.org/xmlextras/xmlserializer;1"].createInstance(
+        Ci.nsIDOMSerializer ).serializeToString( aDOM )
+                             .replace( /\r\n?/g, "\n" );
     if ( base && base.hasAttribute( "href" ) ) {
       base.setAttribute( "href", aBaseURI.spec );
     }
-    return result.replace( /\r\n/g, "\n" );
+    /*
+    @see http://www.w3.org/TR/2000/REC-xml-20001006#dt-xmldecl
+    XMLDecl ::= '<?xml'
+                S 'version'	S? '=' S?
+                ( "'" VersionNum "'" | '"' VersionNum '"' )
+                EncodingDecl?
+                SDDecl?
+                S?
+                '?>'
+    VersionNum ::= ( [a-zA-Z0-9_.:] | '-' )+
+    EncodingDecl ::= S 'encoding' S? '=' S?
+                     ( '"' EncName '"' | "'" EncName "'" )
+    EncName ::= [A-Za-z] ( [A-Za-z0-9._] | '-' )*
+    SDDecl ::= S 'standalone' S? '=' S?
+               ( ( "'" ( 'yes' | 'no' ) "'" ) | ( '"' ( 'yes' | 'no' ) '"' ) )
+    S ::= ( #x20 | #x9 | #xD | #xA )+
+    */
+    if ( !/^<\?xml\s+version\s?=\s?(\'([a-zA-Z0-9_.:]|-)+\'|\"([a-zA-Z0-9_.:]|-)+\")(\s+encoding\s?=\s?(\"[A-Za-z]([A-Za-z0-9._]|-)*\"|\'[A-Za-z]([A-Za-z0-9._]|-)*\'))?(\s+standalone\s?=\s?((\'(yes|no)\')|(\"(yes|no)\")))?\s?\?>/gi.test( result ) ) {
+      result = '<?xml version="1.0" encoding="UTF-8"?>\n' + result;
+    }
+    return result;
   };
 
   pub.parseFromString = function( aData, anURI, aBaseURI, aTitle ) {
-    var dom, err, tmp, parsererror, principal, markup;
+    var dom, err, tmp, parsererror, principal, markup, data;
     var domParser =
       Cc["@mozilla.org/xmlextras/domparser;1"]
       .createInstance( Ci.nsIDOMParser );
@@ -669,7 +709,8 @@ var Document = function() {
       Cc["@mozilla.org/scriptsecuritymanager;1"]
       .getService( Ci.nsIScriptSecurityManager );
     principal = securityManager.getCodebasePrincipal( anURI );
-    // TODO: anURI cause message in error console, what principal must be use?
+    // TODO: usage anURI instead of null causes a message in error console
+    // what the principal should be used?
     domParser.init( principal, null /* anURI */, aBaseURI, null );
     tmp = domParser.parseFromString( aData, pub.getType() );
     if ( tmp.documentElement &&
@@ -679,19 +720,21 @@ var Document = function() {
         decodeURIComponent( tmp.documentElement.firstChild.textContent ),
         tmp.documentElement.firstElementChild.textContent
       );
-      return { result: false, dom: dom, changed: false };
+      return { result: false, dom: dom, data: aData, changed: false };
     }
     err = checkDocument( tmp, anURI, aBaseURI, aTitle );
     if ( err ) {
-      return { result: false, dom: err, changed: false };
+      return { result: false, dom: err, data: aData, changed: false };
     }
     markup = markupDocument( tmp );
     sanitizeDocument( tmp, anURI, aBaseURI );
     fixupDocument( tmp, anURI, aBaseURI, aTitle, markup );
+    data = pub.serializeToString( tmp, anURI, aBaseURI );
     return {
       result: true,
       dom: tmp,
-      changed: ( aData !== pub.serializeToString( tmp, anURI, aBaseURI ) )
+      data: data,
+      changed: ( aData !== data )
     };
   };
 
@@ -700,12 +743,17 @@ var Document = function() {
     var aCollection, aDOMHead, aDOMBody;
     var dom = pub.getBlankDocument( anURI, aBaseURI, aTitle, false, aParams );
     var namespaceURI = dom.documentElement.namespaceURI;
-    var domHead = dom.getElementsByTagNameNS( namespaceURI, "head" )[0];
-    var domBody = dom.getElementsByTagNameNS( namespaceURI, "body" )[0];
+    var domDocType = dom.doctype;
+    var domHead = dom.head;
+    var domBody = dom.body;
+    var domTop = dom.firstChild;
     var aSourceURI = null;
     if ( aParams && aParams.documentURI ) {
       try {
         aSourceURI = ioService.newURI( aParams.documentURI, null, null );
+        dom.insertBefore( dom.createComment( " Clipped by ZNotes! " ), domTop );
+        dom.insertBefore( dom.createComment( " Origin: " + aSourceURI.spec + " " ),
+          domTop );
       } catch ( e ) {
         aSourceURI = null;
         log.warn( e + "\n" + Utils.dumpStack() );
@@ -713,11 +761,20 @@ var Document = function() {
     }
     if ( aDOM.documentElement.namespaceURI === namespaceURI ) {
       node = aDOM.firstChild
+      // before doctype
+      if ( aDOM.doctype ) {
+        while ( node && node !== aDOM.doctype ) {
+          if ( node.nodeType !== Ci.nsIDOMNode.PROCESSING_INSTRUCTION_NODE ) {
+            dom.insertBefore( dom.importNode( node, true ), domDocType );
+          }
+          node = node.nextSibling;
+        }
+        // skip doctype
+        node = node.nextSibling;
+      }
       // before documentElement
-      while ( node && node != aDOM.documentElement ) {
-        // skip doctype && processing instructions
-        if ( node.nodeType !== Ci.nsIDOMNode.DOCUMENT_TYPE_NODE &&
-             node.nodeType !== Ci.nsIDOMNode.PROCESSING_INSTRUCTION_NODE ) {
+      while ( node && node !== aDOM.documentElement ) {
+        if ( node.nodeType !== Ci.nsIDOMNode.PROCESSING_INSTRUCTION_NODE ) {
           dom.insertBefore( dom.importNode( node, true ), dom.documentElement );
         }
         node = node.nextSibling;
@@ -740,6 +797,14 @@ var Document = function() {
         }
       }
       // documentElement content
+      node = dom.documentElement.firstChild;
+      while ( node ) {
+        next = node.nextSibling;
+        if ( node !== domHead && node !== domBody ) {
+          dom.documentElement.removeChild( node );
+        }
+        node = next;
+      }
       aCollection = aDOM.getElementsByTagNameNS( namespaceURI, "head" );
       aDOMHead = aCollection.length ? aCollection[0] : null;
       aCollection = aDOM.getElementsByTagNameNS( namespaceURI, "body" );

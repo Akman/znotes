@@ -294,12 +294,16 @@ ru.akman.znotes.Clipper = function() {
   // CLIPPER
 
   function saveDocument( aDocument, aNote ) {
-    var id, contentEntries, contentExtension, contentFile, contentDirectory;
+    var contentEntries, contentFile, contentDirectory;
+    var aResult = {
+      value: null,
+      status: 0
+    };
+    var id = aNote.getBook().getId() + "&" + aNote.getId();
     var mimeService = Cc["@mozilla.org/mime;1"].getService( Ci.nsIMIMEService );
-    contentExtension =
+    var contentExtension =
       mimeService.getPrimaryExtension( aDocument.contentType, null );
     contentExtension = ( contentExtension ? contentExtension : "html" );
-    id = aNote.getBook().getId() + "&" + aNote.getId();
     try {
       contentEntries =
         Utils.getEntriesToSaveContent( "." + contentExtension, "_files" );
@@ -310,40 +314,45 @@ ru.akman.znotes.Clipper = function() {
         "",
         "chrome,dialog=yes,modal=yes,centerscreen,resizable=yes",
         {
-          note: aNote,
-          doc: aDocument,
+          document: aDocument,
+          result: aResult,
           file: contentFile,
-          dir: contentDirectory,
+          directory: contentDirectory,
           flags: Utils.CLIPPER_FLAGS,
-          callback: function( aStatus ) {
-            if ( aStatus ) {
-              playFail();
-              Utils.showPopup(
-                "chrome://znotes_images/skin/warning-32x32.png",
-                getString( "savePopup.fail" ),
-                aBrowser.contentDocument.location.toString(),
-                true,
-                id,
-                0,
-                null,
-                null,
-                null,
-                alertObserver
-              );
+          onstart: function( result ) {
+            aNote.setOrigin( aDocument.location.toString() );
+            aNote.setLoading( true );
+          },
+          onstop: function( result ) {
+            try {
+              aNote.loadContentDirectory( contentDirectory );
+            } catch ( e ) {
+              log.warn( e + "\n" + Utils.dumpStack() );
+            }
+            try {
+              aNote.importDocument( result.value, {
+                documentURI: aDocument.documentURI,
+                lang: false,
+                author: false
+              } );
+            } catch ( e ) {
+              log.warn( e + "\n" + Utils.dumpStack() );
+            }
+            try {
+              if ( contentFile.exists() ) {
+                contentFile.remove( false );
+              }
+              if ( contentDirectory.exists() ) {
+                contentDirectory.remove( true );
+              }
+            } catch ( e ) {
+              log.warn( e + "\n" + Utils.dumpStack() );
+            }
+            aNote.setLoading( false );
+            if ( result.status ) {
+              notifyFail( id );
             } else {
-              playSuccess();
-              Utils.showPopup(
-                "chrome://znotes_images/skin/message-32x32.png",
-                getString( "savePopup.success" ),
-                aBrowser.contentDocument.location.toString(),
-                true,
-                id,
-                0,
-                null,
-                null,
-                null,
-                alertObserver
-              );
+              notifySuccess( id );
             }
           }
         }
@@ -354,37 +363,50 @@ ru.akman.znotes.Clipper = function() {
     } catch ( e ) {
       log.warn( e + "\n" + Utils.dumpStack() );
     }
-    // remove temp content entries
-    try {
-      if ( contentFile.exists() ) {
-        contentFile.remove( false );
-      }
-      if ( contentDirectory.exists() ) {
-        contentDirectory.remove( true );
-      }
-    } catch ( e ) {
-      log.warn( e + "\n" + Utils.dumpStack() );
-    }
   };
 
   // HELPERS
-
-  function playFail() {
-    if ( Utils.IS_CLIPPER_PLAY_SOUND ) {
-      ( new Audio( "chrome://znotes_sounds/skin/fail.wav" ) ).play();
-    }
-  };
-
-  function playSuccess() {
-    if ( Utils.IS_CLIPPER_PLAY_SOUND ) {
-      ( new Audio( "chrome://znotes_sounds/skin/success.wav" ) ).play();
-    }
-  };
 
   function getString( name ) {
     return aBundle.getString( name );
   };
 
+  function notifyFail( id ) {
+    if ( Utils.IS_CLIPPER_PLAY_SOUND ) {
+      Utils.play( "chrome://znotes_sounds/skin/fail.wav" );
+    }
+    Utils.showPopup(
+      "chrome://znotes_images/skin/warning-32x32.png",
+      getString( "savePopup.fail" ),
+      aBrowser.contentDocument.location.toString(),
+      true,
+      id,
+      0,
+      null,
+      null,
+      null,
+      alertObserver
+    );
+  };
+  
+  function notifySuccess( id ) {
+    if ( Utils.IS_CLIPPER_PLAY_SOUND ) {
+      Utils.play( "chrome://znotes_sounds/skin/success.wav" );
+    }
+    Utils.showPopup(
+      "chrome://znotes_images/skin/message-32x32.png",
+      getString( "savePopup.success" ),
+      aBrowser.contentDocument.location.toString(),
+      true,
+      id,
+      0,
+      null,
+      null,
+      null,
+      alertObserver
+    );
+  };
+  
   function selectNote() {
     var aName = aBrowser.contentDocument.title.trim();
     if ( !aName ) {

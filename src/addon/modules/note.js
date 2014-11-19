@@ -256,7 +256,8 @@ var Note = function( aBook, anEntry, aCategory, aType, aTagID ) {
       return;
     }
     this.setDocument(
-      doc.importDocument( dom, this.getURI(), this.getBaseURI(), this.getName(), params ) );
+      doc.importDocument(
+        dom, this.getURI(), this.getBaseURI(), this.getName(), params ) );
     this.updateDocument();
   };
 
@@ -280,8 +281,8 @@ var Note = function( aBook, anEntry, aCategory, aType, aTagID ) {
     );
   };
 
-  this.loadContentDirectory = function( fromDirectoryEntry, flagMove ) {
-    this.entry.loadContentDirectory( fromDirectoryEntry, flagMove );
+  this.loadContentDirectory = function( fromDirectoryEntry, fMove, fClean ) {
+    this.entry.loadContentDirectory( fromDirectoryEntry, fMove, fClean );
     this.notifyStateListener(
       new ru.akman.znotes.core.Event(
         "NoteContentLoaded",
@@ -615,7 +616,8 @@ var Note = function( aBook, anEntry, aCategory, aType, aTagID ) {
 
   this.setLoading = function( loading ) {
     var oldValue = this.loading;
-    this.loading = loading;
+    var newValue = !!loading;
+    this.loading = newValue;
     this.notifyStateListener(
       new ru.akman.znotes.core.Event(
         "NoteLoadingChanged",
@@ -623,7 +625,7 @@ var Note = function( aBook, anEntry, aCategory, aType, aTagID ) {
           parentCategory: this.getParent(),
           changedNote: this,
           oldValue: oldValue,
-          newValue: loading
+          newValue: newValue
         }
       )
     );

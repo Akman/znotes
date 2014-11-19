@@ -1165,6 +1165,7 @@ var Editor = function() {
           load();
           return;
         }
+        // TODO: see xhtml onNoteMainContentChanged()
         if ( isEditorDirty ) {
           reloadFlag = false;
           params = {

@@ -54,8 +54,8 @@ ru.akman.znotes.ClipperDialog = function() {
   var ioService =
     Cc["@mozilla.org/network/io-service;1"].getService( Ci.nsIIOService );
 
-  var aNote, aDocument, aFile, aDirectory, aFlags, aCallback;
-  var aResultObj, aClipper, anObserver;
+  var aDocument, aResult, aFile, aDirectory, aFlags, aBaseURI, onStart, onStop;
+  var aClipper, anObserver;
   var jobList, btnClose, btnCancel;
 
   var canClose = false;
@@ -197,33 +197,18 @@ ru.akman.znotes.ClipperDialog = function() {
     btnClose.setAttribute( "collapsed", "true" );
     btnCancel.removeAttribute( "collapsed" );
     canClose = false;
+    if ( onStart ) {
+      onStart( aResult );
+    }
   };
 
   function onLoaderStopped( anEvent ) {
-    var aStatus = anEvent.getData().status;
-    try {
-      aNote.loadContentDirectory( aDirectory );
-      aNote.importDocument(
-        aResultObj.value,
-        {
-          documentURI: aResultObj.documentURI,
-          lang: false,
-          author: false
-        }
-      );
-    } catch ( e ) {
-      if ( e.name && ( e.name in Cr ) ) {
-        aStatus = Cr[e.name];
-      } else {
-        aStatus = Cr.NS_ERROR_UNEXPECTED;
-      }
-    }
-    aNote.setLoading( false );
-    if ( aCallback ) {
-      aCallback( aStatus );
+    aResult.status = anEvent.getData().status;
+    if ( onStop ) {
+      onStop( aResult );
     }
     canClose = true;
-    if ( !aStatus ) {
+    if ( !aResult.status ) {
       window.close();
     }
     btnCancel.setAttribute( "collapsed", "true" );
@@ -411,26 +396,6 @@ ru.akman.znotes.ClipperDialog = function() {
   
   // HELPERS
 
-  function doClip() {
-    var aStatus;
-    try {
-      aNote.setLoading( true );
-      aNote.setOrigin( aDocument.location.toString() );
-      aResultObj.documentURI = aDocument.documentURI;
-      aClipper.save(
-        aDocument,
-        aResultObj,
-        aFile,
-        aDirectory,
-        aFlags,
-        anObserver
-      );
-    } catch ( e ) {
-      aClipper.abort();
-      log.warn( e + "\n" + Utils.dumpStack() );
-    }
-  };
-
   function selectAllItems() {
     jobList.selectAll();
   };
@@ -481,12 +446,14 @@ ru.akman.znotes.ClipperDialog = function() {
   var pub = {};
 
   pub.onLoad = function() {
-    aNote = window.arguments[0].note;
-    aDocument = window.arguments[0].doc;
+    aDocument = window.arguments[0].document;
+    aResult = window.arguments[0].result;
     aFile = window.arguments[0].file;
-    aDirectory = window.arguments[0].dir;
+    aDirectory = window.arguments[0].directory;
     aFlags = window.arguments[0].flags;
-    aCallback = window.arguments[0].callback;
+    aBaseURI = window.arguments[0].baseURI;
+    onStart = window.arguments[0].onstart;
+    onStop = window.arguments[0].onstop;
     btnCancel = document.getElementById( "btnCancel" );
     btnClose = document.getElementById( "btnClose" );
     jobList = document.getElementById( "jobList" );
@@ -510,9 +477,21 @@ ru.akman.znotes.ClipperDialog = function() {
       onJobStopped: onJobStopped,
       onJobRemoved: onJobRemoved,
     };
-    aResultObj = { value: null };
     aClipper = new ru.akman.znotes.core.Clipper();
-    doClip();
+    try {
+      aClipper.save(
+        aDocument,
+        aResult,
+        aFile,
+        aDirectory,
+        aFlags,
+        aBaseURI,
+        anObserver
+      );
+    } catch ( e ) {
+      aClipper.abort();
+      log.warn( e + "\n" + Utils.dumpStack() );
+    }
   };
 
   pub.onClose = function( event ) {
