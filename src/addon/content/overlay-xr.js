@@ -211,6 +211,7 @@ ru.akman.znotes.ZNotes = function() {
     keySet = new ru.akman.znotes.Keyset(
       document.getElementById( "znotes_platform_keyset" )
     );
+    Utils.PLATFORM_KEYSET = keySet;
   };
 
   function updateKeyset() {

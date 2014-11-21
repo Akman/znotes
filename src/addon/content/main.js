@@ -5917,6 +5917,7 @@ ru.akman.znotes.Main = function() {
     // keyset
     mainKeySet = new ru.akman.znotes.Keyset(
       document.getElementById( "znotes_keyset" ) );
+    Utils.MAIN_KEYSET = mainKeySet;
     // statusbar
     statusBar = Utils.MAIN_WINDOW.document.getElementById(
       "znotes_statusbar" );

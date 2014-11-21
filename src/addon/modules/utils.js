@@ -95,7 +95,9 @@ var Utils = function() {
   
   var placeName = "";
   var mainShortCuts = "{}";
+  var mainKeySet = null;
   var platformShortCuts = "{}";
+  var platformKeySet = null;
   
   var isDebugEnabled = false;
   var isTestActive = false;
@@ -314,12 +316,28 @@ var Utils = function() {
       mainShortCuts = value;
     },
 
+    get MAIN_KEYSET() {
+      return mainKeySet;
+    },
+
+    set MAIN_KEYSET( value ) {
+      mainKeySet = value;
+    },
+    
     get PLATFORM_SHORTCUTS() {
       return platformShortCuts;
     },
 
     set PLATFORM_SHORTCUTS( value ) {
       platformShortCuts = value;
+    },
+
+    get PLATFORM_KEYSET() {
+      return platformKeySet;
+    },
+
+    set PLATFORM_KEYSET( value ) {
+      platformKeySet = value;
     },
 
     get IS_QUIT_ENABLED() {
@@ -1771,11 +1789,20 @@ var Utils = function() {
     var keycode = ( "keyCode" in event ) ? event.keyCode : 0;
     var key = ( "charCode" in event ) ? event.charCode : 0;
     if ( keycode ) {
-      for ( var name in event ) {
-        if ( name.indexOf( "DOM_VK_" ) == 0 && event[name] == keycode ) {
-          keycode = name.substr( 7 );
+      switch ( keycode ) {
+        case event.DOM_VK_SHIFT:
+        case event.DOM_VK_ALT:
+        case event.DOM_VK_CONTROL:
+        case event.DOM_VK_META:
+          keycode = "";
           break;
-        }
+        default:
+          for ( var name in event ) {
+            if ( name.indexOf( "DOM_VK_" ) == 0 && event[name] == keycode ) {
+              keycode = name.substr( 7 );
+              break;
+            }
+          }
       }
       key = "";
     } else {
@@ -1796,10 +1823,74 @@ var Utils = function() {
       modifiers.push( "Meta" );
     }
     modifiers = modifiers.sort().join( "+" );
-    return modifiers + ( modifiers.length ? "+" : "" ) +
-           ( key.length ? key : keycode );
+    return modifiers +
+      ( modifiers.length && ( key.length || keycode.length ) ? "+" : "" ) +
+      ( key.length ? key : keycode );
   };
 
+  pub.getPlatformAssignedShortcuts = function() {
+    var result = {};
+    var keysets = pub.MAIN_WINDOW.document.getElementsByTagName( "keyset" );
+    var process = function( keyset ) {
+      var shortcut, key, keycode, modifiers;
+      var node = keyset.firstChild;
+      while ( node ) {
+        if ( node.nodeName === "keyset" ) {
+          process( node );
+          node = node.nextSibling;
+          continue;
+        }
+        if ( node.nodeName !== "key" ) {
+          node = node.nextSibling;
+          continue;
+        }
+        key = node.hasAttribute( "key" ) ?
+          node.getAttribute( "key" ).trim() : "";
+        keycode = node.hasAttribute( "keycode" ) ?
+          node.getAttribute( "keycode" ).trim() : "";
+        modifiers = node.hasAttribute( "modifiers" ) ?
+          node.getAttribute( "modifiers" ).trim() : "";
+        if ( !key.length && !keycode.length ) {
+          node = node.nextSibling;
+          continue;
+        }
+        // extend key with "any" in modifiers attribute to proper keys
+        var m = ( modifiers === "" ) ?
+          [] : modifiers.split( /\s*,\s*|\s+/ );
+        modifiers = [];
+        for ( var i = 0; i < m.length; i++ ) {
+          if ( m[i].trim().length ) {
+            modifiers.push( m[i].toLowerCase() );
+          }
+        }
+        m = [ [] ];
+        var i = modifiers.indexOf( "any" );
+        if ( i >= 0 ) {
+          m = modifiers.slice( 0, i );
+          modifiers = modifiers.slice( i + 1 );
+          if ( !m.length ) {
+            m = [ [] ];
+          } else {
+            m = pub.getPermutations( m );
+          }
+        }
+        for ( var j = 0; j < m.length; j++ ) {
+          shortcut = pub.getShortcutFromAttributes(
+            key, keycode, m[j].concat( modifiers ).join( "," ) );
+          if ( shortcut ) {
+            result[ shortcut ] = null;
+          }
+        }
+        //
+        node = node.nextSibling;
+      }
+    };
+    for ( var i = 0; i < keysets.length; i++ ) {
+      process( keysets[i] );
+    }
+    return result;
+  };
+  
   pub.getNameFromId = function( id ) {
     var beginIndex = id.indexOf( "_" );
     var endIndex = id.lastIndexOf( "_" );

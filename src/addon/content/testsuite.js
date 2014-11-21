@@ -643,6 +643,14 @@ ru.akman.znotes.TestSuite = function() {
   } );
 
   tests.push( {
+    name: "Platform assigned shortcuts",
+    description: "Show platform assigned shortcuts",
+    code: function () {
+      log.trace( Utils.dumpObject( Utils.getPlatformAssignedShortcuts() ) );
+    }
+  } );
+
+  tests.push( {
     name: "Permutation",
     description: "Permutation of char",
     code: function () {

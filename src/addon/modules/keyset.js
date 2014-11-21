@@ -269,6 +269,17 @@ var Keyset = function() {
       updateTooltips();
     };
 
+    this.getShortcuts = function() {
+      var name, value, result = {};
+      for ( name in _shortcuts ) {
+        value = _shortcuts[name]["current"];
+        if ( value ) {
+          result[ value ] = true;
+        }
+      }
+      return result;
+    };
+    
     // constructor
 
     if ( !_defaults ) {

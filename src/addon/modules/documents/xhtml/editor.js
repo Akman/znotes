@@ -5014,7 +5014,7 @@ var Editor = function() {
     };
 
     // KEYSET
-
+    
     function setupKeyset() {
       editorKeyset = new ru.akman.znotes.Keyset(
         currentDocument.getElementById( "znotes_editor_keyset" ),
