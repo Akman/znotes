@@ -1795,7 +1795,7 @@ ru.akman.znotes.Main = function() {
     window.openDialog(
       "chrome://znotes/content/colorselectdialog.xul",
       "",
-      "chrome,dialog=yes,modal=yes,centerscreen,resizable=yes",
+      "chrome,dialog=yes,modal=yes,centerscreen,resizable=no",
       params
     ).focus();
     if ( params.output ) {

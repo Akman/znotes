@@ -30,9 +30,16 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+var Cc = Components.classes;
+var Ci = Components.interfaces;
+var Cr = Components.results;
+var Cu = Components.utils;
+
 if ( !ru ) var ru = {};
 if ( !ru.akman ) ru.akman = {};
 if ( !ru.akman.znotes ) ru.akman.znotes = {};
+
+Cu.import( "resource://znotes/utils.js", ru.akman.znotes );
 
 ru.akman.znotes.ColorSelectDialog = function() {
 
@@ -59,7 +66,7 @@ ru.akman.znotes.ColorSelectDialog = function() {
     }
     if ( args.input.color ) {
       colorPicker.color = args.input.color;
-      pub.onClick( null );
+      pub.onClick();
     }
     colorPicker.addEventListener( "click", pub.onClick, false );
   };
@@ -75,7 +82,8 @@ ru.akman.znotes.ColorSelectDialog = function() {
   pub.onClick = function( event ) {
     textBox.setAttribute(
       "style",
-      "-moz-appearance: none !important;background-color: " + colorPicker.color + " !important;"
+      "-moz-appearance: none !important;" +
+      "background-color: " + colorPicker.color + " !important;"
     );
     return true;
   };
