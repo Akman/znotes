@@ -1663,7 +1663,14 @@ ru.akman.znotes.Main = function() {
 
   // znotes_console_command
   function doOpenConsoleWindow() {
-    if ( consoleWindow ) {
+    var windowMediator =
+      Cc["@mozilla.org/appshell/window-mediator;1"]
+      .getService( Ci.nsIWindowMediator );
+    var windowWatcher =
+      Cc["@mozilla.org/embedcomp/window-watcher;1"]
+      .getService( Ci.nsIWindowWatcher );
+    var win = windowMediator.getMostRecentWindow( "global:console" );
+    if ( consoleWindow && consoleWindow === win ) {
       consoleWindow.focus();
     } else {
       consoleWindow = window.open(

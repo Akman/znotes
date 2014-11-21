@@ -72,11 +72,12 @@ var Source = function() {
     }
     var foldFunc = CodeMirror.newFoldFunction( CodeMirror.tagRangeFinder );
     /*
-    var keyMap = {
+    var keyMap = CodeMirror.normalizeKeyMap( {
       "Ctrl-Q": function( cm ) {
         foldFunc( cm, cm.getCursor().line );
       }
-    };
+    } );
+    editor.setOption( "extraKeys", keyMap );
     */
     editor = CodeMirror(
       document.getElementById( "editorView" ),

@@ -189,8 +189,8 @@ var Keyset = function() {
             event.preventDefault();
             return false;
           default:
-            log.debug( "keypressHandler()\ncommand: '" + command +
-              "', keyCode: " + eventKeyCode );
+            //log.debug( "keypressHandler()\ncommand: '" + command +
+            //  "', keyCode: " + eventKeyCode );
         }
       }
       return true;
