@@ -41,11 +41,11 @@
   title="&title;"
   windowtype="znotes:test"
   persist="width height screenX screenY sizemode">
-  
+
   <script type="application/javascript" src="chrome://znotes/content/testsuite.js"/>
 
   <menupopup id="testMenu" />
-  
+
   <toolbox id="testToolBox"
     orient="horizontal"
     pack="start"

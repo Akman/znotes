@@ -30,17 +30,31 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var EXPORTED_SYMBOLS = ["DOMEvents"];
+const EXPORTED_SYMBOLS = ["DOMEvents"];
+
+var Cc = Components.classes;
+var Ci = Components.interfaces;
+var Cr = Components.results;
+var Cu = Components.utils;
+
+if ( !ru ) var ru = {};
+if ( !ru.akman ) ru.akman = {};
+if ( !ru.akman.znotes ) ru.akman.znotes = {};
+
+Cu.import( "resource://znotes/utils.js", ru.akman.znotes );
 
 /**
  *  @see https://developer.mozilla.org/en-US/docs/Web/Events
  */
 var DOMEvents = function() {
 
+  var Utils = ru.akman.znotes.Utils;
+  var log = Utils.getLogger( "modules.domevents" );
+
   var events = [
-  
+
     // Standard events
-  
+
     "abort",
     "afterprint",
     "animationend",
@@ -185,7 +199,7 @@ var DOMEvents = function() {
     "volumechange",
     "waiting",
     "wheel",
-    
+
     // Non-standard events
 
     "afterscriptexecute",
@@ -257,7 +271,7 @@ var DOMEvents = function() {
     "ussdreceived",
     "voicechange"
   ];
-  
+
   function getEventHandlers() {
     var name, result = {};
     for each ( name in events ) {
@@ -268,7 +282,7 @@ var DOMEvents = function() {
     }
     return result;
   };
-  
+
   return {
     getEventHandlers: getEventHandlers
   };

@@ -82,7 +82,7 @@
       <Description>
         <em:id>toolkit@mozilla.org</em:id>
         <em:minVersion>1.9a1</em:minVersion>
-        <em:maxVersion>30.*</em:maxVersion>
+        <em:maxVersion>34.*</em:maxVersion>
       </Description>
     </em:targetApplication>
 

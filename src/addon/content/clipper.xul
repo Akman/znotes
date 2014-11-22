@@ -45,7 +45,7 @@
     <stringbundle id="znotes_clipper_stringbundle"
       src="chrome://znotes/locale/clipper.properties" />
   </stringbundleset>
-  
+
   <commandset id="znotes_commandset">
     <command id="znotes_clippersave_command" disabled="true"
       label="&znotes_clippersave_label;"
@@ -75,7 +75,7 @@
       keycode="&znotes_clippersaveall_keycode;"
       oncommand="ru.akman.znotes.Common.goDoCommand( 'znotes_clippersaveall_command', event.explicitOriginalTarget );"/>
   </keyset>
-  
+
   <popupset id="znotes_popupset">
     <menupopup id="browserToolBarContext">
     </menupopup>
@@ -99,12 +99,12 @@
       </toolbarbutton>
     </toolbar>
   </toolbox>
-  
+
   <vbox id="browserView" />
 
   <statusbar id="browserStatusBar">
     <statusbarpanel id="browserStatusBarPanel">
     </statusbarpanel>
   </statusbar>
-  
+
 </overlay>

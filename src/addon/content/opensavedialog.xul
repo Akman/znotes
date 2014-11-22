@@ -53,7 +53,7 @@
     src="chrome://znotes/content/opensavedialog.js" />
 
   <menupopup id="mpTags" />
-    
+
   <hbox id="hbMain" flex="1">
     <vbox id="vbLeft" persist="width" flex="1">
       <vbox id="vbBooks" class="vbBooksNotes" persist="height" flex="1">
@@ -62,7 +62,7 @@
           keepcurrentinview="true" enableColumnDrag="true">
           <treecols id="bookTreeCols">
             <treecol id="bookTreeName" label="&book_tree_name;"
-              width="150" flex="1" crop="center" 
+              width="150" flex="1" crop="center"
               persist="width ordinal hidden" primary="true"
               sortActive="true" sortDirection="ascending"/>
           </treecols>
@@ -149,7 +149,7 @@
               sortActive="true" sortDirection="ascending"/>
             <splitter id="noteTreeCreateDateTimeSplitter" class="tree-splitter"/>
             <treecol id="noteTreeUpdateDateTime" flex="1" crop="center"
-              label="&note_tree_update_datetime;" 
+              label="&note_tree_update_datetime;"
               persist="width ordinal hidden"
               sortActive="true" sortDirection="ascending"/>
           </treecols>
@@ -168,7 +168,7 @@
         <label id="lblName" value="&name.label;" control="tbName" />
         <menulist id="mlName" placeholder="&name.placeholder;" editable="true">
           <menupopup id="mpName" flex="1" />
-        </menulist>      
+        </menulist>
         <label id="lblTags" value="&tags.label;" control="tbTags" />
         <hbox id="hbTags">
           <button id="btnTags" class="tagbutton"
@@ -177,7 +177,7 @@
         <label id="lblType" value="&type.label;" control="mlType" />
         <menulist id="mlType" editable="true" readonly="true">
           <menupopup id="mpType" flex="1" />
-        </menulist>      
+        </menulist>
       </vbox>
       <hbox id="hbButtons" dir="rtl">
         <button id="btnAccept"
@@ -193,7 +193,7 @@
           pack="start"/>
       </hbox>
     </vbox>
-    
+
   </hbox>
 
 </dialog>

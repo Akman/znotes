@@ -68,7 +68,7 @@
         command="znotes_contentdelete_command"/>
     </menupopup>
   </popupset>
-  
+
   <tabs id="addonsTabs">
     <tab id="addonsTabContent" pack="start" label="&content_tab_caption;" />
   </tabs>

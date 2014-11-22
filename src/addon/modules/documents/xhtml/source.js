@@ -30,9 +30,23 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var EXPORTED_SYMBOLS = ["Source"];
+const EXPORTED_SYMBOLS = ["Source"];
+
+var Cc = Components.classes;
+var Ci = Components.interfaces;
+var Cr = Components.results;
+var Cu = Components.utils;
+
+if ( !ru ) var ru = {};
+if ( !ru.akman ) ru.akman = {};
+if ( !ru.akman.znotes ) ru.akman.znotes = {};
+
+Cu.import( "resource://znotes/utils.js", ru.akman.znotes );
 
 var Source = function() {
+
+  var Utils = ru.akman.znotes.Utils;
+  var log = Utils.getLogger( "documents.xhtml.source" );
 
   var editor = null;
 
@@ -47,23 +61,7 @@ var Source = function() {
   };
 
   pub.onLoad = function() {
-    var defaultKeyMap = CodeMirror.keyMap["default"];
-    for ( var key in defaultKeyMap ) {
-      switch ( defaultKeyMap[key] ) {
-        case 'undo':
-        case 'redo':
-        case 'selectAll':
-          delete defaultKeyMap[key];
-      }
-    }
     var foldFunc = CodeMirror.newFoldFunction( CodeMirror.tagRangeFinder );
-    /*
-    var keyMap = {
-      "Ctrl-Q": function( cm ) {
-        foldFunc( cm, cm.getCursor().line );
-      }
-    };
-    */
     editor = CodeMirror(
       document.getElementById( "editorView" ),
       {
@@ -77,12 +75,30 @@ var Source = function() {
         tabSize: 2,
         undoDepth: 500,
         historyEventDelay: 100
-        //extraKeys: keyMap
       }
     );
+    //editor.setOption( "extraKeys", {
+    //  "Ctrl-Q": function( cm ) {
+    //    foldFunc( cm, cm.getCursor().line );
+    //  }
+    //} );
+    editor.on( "keydown", function( cm, event ) {
+      switch ( event.key ) {
+        case "Esc":
+          event.codemirrorIgnore = true;
+          return;
+      }
+      switch ( CodeMirror.keyMap["default"][event.key] ) {
+        case "undo":
+        case "redo":
+        case "selectAll":
+          event.codemirrorIgnore = true;
+          return;
+      }
+    } );
     editor.on( "gutterClick", function( cm, n ) {
       foldFunc( cm, n );
-    });
+    } );
     editor.setSize( null, 100 );
   };
 

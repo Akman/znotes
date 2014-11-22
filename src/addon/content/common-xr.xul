@@ -32,7 +32,7 @@
   - ***** END LICENSE BLOCK ***** -->
 
 <?xml-stylesheet type="text/css" href="chrome://znotes/skin/common-xr.css" ?>
-  
+
 <!DOCTYPE overlay SYSTEM "chrome://znotes/locale/common-xr.dtd">
 
 <overlay id="common-xr"
@@ -42,5 +42,5 @@
   <commandset id="znotes_platform_commandset" />
   <keyset id="znotes_platform_keyset" />
   <popupset id="znotes_platform_popupset" />
-  
+
 </overlay>

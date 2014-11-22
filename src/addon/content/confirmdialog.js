@@ -30,23 +30,27 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+var Cc = Components.classes;
+var Ci = Components.interfaces;
+var Cr = Components.results;
+var Cu = Components.utils;
+
 if ( !ru ) var ru = {};
 if ( !ru.akman ) ru.akman = {};
 if ( !ru.akman.znotes ) ru.akman.znotes = {};
 
-Components.utils.import( "resource://znotes/utils.js",
-  ru.akman.znotes
-);
+Cu.import( "resource://znotes/utils.js", ru.akman.znotes );
 
 ru.akman.znotes.ConfirmDialog = function() {
 
   var Utils = ru.akman.znotes.Utils;
+  var log = Utils.getLogger( "content.confirmdialog" );
 
   var args = null;
   var kind = 0;
   var btnReject = null;
   var btnCancel = null;
-  
+
   var pub = {};
 
   pub.onLoad = function() {
@@ -90,7 +94,7 @@ ru.akman.znotes.ConfirmDialog = function() {
     window.close();
     return true;
   };
-  
+
   pub.onDialogReject = function() {
     window.close();
     return true;

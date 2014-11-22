@@ -48,7 +48,7 @@
     src="chrome://znotes/content/printpreview.js" />
 
   <toolbox id="previewToolbox" />
-    
+
   <browser id="previewBrowser" flex="1"
     type="content"
     disablesecurity="true"

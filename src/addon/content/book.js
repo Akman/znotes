@@ -30,16 +30,23 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+var Cc = Components.classes;
+var Ci = Components.interfaces;
+var Cr = Components.results;
+var Cu = Components.utils;
+
 if ( !ru ) var ru = {};
 if ( !ru.akman ) ru.akman = {};
 if ( !ru.akman.znotes ) ru.akman.znotes = {};
 
-Components.utils.import( "resource://znotes/utils.js", ru.akman.znotes );
-Components.utils.import( "resource://znotes/drivermanager.js", ru.akman.znotes );
+Cu.import( "resource://znotes/utils.js", ru.akman.znotes );
+Cu.import( "resource://znotes/drivermanager.js", ru.akman.znotes );
 
 ru.akman.znotes.Book = function() {
 
   var Utils = ru.akman.znotes.Utils;
+
+  var log = Utils.getLogger( "content.book" );
 
   var pub = {};
 
@@ -47,28 +54,28 @@ ru.akman.znotes.Book = function() {
 
   var driver = null;
   var params = null;
-  
+
   var paramName = null;
   var paramDescription = null;
   var paramDriver = null;
-  
+
   var originalConnection = {};
   var currentConnection = {};
-  
+
   var textBookName = null;
   var textBookDescription = null;
   var menuBookDriver = null;
-  
+
   var bookStringBundleset = null;
   var paramsView = null;
-  
+
   function clearContent( element ) {
     while ( element.firstChild ) {
       element.removeChild( element.firstChild );
     }
     return element;
   };
-  
+
   function onMenuBookDriverSelect( event ) {
     driver = drivers[menuBookDriver.selectedItem.value];
     params = driver.getParams();
@@ -138,7 +145,7 @@ ru.akman.znotes.Book = function() {
     try {
       conn = driver.getConnection( currentConnection );
     } catch ( e ) {
-      Utils.log( e + "\n" + Utils.dumpStack() );
+      log.warn( e + "\n" + Utils.dumpStack() );
       msg1 = e.message;
       msg2 = e.param;
     }

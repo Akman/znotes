@@ -36,6 +36,7 @@
 <?xml-stylesheet type="text/css" href="chrome://znotes/skin/main.css" ?>
 
 <?xul-overlay href="chrome://znotes/content/common.xul" ?>
+<?xul-overlay href="chrome://znotes/content/common-edit.xul" ?>
 <?xul-overlay href="chrome://znotes/content/menu.xul" ?>
 <?xul-overlay href="chrome://znotes/content/body.xul" ?>
 
@@ -45,7 +46,7 @@
   id="znotes"
   windowtype="znotes:main"
   persist="width height screenX screenY sizemode">
-  
+
   <script type="application/javascript"
     src="chrome://znotes/content/common.js" />
   <script type="application/javascript"
@@ -55,7 +56,7 @@
   <stringbundleset id="znotes_stringbundleset" />
   <commandset id="znotes_commandset" />
   <keyset id="znotes_keyset" />
-  
+
   <popupset id="znotes_popupset">
 
     <!-- toolbox context -->
@@ -76,7 +77,7 @@
         command="znotes_customizemaintoolbar_command"
         key="znotes_customizemaintoolbar_key"/>
     </menupopup>
-    
+
     <!-- book tree context -->
     <menupopup id="bookTreeMenu">
       <menuitem id="bookTreeMenuOpen"
@@ -107,42 +108,51 @@
         class="menuitem-iconic znotes_renamebook_class"
         command="znotes_renamebook_command"
         key="znotes_renamebook_key"/>
+      <menuseparator id="bookTreeMenuRefreshSeparator"/>
       <menuitem id="bookTreeMenuRefresh"
         class="menuitem-iconic znotes_refreshbooktree_class"
         command="znotes_refreshbooktree_command"
         key="znotes_refreshbooktree_key"/>
     </menupopup>
-    
+
     <!-- category tree context -->
     <menupopup id="folderTreeMenu">
+      <menuitem  id="folderTreeMenuClearBin"
+        class="menuitem-iconic znotes_clearbin_class"
+        command="znotes_clearbin_command"
+        observes="znotes_clearbin_command"
+        key="znotes_clearbin_key"/>
+      <menuseparator id="folderTreeMenuClearBinSeparator"
+        observes="znotes_clearbin_command"/>
       <menuitem id="folderTreeMenuNew"
         class="menuitem-iconic znotes_newcategory_class"
         command="znotes_newcategory_command"
+        observes="znotes_newcategory_command"
         key="znotes_newcategory_key"/>
       <menuitem  id="folderTreeMenuDelete"
         class="menuitem-iconic znotes_deletecategory_class"
         command="znotes_deletecategory_command"
+        observes="znotes_deletecategory_command"
         key="znotes_deletecategory_key"/>
       <menuitem id="folderTreeMenuRename"
         class="menuitem-iconic znotes_renamecategory_class"
         command="znotes_renamecategory_command"
+        observes="znotes_renamecategory_command"
         key="znotes_renamecategory_key"/>
+      <menuseparator id="folderTreeMenuRefreshSeparator"/>
       <menuitem id="folderTreeMenuRefresh"
         class="menuitem-iconic znotes_refreshfoldertree_class"
         command="znotes_refreshfoldertree_command"
+        observes="znotes_refreshfoldertree_command"
         key="znotes_refreshfoldertree_key"/>
     </menupopup>
-    
+
     <!-- note tree context -->
     <menupopup id="noteTreeMenu">
       <menuitem id="noteTreeMenuNew"
         class="menuitem-iconic znotes_newnote_class"
         command="znotes_newnote_command"
         key="znotes_newnote_key"/>
-      <menuitem id="noteTreeMenuImport"
-        class="menuitem-iconic znotes_importnote_class"
-        command="znotes_importnote_command"
-        key="znotes_importnote_key"/>
       <menuitem id="noteTreeMenuDelete"
         class="menuitem-iconic znotes_deletenote_class"
         command="znotes_deletenote_command"
@@ -155,16 +165,17 @@
         class="menuitem-iconic znotes_processnote_class"
         command="znotes_processnote_command"
         key="znotes_processnote_key"/>
-      <menuitem id="noteTreeMenuRefresh"
-        class="menuitem-iconic znotes_refreshnotetree_class"
-        command="znotes_refreshnotetree_command"
-        key="znotes_refreshnotetree_key"/>
       <menuitem id="noteTreeMenuUpdate"
         class="menuitem-iconic znotes_updatenote_class"
         command="znotes_updatenote_command"
         key="znotes_updatenote_key"/>
+      <menuseparator id="noteTreeMenuRefreshSeparator"/>
+      <menuitem id="noteTreeMenuRefresh"
+        class="menuitem-iconic znotes_refreshnotetree_class"
+        command="znotes_refreshnotetree_command"
+        key="znotes_refreshnotetree_key"/>
     </menupopup>
-    
+
     <!-- tag tree context -->
     <menupopup id="tagTreeMenu">
       <menuitem id="tagTreeMenuNew"
@@ -183,12 +194,13 @@
         class="menuitem-iconic znotes_colortag_class"
         command="znotes_colortag_command"
         key="znotes_colortag_key"/>
+      <menuseparator id="tagTreeMenuRefreshSeparator"/>
       <menuitem id="tagTreeMenuRefresh"
         class="menuitem-iconic znotes_refreshtagtree_class"
         command="znotes_refreshtagtree_command"
         key="znotes_refreshtagtree_key"/>
     </menupopup>
-    
+
   </popupset>
 
   <!-- main toolbox -->
@@ -363,7 +375,7 @@
     <toolbarset id="znotes_maintoolbarset"
       context="znotes_maintoolbar_menupopup" />
   </toolbox>
-  
+
   <!-- main panel -->
   <hbox id="mainPanel" flex="1">
     <vbox id="folderBox" class="folderBox" width="230" flex="1">
@@ -374,7 +386,7 @@
           keepcurrentinview="true" enableColumnDrag="true">
           <treecols id="bookTreeCols">
             <treecol id="bookTreeName" label="&book_tree_name;"
-              width="150" flex="1" crop="center" 
+              width="150" flex="1" crop="center"
               persist="width ordinal hidden" primary="true"
               sortActive="true" sortDirection="ascending"/>
           </treecols>
@@ -478,7 +490,7 @@
               sortActive="true" sortDirection="ascending"/>
             <splitter id="noteTreeCreateDateTimeSplitter" class="tree-splitter"/>
             <treecol id="noteTreeUpdateDateTime" flex="1" crop="center"
-              label="&note_tree_update_datetime;" 
+              label="&note_tree_update_datetime;"
               persist="width ordinal hidden"
               sortActive="true" sortDirection="ascending"/>
           </treecols>
@@ -495,5 +507,5 @@
       </vbox>
     </vbox>
   </hbox>
-  
+
 </window>

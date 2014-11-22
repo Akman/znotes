@@ -30,18 +30,26 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+var Cc = Components.classes;
+var Ci = Components.interfaces;
+var Cr = Components.results;
+var Cu = Components.utils;
+
 if ( !ru ) var ru = {};
 if ( !ru.akman ) ru.akman = {};
 if ( !ru.akman.znotes ) ru.akman.znotes = {};
 
-Components.utils.import( "resource://znotes/utils.js", ru.akman.znotes );
-Components.utils.import( "resource://gre/modules/devtools/dbg-server.jsm" );
+Cu.import( "resource://znotes/utils.js", ru.akman.znotes );
+Cu.import( "resource://gre/modules/devtools/dbg-server.jsm" );
+
+var Utils = ru.akman.znotes.Utils;
+var log = Utils.getLogger( "content.znotes" );
 
 function toOpenWindowByType( inType, inURI ) {
   var win =
-    Components.classes["@mozilla.org/appshell/window-mediator;1"]
-              .getService( Components.interfaces.nsIWindowMediator )
-              .getMostRecentWindow( inType );
+    Cc["@mozilla.org/appshell/window-mediator;1"]
+      .getService( Ci.nsIWindowMediator )
+      .getMostRecentWindow( inType );
   if ( win ) {
     win.focus();
   } else {
@@ -68,19 +76,3 @@ function startDebuggerServer() {
   }
   DebuggerServer.openListener( 6000 );
 };
-
-ru.akman.znotes.Platform = function() {
-
-  var pub = {};
-
-  var log = ru.akman.znotes.Utils.log;
-
-  pub.onLoad = function( event ) {
-    window.removeEventListener( "load", ru.akman.znotes.Platform.onLoad, false );
-  };
-
-  return pub;
-
-}();
-
-window.addEventListener( "load", ru.akman.znotes.Platform.onLoad, false );

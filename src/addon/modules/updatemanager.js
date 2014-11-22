@@ -30,26 +30,32 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+const EXPORTED_SYMBOLS = ["UpdateManager"];
+
+var Cc = Components.classes;
+var Ci = Components.interfaces;
+var Cr = Components.results;
+var Cu = Components.utils;
+
 if ( !ru ) var ru = {};
 if ( !ru.akman ) ru.akman = {};
 if ( !ru.akman.znotes ) ru.akman.znotes = {};
 
-Components.utils.import( "resource://znotes/utils.js" , ru.akman.znotes );
-
-var EXPORTED_SYMBOLS = ["UpdateManager"];
+Cu.import( "resource://znotes/utils.js", ru.akman.znotes );
 
 var UpdateManager = function() {
 
-  var log = ru.akman.znotes.Utils.log;
+  var Utils = ru.akman.znotes.Utils;
+  var log = Utils.getLogger( "modules.updatemanager" );
 
   var aus, mgr, aup;
-  
+
   var pub = {};
 
   pub.isSupported = function() {
     return ( aus != null && mgr != null && aup != null );
   };
-  
+
   pub.canUpdate = function() {
     if ( !pub.isSupported() ) {
       return false;
@@ -59,14 +65,14 @@ var UpdateManager = function() {
     }
     return aus.canUpdate;
   };
-  
+
   pub.isActive = function() {
     if ( !pub.isSupported() ) {
       return false;
     }
     return !!mgr.activeUpdate;
   };
-  
+
   pub.getName = function() {
     if ( !pub.isSupported() ) {
       return null;
@@ -76,12 +82,12 @@ var UpdateManager = function() {
     }
     return null;
   };
-  
+
   /**
    * default     - idle
    *               show: "Check for updates ..."
    * downloading - downloading an update at present
-   *               show: "Downloading updates ..." 
+   *               show: "Downloading updates ..."
    * paused      - paused an update at present
    *               show: "Resume downloading updates ..."
    * pending     - waiting for the user to restart,
@@ -101,7 +107,7 @@ var UpdateManager = function() {
     }
     return state;
   };
-  
+
   pub.open = function() {
     if ( !pub.isSupported() ) {
       return false;
@@ -126,7 +132,7 @@ var UpdateManager = function() {
     mgr = null;
     aup = null;
   }
-  
+
   return pub;
 
 }();

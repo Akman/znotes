@@ -40,9 +40,10 @@
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <stringbundleset id="znotes_editor_stringbundleset">
-    <stringbundle id="znotes_editor_stringbundle" 
+    <stringbundle id="znotes_editor_stringbundle"
       src="chrome://znotes/locale/documents/text/editor.properties" />
   </stringbundleset>
+
   <commandset id="znotes_editor_commandset">
     <command id="znotes_close_command" disabled="true"
       title="&znotes_close_label;"
@@ -121,6 +122,7 @@
       key="znotes_editorcustomizetoolbar_key"
       oncommand="ru.akman.znotes.Common.goDoCommand( 'znotes_editorcustomizetoolbar_command', event.explicitOriginalTarget );"/>
   </commandset>
+
   <keyset id="znotes_editor_keyset">
     <key id="znotes_close_key" command="znotes_close_command"
       key="&znotes_close_key;" modifiers="&znotes_close_key_modifiers;"
@@ -156,6 +158,7 @@
       key="&znotes_editorcustomizetoolbar_key;" modifiers="&znotes_editorcustomizetoolbar_key_modifiers;"
       keycode="&znotes_editorcustomizetoolbar_keycode;"/>
   </keyset>
+
   <popupset id="znotes_editor_popupset">
     <!-- toolbox context -->
     <menupopup id="znotes_editortoolbar_menupopup">
@@ -165,7 +168,10 @@
         key="znotes_editorcustomizetoolbar_key" />
     </menupopup>
   </popupset>
-  
+
+  <toolbar id="znotes_editor_toolbar">
+  </toolbar>
+
   <vbox id="editorView">
     <tabbox id="editorTabBox" flex="1">
       <hbox id="editorTabsHeader">
@@ -315,5 +321,5 @@
         seltype="single" flex="1"/>
     </groupbox>
   </vbox>
-  
+
 </overlay>

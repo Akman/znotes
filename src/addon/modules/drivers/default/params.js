@@ -30,17 +30,23 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+const EXPORTED_SYMBOLS = ["Params"];
+
+var Cc = Components.classes;
+var Ci = Components.interfaces;
+var Cr = Components.results;
+var Cu = Components.utils;
+
 if ( !ru ) var ru = {};
 if ( !ru.akman ) ru.akman = {};
 if ( !ru.akman.znotes ) ru.akman.znotes = {};
 
-Components.utils.import( "resource://znotes/utils.js", ru.akman.znotes );
-
-var EXPORTED_SYMBOLS = ["Params"];
+Cu.import( "resource://znotes/utils.js", ru.akman.znotes );
 
 var Params = function() {
 
   var Utils = ru.akman.znotes.Utils;
+  var log = Utils.getLogger( "drivers.default.params" );
 
   var pub = {};
 
@@ -58,20 +64,20 @@ var Params = function() {
   var extensionsTreeChildren = null;
   var extensionsTreeTextBox = null;
   var extensionsTreeBoxObject = null;
-  
+
   var oldValue = null;
   var newValue = null;
-  
+
   // HELPERS
-  
+
   function onFolderPicker( event ) {
     var result, currentFolder =
-      Components.classes["@mozilla.org/file/local;1"]
-                .createInstance( Components.interfaces.nsIFile );
-    var nsIFilePicker = Components.interfaces.nsIFilePicker;
-    var filePicker = Components.classes["@mozilla.org/filepicker;1"]
-                               .createInstance( nsIFilePicker );
-    filePicker.init( currentWindow, null, nsIFilePicker.modeGetFolder );
+      Cc["@mozilla.org/file/local;1"]
+      .createInstance( Ci.nsIFile );
+    var filePicker =
+      Cc["@mozilla.org/filepicker;1"]
+      .createInstance( Ci.nsIFilePicker );
+    filePicker.init( currentWindow, null, Ci.nsIFilePicker.modeGetFolder );
     try {
       currentFolder.initWithPath( textPath.value );
       while ( !currentFolder.exists() || !currentFolder.isDirectory() ) {
@@ -79,17 +85,17 @@ var Params = function() {
       }
       filePicker.displayDirectory = currentFolder;
     } catch ( e ) {
-      filePicker.displayDirectory = ru.akman.znotes.Utils.getDataPath();
+      filePicker.displayDirectory = Utils.getDataPath();
     }
     result = filePicker.show();
-    if ( result == nsIFilePicker.returnOK ||
-         result == nsIFilePicker.returnReplace ) {
+    if ( result === Ci.nsIFilePicker.returnOK ||
+         result === Ci.nsIFilePicker.returnReplace ) {
       textPath.value = filePicker.file.path;
       currentConnection.path = textPath.value;
       textPath.setAttribute( "tooltiptext", textPath.value );
     }
   };
-  
+
   function onEncodingChange( event ) {
     if ( !textEncoding.value.trim().length ) {
       Utils.beep();
@@ -99,11 +105,11 @@ var Params = function() {
       currentConnection.encoding = textEncoding.value;
     }
   };
-  
+
   function onPathChange( event ) {
     var currentFolder =
-      Components.classes["@mozilla.org/file/local;1"]
-                .createInstance( Components.interfaces.nsIFile );
+      Cc["@mozilla.org/file/local;1"]
+      .createInstance( Ci.nsIFile );
     try {
       currentFolder.initWithPath( textPath.value );
       textPath.value = currentFolder.path;
@@ -115,7 +121,7 @@ var Params = function() {
       textPath.setAttribute( "tooltiptext", textPath.value );
     }
   };
-  
+
   function checkExtension( aType, anExtension ) {
     return currentDriver.checkExtension( anExtension ) &&
            /^\.[^.\\/:*?"<>|\s]+$/g.test( anExtension );
@@ -128,12 +134,12 @@ var Params = function() {
     }
     return "";
   };
-  
+
   function getFileName( leafName ) {
     return leafName.substring( 0,
       leafName.length - getFileExtension( leafName ).length );
   };
-  
+
   function processCategoryEntry( root, exts ) {
     var entry, entries = root.getEntries();
     for ( var i = 0; i < entries.length; i++ ) {
@@ -152,13 +158,13 @@ var Params = function() {
       try {
         entry.setLeafName( getFileName( entry.getLeafName() ) + exts[type] );
       } catch ( e ) {
-        Utils.log( e + "\n" + Utils.dumpStack() );
+        log.warn( e + "\n" + Utils.dumpStack() );
       }
     }
   };
-  
+
   // EXTENSIONS TREE
-  
+
   function createExtensionsTreeItem( aType, aValue ) {
     var anItem, aRow, aCell;
     aRow = currentDocument.createElement( "treerow" );
@@ -176,7 +182,7 @@ var Params = function() {
     anItem.setAttribute( "value", aType );
     return anItem;
   };
-  
+
   function fillExtensionsTree() {
     var aType, aValue;
     for ( aType in currentConnection.extensions ) {
@@ -186,7 +192,7 @@ var Params = function() {
       );
     }
   };
-  
+
   function onExtensionsTreeDblClick( event ) {
     var aRow = extensionsTreeBoxObject.getRowAt( event.clientX, event.clientY );
     if ( event.button != "0" ||
@@ -201,7 +207,7 @@ var Params = function() {
     extensionsTree.startEditing( aRow, aColumn );
     return true;
   };
-  
+
   function onExtensionsTreeTextBoxEvent( event ) {
     var aRow, aColumn, aCell, anItem, aType, textLength;
     switch ( event.type ) {
@@ -265,7 +271,7 @@ var Params = function() {
     }
     return true;
   };
-  
+
   // PUBLIC
 
   /**
@@ -290,8 +296,7 @@ var Params = function() {
       currentDocument.getElementById( "extensionsTreeChildren" );
     extensionsTreeTextBox = extensionsTree.inputField;
     extensionsTreeBoxObject = extensionsTree.boxObject;
-    extensionsTreeBoxObject.QueryInterface(
-      Components.interfaces.nsITreeBoxObject );
+    extensionsTreeBoxObject.QueryInterface( Ci.nsITreeBoxObject );
     //
     textEncoding.value = currentConnection.encoding;
     textPath.value = currentConnection.path;
@@ -346,7 +351,7 @@ var Params = function() {
       currentWindow.setCursor( "auto" );
     }
   };
-  
+
   return pub;
 
 }();

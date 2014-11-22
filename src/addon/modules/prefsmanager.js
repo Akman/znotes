@@ -30,34 +30,39 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+const EXPORTED_SYMBOLS = ["PrefsManager"];
+
+var Cc = Components.classes;
+var Ci = Components.interfaces;
+var Cr = Components.results;
+var Cu = Components.utils;
+
 if ( !ru ) var ru = {};
 if ( !ru.akman ) ru.akman = {};
 if ( !ru.akman.znotes ) ru.akman.znotes = {};
 if ( !ru.akman.znotes.core ) ru.akman.znotes.core = {};
 
-Components.utils.import( "resource://znotes/utils.js", ru.akman.znotes );
-Components.utils.import( "resource://znotes/event.js", ru.akman.znotes.core );
-
-var EXPORTED_SYMBOLS = ["PrefsManager"];
+Cu.import( "resource://znotes/utils.js", ru.akman.znotes );
+Cu.import( "resource://znotes/event.js", ru.akman.znotes.core );
 
 var PrefsManager = function() {
 
   var Utils = ru.akman.znotes.Utils;
+  var log = Utils.getLogger( "modules.prefsmanager" );
 
   var prefsMozilla =
-    Components.classes["@mozilla.org/preferences-service;1"]
-              .getService( Components.interfaces.nsIPrefBranch );
-  
+    Cc["@mozilla.org/preferences-service;1"]
+    .getService( Ci.nsIPrefBranch );
+
   var prefs = null;
   var observers = [];
 
   var getEntry = function() {
-    var entry = ru.akman.znotes.Utils.getPlacesPath();
-    var placeId = ru.akman.znotes.Utils.getPlaceId();
+    var entry = Utils.getPlacesPath();
+    var placeId = Utils.getPlaceId();
     entry.append( placeId );
     if ( !entry.exists() || !entry.isDirectory() ) {
-      entry.create( Components.interfaces.nsIFile.DIRECTORY_TYPE,
-        parseInt( "0755", 8 ) );
+      entry.create( Ci.nsIFile.DIRECTORY_TYPE, parseInt( "0755", 8 ) );
     }
     entry.append( "prefs.json" );
     return entry.clone();
@@ -71,10 +76,10 @@ var PrefsManager = function() {
       return;
     }
     try {
-      var data = ru.akman.znotes.Utils.readFileContent( entry, "UTF-8" );
+      var data = Utils.readFileContent( entry, "UTF-8" );
       prefs = JSON.parse( data );
     } catch ( e ) {
-      Utils.log( e + "\n" + Utils.dumpStack() );
+      log.warn( e + "\n" + Utils.dumpStack() );
       prefs = {};
       savePrefs();
     }
@@ -82,10 +87,10 @@ var PrefsManager = function() {
 
   var savePrefs = function() {
     var entry = getEntry();
-    var data = JSON.stringify( prefs );
-    ru.akman.znotes.Utils.writeFileContent( entry, "UTF-8", data );
+    var data = JSON.stringify( prefs, null, 2 );
+    Utils.writeFileContent( entry, "UTF-8", data );
   };
-  
+
   var notifyObservers = function( event ) {
     for ( var i = 0; i < observers.length; i++ ) {
       if ( observers[i][ "on" + event.type ] ) {
@@ -117,7 +122,7 @@ var PrefsManager = function() {
       )
     );
   };
-  
+
   pub.getBoolPref = function( name ) {
     if ( !pub.hasPref( name ) ) {
       return null;
@@ -280,111 +285,114 @@ var PrefsManager = function() {
       Utils.IS_PLAY_SOUND =
         pub.getBoolPref( "isPlaySound" );
       //
+      if ( !pub.hasPref( "isClearBinOnExit" ) ) {
+        pub.setBoolPref( "isClearBinOnExit",
+          Utils.IS_CLEAR_BIN_ON_EXIT );
+      }
+      Utils.IS_CLEAR_BIN_ON_EXIT =
+        pub.getBoolPref( "isClearBinOnExit" );
+      //
       if ( !pub.hasPref( "isClipperPlaySound" ) ) {
         pub.setBoolPref( "isClipperPlaySound",
           Utils.IS_CLIPPER_PLAY_SOUND );
       }
       Utils.IS_CLIPPER_PLAY_SOUND =
         pub.getBoolPref( "isClipperPlaySound" );
-      //
+
+      /* CLIPPER_FLAGS */
+
+      // SAVE_SCRIPTS
+      if ( !pub.hasPref( "clipperSaveScripts" ) ) {
+        pub.setBoolPref( "clipperSaveScripts",
+          !!( Utils.CLIPPER_FLAGS & 0x00000001 ) );
+      }
+      // SAVE_FRAMES
+      if ( !pub.hasPref( "clipperSaveFrames" ) ) {
+        pub.setBoolPref( "clipperSaveFrames",
+          !!( Utils.CLIPPER_FLAGS & 0x00000010 ) );
+      }
+      // SAVE_FRAMES_IN_SEPARATE_DIRECTORY
+      if ( !pub.hasPref( "clipperSeparateFrames" ) ) {
+        pub.setBoolPref( "clipperSeparateFrames",
+          !!( Utils.CLIPPER_FLAGS & 0x00000100 ) );
+      }
+      // PRESERVE_HTML5_TAGS
+      if ( !pub.hasPref( "clipperPreserveHTML5Tags" ) ) {
+        pub.setBoolPref( "clipperPreserveHTML5Tags",
+          !!( Utils.CLIPPER_FLAGS & 0x00001000 ) );
+      }
+      // SAVE_STYLES
+      if ( !pub.hasPref( "clipperSaveStyles" ) ) {
+        pub.setBoolPref( "clipperSaveStyles",
+          !!( Utils.CLIPPER_FLAGS & 0x00010000 ) );
+      }
+      // SAVE_INLINE_RESOURCES_IN_SEPARATE_FILES
+      if ( !pub.hasPref( "clipperSaveInlineResources" ) ) {
+        pub.setBoolPref( "clipperSaveInlineResources",
+          !!( Utils.CLIPPER_FLAGS & 0x00100000 ) );
+      }
+      // INLINE_STYLESHEETS_IN_DOCUMENT
+      if ( !pub.hasPref( "clipperInlineStylesheets" ) ) {
+        pub.setBoolPref( "clipperInlineStylesheets",
+          !!( Utils.CLIPPER_FLAGS & 0x01000000 ) );
+      }
+      // SAVE_ACTIVE_RULES_ONLY
+      if ( !pub.hasPref( "clipperSaveActiveRulesOnly" ) ) {
+        pub.setBoolPref( "clipperSaveActiveRulesOnly",
+          !!( Utils.CLIPPER_FLAGS & 0x10000000 ) );
+      }
+
+      // SAVE_STYLES
+      if ( pub.getBoolPref( "clipperSaveStyles" ) ) {
+        Utils.CLIPPER_FLAGS |= 0x00010000;
+      } else {
+        Utils.CLIPPER_FLAGS &= 0x11101111;
+      }
+      // SAVE_INLINE_RESOURCES_IN_SEPARATE_FILES
+      if ( pub.getBoolPref( "clipperSaveInlineResources" ) ) {
+        Utils.CLIPPER_FLAGS |= 0x00100000;
+      } else {
+        Utils.CLIPPER_FLAGS &= 0x11011111;
+      }
+
       if ( Utils.IS_SANITIZE_ENABLED ) {
-        Utils.CLIPPER_FLAGS &= 0x10010000;
-        // SAVE_STYLES
-        if ( !pub.hasPref( "clipperSaveStyles" ) ) {
-          pub.setBoolPref( "clipperSaveStyles",
-            !!( Utils.CLIPPER_FLAGS & 0x00010000 ) );
-        }
-        if ( pub.getBoolPref( "clipperSaveStyles" ) ) {
-          Utils.CLIPPER_FLAGS |= 0x00010000;
-        } else {
-          Utils.CLIPPER_FLAGS &= 0x11101111;
-        }
+        Utils.CLIPPER_FLAGS &= 0x11110000;
+        // INLINE_STYLESHEETS_IN_DOCUMENT
+        Utils.CLIPPER_FLAGS |= 0x01000000;
         // SAVE_ACTIVE_RULES_ONLY
-        if ( !pub.hasPref( "clipperSaveActiveRulesOnly" ) ) {
-          pub.setBoolPref( "clipperSaveActiveRulesOnly",
-            !!( Utils.CLIPPER_FLAGS & 0x10000000 ) );
-        }
-        //if ( pub.getBoolPref( "clipperSaveActiveRulesOnly" ) ) {
-          Utils.CLIPPER_FLAGS |= 0x10000000;
-        //} else {
-        //  Utils.CLIPPER_FLAGS &= 0x01111111;
-        //}
+        Utils.CLIPPER_FLAGS |= 0x10000000;
       } else {
         // SAVE_SCRIPTS
-        if ( !pub.hasPref( "clipperSaveScripts" ) ) {
-          pub.setBoolPref( "clipperSaveScripts",
-            !!( Utils.CLIPPER_FLAGS & 0x00000001 ) );
-        }
         if ( pub.getBoolPref( "clipperSaveScripts" ) ) {
           Utils.CLIPPER_FLAGS |= 0x00000001;
         } else {
           Utils.CLIPPER_FLAGS &= 0x11111110;
         }
         // SAVE_FRAMES
-        if ( !pub.hasPref( "clipperSaveFrames" ) ) {
-          pub.setBoolPref( "clipperSaveFrames",
-            !!( Utils.CLIPPER_FLAGS & 0x00000010 ) );
-        }
         if ( pub.getBoolPref( "clipperSaveFrames" ) ) {
           Utils.CLIPPER_FLAGS |= 0x00000010;
         } else {
           Utils.CLIPPER_FLAGS &= 0x11111101;
         }
         // SAVE_FRAMES_IN_SEPARATE_DIRECTORY
-        if ( !pub.hasPref( "clipperSeparateFrames" ) ) {
-          pub.setBoolPref( "clipperSeparateFrames",
-            !!( Utils.CLIPPER_FLAGS & 0x00000100 ) );
-        }
         if ( pub.getBoolPref( "clipperSeparateFrames" ) ) {
           Utils.CLIPPER_FLAGS |= 0x00000100;
         } else {
           Utils.CLIPPER_FLAGS &= 0x11111011;
         }
         // PRESERVE_HTML5_TAGS
-        if ( !pub.hasPref( "clipperPreserveHTML5Tags" ) ) {
-          pub.setBoolPref( "clipperPreserveHTML5Tags",
-            !!( Utils.CLIPPER_FLAGS & 0x00001000 ) );
-        }
         if ( pub.getBoolPref( "clipperPreserveHTML5Tags" ) ) {
           Utils.CLIPPER_FLAGS |= 0x00001000;
         } else {
           Utils.CLIPPER_FLAGS &= 0x11110111;
         }
-        // SAVE_STYLES
-        if ( !pub.hasPref( "clipperSaveStyles" ) ) {
-          pub.setBoolPref( "clipperSaveStyles",
-            !!( Utils.CLIPPER_FLAGS & 0x00010000 ) );
-        }
-        if ( pub.getBoolPref( "clipperSaveStyles" ) ) {
-          Utils.CLIPPER_FLAGS |= 0x00010000;
-        } else {
-          Utils.CLIPPER_FLAGS &= 0x11101111;
-        }
-        // SAVE_STYLESHEETS_IN_SINGLE_FILE
-        if ( !pub.hasPref( "clipperSingleStylesheet" ) ) {
-          pub.setBoolPref( "clipperSingleStylesheet",
-            !!( Utils.CLIPPER_FLAGS & 0x00100000 ) );
-        }
-        if ( pub.getBoolPref( "clipperSingleStylesheet" ) ) {
-          Utils.CLIPPER_FLAGS |= 0x00100000;
-        } else {
-          Utils.CLIPPER_FLAGS &= 0x11011111;
-        }
-        // SAVE_STYLESHEETS_IN_SEPARATE_FILES
-        if ( !pub.hasPref( "clipperSeparateStylesheets" ) ) {
-          pub.setBoolPref( "clipperSeparateStylesheets",
-            !!( Utils.CLIPPER_FLAGS & 0x01000000 ) );
-        }
-        if ( pub.getBoolPref( "clipperSeparateStylesheets" ) ) {
+        // INLINE_STYLESHEETS_IN_DOCUMENT
+        if ( pub.getBoolPref( "clipperInlineStylesheets" ) ) {
           Utils.CLIPPER_FLAGS |= 0x01000000;
         } else {
           Utils.CLIPPER_FLAGS &= 0x10111111;
         }
         // SAVE_ACTIVE_RULES_ONLY
-        if ( !pub.hasPref( "clipperSaveActiveRulesOnly" ) ) {
-          pub.setBoolPref( "clipperSaveActiveRulesOnly",
-            !!( Utils.CLIPPER_FLAGS & 0x10000000 ) );
-        }
         if ( pub.getBoolPref( "clipperSaveActiveRulesOnly" ) ) {
           Utils.CLIPPER_FLAGS |= 0x10000000;
         } else {
@@ -405,13 +413,6 @@ var PrefsManager = function() {
       }
       Utils.IS_CLOSE_BROWSER_AFTER_IMPORT =
         pub.getBoolPref( "isCloseBrowserAfterImport" );
-      //
-      if ( !pub.hasPref( "isSelectNoteAfterImport" ) ) {
-        pub.setBoolPref( "isSelectNoteAfterImport",
-          Utils.IS_SELECT_NOTE_AFTER_IMPORT );
-      }
-      Utils.IS_SELECT_NOTE_AFTER_IMPORT =
-        pub.getBoolPref( "isSelectNoteAfterImport" );
       //
       if ( !pub.hasPref( "isReplaceBackground" ) ) {
         pub.setBoolPref( "isReplaceBackground",
@@ -477,10 +478,10 @@ var PrefsManager = function() {
         pub.getCharPref( "platform_shortcuts" );
       //
     } catch ( e ) {
-      Utils.log( e + "\n" + Utils.dumpStack() );
+      log.warn( e + "\n" + Utils.dumpStack() );
     }
   };
-  
+
   pub.getInstance = function() {
     return this;
   };

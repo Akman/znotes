@@ -30,41 +30,42 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+const EXPORTED_SYMBOLS = ["Editor"];
+
+var Cc = Components.classes;
+var Ci = Components.interfaces;
+var Cr = Components.results;
+var Cu = Components.utils;
+
 if ( !ru ) var ru = {};
 if ( !ru.akman ) ru.akman = {};
 if ( !ru.akman.znotes ) ru.akman.znotes = {};
 if ( !ru.akman.znotes.core ) ru.akman.znotes.core = {};
 if ( !ru.akman.znotes.spellchecker ) ru.akman.znotes.spellchecker = {};
 
-Components.utils.import( "resource://znotes/utils.js",
-  ru.akman.znotes
-);
-Components.utils.import( "resource://znotes/event.js",
-  ru.akman.znotes.core
-);
-Components.utils.import( "resource://znotes/prefsmanager.js",
-  ru.akman.znotes
-);
-Components.utils.import( "resource://gre/modules/InlineSpellChecker.jsm",
-  ru.akman.znotes.spellchecker
-);
-Components.utils.import( "resource://znotes/keyset.js",
-  ru.akman.znotes
-);
-
-var EXPORTED_SYMBOLS = ["Editor"];
+Cu.import( "resource://znotes/utils.js", ru.akman.znotes );
+Cu.import( "resource://znotes/images.js", ru.akman.znotes );
+Cu.import( "resource://znotes/event.js", ru.akman.znotes.core );
+Cu.import( "resource://znotes/prefsmanager.js", ru.akman.znotes );
+Cu.import( "resource://gre/modules/InlineSpellChecker.jsm",
+  ru.akman.znotes.spellchecker );
+Cu.import( "resource://znotes/keyset.js", ru.akman.znotes );
 
 var Editor = function() {
 
   return function() {
 
     var Utils = ru.akman.znotes.Utils;
+    var Images = ru.akman.znotes.Images;
+
+    var log = Utils.getLogger( "documents.text.editor" );
+
     // can't be initialized at once
-    var Common = null; 
+    var Common = null;
     var prefsBundle = null;
-    
+
     var self = this;
-    
+
     var EditorException = function( message ) {
       this.name = "EditorException";
       this.message = message;
@@ -74,7 +75,7 @@ var Editor = function() {
     };
 
     var listeners = [];
-    
+
     var currentWindow = null;
     var currentDocument = null;
     var currentNote = null;
@@ -87,12 +88,12 @@ var Editor = function() {
     var noteStateListener = null;
     var tagListStateListener = null;
     var documentStateListener = null;
-    
+
     var designEditor = null;
     var isEditorDirty = false;
     var isDesignEditingActive = false;
     var isEditorReady = false;
-    
+
     var editorKeyset = null;
     var editorTabs = null;
     var designFrame = null;
@@ -103,13 +104,13 @@ var Editor = function() {
     var editMenuPopup = null;
     var editSpellMenuPopup = null;
     var spellCheckerUI = null;
-    
+
     var fontNameMenuPopup = null;
     var fontNameMenuList = null;
     var fontSizeTextBox = null;
     var foreColorButton = null;
     var backColorButton = null;
-    
+
     var viewState = {
       bold: false,
       italic: false,
@@ -119,7 +120,7 @@ var Editor = function() {
       justifyright: false,
       justifyfull: false
     };
-    
+
     var prefObserver = {
       onPrefChanged: function( event ) {
         var docName = self.getDocument().getName();
@@ -129,7 +130,7 @@ var Editor = function() {
             break;
           case "isReplaceBackground":
             Utils.IS_REPLACE_BACKGROUND =
-              prefsBundle.getBoolPref( "isReplaceBackground" );          
+              prefsBundle.getBoolPref( "isReplaceBackground" );
             setBackgroundColor();
             break;
         }
@@ -140,9 +141,9 @@ var Editor = function() {
       onEditorPreferencesChanged: onEditorPreferencesChanged,
       onDocumentPreferencesChanged: onDocumentPreferencesChanged
     };
-    
+
     // COMMANDS
-    
+
     var editorCommands = {
       "znotes_close_command": null,
       "znotes_bold_command": null,
@@ -156,7 +157,7 @@ var Editor = function() {
       "znotes_justifyfull_command": null,
       "znotes_editorcustomizetoolbar_command": null,
     };
-    
+
     var editorController = {
       supportsCommand: function( cmd ) {
         return ( cmd in editorCommands );
@@ -180,7 +181,7 @@ var Editor = function() {
             return isDesignEditingActive;
         }
         return false;
-      },                                                                           
+      },
       doCommand: function( cmd ) {
         switch ( cmd ) {
           case "znotes_close_command":
@@ -244,9 +245,9 @@ var Editor = function() {
             return currentWindow.controllers.getControllerId( this );
           };
         } catch ( e ) {
-          Components.utils.reportError(
+          log.warn(
             "An error occurred registering '" + this.getName() +
-            "' controller: " + e
+            "' controller\n" + e
           );
         }
       },
@@ -254,14 +255,14 @@ var Editor = function() {
         try {
           currentWindow.controllers.removeController( this );
         } catch ( e ) {
-          Components.utils.reportError(
+          log.warn(
             "An error occurred unregistering '" + this.getName() +
-            "' controller: " + e
+            "' controller\n" + e
           );
         }
       }
     };
-   
+
     function isDesignFrameFocused() {
       return currentDocument.activeElement == designFrame.inputField;
     };
@@ -269,7 +270,7 @@ var Editor = function() {
     function isViewerFrameFocused() {
       return currentDocument.activeElement == viewerFrame;
     };
-    
+
     function isTextSelected() {
       if ( isDesignFrameFocused() ) {
         return designFrame.selectionStart != designFrame.selectionEnd;
@@ -278,7 +279,7 @@ var Editor = function() {
       var selection = win.getSelection();
       return selection && !selection.isCollapsed;
     };
-    
+
     var editCommands = {
       "znotes_undo_command": null,
       "znotes_redo_command": null,
@@ -288,7 +289,7 @@ var Editor = function() {
       "znotes_delete_command": null,
       "znotes_selectall_command": null
     };
-    
+
     var editController = {
       supportsCommand: function( cmd ) {
         return ( cmd in editCommands ) && isInEditorWindow();
@@ -378,9 +379,9 @@ var Editor = function() {
             return currentWindow.controllers.getControllerId( this );
           };
         } catch ( e ) {
-          Components.utils.reportError(
+          log.warn(
             "An error occurred registering '" + this.getName() +
-            "' controller: " + e
+            "' controller\n" + e
           );
         }
       },
@@ -388,9 +389,9 @@ var Editor = function() {
         try {
           currentWindow.controllers.removeController( this );
         } catch ( e ) {
-          Components.utils.reportError(
+          log.warn(
             "An error occurred unregistering '" + this.getName() +
-            "' controller: " + e
+            "' controller\n" + e
           );
         }
       }
@@ -401,7 +402,7 @@ var Editor = function() {
       "znotes_undoaddtodictionary_command": null,
       "znotes_spellcheckenabled_command": null
     };
-    
+
     var spellEditController = {
       supportsCommand: function( cmd ) {
         return ( cmd in spellEditCommands ) && isInEditorWindow() &&
@@ -409,7 +410,7 @@ var Editor = function() {
       },
       isCommandEnabled: function( cmd ) {
         return spellCheckerUI;
-      },                                                                           
+      },
       doCommand: function( cmd ) {
         if ( !spellCheckerUI ) {
           return;
@@ -450,9 +451,9 @@ var Editor = function() {
             return currentWindow.controllers.getControllerId( this );
           };
         } catch ( e ) {
-          Components.utils.reportError(
+          log.warn(
             "An error occurred registering '" + this.getName() +
-            "' controller: " + e
+            "' controller\n" + e
           );
         }
       },
@@ -460,14 +461,14 @@ var Editor = function() {
         try {
           currentWindow.controllers.removeController( this );
         } catch ( e ) {
-          Components.utils.reportError(
+          log.warn(
             "An error occurred unregistering '" + this.getName() +
-            "' controller: " + e
+            "' controller\n" + e
           );
         }
       }
     };
-    
+
     function updateCommands() {
       editorController.updateCommands();
     };
@@ -479,11 +480,11 @@ var Editor = function() {
     function updateSpellCommands() {
       spellEditController.updateCommands();
     };
- 
+
     function getCommandState( cmd ) {
       return Common.goGetCommandAttribute( cmd, "checked", currentWindow );
     };
- 
+
     function setCommandState( cmd, flag ) {
       Common.goSetCommandAttribute( cmd, "checked", flag, currentWindow );
       Common.goSetCommandAttribute( cmd, "checkState", flag, currentWindow );
@@ -501,7 +502,7 @@ var Editor = function() {
     function onViewerFrameKeyup() {
       updateEditCommands();
     };
-    
+
     function onViewerFrameMouseup() {
       updateEditCommands();
     };
@@ -582,7 +583,7 @@ var Editor = function() {
         spelldictionariesmenu.setAttribute( "hidden", "true" );
       }
     };
-    
+
     function onEditSpellMenuPopupHiding() {
       if ( !spellCheckerUI ) {
         return;
@@ -592,20 +593,20 @@ var Editor = function() {
     };
 
     // COMMANDS
-    
+
     function doClose() {
       if ( stop() ) {
         switchMode( "viewer" );
       }
     };
-    
+
     function doBold() {
       viewState.bold = !viewState.bold;
       setCommandState( "znotes_bold_command", viewState.bold );
       var fontWeight = viewState.bold ? "bold" : "normal";
       var data = currentNote.getData();
       data.fontWeight = fontWeight;
-      currentNote.setData(); 
+      currentNote.setData();
       setDisplayStyle();
       designFrame.focus();
       return true;
@@ -617,19 +618,19 @@ var Editor = function() {
       var fontStyle = viewState.italic ? "italic" : "normal";
       var data = currentNote.getData();
       data.fontStyle = fontStyle;
-      currentNote.setData(); 
+      currentNote.setData();
       setDisplayStyle();
       designFrame.focus();
       return true;
     };
-    
+
     function doUnderline() {
       viewState.underline = !viewState.underline;
       setCommandState( "znotes_underline_command", viewState.underline );
       var textDecoration = viewState.underline ? "underline" : "none";
       var data = currentNote.getData();
       data.textDecoration = textDecoration;
-      currentNote.setData(); 
+      currentNote.setData();
       setDisplayStyle();
       designFrame.focus();
       return true;
@@ -650,7 +651,7 @@ var Editor = function() {
       }
       var data = currentNote.getData();
       data.textAlign = textAlign;
-      currentNote.setData(); 
+      currentNote.setData();
       setDisplayStyle();
       designFrame.focus();
       return true;
@@ -692,7 +693,7 @@ var Editor = function() {
       }
       var data = currentNote.getData();
       data.textAlign = textAlign;
-      currentNote.setData(); 
+      currentNote.setData();
       setDisplayStyle();
       designFrame.focus();
       return true;
@@ -713,12 +714,12 @@ var Editor = function() {
       }
       var data = currentNote.getData();
       data.textAlign = textAlign;
-      currentNote.setData(); 
+      currentNote.setData();
       setDisplayStyle();
       designFrame.focus();
       return true;
     };
-    
+
     function doForeColor() {
       var params = {
         input: {
@@ -741,7 +742,7 @@ var Editor = function() {
       if ( params.output ) {
         var data = currentNote.getData();
         data.color = params.output.color;
-        currentNote.setData(); 
+        currentNote.setData();
         setDisplayStyle();
         setColorButtonsImages();
       }
@@ -771,41 +772,41 @@ var Editor = function() {
       if ( params.output ) {
         var data = currentNote.getData();
         data.background = params.output.color;
-        currentNote.setData(); 
+        currentNote.setData();
         setDisplayStyle();
         setColorButtonsImages();
       }
       designFrame.focus();
       return true;
     };
-    
+
     function onFontNameChange( event ) {
       var fontFamily = fontNameMenuList.selectedItem.value;
       var data = currentNote.getData();
       data.fontFamily = fontFamily;
-      currentNote.setData(); 
+      currentNote.setData();
       setDisplayStyle();
       designFrame.focus();
       return true;
     };
-    
+
     function onFontSizeTextBoxChange( event ) {
       var fontSize = fontSizeTextBox.value;
       var data = currentNote.getData();
       data.fontSize = fontSize;
-      currentNote.setData(); 
+      currentNote.setData();
       setDisplayStyle();
       designFrame.focus();
       return true;
     };
-    
+
     function onFontSizeTextBoxFocus( event ) {
       fontSizeTextBox.select();
       return true;
     };
-    
+
     // edit
-    
+
     function doSelectAll() {
       if ( isDesignEditingActive ) {
         designEditor.selectAll();
@@ -819,7 +820,7 @@ var Editor = function() {
       updateEditCommands();
       return true;
     };
-    
+
     function doCopy() {
       if ( isDesignEditingActive ) {
         designEditor.copy();
@@ -830,9 +831,8 @@ var Editor = function() {
           "nsITransferable"
         )();
         transferable.init(
-          currentWindow.QueryInterface(
-            Components.interfaces.nsIInterfaceRequestor
-          ).getInterface( Components.interfaces.nsIWebNavigation )
+          currentWindow.QueryInterface( Ci.nsIInterfaceRequestor ).getInterface(
+            Ci.nsIWebNavigation )
         );
         transferable.addDataFlavor( "text/unicode" );
         var textData = viewerFrame.contentWindow.getSelection().toString();
@@ -844,15 +844,15 @@ var Editor = function() {
         transferable.setTransferData(
           "text/unicode", textSupportsString, textData.length * 2 );
         var clipboard =
-          Components.classes['@mozilla.org/widget/clipboard;1']
-                    .createInstance( Components.interfaces.nsIClipboard );
+          Cc['@mozilla.org/widget/clipboard;1']
+          .createInstance( Ci.nsIClipboard );
         clipboard.setData( transferable, null, clipboard.kGlobalClipboard );
         viewerFrame.contentWindow.focus();
       }
       updateEditCommands();
       return true;
     };
-    
+
     function doCut() {
       designEditor.cut();
       designFrame.focus();
@@ -860,7 +860,7 @@ var Editor = function() {
       updateEditCommands();
       return true;
     };
-    
+
     function doPaste() {
       designEditor.paste( 1 );
       designFrame.focus();
@@ -868,7 +868,7 @@ var Editor = function() {
       updateEditCommands();
       return true;
     };
-    
+
     function doUndo() {
       designEditor.undo( 1 );
       designFrame.focus();
@@ -876,7 +876,7 @@ var Editor = function() {
       updateEditCommands();
       return true;
     };
-    
+
     function doRedo() {
       designEditor.redo( 1 );
       designFrame.focus();
@@ -884,7 +884,7 @@ var Editor = function() {
       updateEditCommands();
       return true;
     };
-    
+
     function doDelete() {
       designEditor.deleteSelection( null, null );
       designFrame.focus();
@@ -892,9 +892,9 @@ var Editor = function() {
       updateEditCommands();
       return true;
     };
-    
+
     // HELPERS
- 
+
     function isInEditorWindow() {
       var focusedWindow =
         currentWindow.top.document.commandDispatcher.focusedWindow;
@@ -908,7 +908,7 @@ var Editor = function() {
       }
       return ( focusedWindow == viewerFrame.contentWindow );
     };
- 
+
     function getElementId( element ) {
       if ( !element ) {
         return null;
@@ -918,7 +918,7 @@ var Editor = function() {
       }
       return getElementId( element.parentNode );
     };
- 
+
     function createFontNameMenuList() {
       var fontNameArray = Utils.getFontNameArray();
       while ( fontNameMenuPopup.firstChild ) {
@@ -969,7 +969,7 @@ var Editor = function() {
       viewState.justifyfull = ( getTextAlign( currentNote ) == "justify" );
       setCommandState( "znotes_justifyfull_command", viewState.justifyfull );
     };
-    
+
     function setDisplayStyle() {
       // design
       var style = designFrame.inputField.style;
@@ -1001,7 +1001,7 @@ var Editor = function() {
         style.setProperty( 'text-align', textAlign );
       }
     };
-    
+
     function getFontFamily( aNote ) {
       var data = aNote.getData();
       return data.fontFamily ? data.fontFamily : "Courier New";
@@ -1011,7 +1011,7 @@ var Editor = function() {
       var data = aNote.getData();
       return data.fontSize ? data.fontSize : "16";
     };
-    
+
     function getColor( aNote ) {
       var data = aNote.getData();
       return data.color ? data.color : "#000000";
@@ -1021,12 +1021,12 @@ var Editor = function() {
       var data = aNote.getData();
       return data.background ? data.background : "#FFFFFF";
     };
-    
+
     function getFontStyle( aNote ) {
       var data = aNote.getData();
       return data.fontStyle ? data.fontStyle : "normal";
     };
-    
+
     function getFontWeight( aNote ) {
       var data = aNote.getData();
       return data.fontWeight ? data.fontWeight : "normal";
@@ -1036,7 +1036,7 @@ var Editor = function() {
       var data = aNote.getData();
       return data.textDecoration ? data.textDecoration : "none";
     };
-    
+
     function getTextAlign( aNote ) {
       var data = aNote.getData();
       return data.textAlign ? data.textAlign : "";
@@ -1045,7 +1045,7 @@ var Editor = function() {
     function setColorButtonsImages() {
       if ( foreColorButton ) {
         foreColorButton.setAttribute( "image",
-          Utils.makeForeColorImage(
+          Images.makeForeColorImage(
             getColor( currentNote ),
             currentStyle.iconsize == "small" ? 16 : 24,
             getBackground( currentNote )
@@ -1054,19 +1054,19 @@ var Editor = function() {
       }
       if ( backColorButton ) {
         backColorButton.setAttribute( "image",
-          Utils.makeBackColorImage(
+          Images.makeBackColorImage(
             getBackground( currentNote ),
             currentStyle.iconsize == "small" ? 16 : 24
           )
         );
       }
     };
-    
+
     function setBackgroundColor() {
       if ( !currentNote ) {
         return;
       }
-      var style = viewerFrame.contentDocument.body.style;    
+      var style = viewerFrame.contentDocument.body.style;
       if ( Utils.IS_REPLACE_BACKGROUND ) {
         var tagColor = currentBookTagList.getNoTag().getColor();
         var tagID = currentNote.getMainTag();
@@ -1082,13 +1082,13 @@ var Editor = function() {
     function getString( name ) {
       return Utils.STRINGS_BUNDLE.getString( name );
     };
-    
+
     function getFormattedString( name, values ) {
       return Utils.STRINGS_BUNDLE.getFormattedString( name, values );
     };
-    
+
     // TOOLBAR
-    
+
     function restoreToolbarCurrentSet() {
       var docName = self.getDocument().getName();
       var currentset = designToolBar.getAttribute( "defaultset" );
@@ -1098,7 +1098,7 @@ var Editor = function() {
       designToolBar.setAttribute( "currentset", currentset );
       designToolBar.currentSet = currentset;
     };
-    
+
     function saveToolbarCurrentSet() {
       var docName = self.getDocument().getName();
       var currentset = designToolBar.currentSet;
@@ -1106,9 +1106,9 @@ var Editor = function() {
         prefsBundle.setCharPref( "designToolbarCurrentSet." + docName, currentset );
       }
     };
-    
+
     // CONTENT
-    
+
     function setDesignFrameContent( aContent ) {
       designFrame.value = aContent;
       var content = viewerFrame.contentDocument.getElementById( "content" );
@@ -1124,25 +1124,25 @@ var Editor = function() {
     function getDesignFrameContent() {
       return designFrame.value;
     };
-    
+
     // TAG LIST EVENTS
-    
+
     function onTagChanged( e ) {
       var aTag = e.data.changedTag;
       if ( currentNote ) {
         setBackgroundColor();
       }
     };
-    
+
     function onTagDeleted( e ) {
       var aTag = e.data.deletedTag;
       if ( currentNote ) {
         setBackgroundColor();
       }
     };
-    
+
     // NOTE EVENTS
-    
+
     function onNoteMainTagChanged( e ) {
       var aCategory = e.data.parentCategory;
       var aNote = e.data.changedNote;
@@ -1152,7 +1152,7 @@ var Editor = function() {
         setBackgroundColor();
       }
     };
-    
+
     // @@@@ 1 onNoteMainContentChanged
     function onNoteMainContentChanged( e ) {
       var aCategory = e.data.parentCategory;
@@ -1165,6 +1165,7 @@ var Editor = function() {
           load();
           return;
         }
+        // TODO: see xhtml onNoteMainContentChanged()
         if ( isEditorDirty ) {
           reloadFlag = false;
           params = {
@@ -1190,7 +1191,7 @@ var Editor = function() {
         }
       }
     };
-    
+
     function onNoteDataChanged( e ) {
       var aCategory = e.data.parentCategory;
       var aNote = e.data.changedNote;
@@ -1198,20 +1199,20 @@ var Editor = function() {
         setDisplayStyle();
       }
     };
-    
+
     // EDITOR EVENTS
-    
+
     function onDocumentStateChanged( nowDirty ) {
       switchState( nowDirty );
       return true;
     };
-    
+
     // PREFERENCES
-    
+
     function loadPrefs() {
       currentPreferences = self.getPreferences();
     };
-    
+
     function onDocumentPreferencesChanged( event ) {
     };
 
@@ -1225,9 +1226,9 @@ var Editor = function() {
       }
       updateKeyset();
     };
-    
+
     // EDITOR
-    
+
     function updateEditorDirtyState() {
       var isEnabled, canUndo;
       isEnabled = {};
@@ -1235,7 +1236,7 @@ var Editor = function() {
       designEditor.canUndo( isEnabled, canUndo );
       documentStateListener.NotifyDocumentStateChanged( canUndo.value );
     };
-    
+
     function initDesignEditing() {
       if ( isDesignEditingActive ) {
         return;
@@ -1270,7 +1271,7 @@ var Editor = function() {
       updateEditCommands();
       updateSpellCommands();
     };
-    
+
     function doneDesignEditing() {
       if ( !isDesignEditingActive ) {
         return;
@@ -1288,7 +1289,7 @@ var Editor = function() {
       viewerFrame.contentWindow.focus();
       updateEditCommands();
     };
-    
+
     function addEventListeners() {
       viewerFrame.addEventListener( "keyup", onViewerFrameKeyup, false );
       viewerFrame.addEventListener( "mouseup", onViewerFrameMouseup, false );
@@ -1302,7 +1303,7 @@ var Editor = function() {
       currentNote.addStateListener( noteStateListener );
       currentBookTagList.addStateListener( tagListStateListener );
     };
-    
+
     function removeEventListeners() {
       viewerFrame.removeEventListener( "keyup", onViewerFrameKeyup, false );
       viewerFrame.removeEventListener( "mouseup", onViewerFrameMouseup, false );
@@ -1316,18 +1317,18 @@ var Editor = function() {
       currentNote.removeStateListener( noteStateListener );
       currentBookTagList.removeStateListener( tagListStateListener );
     };
-    
+
     function setupKeyset() {
       editorKeyset = new ru.akman.znotes.Keyset(
         currentDocument.getElementById( "znotes_editor_keyset" ),
         self.getDefaultPreferences().shortcuts
       );
     };
-    
+
     function updateKeyset() {
       editorKeyset.update( currentPreferences.shortcuts );
     };
-    
+
     function activateKeyset() {
       editorKeyset.activate();
     };
@@ -1335,7 +1336,7 @@ var Editor = function() {
     function deactivateKeyset() {
       editorKeyset.deactivate();
     };
-    
+
     function init( callback, wait ) {
       var initProgress = 0;
       var onCallback = function() {
@@ -1419,7 +1420,7 @@ var Editor = function() {
       }
       onInitDone();
     };
-    
+
     function done() {
       if ( currentMode == "editor" ) {
         if ( !stop() ) {
@@ -1438,7 +1439,7 @@ var Editor = function() {
       currentDocument = null;
       currentWindow = null;
     };
-    
+
     function switchMode( mode ) {
       if ( currentMode && currentMode == mode ) {
         return;
@@ -1474,7 +1475,7 @@ var Editor = function() {
       // @@@@ 1 getMainContent
       setDesignFrameContent( currentNote.getMainContent() );
     };
-    
+
     function save() {
       if ( isEditorDirty ) {
         currentNote.removeStateListener( noteStateListener );
@@ -1487,7 +1488,7 @@ var Editor = function() {
         switchState( false );
       }
     };
-    
+
     function cancel( force ) {
       if ( isEditorDirty || force ) {
         if ( currentNote && currentNote.isExists() ) {
@@ -1501,7 +1502,7 @@ var Editor = function() {
         }
       }
     };
-    
+
     function start() {
       editorTabs.removeAttribute( "hidden" );
       Common.goSetCommandHidden( "znotes_close_command", false, currentWindow );
@@ -1510,7 +1511,7 @@ var Editor = function() {
       switchState( false );
       initDesignEditing();
     };
-    
+
     function stop() {
       var res;
       if ( currentNote && currentNote.isExists() && isEditorDirty ) {
@@ -1617,7 +1618,7 @@ var Editor = function() {
         }
       ).focus();
     };
-    
+
     function updateStyle() {
       designToolBox.setAttribute( "iconsize", currentStyle.iconsize );
       designToolBar.setAttribute( "iconsize", currentStyle.iconsize );
@@ -1625,7 +1626,7 @@ var Editor = function() {
         setColorButtonsImages();
       }
     };
-    
+
     function editorInit( win, doc, note, style, wait ) {
       currentWindow = win;
       currentDocument = doc;
@@ -1645,11 +1646,12 @@ var Editor = function() {
         );
         switchMode( "viewer" );
         isEditorReady = true;
+        updateCommands();
       }, wait );
     };
 
     // LISTENERS
-    
+
     function notifyStateListener( event ) {
       for ( var i = 0; i < listeners.length; i++ ) {
         if ( listeners[i][ "on" + event.type ] ) {
@@ -1657,9 +1659,9 @@ var Editor = function() {
         }
       }
     };
-    
+
     // PUBLIC
-    
+
     /**
      * Check editor ready state ( UI loaded )
      */
@@ -1673,7 +1675,7 @@ var Editor = function() {
     this.isDirty = function() {
       return isEditorDirty;
     };
-    
+
     /**
      * Open editor for a note
      * @param win Window in which Document live
@@ -1708,6 +1710,10 @@ var Editor = function() {
         while ( node.firstChild ) {
           node.removeChild( node.firstChild );
         }
+        node = doc.getElementById( "znotes_editor_toolbar" );
+        while ( node.firstChild ) {
+          node.removeChild( node.firstChild );
+        }
         while ( editorView.firstChild ) {
           editorView.removeChild( editorView.firstChild );
         }
@@ -1723,7 +1729,7 @@ var Editor = function() {
         );
       }
     };
-    
+
     /**
      * Close editor for current note
      */
@@ -1739,7 +1745,7 @@ var Editor = function() {
       );
       done();
     };
-    
+
     /**
      * Switch to editor mode
      */
@@ -1749,7 +1755,7 @@ var Editor = function() {
       }
       switchMode( "editor" );
     };
-    
+
     /**
      * Save changes
      */
@@ -1759,7 +1765,7 @@ var Editor = function() {
       }
       save();
     };
-    
+
     /**
      * Discard changes
      */
@@ -1779,7 +1785,7 @@ var Editor = function() {
       }
       print();
     };
-    
+
     /**
      * Update style of toolbars
      * @param style { iconsize: "small" || "normal" }
@@ -1793,7 +1799,7 @@ var Editor = function() {
       }
       updateStyle();
     };
-    
+
     /**
      * Add state listener
      * @param stateListener Listener
@@ -1803,7 +1809,7 @@ var Editor = function() {
         listeners.push( stateListener );
       }
     };
-    
+
     /**
      * Remove state listener
      * @param stateListener Listener
@@ -1815,7 +1821,7 @@ var Editor = function() {
       }
       listeners.splice( index, 1 );
     };
-    
+
   };
 
 }();

@@ -30,27 +30,33 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+const EXPORTED_SYMBOLS = ["SessionManager"];
+
+var Cc = Components.classes;
+var Ci = Components.interfaces;
+var Cr = Components.results;
+var Cu = Components.utils;
+
 if ( !ru ) var ru = {};
 if ( !ru.akman ) ru.akman = {};
 if ( !ru.akman.znotes ) ru.akman.znotes = {};
 
-Components.utils.import( "resource://znotes/utils.js", ru.akman.znotes );
-
-var EXPORTED_SYMBOLS = ["SessionManager"];
+Cu.import( "resource://znotes/utils.js", ru.akman.znotes );
 
 var SessionManager = function() {
 
   var Utils = ru.akman.znotes.Utils;
+  var log = Utils.getLogger( "modules.sessionmanager" );
 
   var persistedState = null;
   var currentState = null;
-  
+
   function getEntry() {
     var entry = Utils.getPlacesPath();
     var placeId = Utils.getPlaceId();
     entry.append( placeId );
     if ( !entry.exists() || !entry.isDirectory() ) {
-      entry.create( Components.interfaces.nsIFile.DIRECTORY_TYPE, parseInt( "0755", 8 ) );
+      entry.create( Ci.nsIFile.DIRECTORY_TYPE, parseInt( "0755", 8 ) );
     }
     entry.append( "session.json" );
     return entry.clone();
@@ -68,7 +74,7 @@ var SessionManager = function() {
       var data = Utils.readFileContent( entry, "UTF-8" );
       state = JSON.parse( data );
     } catch ( e ) {
-      Utils.log( e + "\n" + Utils.dumpStack() );
+      log.warn( e + "\n" + Utils.dumpStack() );
       state = {
         tabs: []
       };
@@ -77,7 +83,7 @@ var SessionManager = function() {
   };
 
   function saveSession( state ) {
-    var data = JSON.stringify( state );
+    var data = JSON.stringify( state, null, 2 );
     var entry = getEntry();
     Utils.writeFileContent( entry, "UTF-8", data );
   };
@@ -89,7 +95,7 @@ var SessionManager = function() {
     currentState = { tabs: [] };
     saveSession( currentState );
   };
-  
+
   pub.getPersistedState = function() {
     return { tabs: persistedState.tabs.slice( 0 ) };
   };
@@ -150,7 +156,7 @@ var SessionManager = function() {
   pub.getInstance = function() {
     return this;
   };
-  
+
   return pub;
 
 }();

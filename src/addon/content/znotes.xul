@@ -55,10 +55,10 @@
   lightweightthemes="true"
   fullscreenbutton="true"
   lightweightthemesfooter="znotes_statusbar">
-  
+
   <script type="application/javascript"
     src="chrome://znotes/content/znotes.js" />
-    
+
   <tabbox id="znotes_tabbox" flex="1">
     <tabpanels id="znotes_tabpanels" flex="1">
       <vbox id="znotes_maintabpanel" />
@@ -66,7 +66,7 @@
   </tabbox>
 
   <vbox id="znotes_tabpanelcontainer" collapsed="true" />
-  
+
   <statusbar id="znotes_statusbar" />
-  
+
 </window>

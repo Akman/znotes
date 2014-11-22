@@ -30,23 +30,29 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+const EXPORTED_SYMBOLS = ["Document"];
+
+var Cc = Components.classes;
+var Ci = Components.interfaces;
+var Cr = Components.results;
+var Cu = Components.utils;
+
 if ( !ru ) var ru = {};
 if ( !ru.akman ) ru.akman = {};
 if ( !ru.akman.znotes ) ru.akman.znotes = {};
 if ( !ru.akman.znotes.doc ) ru.akman.znotes.doc = {};
 if ( !ru.akman.znotes.core ) ru.akman.znotes.core = {};
 
-Components.utils.import( "resource://znotes/utils.js", ru.akman.znotes );
-Components.utils.import( "resource://znotes/event.js", ru.akman.znotes.core );
-
-var EXPORTED_SYMBOLS = ["Document"];
+Cu.import( "resource://znotes/utils.js", ru.akman.znotes );
+Cu.import( "resource://znotes/event.js", ru.akman.znotes.core );
 
 var Document = function() {
 
   var Utils = ru.akman.znotes.Utils;
+  var log = Utils.getLogger( "documents.text.document" );
 
   var registryObject = null;
-  
+
   var DocumentException = function( message ) {
     this.name = "DocumentException";
     this.message = message;
@@ -54,11 +60,11 @@ var Document = function() {
       return this.name + ": " + this.message;
     }
   };
-  
+
   var observers = [];
 
   // HELPERS
-  
+
   function getErrorDocument( anURI, aBaseURI, aTitle, errorText, sourceText ) {
     var dom = pub.getBlankDocument( anURI, aBaseURI, aTitle );
     if ( errorText ) {
@@ -69,24 +75,24 @@ var Document = function() {
     }
     return dom;
   };
-  
+
   function checkDocument( aDOM, anURI, aBaseURI, aTitle ) {
     return null;
   };
 
   function sanitizeDocument( aDOM, anURI, aBaseURI ) {
   };
-  
+
   function markupDocument( aDOM ) {
     return {};
   };
-  
+
   function fixupDocument( aDOM, anURI, aBaseURI, aTitle, aMarkup ) {
     return false;
   };
-  
+
   // PUBLIC
-  
+
   var pub = {};
 
   pub.getInfo = function() {
@@ -109,7 +115,7 @@ var Document = function() {
   pub.getType = function() {
     return "text/plain";
   };
-  
+
   pub.addObserver = function( aObserver ) {
     if ( observers.indexOf( aObserver ) < 0 ) {
       observers.push( aObserver );
@@ -136,19 +142,19 @@ var Document = function() {
     var info = pub.getInfo();
     return info.name + "-" + info.version;
   };
-  
+
   pub.getURL = function() {
     return pub.getInfo().url;
   };
-  
+
   pub.getIconURL = function() {
     return pub.getInfo().iconURL;
   };
-  
+
   pub.getTypes = function() {
     return Object.keys( pub.getInfo().types );
   }
-  
+
   pub.supportsType = function( aType ) {
     return ( aType in pub.getInfo().types );
   };
@@ -158,7 +164,7 @@ var Document = function() {
       aType : pub.getType();
     return pub.getInfo().types[ contentType ].extension;
   };
-  
+
   pub.getName = function() {
     return pub.getInfo().name;
   };
@@ -170,20 +176,20 @@ var Document = function() {
   pub.getDescription = function() {
     return pub.getInfo().description;
   };
-  
+
   pub.getDefaultPreferences = function() {
     return {
     };
   };
-  
+
   pub.getBlankDocument = function( anURI, aBaseURI, aTitle, aCommentFlag, aParams ) {
     return "";
   };
-  
+
   pub.serializeToString = function( aDOM, anURI, aBaseURI ) {
     return aDOM;
   };
-  
+
   pub.parseFromString = function( aData, anURI, aBaseURI, aTitle ) {
     var tmp, err, markup;
     tmp = aData;
@@ -202,27 +208,26 @@ var Document = function() {
   };
 
   pub.importDocument = function( aDOM, anURI, aBaseURI, aTitle, aParams ) {
-    
+
     // TODO: documentEncoder html -> text
     /*
     try {
-      var nsIDocumentEncoder = Components.interfaces.nsIDocumentEncoder;
       var documentEncoder =
-        Components.classes["@mozilla.org/layout/documentEncoder;1?type=text/plain"]
-                  .createInstance( nsIDocumentEncoder );
+        Cc["@mozilla.org/layout/documentEncoder;1?type=text/plain"]
+        .createInstance( Ci.nsIDocumentEncoder );
       documentEncoder.init( aDOM, "text/plain",
-        nsIDocumentEncoder.OutputLFLineBreak |
-        nsIDocumentEncoder.OutputPersistNBSP |
-        nsIDocumentEncoder.OutputBodyOnly |
-        nsIDocumentEncoder.SkipInvisibleContent |
-        nsIDocumentEncoder.OutputNoScriptContent
+        Ci.nsIDocumentEncoder.OutputLFLineBreak |
+        Ci.nsIDocumentEncoder.OutputPersistNBSP |
+        Ci.nsIDocumentEncoder.OutputBodyOnly |
+        Ci.nsIDocumentEncoder.SkipInvisibleContent |
+        Ci.nsIDocumentEncoder.OutputNoScriptContent
       );
-      Utils.log( documentEncoder.encodeToString() );
+      log.debug( documentEncoder.encodeToString() );
     } catch ( e ) {
-      Utils.log( e + "\n" + Utils.dumpStack() );
+      log.warn( e + "\n" + Utils.dumpStack() );
     }
     */
-    
+
     var dom, body;
     dom = pub.getBlankDocument( anURI, aBaseURI, aTitle, false, aParams );
     try {
@@ -231,11 +236,11 @@ var Document = function() {
         dom += body.textContent;
       }
     } catch ( e ) {
-      Utils.log( e + "\n" + Utils.dumpStack() );
+      log.warn( e + "\n" + Utils.dumpStack() );
     }
     return dom;
   };
-  
+
   return pub;
 
 }();

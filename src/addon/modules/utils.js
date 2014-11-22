@@ -30,43 +30,87 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+const EXPORTED_SYMBOLS = ["Utils"];
+
+var Cc = Components.classes;
+var Ci = Components.interfaces;
+var Cr = Components.results;
+var Cu = Components.utils;
+
 if ( !ru ) var ru = {};
 if ( !ru.akman ) ru.akman = {};
 if ( !ru.akman.znotes ) ru.akman.znotes = {};
 
-Components.utils.import( "resource://znotes/product.js",
-  ru.akman.znotes
-);
-Components.utils.import( "resource://znotes/pnglib.js",
-  ru.akman.znotes
-);
-
-var EXPORTED_SYMBOLS = ["Utils"];
+Cu.import( "resource://znotes/product.js", ru.akman.znotes );
+Cu.import( "resource://gre/modules/Log.jsm" );
 
 var Utils = function() {
 
+  /*
+  FATAL    Severe errors that cause premature termination.
+           Expect these to be immediately visible on a status console.
+  ERROR    Other runtime errors or unexpected conditions.
+           Expect these to be immediately visible on a status console.
+  WARN     Use of deprecated APIs, poor use of API, 'almost' errors,
+           other runtime situations that are undesirable or unexpected,
+            but not necessarily "wrong". Expect these to be immediately
+            visible on a status console.
+  INFO     Interesting runtime events (startup/shutdown).
+           Expect these to be immediately visible on a console, so be
+           conservative and keep to a minimum.
+  CONFIG   Information regarding important configuration options the system
+           is using that affects how it runs.
+  DEBUG    Detailed information on the flow through the system.
+           Expect these to be written to logs only.
+  TRACE    Most detailed information. Expect these to be written to logs only.
+  ALL      All kind of information
+  */
+  Log.repository.rootLogger.level = Log.Level.All;
+  Log.repository.rootLogger.addAppender(
+    new Log.ConsoleAppender(
+      new Log.BasicFormatter()
+    )
+  );
+
+  var log = getLogger( "modules.utils" );
+
+  var systemInfo = null;
+  var mainWindow = null;
+  var mainContext = null;
+  var stringsBundle = null;
+  var fontNameArray = null;
+  
+  /*
+  0x00000001 SAVE_SCRIPTS
+  0x00000010 SAVE_FRAMES
+  0x00000100 SAVE_FRAMES_IN_SEPARATE_DIRECTORY
+  0x00001000 PRESERVE_HTML5_TAGS
+  0x00010000 SAVE_STYLES
+  0x00100000 SAVE_INLINE_RESOURCES_IN_SEPARATE_FILES
+  0x01000000 INLINE_STYLESHEETS_IN_DOCUMENT
+  0x10000000 SAVE_ACTIVE_RULES_ONLY
+  */
+  var clipperFlags = 0x11010000;
+  var defaultDocumentType = "application/xhtml+xml";
+  
+  var placeName = "";
+  var mainShortCuts = "{}";
+  var mainKeySet = null;
+  var platformShortCuts = "{}";
+  var platformKeySet = null;
+  
   var isDebugEnabled = false;
   var isTestActive = false;
   var isTestRaised = false;
   var isSanitizeEnabled = true;
   var isAdEnabled = false;
   var isFirstRun = true;
-  
-  var app_version = ru.akman.znotes.Product.Version;
-
-  var systemInfo = null;
-
-  var mainWindow = null;
-  var mainContext = null;
-  var stringsBundle = null;
   var isStandalone = true;
-  
   var isQuitEnabled = true;
-  var debugTextBox = null;
-
   var isSavePosition = true;
   var isEditSourceEnabled = true;
   var isPlaySound = true;
+  var isClearBinOnExit = false;
   var isMainMenubarVisible = false;
   var isMainToolbarVisible = true;
   var isConfirmExit = true;
@@ -74,36 +118,26 @@ var Utils = function() {
   var isReplaceBackground = false;
   var isHighlightRow = false;
   var isCloseBrowserAfterImport = true;
-  var isSelectNoteAfterImport = true;
   var isClipperPlaySound = true;
-  var clipperFlags = 0x10010000;
-  var defaultDocumentType = "application/xhtml+xml";
-  var placeName = "";
-  var mainShortCuts = "{}";
-  var platformShortCuts = "{}";
 
-  function getVersion( addonID, callback ) {
-    var aScope = {};
-    if ( typeof( Components.classes["@mozilla.org/extensions/manager;1"] ) != 'undefined' ) {
-      var extMan = Components.classes["@mozilla.org/extensions/manager;1"]
-                             .getService( Components.interfaces.nsIExtensionManager );
-      var ext = extMan.getItemForID( addonID );
-      ext.QueryInterface( Components.interfaces.nsIUpdateItem );
-      callback( ext.version );
-      return;
-    }
-    if ( typeof( Components.utils ) != 'undefined' && typeof( Components.utils.import ) != 'undefined' ) {
-      Components.utils.import( "resource://gre/modules/AddonManager.jsm", aScope );
-    }
-    aScope.AddonManager.getAddonByID( addonID, function( addon ) { if ( addon ) { callback( addon.version ); } } );
+  function getLogger( name ) {
+    return Log.repository.getLogger( "znotes." + name );
   };
 
   var pub = {
 
+    get LOGGER_LEVEL() {
+      return Log.Level.Desc[Log.repository.rootLogger.level];
+    },
+
+    set LOGGER_LEVEL( value ) {
+      Log.repository.rootLogger.level = Log.Level.Numbers[value.toUpperCase()];
+    },
+
     get IS_DEBUG_ENABLED() {
       return isDebugEnabled;
     },
-    
+
     set IS_DEBUG_ENABLED( value ) {
       isDebugEnabled = value;
     },
@@ -111,23 +145,23 @@ var Utils = function() {
     get IS_TEST_ACTIVE() {
       return isTestActive;
     },
-    
+
     set IS_TEST_ACTIVE( value ) {
       isTestActive = value;
     },
-    
+
     get IS_TEST_RAISED() {
       return isTestRaised;
     },
-    
+
     set IS_TEST_RAISED( value ) {
       isTestRaised = value;
     },
-    
+
     get IS_SANITIZE_ENABLED() {
       return isSanitizeEnabled;
     },
-    
+
     set IS_SANITIZE_ENABLED( value ) {
       isSanitizeEnabled = value;
     },
@@ -135,15 +169,15 @@ var Utils = function() {
     get IS_AD_ENABLED() {
       return isAdEnabled;
     },
-    
+
     set IS_AD_ENABLED( value ) {
       isAdEnabled = value;
     },
-    
+
     get IS_FIRST_RUN() {
       return isFirstRun;
     },
-    
+
     set IS_FIRST_RUN( value ) {
       isFirstRun = value;
     },
@@ -157,8 +191,7 @@ var Utils = function() {
     },
 
     get VERSION() {
-      getVersion( pub.ID, function( ver ) { app_version = ver; } );
-      return app_version;
+      return ru.akman.znotes.Product.Version;
     },
 
     get SITE() {
@@ -242,7 +275,7 @@ var Utils = function() {
     set MAIN_CONTEXT( value ) {
       mainContext = value;
     },
-    
+
     get STRINGS_BUNDLE() {
       return stringsBundle;
     },
@@ -262,7 +295,7 @@ var Utils = function() {
     get DEFAULT_DOCUMENT_TYPE() {
       return defaultDocumentType;
     },
-    
+
     set DEFAULT_DOCUMENT_TYPE( value ) {
       defaultDocumentType = value;
     },
@@ -278,25 +311,33 @@ var Utils = function() {
     get MAIN_SHORTCUTS() {
       return mainShortCuts;
     },
-    
+
     set MAIN_SHORTCUTS( value ) {
       mainShortCuts = value;
+    },
+
+    get MAIN_KEYSET() {
+      return mainKeySet;
+    },
+
+    set MAIN_KEYSET( value ) {
+      mainKeySet = value;
     },
     
     get PLATFORM_SHORTCUTS() {
       return platformShortCuts;
     },
-    
+
     set PLATFORM_SHORTCUTS( value ) {
       platformShortCuts = value;
     },
 
-    get DEBUG_TEXTBOX() {
-      return debugTextBox;
+    get PLATFORM_KEYSET() {
+      return platformKeySet;
     },
 
-    set DEBUG_TEXTBOX( value ) {
-      debugTextBox = value;
+    set PLATFORM_KEYSET( value ) {
+      platformKeySet = value;
     },
 
     get IS_QUIT_ENABLED() {
@@ -306,11 +347,11 @@ var Utils = function() {
     set IS_QUIT_ENABLED( value ) {
       isQuitEnabled = value;
     },
-    
+
     get IS_DEBUGGER_INSTALLED() {
       return pub.convertChromeURL( "chrome://venkman/content/" );
     },
-    
+
     get IS_INSPECTOR_INSTALLED() {
       return pub.convertChromeURL( "chrome://inspector/content/" );
     },
@@ -341,6 +382,14 @@ var Utils = function() {
       isPlaySound = value;
     },
 
+    get IS_CLEAR_BIN_ON_EXIT() {
+      return isClearBinOnExit;
+    },
+
+    set IS_CLEAR_BIN_ON_EXIT( value ) {
+      isClearBinOnExit = value;
+    },
+
     get IS_REPLACE_BACKGROUND() {
       return isReplaceBackground;
     },
@@ -364,7 +413,7 @@ var Utils = function() {
     set CLIPPER_FLAGS( value ) {
       clipperFlags = value;
     },
-    
+
     get IS_CLIPPER_PLAY_SOUND() {
       return isClipperPlaySound;
     },
@@ -372,7 +421,7 @@ var Utils = function() {
     set IS_CLIPPER_PLAY_SOUND( value ) {
       isClipperPlaySound = value;
     },
-    
+
     get IS_CLOSE_BROWSER_AFTER_IMPORT() {
       return isCloseBrowserAfterImport;
     },
@@ -381,14 +430,6 @@ var Utils = function() {
       isCloseBrowserAfterImport = value;
     },
 
-    get IS_SELECT_NOTE_AFTER_IMPORT() {
-      return isSelectNoteAfterImport;
-    },
-
-    set IS_SELECT_NOTE_AFTER_IMPORT( value ) {
-      isSelectNoteAfterImport = value;
-    },
-    
     get IS_MAINMENUBAR_VISIBLE() {
       return isMainMenubarVisible;
     },
@@ -404,43 +445,54 @@ var Utils = function() {
     set IS_MAINTOOLBAR_VISIBLE( value ) {
       isMainToolbarVisible = value;
     },
-    
+
     get IS_CONFIRM_EXIT() {
       return isConfirmExit;
     },
-    
+
     set IS_CONFIRM_EXIT( value ) {
       isConfirmExit = value;
     },
-    
+
     get IS_EXIT_QUIT_TB() {
       return isExitQuitTB;
     },
-    
+
     set IS_EXIT_QUIT_TB( value ) {
       isExitQuitTB = value;
     }
 
   };
 
-  var fontNameArray = null;
-
-  pub.showPopup = function( img, title, text, clickable ) {
-    try {
-      Components.classes['@mozilla.org/alerts-service;1']
-                .getService( Components.interfaces.nsIAlertsService )
-                .showAlertNotification(
-        img,
-        title,
-        text,
-        clickable,
-        '',
-        null
-      );
-    } catch(e) {
-    }
+  pub.getLogger = function( name ) {
+    return getLogger( name );
   };
-  
+
+  pub.showPopup = function( imageUrl, title, text, textClickable, cookie,
+                            origin, bidi, lang,
+                            replacedWindow, alertListener ) {
+    var win =
+      Cc["@mozilla.org/embedcomp/window-watcher;1"]
+      .getService( Ci.nsIWindowWatcher )
+      .openWindow(
+        null, "chrome://znotes/content/alert.xul",
+        "_blank", "chrome,titlebar=no,popup=yes", null
+      );
+    win.arguments = [
+      imageUrl,       // the image src url
+      title,          // the alert title
+      text,           // the alert text
+      textClickable,  // is the text clickable
+      cookie,         // the alert cookie to be passed back to the listener
+      origin,         // the alert origin reported by the look and feel
+      bidi,           // bidi
+      lang,           // lang
+      replacedWindow, // replaced alert window (nsIDOMWindow)
+      alertListener   // an optional callback listener (nsIObserver)
+    ];
+    return win;
+  };
+
   pub.dumpStack = function() {
     var lines = [];
     for ( var frame = Components.stack; frame; frame = frame.caller ) {
@@ -454,25 +506,26 @@ var Utils = function() {
     if ( systemInfo ) {
       return systemInfo;
     }
-    var xulRuntime = Components.classes["@mozilla.org/xre/app-info;1"]
-                               .getService( Components.interfaces.nsIXULRuntime );
+    var xulRuntime =
+      Cc["@mozilla.org/xre/app-info;1"].getService( Ci.nsIXULRuntime );
     systemInfo = {};
     systemInfo.OS = xulRuntime.OS;
     systemInfo.widgetToolkit = xulRuntime.widgetToolkit;
-    var dnsService = Components.classes["@mozilla.org/network/dns-service;1"]
-                               .createInstance( Components.interfaces.nsIDNSService );
+    var dnsService = Cc["@mozilla.org/network/dns-service;1"].createInstance(
+      Ci.nsIDNSService );
     systemInfo.hostName = dnsService.myHostName;
     return systemInfo;
   };
 
   pub.getPlaceId = function() {
     var placeId = pub.createUUID();
-    var directoryService = Components.classes["@mozilla.org/file/directory_service;1"]
-                                     .getService( Components.interfaces.nsIProperties );
-    var placeEntry = directoryService.get( "Home", Components.interfaces.nsIFile );
+    var directoryService =
+      Cc["@mozilla.org/file/directory_service;1"]
+      .getService( Ci.nsIProperties );
+    var placeEntry = directoryService.get( "Home", Ci.nsIFile );
     placeEntry.append( ".znotes" );
     if ( !placeEntry.exists() || !placeEntry.isFile() ) {
-      placeEntry.create( Components.interfaces.nsIFile.NORMAL_FILE_TYPE, parseInt( "0644", 8 ) );
+      placeEntry.create( Ci.nsIFile.NORMAL_FILE_TYPE, parseInt( "0644", 8 ) );
       pub.writeFileContent( placeEntry, "UTF-8", placeId );
     } else {
       placeId = pub.readFileContent( placeEntry, "UTF-8" );
@@ -481,13 +534,15 @@ var Utils = function() {
   };
 
   pub.getDataPath = function() {
-    var directoryService = Components.classes["@mozilla.org/file/directory_service;1"]
-                                     .getService( Components.interfaces.nsIProperties );
-    var profileDir = directoryService.get( "ProfD", Components.interfaces.nsIFile );
+    var directoryService =
+      Cc["@mozilla.org/file/directory_service;1"]
+      .getService( Ci.nsIProperties );
+    var profileDir = directoryService.get( "ProfD", Ci.nsIFile );
     var dataPath = profileDir.clone();
     dataPath.append( pub.NAME );
     if ( !dataPath.exists() || !dataPath.isDirectory() ) {
-      dataPath.create( Components.interfaces.nsIFile.DIRECTORY_TYPE, parseInt( "0774", 8 ) );
+      dataPath.create( Ci.nsIFile.DIRECTORY_TYPE,
+        parseInt( "0774", 8 ) );
     }
     return dataPath;
   };
@@ -496,74 +551,81 @@ var Utils = function() {
     var placesPath = pub.getDataPath();
     placesPath.append( "places" );
     if ( !placesPath.exists() || !placesPath.isDirectory() ) {
-      placesPath.create( Components.interfaces.nsIFile.DIRECTORY_TYPE, parseInt( "0774", 8 ) );
+      placesPath.create( Ci.nsIFile.DIRECTORY_TYPE, parseInt( "0774", 8 ) );
     }
     return placesPath;
   };
 
-  pub.getDriverDirectory = function() {
-    var ios = Components.classes["@mozilla.org/network/io-service;1"]
-                        .getService( Components.interfaces.nsIIOService );
-    var fph = ios.getProtocolHandler( "file" )
-                 .QueryInterface( Components.interfaces.nsIFileProtocolHandler );
-    var chr = Components.classes["@mozilla.org/chrome/chrome-registry;1"]
-                        .getService(Components.interfaces.nsIChromeRegistry);
+  pub.getDBFile = function() {
+    var dbFile = pub.getDataPath();
+    dbFile.append( "znotes.sqlite" );
+    return dbFile;
+  };
+  
+  pub.getDriversPath = function() {
+    var ios = Cc["@mozilla.org/network/io-service;1"].getService(
+      Ci.nsIIOService );
+    var fph = ios.getProtocolHandler( "file" ).QueryInterface(
+      Ci.nsIFileProtocolHandler );
+    var chr = Cc["@mozilla.org/chrome/chrome-registry;1"].getService(
+      Ci.nsIChromeRegistry );
     var uri = ios.newURI( "chrome://znotes_drivers/content/", null, null );
     return fph.getFileFromURLSpec( chr.convertChromeURL( uri ).spec ).parent.clone();
   };
 
-  pub.getDocumentDirectory = function() {
-    var ios = Components.classes["@mozilla.org/network/io-service;1"]
-                        .getService( Components.interfaces.nsIIOService );
-    var fph = ios.getProtocolHandler( "file" )
-                 .QueryInterface( Components.interfaces.nsIFileProtocolHandler );
-    var chr = Components.classes["@mozilla.org/chrome/chrome-registry;1"]
-                        .getService(Components.interfaces.nsIChromeRegistry);
+  pub.getDocumentsPath = function() {
+    var ios = Cc["@mozilla.org/network/io-service;1"].getService(
+      Ci.nsIIOService );
+    var fph = ios.getProtocolHandler( "file" ).QueryInterface(
+      Ci.nsIFileProtocolHandler );
+    var chr = Cc["@mozilla.org/chrome/chrome-registry;1"].getService(
+      Ci.nsIChromeRegistry );
     var uri = ios.newURI( "chrome://znotes_documents/content/", null, null );
     return fph.getFileFromURLSpec( chr.convertChromeURL( uri ).spec ).parent.clone();
   };
-  
+
   pub.getURLSpecFromFile = function( entry ) {
-    var ios = Components.classes["@mozilla.org/network/io-service;1"]
-                        .getService( Components.interfaces.nsIIOService );
-    var fph = ios.getProtocolHandler( "file" )
-                 .QueryInterface( Components.interfaces.nsIFileProtocolHandler );
+    var ios = Cc["@mozilla.org/network/io-service;1"].getService(
+      Ci.nsIIOService );
+    var fph = ios.getProtocolHandler( "file" ).QueryInterface(
+      Ci.nsIFileProtocolHandler );
     return fph.getURLSpecFromFile( entry );
   };
-  
+
   pub.getFileFromURLSpec = function( url ) {
-    var ios = Components.classes["@mozilla.org/network/io-service;1"]
-                        .getService( Components.interfaces.nsIIOService );
-    var fph = ios.getProtocolHandler( "file" )
-                 .QueryInterface( Components.interfaces.nsIFileProtocolHandler );
-    var chr = Components.classes["@mozilla.org/chrome/chrome-registry;1"]
-                        .getService(Components.interfaces.nsIChromeRegistry);
+    var ios = Cc["@mozilla.org/network/io-service;1"].getService(
+      Ci.nsIIOService );
+    var fph = ios.getProtocolHandler( "file" ).QueryInterface(
+      Ci.nsIFileProtocolHandler );
+    var chr = Cc["@mozilla.org/chrome/chrome-registry;1"].getService(
+      Ci.nsIChromeRegistry );
     var uri = ios.newURI( url, null, null );
     return fph.getFileFromURLSpec( chr.convertChromeURL( uri ).spec ).clone();
   };
 
   pub.convertChromeURL = function( url ) {
-    var ios = Components.classes["@mozilla.org/network/io-service;1"]
-                        .getService( Components.interfaces.nsIIOService );
-    var fph = ios.getProtocolHandler( "file" )
-                 .QueryInterface( Components.interfaces.nsIFileProtocolHandler );
-    var chr = Components.classes["@mozilla.org/chrome/chrome-registry;1"]
-                        .getService(Components.interfaces.nsIChromeRegistry);
+    var ios = Cc["@mozilla.org/network/io-service;1"].getService(
+      Ci.nsIIOService );
+    var fph = ios.getProtocolHandler( "file" ).QueryInterface(
+      Ci.nsIFileProtocolHandler );
+    var chr = Cc["@mozilla.org/chrome/chrome-registry;1"].getService(
+      Ci.nsIChromeRegistry );
     var uri;
     try {
       uri = chr.convertChromeURL( ios.newURI( url, null, null ) );
     } catch ( e ) {
-      pub.log( e );
+      log.warn( e + "\n" + pub.dumpStack() );
       return null;
     }
     return uri.spec;
   };
-  
+
   pub.getLocale = function() {
     var aLocale = null;
     try {
-      var chromeRegistry = Components.classes ["@mozilla.org/chrome/chrome-registry;1"]
-                                     .getService( Components.interfaces.nsIXULChromeRegistry );
+      var chromeRegistry =
+        Cc["@mozilla.org/chrome/chrome-registry;1"].getService(
+          Ci.nsIXULChromeRegistry );
       aLocale = chromeRegistry.getSelectedLocale( "znotes" );
     } catch ( e ) {
       aLocale = "en-US";
@@ -632,13 +694,13 @@ var Utils = function() {
       }
     }
   };
-  
+
   pub.openMainTab = function( isActive, persistedState ) {
     var mail3PaneWindow = pub.getMail3PaneWindow();
     var tabMail = pub.getTabMail();
     if ( tabMail ) {
       mail3PaneWindow.setTimeout(
-        function() { 
+        function() {
           tabMail.openTab(
             "znotesMainTab",
             {
@@ -652,7 +714,7 @@ var Utils = function() {
       );
     } else if ( mail3PaneWindow ) {
       mail3PaneWindow.setTimeout(
-        function() { 
+        function() {
           mail3PaneWindow.openDialog(
             "chrome://messenger/content/",
             "_blank",
@@ -683,7 +745,7 @@ var Utils = function() {
       );
     }
   };
-  
+
   pub.getSelectedTab = function() {
     var tabMail = pub.getTabMail();
     if ( !tabMail ) {
@@ -708,42 +770,42 @@ var Utils = function() {
   };
 
   pub.getParentChromeWindow = function( aWindow ) {
-    return aWindow.QueryInterface( Components.interfaces.nsIInterfaceRequestor )
-                  .getInterface( Components.interfaces.nsIWebNavigation )
-                  .QueryInterface( Components.interfaces.nsIDocShell )
+    return aWindow.QueryInterface( Ci.nsIInterfaceRequestor )
+                  .getInterface( Ci.nsIWebNavigation )
+                  .QueryInterface( Ci.nsIDocShell )
                   .chromeEventHandler
                   .ownerDocument
                   .defaultView;
   };
-  
+
   pub.getPlatformWindow = function( aWindow ) {
     return ( aWindow ? aWindow : window )
-      .QueryInterface( Components.interfaces.nsIInterfaceRequestor )
-      .getInterface( Components.interfaces.nsIWebNavigation )
-      .QueryInterface( Components.interfaces.nsIDocShellTreeItem )
+      .QueryInterface( Ci.nsIInterfaceRequestor )
+      .getInterface( Ci.nsIWebNavigation )
+      .QueryInterface( Ci.nsIDocShellTreeItem )
       .rootTreeItem
-      .QueryInterface( Components.interfaces.nsIInterfaceRequestor )
-      .getInterface( Components.interfaces.nsIDOMWindow );
+      .QueryInterface( Ci.nsIInterfaceRequestor )
+      .getInterface( Ci.nsIDOMWindow );
   };
-  
+
   pub.getZNotesPlatformWindow = function() {
-    return Components.classes["@mozilla.org/appshell/window-mediator;1"]
-                     .getService( Components.interfaces.nsIWindowMediator )
-                     .getMostRecentWindow( "znotes:platform" );
+    return Cc["@mozilla.org/appshell/window-mediator;1"]
+      .getService( Ci.nsIWindowMediator )
+      .getMostRecentWindow( "znotes:platform" );
   };
 
   pub.getMail3PaneWindow = function() {
-    return Components.classes["@mozilla.org/appshell/window-mediator;1"]
-                     .getService( Components.interfaces.nsIWindowMediator )
-                     .getMostRecentWindow( "mail:3pane" );
+    return Cc["@mozilla.org/appshell/window-mediator;1"]
+      .getService( Ci.nsIWindowMediator )
+      .getMostRecentWindow( "mail:3pane" );
   };
 
   pub.getZNotesMainWindow = function() {
-    return Components.classes["@mozilla.org/appshell/window-mediator;1"]
-                     .getService( Components.interfaces.nsIWindowMediator )
-                     .getMostRecentWindow( "znotes:main" );
+    return Cc["@mozilla.org/appshell/window-mediator;1"]
+      .getService( Ci.nsIWindowMediator )
+      .getMostRecentWindow( "znotes:main" );
   };
-  
+
   pub.initGlobals = function() {
     if ( pub.MAIN_WINDOW ) {
       return;
@@ -767,7 +829,7 @@ var Utils = function() {
       return;
     }
     // UNKNOWN
-    throw Components.results.NS_ERROR_UNEXPECTED;
+    throw Cr.NS_ERROR_UNEXPECTED;
   };
 
   pub.showNewVersionInfo = function( mode ) {
@@ -793,7 +855,7 @@ var Utils = function() {
       } ];
     }
   };
-  
+
   pub.dumpObject = function( obj, chr, cnt ) {
     if ( obj === undefined ) {
       return "undefined";
@@ -812,7 +874,7 @@ var Utils = function() {
       var result = "";
       var indent = replicate( chr, depth * cnt );
       var value;
-	    for ( var p in o ) {
+      for ( var p in o ) {
         switch ( typeof o[p] ) {
           case "string":
             result += indent + p + " : '" + o[p] + "',\n";
@@ -839,19 +901,19 @@ var Utils = function() {
                       value.substring( 0, value.indexOf( "{" ) ) + ",\n";
             break;
         }
-	    }
+      }
       return result.substring( 0, result.length - 2 ) + "\n";
     };
     //
     return "\n{\n" + dumpObj( obj, 1 ) + "}";
   };
-  
+
   pub.cloneObject = function( from, to ) {
     var modified = false;
-	  for ( var p in from ) {
-	  	if ( from.hasOwnProperty( p ) ) {
+    for ( var p in from ) {
+      if ( from.hasOwnProperty( p ) ) {
         if ( to.hasOwnProperty( p ) ) {
-  	  	  if( from[p] && "object" === typeof from[p] ) {
+          if( from[p] && "object" === typeof from[p] ) {
             if ( !to[p] || "object" !== typeof to[p] ) {
               delete to[p];
               to[p] = "function" === typeof from[p].pop ? [] : {};
@@ -867,7 +929,7 @@ var Utils = function() {
             }
           }
         } else {
-  	  	  if ( from[p] && "object" === typeof from[p] ) {
+          if ( from[p] && "object" === typeof from[p] ) {
             to[p] = "function" === typeof from[p].pop ? [] : {};
             if ( pub.cloneObject( from[p], to[p] ) ) {
               modified = true;
@@ -877,23 +939,23 @@ var Utils = function() {
             modified = true;
           }
         }
-	  	}
-	  }
+      }
+    }
     for ( var p in to ) {
-	  	if ( to.hasOwnProperty( p ) && !from.hasOwnProperty( p ) ) {
+      if ( to.hasOwnProperty( p ) && !from.hasOwnProperty( p ) ) {
         delete to[p];
         modified = true;
       }
     }
-	  return modified;
+    return modified;
   };
 
   pub.fillObject = function( from, to ) {
     var modified = false;
-	  for ( var p in from ) {
-	  	if ( from.hasOwnProperty( p ) ) {
+    for ( var p in from ) {
+      if ( from.hasOwnProperty( p ) ) {
         if ( to.hasOwnProperty( p ) ) {
-  	  	  if ( from[p] && "object" === typeof from[p] ) {
+          if ( from[p] && "object" === typeof from[p] ) {
             if ( to[p] && "object" === typeof to[p] ) {
               modified = pub.fillObject( from[p], to[p] );
             }
@@ -906,16 +968,16 @@ var Utils = function() {
             }
           }
         }
-	  	}
-	  }
-	  return modified;
+      }
+    }
+    return modified;
   };
-  
+
   pub.isObjectsEqual = function( from, to ) {
-	  for ( var p in from ) {
-	  	if ( from.hasOwnProperty( p ) ) {
+    for ( var p in from ) {
+      if ( from.hasOwnProperty( p ) ) {
         if ( to.hasOwnProperty( p ) ) {
-  	  	  if( from[p] && "object" === typeof from[p] ) {
+          if( from[p] && "object" === typeof from[p] ) {
             if ( !to[p] || "object" !== typeof to[p] ) {
               return false;
             }
@@ -930,12 +992,12 @@ var Utils = function() {
         } else {
           return false;
         }
-	  	}
-	  }
+      }
+    }
     for ( var p in to ) {
-	  	if ( to.hasOwnProperty( p ) ) {
+      if ( to.hasOwnProperty( p ) ) {
         if ( from.hasOwnProperty( p ) ) {
-  	  	  if( to[p] && "object" === typeof to[p] ) {
+          if( to[p] && "object" === typeof to[p] ) {
             if ( !from[p] || "object" !== typeof from[p] ) {
               return false;
             }
@@ -952,31 +1014,13 @@ var Utils = function() {
         }
       }
     }
-	  return true;
-  };
-  
-  pub.log = function( aText ) {
-    var consoleService = Components.classes["@mozilla.org/consoleservice;1"]
-                                   .getService( Components.interfaces.nsIConsoleService );
-    consoleService.logStringMessage( "[" + pub.NAME + "] " + aText );
-
-    if ( pub.DEBUG_TEXTBOX ) {
-      pub.DEBUG_TEXTBOX.value += aText + "\n";
-    }
-
+    return true;
   };
 
-  pub.logDocument = function( aDocument ) {
-    var serializer =
-      Components.classes["@mozilla.org/xmlextras/xmlserializer;1"]
-                .createInstance( Components.interfaces.nsIDOMSerializer );
-    pub.log( serializer.serializeToString( aDocument ) );
-  };
-  
   pub.isURI = function( str ) {
     return str && /^http:\/\/|^https:\/\/|^file:\/\/|^ftp:\/\/|^about:|^mailto:|^news:|^snews:|^telnet:|^ldap:|^ldaps:|^gopher:|^finger:|^javascript:/i.test( str );
   };
-  
+
   pub.encodeUTF8 = function( s ) {
     return unescape( encodeURIComponent( s ) );
   };
@@ -999,23 +1043,19 @@ var Utils = function() {
     }
     return result;
   };
-  
+
   pub.copyEntryTo = function( from, to, name, overwrite ) {
     var entries, entry, parent = to ? to.clone() : from.parent.clone();
     var flag = ( overwrite === undefined ? false : !!overwrite );
-    if ( !from.exists() ) {
-      return;
-    }
     if ( from.isDirectory() ) {
       parent.append( name );
       if ( !parent.exists() || !parent.isDirectory() ) {
-        parent.create( Components.interfaces.nsIFile.DIRECTORY_TYPE,
-          parseInt( "0755", 8 ) );
+        parent.create( Ci.nsIFile.DIRECTORY_TYPE, parseInt( "0755", 8 ) );
       }
       entries = from.directoryEntries;
-      while ( entries.hasMoreElements() ) {
+      while ( entries && entries.hasMoreElements() ) {
         entry = entries.getNext();
-        entry.QueryInterface( Components.interfaces.nsIFile );
+        entry.QueryInterface( Ci.nsIFile );
         pub.copyEntryTo( entry, parent, entry.leafName, flag );
       }
     } else {
@@ -1025,7 +1065,7 @@ var Utils = function() {
         try {
           from.copyTo( parent, name );
         } catch ( e ) {
-          pub.log( "nsIFile.copyTo()\n" + e + "from: " + from.path + "\nto: " + parent.path + "\nname: " + name );
+          //
         }
       } else if ( flag ) {
         if ( entry.exists() ) {
@@ -1034,18 +1074,20 @@ var Utils = function() {
         try {
           from.copyTo( parent, name );
         } catch ( e ) {
-          pub.log( "nsIFile.copyTo()\n" + e + "from: " + from.path + "\nto: " + parent.path + "\nname: " + name );
+          //
         }
       }
     }
   };
-  
+
   pub.readFileContent = function( entry, encoding ) {
     var data = "";
-    var istream = Components.classes["@mozilla.org/network/file-input-stream;1"]
-                            .createInstance( Components.interfaces.nsIFileInputStream );
-    var cstream = Components.classes["@mozilla.org/intl/converter-input-stream;1"]
-                            .createInstance( Components.interfaces.nsIConverterInputStream );
+    var istream =
+      Cc["@mozilla.org/network/file-input-stream;1"]
+      .createInstance( Ci.nsIFileInputStream );
+    var cstream =
+      Cc["@mozilla.org/intl/converter-input-stream;1"]
+      .createInstance( Ci.nsIConverterInputStream );
     istream.init( entry, -1, 0, 0 );
     try {
       var isInit = false;
@@ -1056,7 +1098,7 @@ var Utils = function() {
             istream,
             enc,
             0,
-            Components.interfaces.nsIConverterInputStream.DEFAULT_REPLACEMENT_CHARACTER
+            Ci.nsIConverterInputStream.DEFAULT_REPLACEMENT_CHARACTER
           );
           var str = {};
           var read = 0;
@@ -1066,8 +1108,8 @@ var Utils = function() {
           } while ( read != 0 );
           isInit = true;
         } catch( e ) {
-          pub.log( e );
-          if ( enc == "UTF-8" )
+          log.warn( e + "\n" + pub.dumpStack() );
+          if ( enc === "UTF-8" )
             isInit = true;
           enc = "UTF-8";
         }
@@ -1080,8 +1122,9 @@ var Utils = function() {
   };
 
   pub.writeFileContent = function( entry, encoding, data ) {
-    var ostream = Components.classes["@mozilla.org/network/file-output-stream;1"]
-                             .createInstance( Components.interfaces.nsIFileOutputStream );
+    var ostream =
+      Cc["@mozilla.org/network/file-output-stream;1"]
+      .createInstance( Ci.nsIFileOutputStream );
     ostream.init(
       entry,
       // PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE
@@ -1089,8 +1132,9 @@ var Utils = function() {
       parseInt( "0644", 8 ),
       0
     );
-    var cstream = Components.classes["@mozilla.org/intl/converter-output-stream;1"]
-                              .createInstance( Components.interfaces.nsIConverterOutputStream );
+    var cstream =
+      Cc["@mozilla.org/intl/converter-output-stream;1"]
+      .createInstance( Ci.nsIConverterOutputStream );
     try {
       var isInit = false;
       var enc = encoding;
@@ -1100,13 +1144,13 @@ var Utils = function() {
             ostream,
             enc,
             0,
-            Components.interfaces.nsIConverterInputStream.DEFAULT_REPLACEMENT_CHARACTER
+            Ci.nsIConverterInputStream.DEFAULT_REPLACEMENT_CHARACTER
           );
           cstream.writeString( data );
           isInit = true;
         } catch( e ) {
-          pub.log( e );
-          if ( enc == "UTF-8" )
+          log.warn( e + "\n" + pub.dumpStack() );
+          if ( enc === "UTF-8" )
             isInit = true;
           enc = "UTF-8";
         }
@@ -1117,21 +1161,18 @@ var Utils = function() {
     }
   };
 
+  // TODO: @see clipper.js :: loadURLToFileEntry()
   pub.saveURLToFile = function( fileEntry, fileMode, filePermitions, bufferSize,
                                 url, contentType, context, urlListener ) {
-    var nsIIOService = Components.interfaces.nsIIOService;
-    var nsIFileOutputStream = Components.interfaces.nsIFileOutputStream;
-    var nsIBufferedOutputStream = Components.interfaces.nsIBufferedOutputStream;
-    var nsISafeOutputStream = Components.interfaces.nsISafeOutputStream;
     var ioService =
-      Components.classes["@mozilla.org/network/io-service;1"]
-                .getService( nsIIOService );
+      Cc["@mozilla.org/network/io-service;1"]
+      .getService( Ci.nsIIOService );
     var fileOutputStream =
-      Components.classes["@mozilla.org/network/safe-file-output-stream;1"]
-                .createInstance( nsIFileOutputStream );
+      Cc["@mozilla.org/network/safe-file-output-stream;1"]
+      .createInstance( Ci.nsIFileOutputStream );
     var bufferedOutputStream =
-        Components.classes["@mozilla.org/network/buffered-output-stream;1"]
-                  .createInstance( nsIBufferedOutputStream );
+      Cc["@mozilla.org/network/buffered-output-stream;1"]
+      .createInstance( Ci.nsIBufferedOutputStream );
     var uri = ioService.newURI( url, null, null );
     var channel = ioService.newChannelFromURI( uri );
     if ( contentType ) {
@@ -1144,7 +1185,7 @@ var Utils = function() {
             fileEntry,
             fileMode,
             filePermitions,
-            nsIFileOutputStream.DEFER_OPEN
+            Ci.nsIFileOutputStream.DEFER_OPEN
           );
           bufferedOutputStream.init( fileOutputStream, bufferSize );
           if ( urlListener && urlListener.OnStartRunningUrl ) {
@@ -1153,7 +1194,7 @@ var Utils = function() {
         },
         onStopRequest: function ( aRequest,  aContext,  aStatusCode ) {
           bufferedOutputStream.flush();
-          if ( fileOutputStream instanceof nsISafeOutputStream ) {
+          if ( fileOutputStream instanceof Ci.nsISafeOutputStream ) {
             fileOutputStream.finish();
           } else {
             fileOutputStream.close();
@@ -1176,7 +1217,7 @@ var Utils = function() {
       context ? context : null
     );
   };
-  
+
   pub.createUUID = function() {
     var s = [];
     var hexDigits = "0123456789ABCDEF";
@@ -1186,7 +1227,7 @@ var Utils = function() {
     s[16] = hexDigits.substr( ( s[16] & parseInt( "0x3", 16 ) ) | parseInt( "0x8", 16 ), 1 );
     return s.join("");
   };
-  
+
   pub.RGB2HEX = function( r, g, b ) {
     var red = r.toString( 16 );
     while ( red.length < 2 ) red = "0" + red;
@@ -1204,14 +1245,14 @@ var Utils = function() {
       parseInt( hex.substr( 5, 2 ), 16 )
     ];
   };
-  
+
   pub.HEX2HSL = function( hex ) {
-	  var r = parseInt( hex.substr( 1, 2 ), 16 ) / 255;
-	  var g = parseInt( hex.substr( 3, 2 ), 16 ) / 255;
-	  var b = parseInt( hex.substr( 5, 2 ), 16 ) / 255;
+    var r = parseInt( hex.substr( 1, 2 ), 16 ) / 255;
+    var g = parseInt( hex.substr( 3, 2 ), 16 ) / 255;
+    var b = parseInt( hex.substr( 5, 2 ), 16 ) / 255;
     var max = Math.max( r, g, b );
     var min = Math.min( r, g, b );
-	  var h, s, l;
+    var h, s, l;
     l = ( max + min ) / 2;
     if ( max == min ) {
       h = s = 0;
@@ -1219,13 +1260,13 @@ var Utils = function() {
       var d = max - min;
       s = l > 0.5 ? d / ( 2 - max - min ) : d / ( max + min );
       switch ( max ) {
-      	case r:
+        case r:
           h = ( g - b ) / d + ( g < b ? 6 : 0 );
           break;
-      	case g:
+        case g:
           h = ( b - r ) / d + 2;
           break;
-      	case b:
+        case b:
           h = ( r - g ) / d + 4;
           break;
       }
@@ -1244,122 +1285,6 @@ var Utils = function() {
     };
   };
 
-  pub.makeTagImage = function( color, checked, size ) {
-    if ( color == null ) {
-      return null;
-    }
-    var red, green, blue;
-    var rgb = /\s*rgb\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)\s*/i.exec( color );
-    if ( rgb ) {
-      red = parseInt( rgb[1] );
-      green = parseInt( rgb[2] );
-      blue = parseInt( rgb[3] );
-    } else {
-      red = parseInt( color.substr( 1, 2 ), 16 );
-      green = parseInt( color.substr( 3, 2 ), 16 );
-      blue = parseInt( color.substr( 5, 2 ), 16 );
-    }
-    var sizeX = size;
-    var sizeY = size;
-    var p = new ru.akman.znotes.PNGLib.PNG( sizeX, sizeY, 256 );
-    var background = p.color( 0, 0, 0, 0 );
-    var foreground = p.color( red, green, blue );
-    for ( var x = 0; x < sizeX; x++ ) {
-      for ( var y = 0; y < sizeY; y++ ) {
-        p.buffer[ p.index( x, y ) ] = background;
-        if ( x == 0 || x == sizeX - 1 || y == 0 || y == sizeY - 1 )
-          p.buffer[ p.index( x, y ) ] = foreground;
-        if ( x == 1 || x == sizeX - 2 || y == 1 || y == sizeY - 2 )
-          p.buffer[ p.index( x, y ) ] = foreground;
-        if ( checked && x > 3 && x < sizeX - 4 && y > 3 && y < sizeY - 4 )
-          p.buffer[ p.index( x, y ) ] = foreground;
-      }
-    }
-    var result = 'data:image/png;base64,'+p.getBase64();
-    return result;
-  };
-
-  pub.makeForeColorImage = function( color, size, bcolor ) {
-    var red = 0, green = 0, blue = 0, rgb;
-    if ( color ) {
-      rgb = /\s*rgb\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)\s*/i.exec( color );
-      if ( rgb ) {
-        red = parseInt( rgb[1] );
-        green = parseInt( rgb[2] );
-        blue = parseInt( rgb[3] );
-      } else {
-        red = parseInt( color.substr( 1, 2 ), 16 );
-        green = parseInt( color.substr( 3, 2 ), 16 );
-        blue = parseInt( color.substr( 5, 2 ), 16 );
-      }
-    }
-    var sizeX = size;
-    var sizeY = size;
-    var p = new ru.akman.znotes.PNGLib.PNG( sizeX, sizeY, 256 );
-    var foreground = p.color( red, green, blue );
-    var bred = 255, bgreen = 255, bblue = 255, brgb;
-    var transparent = !( bcolor && bcolor.toLowerCase() != "transparent" );
-    if ( bcolor && !transparent ) {
-      brgb = /\s*rgb\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)\s*/i.exec( bcolor );
-      if ( brgb ) {
-        bred = parseInt( brgb[1] );
-        bgreen = parseInt( brgb[2] );
-        bblue = parseInt( brgb[3] );
-      } else {
-        bred = parseInt( bcolor.substr( 1, 2 ), 16 );
-        bgreen = parseInt( bcolor.substr( 3, 2 ), 16 );
-        bblue = parseInt( bcolor.substr( 5, 2 ), 16 );
-      }
-    }
-    var background = p.color( bred, bgreen, bblue );
-    var foretransp = p.color( 0, 0, 0 );
-    for ( var x = 0; x < sizeX; x++ ) {
-      for ( var y = 0; y < sizeY; y++ ) {
-        p.buffer[ p.index( x, y ) ] = background;
-        if ( transparent && ( x % 3 == 0 || y % 3 == 0 ) ) {
-          p.buffer[ p.index( x, y ) ] = foretransp;
-        }
-        if ( x > 3 && x < sizeX - 4 && y > 3 && y < sizeY - 4 ) {
-          p.buffer[ p.index( x, y ) ] = foreground;
-        }
-      }
-    }
-    var result = 'data:image/png;base64,'+p.getBase64();
-    return result;
-  };
-
-  pub.makeBackColorImage = function( color, size ) {
-    var transparent = !( color && color.toLowerCase() != "transparent" );
-    var red = 255, green = 255, blue = 255, rgb;
-    if ( !transparent ) {
-      rgb = /\s*rgb\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)\s*/i.exec( color );
-      if ( rgb ) {
-        red = parseInt( rgb[1] );
-        green = parseInt( rgb[2] );
-        blue = parseInt( rgb[3] );
-      } else {
-        red = parseInt( color.substr( 1, 2 ), 16 );
-        green = parseInt( color.substr( 3, 2 ), 16 );
-        blue = parseInt( color.substr( 5, 2 ), 16 );
-      }
-    }
-    var sizeX = size;
-    var sizeY = size;
-    var p = new ru.akman.znotes.PNGLib.PNG( sizeX, sizeY, 256 );
-    var background = p.color( red, green, blue );
-    var foreground = p.color( 0, 0, 0 );
-    for ( var x = 0; x < sizeX; x++ ) {
-      for ( var y = 0; y < sizeY; y++ ) {
-        p.buffer[ p.index( x, y ) ] = background;
-        if ( transparent && ( x % 3 == 0 || y % 3 == 0 ) ) {
-          p.buffer[ p.index( x, y ) ] = foreground;
-        }
-      }
-    }
-    var result = 'data:image/png;base64,'+p.getBase64();
-    return result;
-  };
-  
   pub.setProperty = function( node, value ) {
     node.setAttribute( "properties", value );
   };
@@ -1367,7 +1292,7 @@ var Utils = function() {
   pub.addProperty = function( node, value ) {
     var properties = node.hasAttribute( "properties" ) ?
       node.getAttribute( "properties" ).trim() : "";
-    properties = properties.length ? properties.split( /\s+/ ) : [];
+    properties = properties.length ? properties.split( /\s+/g ) : [];
     if ( properties.indexOf( value ) < 0 ) {
       properties.push( value );
     }
@@ -1377,7 +1302,7 @@ var Utils = function() {
   pub.removeProperty = function( node, value ) {
     var properties = node.hasAttribute( "properties" ) ?
       node.getAttribute( "properties" ).trim() : "";
-    properties = properties.length ? properties.split( /\s+/ ) : [];
+    properties = properties.length ? properties.split( /\s+/g ) : [];
     var index = properties.indexOf( value );
     if ( index < 0 ) {
       return;
@@ -1385,7 +1310,7 @@ var Utils = function() {
     properties.splice( index, 1 );
     node.setAttribute( "properties", properties.join( " " ) );
   };
-  
+
   pub.addCSSRule = function( doc, selector, declaration ) {
     var styleSheet = doc.styleSheets[0];
     var rule = selector + " { " + declaration + " }";
@@ -1421,21 +1346,24 @@ var Utils = function() {
 
   pub.getFontNameArray = function() {
     if ( fontNameArray == null ) {
-      fontNameArray = Components.classes["@mozilla.org/gfx/fontenumerator;1"]
-                                .getService( Components.interfaces.nsIFontEnumerator )
-                                .EnumerateAllFonts( {} );
+      fontNameArray =
+        Cc["@mozilla.org/gfx/fontenumerator;1"]
+        .getService( Ci.nsIFontEnumerator )
+        .EnumerateAllFonts( {} );
     }
     return fontNameArray;
   };
 
   pub.getDefaultFontMapping = function() {
-    var prefs = Components.classes["@mozilla.org/preferences-service;1"]
-                          .getService( Components.interfaces.nsIPrefService )
-                          .getDefaultBranch( "font." );
-    var languageGroup = Components.classes["@mozilla.org/intl/stringbundle;1"]
-                                  .getService( Components.interfaces.nsIStringBundleService )
-                                  .createBundle( prefs.getCharPref( "language.group" ) )
-                                  .GetStringFromName( "font.language.group" );
+    var prefs =
+      Cc["@mozilla.org/preferences-service;1"]
+      .getService( Ci.nsIPrefService )
+      .getDefaultBranch( "font." );
+    var languageGroup =
+      Cc["@mozilla.org/intl/stringbundle;1"]
+      .getService( Ci.nsIStringBundleService )
+      .createBundle( prefs.getCharPref( "language.group" ) )
+      .GetStringFromName( "font.language.group" );
     var defaultFontName = prefs.getCharPref( "default." + languageGroup );
     var defaultFontValue = prefs.getCharPref( "name." + defaultFontName + "." + languageGroup );
     var serif, sansserif, cursive, fantasy, monospace;
@@ -1490,15 +1418,16 @@ var Utils = function() {
       "fixSize" : fixSize
     };
   };
-  
+
   pub.getEntryIcon = function( entry, size ) {
     if ( !entry.exists() || entry.isDirectory() ) {
       return null;
     }
-    var fph = Components.classes["@mozilla.org/network/io-service;1"]
-                        .getService( Components.interfaces.nsIIOService )
-                        .getProtocolHandler( "file" )
-                        .QueryInterface( Components.interfaces.nsIFileProtocolHandler );
+    var fph =
+      Cc["@mozilla.org/network/io-service;1"]
+      .getService( Ci.nsIIOService )
+      .getProtocolHandler( "file" )
+      .QueryInterface( Ci.nsIFileProtocolHandler );
     var urlSpec = fph.getURLSpecFromFile( entry );
     return "moz-icon://" + urlSpec + "?size=" + size;
   };
@@ -1510,18 +1439,19 @@ var Utils = function() {
   pub.getExtensionIcon = function( ext, size ) {
     return "moz-icon://goat." + ext + "?size=" + size;
   };
-  
+
   pub.openURI = function( uri, force, win, title ) {
     if ( force === undefined ) {
       force = false;
     }
-    var ioService = Components.classes["@mozilla.org/network/io-service;1"]
-                              .getService( Components.interfaces.nsIIOService );
-    var fph = ioService.getProtocolHandler( "file" )
-                       .QueryInterface( Components.interfaces.nsIFileProtocolHandler );
-    var mimeService = Components.classes["@mozilla.org/mime;1"]
-                                .getService( Components.interfaces.nsIMIMEService );
-    if ( !( uri instanceof Components.interfaces.nsIURI ) ) {
+    var ioService =
+      Cc["@mozilla.org/network/io-service;1"]
+      .getService( Ci.nsIIOService );
+    var fph =
+      ioService.getProtocolHandler( "file" ).QueryInterface(
+        Ci.nsIFileProtocolHandler );
+    var mimeService = Cc["@mozilla.org/mime;1"].getService( Ci.nsIMIMEService );
+    if ( !( uri instanceof Ci.nsIURI ) ) {
       uri = ioService.newURI( uri, null, null );
     }
     var contentType = "unknown";
@@ -1536,7 +1466,7 @@ var Utils = function() {
           try {
             contentType = mimeService.getTypeFromExtension( ext );
           } catch ( e ) {
-            // pub.log( e ); // NS_ERROR_NOT_AVAILABLE
+            // NS_ERROR_NOT_AVAILABLE
           }
         }
       } else {
@@ -1550,12 +1480,13 @@ var Utils = function() {
       try {
         contentType = mimeService.getTypeFromURI( uri );
       } catch ( e ) {
-        // pub.log( e ); // NS_ERROR_NOT_AVAILABLE
+        // NS_ERROR_NOT_AVAILABLE
       }
     }
     var mimeInfo = mimeService.getFromTypeAndExtension( contentType, ext );
-    var handlerService = Components.classes["@mozilla.org/uriloader/handler-service;1"]
-                                   .getService(Components.interfaces.nsIHandlerService);
+    var handlerService =
+      Cc["@mozilla.org/uriloader/handler-service;1"]
+      .getService( Ci.nsIHandlerService );
     if ( !mimeInfo.preferredApplicationHandler || force ) {
       var params = {};
       params.title = title;
@@ -1580,7 +1511,7 @@ var Utils = function() {
         if ( params.handlerApp.executable.isFile() ) {
           mimeInfo.preferredApplicationHandler = params.handlerApp;
           mimeInfo.alwaysAskBeforeHandling = false;
-          mimeInfo.preferredAction = Components.interfaces.nsIHandlerInfo.useHelperApp;
+          mimeInfo.preferredAction = Ci.nsIHandlerInfo.useHelperApp;
           handlerService.store( mimeInfo );
         }
       } catch ( e ) {
@@ -1596,10 +1527,9 @@ var Utils = function() {
 
   pub.getTempFileEntry = function( fileName, fileSuffix ) {
     var directoryService =
-      Components.classes["@mozilla.org/file/directory_service;1"]
-                .getService( Components.interfaces.nsIProperties );
-    var tempDirectory =
-      directoryService.get( "TmpD", Components.interfaces.nsIFile );
+      Cc["@mozilla.org/file/directory_service;1"]
+      .getService( Ci.nsIProperties );
+    var tempDirectory = directoryService.get( "TmpD", Ci.nsIFile );
     var tmpDir, tmpFile;
     var tmpFileSuffix = fileSuffix ? fileSuffix : ".tmp";
     var tmpFileName = fileName ? fileName : pub.createUUID().toLowerCase();
@@ -1617,20 +1547,16 @@ var Utils = function() {
       tmpFile.exists() && !tmpFile.isDirectory()
     );
     if ( !tmpDir.exists() || !tmpDir.isDirectory() ) {
-      tmpDir.create(
-        Components.interfaces.nsIFile.DIRECTORY_TYPE,
-        parseInt( "0774", 8 )
-      );
+      tmpDir.create( Ci.nsIFile.DIRECTORY_TYPE, parseInt( "0774", 8 ) );
     }
     return tmpFile.clone();
   };
-  
+
   pub.getEntriesToSaveContent = function( fileSuffix, dirSuffix ) {
     var directoryService =
-      Components.classes["@mozilla.org/file/directory_service;1"]
-                .getService( Components.interfaces.nsIProperties );
-    var tempDirectory =
-      directoryService.get( "TmpD", Components.interfaces.nsIFile );
+      Cc["@mozilla.org/file/directory_service;1"]
+      .getService( Ci.nsIProperties );
+    var tempDirectory = directoryService.get( "TmpD", Ci.nsIFile );
     var tmpName, tmpFile, tmpDir;
     var tmpDirSuffix = dirSuffix ? dirSuffix : "_files";
     var tmpFileSuffix = fileSuffix ? fileSuffix : ".xhtml";
@@ -1644,29 +1570,26 @@ var Utils = function() {
       tmpDir.exists() && tmpDir.isDirectory() ||
       tmpFile.exists() && !tmpFile.isDirectory()
     );
-    tmpDir.create(
-      Components.interfaces.nsIFile.DIRECTORY_TYPE,
-      parseInt( "0774", 8 )
-    );
+    tmpDir.create( Ci.nsIFile.DIRECTORY_TYPE, parseInt( "0774", 8 ) );
     return {
       fileEntry: tmpFile.clone(),
       directoryEntry: tmpDir.clone()
     };
   };
-  
+
   pub.getURLFromRequest = function( aRequest ) {
     if ( !aRequest ) {
       return "";
     }
     var aURI;
     try {
-      aURI = aRequest.QueryInterface( Components.interfaces.nsIChannel ).URI;
+      aURI = aRequest.QueryInterface( Ci.nsIChannel ).URI;
     } catch ( e ) {
       aURI = null;
     }
     return pub.getURLFromURI( aURI );
   };
-  
+
   pub.getURLFromURI = function( aURI ) {
     if ( !aURI ) {
       return "";
@@ -1674,8 +1597,8 @@ var Utils = function() {
     var result, nsIURIFixup;
     try {
       nsIURIFixup =
-        Components.classes["@mozilla.org/docshell/urifixup;1"]
-                  .getService( Components.interfaces.nsIURIFixup );
+        Cc["@mozilla.org/docshell/urifixup;1"]
+        .getService( Ci.nsIURIFixup );
       result = nsIURIFixup.createExposableURI( aURI ).spec;
     } catch( e ) {
       result = aURI.spec;
@@ -1697,7 +1620,7 @@ var Utils = function() {
     }
     return result;
   };
-  
+
   pub.getHREFForClickEvent = function( aEvent, aDontCheckInputElement ) {
     var href = null;
     var target = aEvent.target;
@@ -1724,14 +1647,15 @@ var Utils = function() {
 
   pub.openLinkExternally = function( url ) {
     var uri = url;
-    if ( !( uri instanceof Components.interfaces.nsIURI ) ) {
-      uri = Components.classes["@mozilla.org/network/io-service;1"]
-                      .getService( Components.interfaces.nsIIOService )
-                      .newURI( url, null, null );
+    if ( !( uri instanceof Ci.nsIURI ) ) {
+      uri =
+        Cc["@mozilla.org/network/io-service;1"]
+        .getService( Ci.nsIIOService )
+        .newURI( url, null, null );
     }
-    Components.classes["@mozilla.org/uriloader/external-protocol-service;1"]
-              .getService( Components.interfaces.nsIExternalProtocolService )
-              .loadUrl( uri );
+    Cc["@mozilla.org/uriloader/external-protocol-service;1"]
+    .getService( Ci.nsIExternalProtocolService )
+    .loadUrl( uri );
   };
 
   pub.clickHandler = function( event ) {
@@ -1742,10 +1666,12 @@ var Utils = function() {
     if ( !href ) {
       return true;
     }
-    var svc = Components.classes["@mozilla.org/uriloader/external-protocol-service;1"]
-                        .getService( Components.interfaces.nsIExternalProtocolService );
-    var ioService = Components.classes["@mozilla.org/network/io-service;1"]
-                              .getService( Components.interfaces.nsIIOService );
+    var svc =
+      Cc["@mozilla.org/uriloader/external-protocol-service;1"]
+      .getService( Ci.nsIExternalProtocolService );
+    var ioService =
+      Cc["@mozilla.org/network/io-service;1"]
+      .getService( Ci.nsIIOService );
     var uri = ioService.newURI( href, null, null );
     if ( uri.schemeIs( "znotes" ) ) {
       event.stopPropagation();
@@ -1763,14 +1689,13 @@ var Utils = function() {
   };
 
   pub.openLinkInternally = function( href ) {
-    pub.log( href );
+    log.debug( "openLinkExternally()\n" + href );
     return true;
   };
 
   pub.getErrorName = function( code ) {
-    var results = Components.results;
-    for ( var name in results ) {
-      if ( results[name] == "" + code ) {
+    for ( var name in Cr ) {
+      if ( Cr[name] === ( "" + code ) ) {
         return name;
       }
     }
@@ -1796,11 +1721,12 @@ var Utils = function() {
           child = child.nextElementSibling;
         }
       } catch ( e ) {
-        Utils.log( e + "\n" + pub.dumpObject( node ) );
+        log.debug( pub.dumpObject( node ) );
+        log.warn( e + "\n" + pub.dumpStack() );
       }
     }
   };
-  
+
   /*
   alt     The user must press the Alt key.
           On the Macintosh, this is the Option key.
@@ -1819,7 +1745,7 @@ var Utils = function() {
           value as far as possible. Requires Gecko 17.0
   access  The user must press the special access key.
           The key used for access keys on the user's platform.
-  any     Indicates that all modifiers preceding it are optional.              
+  any     Indicates that all modifiers preceding it are optional.
   */
 
   pub.getShortcutFromAttributes = function( key, keycode, modifiers ) {
@@ -1858,16 +1784,25 @@ var Utils = function() {
     return modifiers + ( modifiers.length ? "+" : "" ) +
            ( key.length ? key : keycode );
   };
-  
+
   pub.getShortcutFromEvent = function( event ) {
     var keycode = ( "keyCode" in event ) ? event.keyCode : 0;
     var key = ( "charCode" in event ) ? event.charCode : 0;
     if ( keycode ) {
-      for ( var name in event ) {
-        if ( name.indexOf( "DOM_VK_" ) == 0 && event[name] == keycode ) {
-          keycode = name.substr( 7 );
+      switch ( keycode ) {
+        case event.DOM_VK_SHIFT:
+        case event.DOM_VK_ALT:
+        case event.DOM_VK_CONTROL:
+        case event.DOM_VK_META:
+          keycode = "";
           break;
-        }
+        default:
+          for ( var name in event ) {
+            if ( name.indexOf( "DOM_VK_" ) == 0 && event[name] == keycode ) {
+              keycode = name.substr( 7 );
+              break;
+            }
+          }
       }
       key = "";
     } else {
@@ -1888,8 +1823,72 @@ var Utils = function() {
       modifiers.push( "Meta" );
     }
     modifiers = modifiers.sort().join( "+" );
-    return modifiers + ( modifiers.length ? "+" : "" ) +
-           ( key.length ? key : keycode );
+    return modifiers +
+      ( modifiers.length && ( key.length || keycode.length ) ? "+" : "" ) +
+      ( key.length ? key : keycode );
+  };
+
+  pub.getPlatformAssignedShortcuts = function() {
+    var result = {};
+    var keysets = pub.MAIN_WINDOW.document.getElementsByTagName( "keyset" );
+    var process = function( keyset ) {
+      var shortcut, key, keycode, modifiers;
+      var node = keyset.firstChild;
+      while ( node ) {
+        if ( node.nodeName === "keyset" ) {
+          process( node );
+          node = node.nextSibling;
+          continue;
+        }
+        if ( node.nodeName !== "key" ) {
+          node = node.nextSibling;
+          continue;
+        }
+        key = node.hasAttribute( "key" ) ?
+          node.getAttribute( "key" ).trim() : "";
+        keycode = node.hasAttribute( "keycode" ) ?
+          node.getAttribute( "keycode" ).trim() : "";
+        modifiers = node.hasAttribute( "modifiers" ) ?
+          node.getAttribute( "modifiers" ).trim() : "";
+        if ( !key.length && !keycode.length ) {
+          node = node.nextSibling;
+          continue;
+        }
+        // extend key with "any" in modifiers attribute to proper keys
+        var m = ( modifiers === "" ) ?
+          [] : modifiers.split( /\s*,\s*|\s+/ );
+        modifiers = [];
+        for ( var i = 0; i < m.length; i++ ) {
+          if ( m[i].trim().length ) {
+            modifiers.push( m[i].toLowerCase() );
+          }
+        }
+        m = [ [] ];
+        var i = modifiers.indexOf( "any" );
+        if ( i >= 0 ) {
+          m = modifiers.slice( 0, i );
+          modifiers = modifiers.slice( i + 1 );
+          if ( !m.length ) {
+            m = [ [] ];
+          } else {
+            m = pub.getPermutations( m );
+          }
+        }
+        for ( var j = 0; j < m.length; j++ ) {
+          shortcut = pub.getShortcutFromAttributes(
+            key, keycode, m[j].concat( modifiers ).join( "," ) );
+          if ( shortcut ) {
+            result[ shortcut ] = null;
+          }
+        }
+        //
+        node = node.nextSibling;
+      }
+    };
+    for ( var i = 0; i < keysets.length; i++ ) {
+      process( keysets[i] );
+    }
+    return result;
   };
   
   pub.getNameFromId = function( id ) {
@@ -1900,7 +1899,7 @@ var Utils = function() {
     }
     return id.substring( beginIndex + 1, endIndex );
   };
-  
+
   pub.getPermutations = function( arr ) {
     var result = [];
     function process( key ) {
@@ -1917,16 +1916,24 @@ var Utils = function() {
     result.push( [] );
     return result;
   };
-  
+
   pub.beep = function() {
-    var sound = Components.classes["@mozilla.org/sound;1"]
-                          .createInstance( Components.interfaces.nsISound );
+    var sound = Cc["@mozilla.org/sound;1"].createInstance( Ci.nsISound );
     sound.beep();
+  };
+  
+  pub.play = function( url ) {
+    var sound = Cc["@mozilla.org/sound;1"].createInstance( Ci.nsISound );
+    var uri = Cc["@mozilla.org/network/io-service;1"]
+      .getService( Ci.nsIIOService )
+      .newURI( url, null, null );
+    sound.play( uri );
   };
 
   pub.checkChromeURL = function( url ) {
-    var ios = Components.classes["@mozilla.org/network/io-service;1"]
-                        .getService( Components.interfaces.nsIIOService );
+    var ios =
+      Cc["@mozilla.org/network/io-service;1"]
+      .getService( Ci.nsIIOService );
     try {
       ios.newChannelFromURI( ios.newURI( url, null, null ) ).open();
       return true;
@@ -1935,12 +1942,12 @@ var Utils = function() {
     }
     return false;
   };
-  
+
   pub.loadScript = function( url, context, charset ) {
     var loader =
-      Components.classes["@mozilla.org/moz/jssubscript-loader;1"]
-                .getService( Components.interfaces.mozIJSSubScriptLoader );
-    loader.loadSubScript( url, context, charset ); 
+      Cc["@mozilla.org/moz/jssubscript-loader;1"]
+      .getService( Ci.mozIJSSubScriptLoader );
+    loader.loadSubScript( url, context, charset );
   };
 
   return pub;

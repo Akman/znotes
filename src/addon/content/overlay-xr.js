@@ -30,49 +30,42 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+var Cc = Components.classes;
+var Ci = Components.interfaces;
+var Cr = Components.results;
+var Cu = Components.utils;
+
 if ( !ru ) var ru = {};
 if ( !ru.akman ) ru.akman = {};
 if ( !ru.akman.znotes ) ru.akman.znotes = {};
 if ( !ru.akman.znotes.core ) ru.akman.znotes.core = {};
 
-Components.utils.import( "resource://znotes/utils.js",
-  ru.akman.znotes
-);
-Components.utils.import( "resource://znotes/event.js",
-  ru.akman.znotes.core
-);
-Components.utils.import( "resource://znotes/prefsmanager.js",
-  ru.akman.znotes
-);
-Components.utils.import( "resource://znotes/sessionmanager.js",
-  ru.akman.znotes
-);
-Components.utils.import( "resource://znotes/tabmonitor.js",
-  ru.akman.znotes
-);
-Components.utils.import( "resource://znotes/keyset.js",
-  ru.akman.znotes
-);
+Cu.import( "resource://znotes/utils.js", ru.akman.znotes );
+Cu.import( "resource://znotes/event.js", ru.akman.znotes.core );
+Cu.import( "resource://znotes/prefsmanager.js", ru.akman.znotes );
+Cu.import( "resource://znotes/sessionmanager.js", ru.akman.znotes );
+Cu.import( "resource://znotes/tabmonitor.js", ru.akman.znotes );
+Cu.import( "resource://znotes/keyset.js", ru.akman.znotes );
 
 ru.akman.znotes.ZNotes = function() {
 
   var pub = {};
 
-  var observerService =
-    Components.classes["@mozilla.org/observer-service;1"]
-              .getService( Components.interfaces.nsIObserverService );
-  
   var Utils = ru.akman.znotes.Utils;
-  var Common = ru.akman.znotes.Common;
+  var log = Utils.getLogger( "content.overlay-xr" );
 
+  var Common = ru.akman.znotes.Common;
   var prefsBundle = ru.akman.znotes.PrefsManager.getInstance();
   var sessionManager = ru.akman.znotes.SessionManager.getInstance();
   var tabMonitor = ru.akman.znotes.TabMonitor.getInstance();
 
+  var observerService = Cc["@mozilla.org/observer-service;1"].getService(
+    Ci.nsIObserverService );
+
   var mainWindow = null;
   var isMainLoaded = false;
   var keySet = null;
-  
+
   // PLATFORM
 
   var platformShutdownObserver = {
@@ -92,7 +85,7 @@ ru.akman.znotes.ZNotes = function() {
       observerService.removeObserver( this, "quit-application-requested" );
     }
   };
-  
+
   var mainStartupObserver = {
     observe: function( aSubject, aTopic, aData ) {
       mainWindow = aSubject;
@@ -120,9 +113,9 @@ ru.akman.znotes.ZNotes = function() {
       observerService.removeObserver( this, "znotes-main-shutdown" );
     }
   };
-  
+
   // PREFERENCES
-  
+
   var prefsBundleObserver = {
     onPrefChanged: function( event ) {
       switch( event.data.name ) {
@@ -139,9 +132,9 @@ ru.akman.znotes.ZNotes = function() {
       prefsBundle.removeObserver( this );
     }
   };
-  
+
   // COMMANDS
-  
+
   var platformCommands = {
   };
 
@@ -187,9 +180,9 @@ ru.akman.znotes.ZNotes = function() {
           return window.controllers.getControllerId( this );
         };
       } catch ( e ) {
-        Components.utils.reportError(
+        log.warn(
           "An error occurred registering '" + this.getName() +
-          "' controller: " + e
+          "' controller\n" + e
         );
       }
     },
@@ -200,24 +193,25 @@ ru.akman.znotes.ZNotes = function() {
       try {
         window.controllers.removeController( this );
       } catch ( e ) {
-        Components.utils.reportError(
+        log.warn(
           "An error occurred unregistering '" + this.getName() +
-          "' controller: " + e
+          "' controller\n" + e
         );
       }
     }
   };
-  
+
   function updateCommands() {
     platformController.updateCommands();
   };
-  
+
   // SHORTCUTS
 
   function setupKeyset() {
     keySet = new ru.akman.znotes.Keyset(
       document.getElementById( "znotes_platform_keyset" )
     );
+    Utils.PLATFORM_KEYSET = keySet;
   };
 
   function updateKeyset() {
@@ -228,32 +222,31 @@ ru.akman.znotes.ZNotes = function() {
         shortcuts = {};
       }
     } catch ( e ) {
-      Utils.log( e + "\n" + Utils.dumpStack() );
+      log.warn( e + "\n" + Utils.dumpStack() );
       shortcuts = {};
     }
     keySet.update( shortcuts );
   };
-  
+
   // HELPERS
-  
+
   function closeAllWindows() {
     var windowService =
-      Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
-                .getService( Components.interfaces.nsIWindowWatcher );
+      Cc["@mozilla.org/embedcomp/window-watcher;1"].getService(
+        Ci.nsIWindowWatcher );
     var windowEnumerator = windowService.getWindowEnumerator();
     while ( windowEnumerator.hasMoreElements() ) {
-      win = windowEnumerator.getNext().QueryInterface(
-        Components.interfaces.nsIDOMWindow );
+      win = windowEnumerator.getNext().QueryInterface( Ci.nsIDOMWindow );
       win.close();
     }
   };
-  
+
   // PUBLIC
 
   pub.load = function( event ) {
     window.removeEventListener( "load", ru.akman.znotes.ZNotes.load, false );
     Utils.initGlobals();
-    platformShutdownObserver.register();    
+    platformShutdownObserver.register();
     prefsBundle.loadPrefs();
     sessionManager.init();
     setupKeyset();
@@ -268,7 +261,7 @@ ru.akman.znotes.ZNotes = function() {
 
   pub.unload = function( event ) {
     platformController.unregister();
-    platformShutdownObserver.unregister();    
+    platformShutdownObserver.unregister();
     closeAllWindows();
     return true;
   };
@@ -285,7 +278,7 @@ ru.akman.znotes.ZNotes = function() {
     observerService.notifyObservers( null, "znotes-quit-accepted", null );
     return true;
   };
-  
+
   return pub;
 
 }();

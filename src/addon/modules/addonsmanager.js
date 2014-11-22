@@ -30,43 +30,50 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+const EXPORTED_SYMBOLS = ["AddonsManager"];
+
+var Cc = Components.classes;
+var Ci = Components.interfaces;
+var Cr = Components.results;
+var Cu = Components.utils;
+
 if ( !ru ) var ru = {};
 if ( !ru.akman ) ru.akman = {};
 if ( !ru.akman.znotes ) ru.akman.znotes = {};
 
-Components.utils.import( "resource://znotes/utils.js" , ru.akman.znotes );
-
-var EXPORTED_SYMBOLS = ["AddonsManager"];
+Cu.import( "resource://znotes/utils.js", ru.akman.znotes );
 
 var AddonsManager = function() {
 
-  var log = ru.akman.znotes.Utils.log;
+  var Utils = ru.akman.znotes.Utils;
+  var log = Utils.getLogger( "modules.addonsmanager" );
 
   var pub = {};
 
   pub.open = function() {
     var winType = "Extension:Manager-extensions";
-    var windowMediator = Components.classes["@mozilla.org/appshell/window-mediator;1"]
-                                   .getService( Components.interfaces.nsIWindowMediator );
+    var windowMediator =
+      Cc["@mozilla.org/appshell/window-mediator;1"]
+      .getService( Ci.nsIWindowMediator );
     var wins = windowMediator.getEnumerator( winType );
     var flag = true;
     while ( wins.hasMoreElements() ) {
-      var win = wins.getNext().QueryInterface( Components.interfaces.nsIDOMWindowInternal );
+      var win = wins.getNext().QueryInterface( Ci.nsIDOMWindowInternal );
       if ( win.document.documentElement.getAttribute( "windowtype" ) == winType ) {
         win.focus();
         flag = false;
-    		break;
-     	}
+        break;
+      }
     }
     if ( flag ) {
-    	ru.akman.znotes.Utils.MAIN_WINDOW.openDialog(
+      Utils.MAIN_WINDOW.openDialog(
         "chrome://mozapps/content/extensions/extensions.xul?type=extensions",
         "znotes:addons",
         "chrome,dialog=no,resizable=yes,centerscreen"
       );
     }
   };
-  
+
   return pub;
 
 }();

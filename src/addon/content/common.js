@@ -30,26 +30,28 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+var Cc = Components.classes;
+var Ci = Components.interfaces;
+var Cr = Components.results;
+var Cu = Components.utils;
+
 if ( !ru ) var ru = {};
 if ( !ru.akman ) ru.akman = {};
 if ( !ru.akman.znotes ) ru.akman.znotes = {};
 if ( !ru.akman.znotes.core ) ru.akman.znotes.core = {};
 
-Components.utils.import( "resource://znotes/utils.js",
-  ru.akman.znotes
-);
-Components.utils.import( "resource://znotes/event.js",
-  ru.akman.znotes.core
-);
+Cu.import( "resource://znotes/utils.js", ru.akman.znotes );
+Cu.import( "resource://znotes/event.js", ru.akman.znotes.core );
 
 ru.akman.znotes.Common = function() {
 
   var pub = {};
 
   var Utils = ru.akman.znotes.Utils;
+  var log = Utils.getLogger( "content.common" );
 
   // COMMANDS
-  
+
   pub.goDoCommand = function( command, target ) {
     var result = false;
     var win = target ? target.ownerDocument.defaultView : top;
@@ -66,8 +68,8 @@ ru.akman.znotes.Common = function() {
         }
       }
     } catch ( e ) {
-      Components.utils.reportError(
-        "An error occurred executing the '" + command + "' command: " + e
+      log.warn(
+        "An error occurred executing the '" + command + "' command\n" + e
       );
     }
     return result;
@@ -84,8 +86,8 @@ ru.akman.znotes.Common = function() {
       }
       pub.goSetCommandEnabled( command, enabled, cmdwin );
     } catch ( e ) {
-      Components.utils.reportError(
-        "An error occurred updating the '" + command + "' command:\n" + e
+      log.warn(
+        "An error occurred updating the '" + command + "' command\n" + e
       );
     }
   };
@@ -100,13 +102,13 @@ ru.akman.znotes.Common = function() {
         enabled = controller.isCommandEnabled( command );
       }
     } catch ( e ) {
-      Components.utils.reportError(
-        "An error occurred accessing the '" + command + "' command: " + e
+      log.warn(
+        "An error occurred accessing the '" + command + "' command\n" + e
       );
     }
     return enabled;
   };
-  
+
   pub.goSetCommandEnabled = function( command, enabled, cmdwin ) {
     var win = cmdwin ? cmdwin : top;
     var node = win.document.getElementById( command );
@@ -153,7 +155,7 @@ ru.akman.znotes.Common = function() {
     }
     return null;
   };
-  
+
   pub.goDoCommandWithParams = function( command, params, target ) {
     var win = target ? target.ownerDocument.defaultView : top;
     try {
@@ -164,7 +166,7 @@ ru.akman.znotes.Common = function() {
       }
       if ( controller ) {
         if ( controller.isCommandEnabled( command ) ) {
-          if ( controller instanceof Components.interfaces.nsICommandController ) {
+          if ( controller instanceof Ci.nsICommandController ) {
             controller.doCommandWithParams( command, params );
           } else {
             controller.doCommand( command );
@@ -172,19 +174,19 @@ ru.akman.znotes.Common = function() {
         }
       }
     } catch ( e ) {
-      Components.utils.reportError(
-        "An error occurred executing the '" + command + "' command: " + e
+      log.warn(
+        "An error occurred executing the '" + command + "' command\n" + e
       );
     }
   };
-  
+
   pub.createCommandParamsObject = function() {
     try {
-      return Components.classes["@mozilla.org/embedcomp/command-params;1"]
-                       .createInstance( Components.interfaces.nsICommandParams );
+      return Cc["@mozilla.org/embedcomp/command-params;1"].createInstance(
+        Ci.nsICommandParams );
     } catch ( e ) {
-      Components.utils.reportError(
-        "An error occurred in createCommandParamsObject: " + e
+      log.warn(
+        "An error occurred in createCommandParamsObject()\n" + e
       );
     }
     return null;

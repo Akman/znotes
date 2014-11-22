@@ -30,9 +30,23 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var EXPORTED_SYMBOLS = ["CSSUtils"];
+const EXPORTED_SYMBOLS = ["CSSUtils"];
+
+var Cc = Components.classes;
+var Ci = Components.interfaces;
+var Cr = Components.results;
+var Cu = Components.utils;
+
+if ( !ru ) var ru = {};
+if ( !ru.akman ) ru.akman = {};
+if ( !ru.akman.znotes ) ru.akman.znotes = {};
+
+Cu.import( "resource://znotes/utils.js", ru.akman.znotes );
 
 var CSSUtils = function() {
+
+  var Utils = ru.akman.znotes.Utils;
+  var log = Utils.getLogger( "modules.cssutils" );
 
   function CodePointStream( aString ) {
     this.mString = aString ? aString : "";
@@ -53,15 +67,15 @@ var CSSUtils = function() {
     codePointAt: function( str, ind ) {
       var low, high, len = str.length;
       if ( ind < 0 || ind >= len ) {
-      	return undefined;
+        return undefined;
       }
       low = str.charCodeAt( ind );
       if ( low >= 0xD800 && low <= 0xDBFF && len > ind + 1 ) {
-      	high = str.charCodeAt( ind + 1 );
-      	if ( high >= 0xDC00 && high <= 0xDFFF ) {
-      		// http://mathiasbynens.be/notes/javascript-encoding#surrogate-formulae
-      		return ( low - 0xD800 ) * 0x400 + high - 0xDC00 + 0x10000;
-      	}
+        high = str.charCodeAt( ind + 1 );
+        if ( high >= 0xDC00 && high <= 0xDFFF ) {
+          // http://mathiasbynens.be/notes/javascript-encoding#surrogate-formulae
+          return ( low - 0xD800 ) * 0x400 + high - 0xDC00 + 0x10000;
+        }
       }
       return low;
     },
@@ -69,23 +83,23 @@ var CSSUtils = function() {
       var len = arguments.length, result = '';
       var cp, high, low, ind = -1, units = [];
       if ( !len ) {
-      	return result;
+        return result;
       }
       while ( ++ind < len ) {
         var cp = Number( arguments[ind] );
-      	if ( cp <= 0xFFFF ) {
-      		units.push( cp );
-      	} else {
-      		// http://mathiasbynens.be/notes/javascript-encoding#surrogate-formulae
-      		cp -= 0x10000;
-      		high = ( cp >> 10 ) + 0xD800;
-      		low = ( cp % 0x400 ) + 0xDC00;
-      		units.push( high, low );
-      	}
-      	if ( ind + 1 === len ) {
-      		result += String.fromCharCode.apply( null, units );
-      		units.length = 0;
-      	}
+        if ( cp <= 0xFFFF ) {
+          units.push( cp );
+        } else {
+          // http://mathiasbynens.be/notes/javascript-encoding#surrogate-formulae
+          cp -= 0x10000;
+          high = ( cp >> 10 ) + 0xD800;
+          low = ( cp % 0x400 ) + 0xDC00;
+          units.push( high, low );
+        }
+        if ( ind + 1 === len ) {
+          result += String.fromCharCode.apply( null, units );
+          units.length = 0;
+        }
       }
       return result;
     },
@@ -113,7 +127,7 @@ var CSSUtils = function() {
       return -1;
     }
   }
-  
+
   function Token( aName, aStart, aStop ) {
     this.mName = aName;
     this.mStart = aStart;
@@ -154,7 +168,7 @@ var CSSUtils = function() {
     }
     return result;
   }
-  
+
   function Tokenizer( aStream ) {
     this.mListeners = [];
     this.mStream = aStream;
@@ -1174,7 +1188,7 @@ var CSSUtils = function() {
       } );
     }
   }
-  
+
   function Production( aName ) {
     this.mName = aName;
     this.mItems = [];
@@ -1234,22 +1248,22 @@ var CSSUtils = function() {
       return result;
     }
   }
-  
+
   /**
    *  The grammar below defines the syntax of Selectors.
    *  It is globally LL(1) and can be locally LL(2).
    *  See http://www.w3.org/TR/css3-selectors/#w3cselgrammar
-   *  
+   *
    *  Notation:
-   *  
+   *
    *  *: 0 or more
    *  +: 1 or more
    *  ?: 0 or 1
    *  |: separates alternatives
    *  [ ]: grouping
-   *  
+   *
    *  Grammar:
-   *  
+   *
    *  selectors ::=
    *      selector ( WS* COMMA WS* selector )*
    *  simples ::=
@@ -1292,9 +1306,9 @@ var CSSUtils = function() {
    *      NOT WS* args WS* ')'
    *  args ::=
    *      tag | universal | HASH | class | attrib | pseudo
-   *  
+   *
    *  Notes:
-   *  
+   *
    *  HASH ::=
    *      "#" IDENT ( IDENT with flag === "id" )
    *  NOT ::=
@@ -1303,7 +1317,7 @@ var CSSUtils = function() {
    *    FUNC ( FUNC with value === "any" || "-moz-any" || "-webkit-any" ||
    *                               "match" )
    */
-  
+
   function ParseError( aMessage, aPosition, aLength ) {
     this.message = aMessage;
     this.position = aPosition;
@@ -1315,7 +1329,7 @@ var CSSUtils = function() {
              this.message;
     }
   }
-  
+
   function Parser( aTokenizer, aNamespaces ) {
     this.mTokenizer = aTokenizer;
     if ( aNamespaces ) {
@@ -1689,7 +1703,7 @@ var CSSUtils = function() {
             return result;
           }
         } else {
-          this.error( "prefix? tag|universal expected!" );      
+          this.error( "prefix? tag|universal expected!" );
           return result;
         }
         while ( this.isHASH() || this.isDOT() ||
@@ -1899,7 +1913,7 @@ var CSSUtils = function() {
           return result;
         }
       } else {
-        this.error( "prefix? attr expected!" );      
+        this.error( "prefix? attr expected!" );
         return result;
       }
       while ( this.isWS() || this.isCOMMENT() ) {
@@ -2078,11 +2092,11 @@ var CSSUtils = function() {
           } else if ( this.isASTERISK() ) {
             result.addItem( this.universal( prefix, null ) );
           } else {
-            this.error( "tag|universal expected!" );      
+            this.error( "tag|universal expected!" );
             return result;
           }
         } else {
-          this.error( "prefix? tag|universal expected!" );      
+          this.error( "prefix? tag|universal expected!" );
           return result;
         }
       }
@@ -2091,15 +2105,15 @@ var CSSUtils = function() {
     /**
      *  The grammar below defines the syntax of at namespace rule.
      *  See http://www.w3.org/TR/css-namespaces-3/#syntax
-     *  
+     *
      *  Notation:
-     *  
+     *
      *  *: 0 or more
      *  +: 1 or more
      *  ?: 0 or 1
      *  |: separates alternatives
      *  [ ]: grouping
-     *  
+     *
      *  Grammar:
      *
      *  @{N}{A}{M}{E}{S}{P}{A}{C}{E} S* [IDENT S*]? [STRING|URI] S* ';' S*
@@ -2168,6 +2182,8 @@ var CSSUtils = function() {
     }
   }
 
+  // PUBLIC
+  
   function Namespaces( uri ) {
     this.mDefault = uri;
     this.mPrefixies = {};
@@ -2247,15 +2263,16 @@ var CSSUtils = function() {
     }
   }
   Namespaces.knowns = {
-    "xml"   : "http://www.w3.org/XML/1998/namespace",
-    "xmlns" : "http://www.w3.org/2000/xmlns/",
-    "html"  : "http://www.w3.org/1999/xhtml",
-    "math"  : "http://www.w3.org/1998/Math/MathML",
-    "svg"   : "http://www.w3.org/2000/svg",
-    "xlink" : "http://www.w3.org/1999/xlink",
-    "og"    : "http://ogp.me/ns#", // "http://ogp.me/ns/fb#"
-    "fb"    : "http://ogp.me/ns/fb#", // "http://www.facebook.com/2008/fbml"
-    "g"     : "http://base.google.com/ns/1.0"
+    "xml"     : "http://www.w3.org/XML/1998/namespace",
+    "xmlns"   : "http://www.w3.org/2000/xmlns/",
+    "html"    : "http://www.w3.org/1999/xhtml",
+    "math"    : "http://www.w3.org/1998/Math/MathML",
+    "svg"     : "http://www.w3.org/2000/svg",
+    "xlink"   : "http://www.w3.org/1999/xlink",
+    "og"      : "http://ogp.me/ns#",
+    "fb"      : "http://ogp.me/ns/fb#",
+    "article" : "http://ogp.me/ns/article#",
+    "g"       : "http://base.google.com/ns/1.0"
   }
   Namespaces.create = function( uri ) {
     var result = new Namespaces( uri );
@@ -2271,7 +2288,7 @@ var CSSUtils = function() {
     }
     return "ns";
   }
-  
+
   function parseSelectors( aString, aNamespaces ) {
     return (
       new Parser(
@@ -2288,7 +2305,7 @@ var CSSUtils = function() {
       )
     ).namespaceRule();
   }
-  
+
   return {
     Namespaces: Namespaces,
     parseSelectors: parseSelectors,

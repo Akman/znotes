@@ -30,13 +30,21 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+var Cc = Components.classes;
+var Ci = Components.interfaces;
+var Cr = Components.results;
+var Cu = Components.utils;
+
 if ( !ru ) var ru = {};
 if ( !ru.akman ) ru.akman = {};
 if ( !ru.akman.znotes ) ru.akman.znotes = {};
 
-Components.utils.import( "resource://znotes/utils.js", ru.akman.znotes );
+Cu.import( "resource://znotes/utils.js", ru.akman.znotes );
 
 ru.akman.znotes.ImageSelectDialog = function() {
+
+  var Utils = ru.akman.znotes.Utils;
+  var log = Utils.getLogger( "content.imageselectdialog" );
 
   var args = null;
   var currentNote = null;
@@ -72,12 +80,13 @@ ru.akman.znotes.ImageSelectDialog = function() {
     urlTextBox = document.getElementById( "urlTextBox" );
     urlTextBox.value = "http://";
     imgBox = document.getElementById( "imgBox" );
-    var ioService = Components.classes["@mozilla.org/network/io-service;1"]
-                              .getService( Components.interfaces.nsIIOService );
-    var fph = ioService.getProtocolHandler( "file" )
-                       .QueryInterface( Components.interfaces.nsIFileProtocolHandler );
-    var mimeService = Components.classes["@mozilla.org/mime;1"]
-                                .getService( Components.interfaces.nsIMIMEService );
+    var ioService =
+      Cc["@mozilla.org/network/io-service;1"]
+      .getService( Ci.nsIIOService );
+    var fph =
+      ioService.getProtocolHandler( "file" ).QueryInterface(
+        Ci.nsIFileProtocolHandler );
+    var mimeService = Cc["@mozilla.org/mime;1"].getService( Ci.nsIMIMEService );
     var contents = currentNote.getContents();
     images.splice( 0, images.length );
     for ( var i = 0; i < contents.length; i++ ) {
@@ -91,7 +100,7 @@ ru.akman.znotes.ImageSelectDialog = function() {
       }
     }
     for ( var i = 0; i < images.length; i++ ) {
-      uuid = ru.akman.znotes.Utils.createUUID();
+      uuid = Utils.createUUID();
       imgBoxItem = document.createElement( "richlistitem" );
       imgBoxItem.setAttribute( "id", "item_" + uuid );
       imgBoxItem.setAttribute( "class", "boxItem" );

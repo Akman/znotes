@@ -1,7 +1,7 @@
 [
   {
-    "path": "editor/module.js",
-    "name": "Module",
-    "description": "Editor module"
+    "path": "editor/sample.js",
+    "name": "Sample",
+    "description": "Sample editor module"
   }
 ]

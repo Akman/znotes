@@ -34,13 +34,20 @@ if ( !ru ) var ru = {};
 if ( !ru.akman ) ru.akman = {};
 if ( !ru.akman.znotes ) ru.akman.znotes = {};
 
-Components.utils.import( "resource://znotes/utils.js" , ru.akman.znotes );
+var Cc = Components.classes;
+var Ci = Components.interfaces;
+var Cr = Components.results;
+var Cu = Components.utils;
+
+Cu.import( "resource://znotes/utils.js", ru.akman.znotes );
 
 ru.akman.znotes.About = function() {
 
   var pub = {};
 
   var Utils = ru.akman.znotes.Utils;
+  var log = Utils.getLogger( "content.about" );
+
   var obj = null;
   var lbl = null;
   var hbx = null;
@@ -207,7 +214,7 @@ ru.akman.znotes.About = function() {
   pub.onDonate = function( aEvent ) {
     Utils.openLinkExternally( Utils.SITE + Utils.getLanguage() + "/donations.xhtml" );
   };
-  
+
   return pub;
 
 }();

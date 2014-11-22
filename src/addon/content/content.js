@@ -30,11 +30,16 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+var Cc = Components.classes;
+var Ci = Components.interfaces;
+var Cr = Components.results;
+var Cu = Components.utils;
+
 if ( !ru ) var ru = {};
 if ( !ru.akman ) ru.akman = {};
 if ( !ru.akman.znotes ) ru.akman.znotes = {};
 
-Components.utils.import( "resource://znotes/utils.js", ru.akman.znotes );
+Cu.import( "resource://znotes/utils.js", ru.akman.znotes );
 
 ru.akman.znotes.Content = function() {
 
@@ -42,11 +47,12 @@ ru.akman.znotes.Content = function() {
   return function( aWindow, aStyle ) {
 
     var Utils = ru.akman.znotes.Utils;
+    var log = Utils.getLogger( "content.content" );
     var Common = ru.akman.znotes.Common;
 
     var currentWindow = null;
     var currentStyle = null;
-    
+
     var contentTree = null;
     var contentTreeChildren = null;
 
@@ -58,7 +64,7 @@ ru.akman.znotes.Content = function() {
     //
     // COMMANDS
     //
-    
+
     var contentCommands = {
       "znotes_contentaddfile_command": null,
       "znotes_contentopen_command": null,
@@ -66,7 +72,7 @@ ru.akman.znotes.Content = function() {
       "znotes_contentsave_command": null,
       "znotes_contentdelete_command": null
     };
-    
+
     var contentController = {
       supportsCommand: function( cmd ) {
         if ( !( cmd in contentCommands ) ) {
@@ -102,17 +108,16 @@ ru.akman.znotes.Content = function() {
         }
         switch ( cmd ) {
           case "znotes_contentaddfile_command":
-            var nsIFilePicker = Components.interfaces.nsIFilePicker;
-            var fp = Components.classes["@mozilla.org/filepicker;1"]
-                               .createInstance( nsIFilePicker );
+            var fp = Cc["@mozilla.org/filepicker;1"]
+                               .createInstance( Ci.nsIFilePicker );
             fp.init(
               currentWindow,
               Utils.STRINGS_BUNDLE.getString( "content.addfiledialog.title" ),
-              nsIFilePicker.modeOpen
+              Ci.nsIFilePicker.modeOpen
             );
-            fp.appendFilters( nsIFilePicker.filterAll );
+            fp.appendFilters( Ci.nsIFilePicker.filterAll );
             var result = fp.show();
-            if ( result == nsIFilePicker.returnOK ) {
+            if ( result === Ci.nsIFilePicker.returnOK ) {
               createContent( fp.file );
             }
             break;
@@ -123,21 +128,20 @@ ru.akman.znotes.Content = function() {
             openContent( currentContent, true );
             break;
           case "znotes_contentsave_command":
-            var nsIFilePicker = Components.interfaces.nsIFilePicker;
-            var fp = Components.classes["@mozilla.org/filepicker;1"]
-                               .createInstance( nsIFilePicker );
+            var fp = Cc["@mozilla.org/filepicker;1"].createInstance(
+              Ci.nsIFilePicker );
             fp.defaultString = getContentId( currentContent )
             fp.init(
               currentWindow,
               Utils.STRINGS_BUNDLE.getString(
                 "content.savecontentdialog.title"
               ),
-              nsIFilePicker.modeSave
+              Ci.nsIFilePicker.modeSave
             );
-            fp.appendFilters( nsIFilePicker.filterAll );
+            fp.appendFilters( Ci.nsIFilePicker.filterAll );
             var result = fp.show();
-            if ( result == nsIFilePicker.returnOK ||
-                 result == nsIFilePicker.returnReplace ) {
+            if ( result === Ci.nsIFilePicker.returnOK ||
+                 result === Ci.nsIFilePicker.returnReplace ) {
               saveContent( currentContent, fp.file );
             }
             break;
@@ -191,9 +195,9 @@ ru.akman.znotes.Content = function() {
             return currentWindow.controllers.getControllerId( this );
           };
         } catch ( e ) {
-          Components.utils.reportError(
+          log.warn(
             "An error occurred registering '" + this.getName() +
-            "' controller: " + e
+            "' controller\n" + e
           );
         }
       },
@@ -204,9 +208,9 @@ ru.akman.znotes.Content = function() {
         try {
           currentWindow.controllers.removeController( this );
         } catch ( e ) {
-          Components.utils.reportError(
+          log.warn(
             "An error occurred unregistering '" + this.getName() +
-            "' controller: " + e
+            "' controller\n" + e
           );
         }
       }
@@ -220,7 +224,7 @@ ru.akman.znotes.Content = function() {
       Common.goUpdateCommand( "znotes_contentsave_command", id, currentWindow );
       Common.goUpdateCommand( "znotes_contentdelete_command", id, currentWindow );
     };
-    
+
     function createContent( file ) {
       currentNote.addContent( [ file.leafName, file.parent.path ] );
     };
@@ -248,13 +252,10 @@ ru.akman.znotes.Content = function() {
       var entry = currentNote.getContentEntry(
         getContentId( anContentIndex ) );
       if ( entry ) {
-        var ioService =
-          Components.classes["@mozilla.org/network/io-service;1"]
-                    .getService( Components.interfaces.nsIIOService );
-        var fph =
-          ioService.getProtocolHandler( "file" )
-                   .QueryInterface(
-                     Components.interfaces.nsIFileProtocolHandler );
+        var ioService = Cc["@mozilla.org/network/io-service;1"].getService(
+          Ci.nsIIOService );
+        var fph = ioService.getProtocolHandler( "file" ).QueryInterface(
+          Ci.nsIFileProtocolHandler );
         var url = fph.getURLSpecFromFile( entry );
         var title = Utils.STRINGS_BUNDLE.getString(
           "utils.openuri.apppicker.title" );
@@ -349,7 +350,7 @@ ru.akman.znotes.Content = function() {
       var parseInfo = treeItem.getAttribute( "value" ).split( "\u0000" );
       return parseInfo[0];
     };
-    
+
     function getFileName( entry ) {
       var result = Utils.STRINGS_BUNDLE.getString( "content.filenotfound" );
       if ( entry.exists() && !entry.isDirectory() ) {
@@ -361,9 +362,14 @@ ru.akman.znotes.Content = function() {
     function getFileDescription( entry ) {
       var result = Utils.STRINGS_BUNDLE.getString( "content.filenotfound" );
       if ( entry.exists() && !entry.isDirectory() ) {
-        result = Utils.STRINGS_BUNDLE.getString( "content.filesize" ) + ": " +
-                 Math.round( entry.fileSize / 1000 ) + " " +
-                 Utils.STRINGS_BUNDLE.getString( "content.kib" );
+        result = Utils.STRINGS_BUNDLE.getString( "content.filesize" ) + ": ";
+        if ( entry.fileSize < 1024 ) {
+          result += entry.fileSize + " " +
+            Utils.STRINGS_BUNDLE.getString( "content.bytes" );
+        } else {
+          result += Math.round( entry.fileSize / 1024 ) + " " +
+            Utils.STRINGS_BUNDLE.getString( "content.kib" );
+        }
       }
       return result;
     };
@@ -389,7 +395,7 @@ ru.akman.znotes.Content = function() {
       }
       return result;
     };
-    
+
     // NOTE EVENTS
 
     function onNoteDeleted( aCategory, aNote ) {
@@ -458,13 +464,13 @@ ru.akman.znotes.Content = function() {
     };
 
     // VIEW
-    
+
     function clearContentTree() {
       while ( contentTreeChildren.firstChild ) {
         contentTreeChildren.removeChild( contentTreeChildren.firstChild );
       }
     };
-    
+
     function showCurrentView() {
       contentTree.removeAttribute( "disabled" );
       var count = 0;
@@ -486,11 +492,11 @@ ru.akman.znotes.Content = function() {
       }
       contentTree.view.selection.select( count > 0 ? 0 : -1 );
     };
-    
+
     function hideCurrentView() {
       contentTree.setAttribute( "disabled", "true" );
     };
-    
+
     function show( aNote, aForced ) {
       if ( currentNote && currentNote == aNote && !aForced ) {
         return;
@@ -506,7 +512,7 @@ ru.akman.znotes.Content = function() {
       }
       updateCommands();
     };
-    
+
     // LISTENERS
 
     function addEventListeners() {
@@ -526,23 +532,23 @@ ru.akman.znotes.Content = function() {
       contentTree.removeEventListener( "dblclick", onDblClick, true );
       currentNote.removeStateListener( noteStateListener );
     };
-    
+
     // PUBLIC
 
     this.onStyleChanged = function( event ) {
     };
-    
+
     this.onNoteChanged = function( event ) {
       var aNote = event.data.note;
       var aForced = event.data.forced;
       show( aNote, aForced );
     };
-    
+
     this.onRelease = function( event ) {
       removeEventListeners();
       contentController.unregister();
     };
-    
+
     // CONSTRUCTOR ( aWindow, aStyle )
 
     currentWindow = aWindow ? aWindow : window;

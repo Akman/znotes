@@ -40,7 +40,7 @@
 
   <script type="application/javascript"
     src="chrome://znotes/content/editor.js" />
-    
+
   <stringbundleset id="znotes_stringbundleset">
     <stringbundleset id="znotes_editor_stringbundleset" />
   </stringbundleset>
@@ -69,6 +69,8 @@
       command="znotes_editorprint_command" />
   </toolbarpalette>
 
+  <toolbar id="znotes_editor_toolbar" />
+  
   <vbox id="noteView" flex="1">
     <vbox id="editorView" flex="1" />
   </vbox>

@@ -30,18 +30,24 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+const EXPORTED_SYMBOLS = ["DriverManager"];
+
+var Cc = Components.classes;
+var Ci = Components.interfaces;
+var Cr = Components.results;
+var Cu = Components.utils;
+
 if ( !ru ) var ru = {};
 if ( !ru.akman ) ru.akman = {};
 if ( !ru.akman.znotes ) ru.akman.znotes = {};
 if ( !ru.akman.znotes.data ) ru.akman.znotes.data = {};
 
-Components.utils.import( "resource://znotes/utils.js" , ru.akman.znotes );
-
-var EXPORTED_SYMBOLS = ["DriverManager"];
+Cu.import( "resource://znotes/utils.js", ru.akman.znotes );
 
 var DriverManager = function() {
 
   var Utils = ru.akman.znotes.Utils;
+  var log = Utils.getLogger( "modules.drivermanager" );
 
   var pub = {};
 
@@ -58,8 +64,8 @@ var DriverManager = function() {
     unregisterDriver( name );
     try {
       ru.akman.znotes.data[ name ] = {};
-      Components.utils.import( driverURL + "driver.js", ru.akman.znotes.data[ name ] );
-      Components.utils.import( driverURL + "params.js", ru.akman.znotes.data[ name ] );
+      Cu.import( driverURL + "driver.js", ru.akman.znotes.data[ name ] );
+      Cu.import( driverURL + "params.js", ru.akman.znotes.data[ name ] );
       driver = ru.akman.znotes.data[ name ].Driver;
       params = ru.akman.znotes.data[ name ].Params;
       driver.getParams = function() {
@@ -93,20 +99,20 @@ var DriverManager = function() {
   };
 
   // CONSTRUCTOR
-  
+
   function init() {
     if ( drivers ) {
       return;
     }
     drivers = {};
-    var driverDirectory = Utils.getDriverDirectory();
+    var driverDirectory = Utils.getDriversPath();
     var entries = driverDirectory.directoryEntries;
     var driver = null;
     var name = null;
     var entry = null;
     while( entries.hasMoreElements() ) {
       entry = entries.getNext();
-      entry.QueryInterface( Components.interfaces.nsIFile );
+      entry.QueryInterface( Ci.nsIFile );
       if ( !entry.isDirectory() ) {
         continue;
       }
@@ -115,16 +121,16 @@ var DriverManager = function() {
         driver = registerDriver( name );
       } catch ( e ) {
         driver = null;
-        Utils.log( e + "\n" + Utils.dumpStack() );
+        log.warn( e + "\n" + Utils.dumpStack() );
       }
       if ( driver == null ) {
-        Utils.log( "Error registering driver: " + entry.path );
+        log.error( "Error registering driver\n" + entry.path );
       }
     }
   };
-  
+
   // PUBLIC
-  
+
   pub.getDrivers = function() {
     return drivers;
   };
@@ -153,9 +159,9 @@ var DriverManager = function() {
   pub.getInstance = function() {
     return this;
   };
-  
+
   init();
-  
+
   return pub;
 
 }();

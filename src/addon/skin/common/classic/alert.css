@@ -1,4 +1,4 @@
-/* ***** BEGIN LICENSE BLOCK *****
+﻿/* ***** BEGIN LICENSE BLOCK *****
  *
  * Version: GPL 3.0
  *
@@ -30,26 +30,13 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-if ( !ru ) var ru = {};
-if ( !ru.akman ) ru.akman = {};
-if ( !ru.akman.znotes ) ru.akman.znotes = {};
+/* ***** classic/1.0 common **** */
 
-Components.utils.import( "resource://znotes/utils.js",
-  ru.akman.znotes
-);
+.alertText[clickable="true"] {
+  color: -moz-nativehyperlinktext;
+  text-decoration: underline !important;
+}
 
-var EXPORTED_SYMBOLS = ["Module"];
-
-var Module = function() {
-
-  var Utils = ru.akman.znotes.Utils;
-
-  var pub = {};
-  
-  pub.run = function() {
-    Utils.log( "Module::run()" );
-  };
-  
-  return pub;
-
-}();
+.alertText[clickable="true"]:hover:active {
+  color: -moz-activehyperlinktext;
+}

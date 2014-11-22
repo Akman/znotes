@@ -30,20 +30,26 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+const EXPORTED_SYMBOLS = ["ContentTree"];
+
+var Cc = Components.classes;
+var Ci = Components.interfaces;
+var Cr = Components.results;
+var Cu = Components.utils;
+
 if ( !ru ) var ru = {};
 if ( !ru.akman ) ru.akman = {};
 if ( !ru.akman.znotes ) ru.akman.znotes = {};
 if ( !ru.akman.znotes.core ) ru.akman.znotes.core = {};
 
-Components.utils.import( "resource://znotes/utils.js", ru.akman.znotes );
-Components.utils.import( "resource://znotes/category.js", ru.akman.znotes.core );
-Components.utils.import( "resource://znotes/note.js", ru.akman.znotes.core );
-
-var EXPORTED_SYMBOLS = ["ContentTree"];
+Cu.import( "resource://znotes/utils.js", ru.akman.znotes );
+Cu.import( "resource://znotes/category.js", ru.akman.znotes.core );
+Cu.import( "resource://znotes/note.js", ru.akman.znotes.core );
 
 var ContentTree = function( book, rootCategoryEntry ) {
 
   var Utils = ru.akman.znotes.Utils;
+  var log = Utils.getLogger( "modules.contenttree" );
 
   this.getBook = function() {
     return this.book;
@@ -51,6 +57,25 @@ var ContentTree = function( book, rootCategoryEntry ) {
 
   this.getRoot = function() {
     return this.root;
+  };
+
+  this.getBin = function() {
+    return this.bin;
+  };
+
+  this.clearBin = function() {
+    var bin = this.getBin();
+    if ( !bin ) {
+      return;
+    }
+    var categories = bin.getCategories();
+    var notes = bin.getNotes();
+    for each ( var note in notes ) {
+      note.remove();
+    }
+    for each ( var category in categories ) {
+      category.remove();
+    }
   };
 
   this.load = function() {
@@ -69,6 +94,19 @@ var ContentTree = function( book, rootCategoryEntry ) {
     };
     this.root = new ru.akman.znotes.core.Category( this.getBook(), this.rootEntry, null );
     read( this.root );
+    for each ( var category in this.root.categories ) {
+      if ( category.isBin() ) {
+        this.bin = category;
+        break;
+      }
+    }
+    if ( !this.bin ) {
+      this.bin = new ru.akman.znotes.core.Category(
+        this.getBook(),
+        this.rootEntry.createBin(),
+        this.root
+      );
+    }
   };
 
   /*
@@ -121,7 +159,7 @@ var ContentTree = function( book, rootCategoryEntry ) {
       return null;
     }
   };
-  
+
   this.getNoteByName = function( aName ) {
     var result = [];
     var getNoteByNameProcessor = {
@@ -197,5 +235,6 @@ var ContentTree = function( book, rootCategoryEntry ) {
   this.book = book;
   this.rootEntry = rootCategoryEntry;
   this.root = null;
+  this.bin = null;
 
 };

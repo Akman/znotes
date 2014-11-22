@@ -30,93 +30,213 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+var Cc = Components.classes;
+var Ci = Components.interfaces;
+var Cr = Components.results;
+var Cu = Components.utils;
+
 if ( !ru ) var ru = {};
 if ( !ru.akman ) ru.akman = {};
 if ( !ru.akman.znotes ) ru.akman.znotes = {};
 if ( !ru.akman.znotes.core ) ru.akman.znotes.core = {};
 
-Components.utils.import( "resource://znotes/utils.js",
-  ru.akman.znotes
-);
-Components.utils.import( "resource://znotes/clipper.js",
-  ru.akman.znotes.core
-);
+Cu.import( "resource://znotes/utils.js", ru.akman.znotes );
+Cu.import( "resource://znotes/keyset.js", ru.akman.znotes );
+Cu.import( "resource://znotes/clipper.js", ru.akman.znotes.core );
 
 ru.akman.znotes.ClipperDialog = function() {
 
   var Utils = ru.akman.znotes.Utils;
-  
-  var ioService =
-    Components.classes["@mozilla.org/network/io-service;1"]
-              .getService( Components.interfaces.nsIIOService );
+  var Common = ru.akman.znotes.Common;
 
-  var aNote, aDocument, aFile, aDirectory, aFlags, aCallback;
-  var aResultObj, aClipper, anObserver;
-  var btnClose, btnCancel;
+  var log = Utils.getLogger( "content.clipperdialog" );
+
+  var ioService =
+    Cc["@mozilla.org/network/io-service;1"].getService( Ci.nsIIOService );
+
+  var aDocument, aResult, aFile, aDirectory, aFlags, aBaseURI, onStart, onStop;
+  var aClipper, anObserver;
+  var jobList, btnClose, btnCancel;
+
   var canClose = false;
+
+  // KEYSET
+
+  var dialogKeyset = {
+    mKeyset: null,
+    mShortcuts: "{}",
+    setup: function() {
+      if ( this.mKeyset ) {
+        return;
+      }
+      this.mKeyset = new ru.akman.znotes.Keyset(
+        document.getElementById( "znotes_keyset" )
+      );
+    },
+    activate: function() {
+      if ( !this.mKeyset ) {
+        return;
+      }
+      this.mKeyset.activate();
+    },
+    deactivate: function() {
+      if ( !this.mKeyset ) {
+        return;
+      }
+      this.mKeyset.deactivate();
+    },
+    update: function() {
+      if ( !this.mKeyset ) {
+        return;
+      }
+      var shortcuts = {};
+      try {
+        shortcuts = JSON.parse( this.mShortcuts );
+        if ( typeof( shortcuts ) !== "object" ) {
+          shortcuts = {};
+        }
+      } catch ( e ) {
+        log.warn( e + "\n" + Utils.dumpStack() );
+        shortcuts = {};
+      }
+      this.mKeyset.update( shortcuts );
+    }
+  };
+
+  // COMMANDS
+
+  var dialogCommands = {
+    "znotes_copy_command": null,
+    "znotes_selectall_command": null
+  };
+
+  var dialogController = {
+    supportsCommand: function( cmd ) {
+      if ( !( cmd in dialogCommands ) ) {
+        return false;
+      }
+      return true;
+    },
+    isCommandEnabled: function( cmd ) {
+      if ( !( cmd in dialogCommands ) ) {
+        return false;
+      }
+      switch ( cmd ) {
+        case "znotes_copy_command":
+          return true;
+        case "znotes_selectall_command":
+          return true;
+      }
+      return true;
+    },
+    doCommand: function( cmd ) {
+      if ( !( cmd in dialogCommands ) ) {
+        return;
+      }
+      switch ( cmd ) {
+        case "znotes_copy_command":
+          copySelectedItemsToClipboard();
+          break;
+        case "znotes_selectall_command":
+          selectAllItems();
+          break;
+      }
+      this.updateCommands();
+    },
+    onEvent: function( event ) {
+    },
+    getName: function() {
+      return "CLIPPERDIALOG";
+    },
+    getCommand: function( cmd ) {
+      if ( cmd in dialogCommands ) {
+        return document.getElementById( cmd );
+      }
+      return null;
+    },
+    updateCommands: function() {
+      for ( var cmd in dialogCommands ) {
+        Common.goUpdateCommand( cmd, this.getId(), window );
+      }
+    },
+    register: function() {
+      try {
+        window.controllers.insertControllerAt( 0, this );
+        this.getId = function() {
+          return window.controllers.getControllerId( this );
+        };
+      } catch ( e ) {
+        log.warn(
+          "An error occurred registering '" + this.getName() +
+          "' controller\n" + e
+        );
+      }
+    },
+    unregister: function() {
+      for ( var cmd in dialogCommands ) {
+        Common.goSetCommandEnabled( cmd, false, window );
+      }
+      try {
+        window.controllers.removeController( this );
+      } catch ( e ) {
+        log.warn(
+          "An error occurred unregistering '" + this.getName() +
+          "' controller\n" + e
+        );
+      }
+    }
+  };
+
+  function updateCommands() {
+    dialogController.updateCommands();
+  };
   
-  // OBSERVER
-  
+  // LOADER OBSERVER
+
   function onLoaderStarted( anEvent ) {
     btnClose.setAttribute( "collapsed", "true" );
     btnCancel.removeAttribute( "collapsed" );
     canClose = false;
-  };
-  
-  function onLoaderStopped( anEvent ) {
-    var aStatus = anEvent.getData().status;
-    try {
-      aNote.loadContentDirectory( aDirectory );
-      aNote.importDocument(
-        aResultObj.value,
-        {
-          documentURI: aResultObj.documentURI,
-          lang: false,
-          author: false
-        }
-      );
-      aNote.setLoading( false );
-    } catch ( e ) {
-      if ( e.name && ( e.name in Components.results ) ) {
-        aStatus = Components.results[e.name];
-      } else {
-        aStatus = Components.results.NS_ERROR_UNEXPECTED;
-      }
+    if ( onStart ) {
+      onStart( aResult );
     }
-    if ( aCallback ) {
-      aCallback( aStatus );
+  };
+
+  function onLoaderStopped( anEvent ) {
+    aResult.status = anEvent.getData().status;
+    if ( onStop ) {
+      onStop( aResult );
     }
     canClose = true;
-    if ( !aStatus ) {
+    if ( !aResult.status ) {
       window.close();
     }
     btnCancel.setAttribute( "collapsed", "true" );
     btnClose.removeAttribute( "collapsed" );
   };
-  
+
   function onGroupStarted( anEvent ) {
     var id = anEvent.getData().id;
   };
-  
+
   function onGroupStopped( anEvent ) {
     var id = anEvent.getData().id;
   };
-  
+
   function onJobCreated( anEvent ) {
     var id, url, uri;
-    var jobList, jobItem, jobBox, jobLabel, jobProgress;
+    var jobItem, jobBox, jobLabel;
     var jobImg, jobImage, jobSpacer1, jobSpacer2;
     var aData = anEvent.getData();
     var aJob = aData.job;
     id = aJob.getId();
     uri = ioService.newURI( aJob.getURL(), null, null );
     try {
-      uri.QueryInterface( Components.interfaces.nsIURL );
+      uri.QueryInterface( Ci.nsIURL );
       url = uri.spec;
     } catch ( e ) {
       url = uri.scheme + "://";
     }
-    jobList = document.getElementById( "jobList" );
     jobItem = document.createElement( "richlistitem" );
     jobItem.setAttribute( "id", id );
     jobItem.setAttribute( "class", "item" );
@@ -157,7 +277,7 @@ ru.akman.znotes.ClipperDialog = function() {
     jobItem.appendChild( jobBox );
     jobList.insertBefore( jobItem, jobList.firstChild );
   };
-  
+
   function onJobStarted( anEvent ) {
     var aData = anEvent.getData();
     var aJob = aData.job;
@@ -217,6 +337,7 @@ ru.akman.znotes.ClipperDialog = function() {
     var aJob = aData.job;
     var id = aJob.getId();
     var status = aJob.getStatus();
+    var statusText = aJob.getStatusText();
     var jobLabel, jobProgress;
     var jobItem = document.getElementById( id );
     var jobImage = jobItem.childNodes[0].childNodes[1];
@@ -230,14 +351,18 @@ ru.akman.znotes.ClipperDialog = function() {
     } else {
       jobImage.setAttribute( "class", "fail" );
       jobLabel = jobBox.childNodes[0];
-      jobLabel.setAttribute( "value", Utils.getErrorName( status ) );
+      jobLabel.setAttribute( "value",
+        statusText ? statusText : Utils.getErrorName( status ) );
       jobLabel.classList.add( "error" );
-      jobProgress = jobBox.childNodes[2];
-      // TODO: jobProgress is undefined
-      jobProgress.setAttribute( "collapsed", "true" );
+      if ( jobBox.childNodes.length === 3 ) {
+        jobProgress = jobBox.childNodes[2];
+        jobProgress.setAttribute( "collapsed", "true" );
+      }
+      jobList.insertBefore( jobList.removeChild( jobItem ),
+        jobList.firstChild );
     }
   };
-  
+
   function onJobRemoved( anEvent ) {
     var aData = anEvent.getData();
     var aJob = aData.job;
@@ -245,42 +370,102 @@ ru.akman.znotes.ClipperDialog = function() {
     var jobItem = document.getElementById( id );
     jobItem.parentNode.removeChild( jobItem );
   };
+
+  function onJobListDblClick( anEvent ) {
+    copySelectedItemsToClipboard();
+  };
+  
+  function onJobListContextMenu( anEvent ) {
+    var box, target = anEvent.target;
+    while ( target && target.localName !== "richlistitem" ) {
+      target = target.parentNode;
+    }
+    if ( !target ) {
+      return;
+    }
+    document.getElementById( "znotes_edit_menupopup" ).openPopup(
+      null,
+      "after_pointer",
+      anEvent.clientX,
+      anEvent.clientY,
+      true,
+      true,
+      anEvent
+    );
+  };
   
   // HELPERS
+
+  function selectAllItems() {
+    jobList.selectAll();
+  };
   
-  function doClip() {
-    var aStatus;
-    try {
-      aNote.setLoading( true );
-      aNote.setOrigin( aDocument.location.toString() );
-      aResultObj.documentURI = aDocument.documentURI;
-      aClipper.save(
-        aDocument,
-        aResultObj,
-        aFile,
-        aDirectory,
-        aFlags,
-        anObserver
+  function copySelectedItemsToClipboard() {
+    var box, lines = [], items = jobList.selectedItems;
+    for each ( var item in items ) {
+      box = item.childNodes[1];
+      lines.push(
+        box.childNodes[0].value + "\n" + box.childNodes[1].value
       );
+    }
+    if ( lines.length ) {
+      copyToClipboard( lines.join( "\n" ) );
+    }
+  };
+  
+  function copyToClipboard( textData ) {
+    var clipboard, transferable, textSupportsString;
+    try {
+      clipboard =
+        Cc['@mozilla.org/widget/clipboard;1']
+        .createInstance( Ci.nsIClipboard );
+      transferable = Components.Constructor(
+        "@mozilla.org/widget/transferable;1",
+        "nsITransferable"
+      )();
+      textSupportsString = Components.Constructor(
+        "@mozilla.org/supports-string;1",
+        "nsISupportsString"
+      )();
+      transferable.init(
+        window.QueryInterface( Ci.nsIInterfaceRequestor ).getInterface(
+          Ci.nsIWebNavigation )
+      );
+      transferable.addDataFlavor( "text/unicode" );
+      textSupportsString.data = textData;
+      transferable.setTransferData(
+        "text/unicode", textSupportsString, textData.length * 2 );
+      clipboard.setData( transferable, null, clipboard.kGlobalClipboard );
     } catch ( e ) {
-      Utils.log( e + "\n" + Utils.dumpStack() );
-      aClipper.abort();
+      log.warn( e );
     }
   };
   
   // PUBLIC
-  
+
   var pub = {};
-  
+
   pub.onLoad = function() {
-    aNote = window.arguments[0].note;
-    aDocument = window.arguments[0].doc;
+    aDocument = window.arguments[0].document;
+    aResult = window.arguments[0].result;
     aFile = window.arguments[0].file;
-    aDirectory = window.arguments[0].dir;
+    aDirectory = window.arguments[0].directory;
     aFlags = window.arguments[0].flags;
-    aCallback = window.arguments[0].callback;
+    aBaseURI = window.arguments[0].baseURI;
+    onStart = window.arguments[0].onstart;
+    onStop = window.arguments[0].onstop;
     btnCancel = document.getElementById( "btnCancel" );
     btnClose = document.getElementById( "btnClose" );
+    jobList = document.getElementById( "jobList" );
+    jobList.addEventListener( "dblclick", onJobListDblClick, true );
+    jobList.addEventListener( "contextmenu", onJobListContextMenu, true );
+    jobList.selectedIndex = -1;
+    jobList.currentIndex = -1;
+    dialogKeyset.setup();
+    dialogKeyset.update();
+    dialogKeyset.activate();
+    dialogController.register();
+    updateCommands();
     anObserver = {
       onLoaderStarted: onLoaderStarted,
       onLoaderStopped: onLoaderStopped,
@@ -292,15 +477,31 @@ ru.akman.znotes.ClipperDialog = function() {
       onJobStopped: onJobStopped,
       onJobRemoved: onJobRemoved,
     };
-    aResultObj = { value: null };
     aClipper = new ru.akman.znotes.core.Clipper();
-    doClip();
+    try {
+      aClipper.save(
+        aDocument,
+        aResult,
+        aFile,
+        aDirectory,
+        aFlags,
+        aBaseURI,
+        anObserver
+      );
+    } catch ( e ) {
+      aClipper.abort();
+      log.warn( e + "\n" + Utils.dumpStack() );
+    }
   };
 
   pub.onClose = function( event ) {
     if ( canClose ) {
       return true;
     }
+    dialogKeyset.deactivate();
+    dialogController.unregister();
+    jobList.removeEventListener( "contextmenu", onJobListContextMenu, true );
+    jobList.removeEventListener( "dblclick", onJobListDblClick, true );
     event.stopPropagation();
     event.preventDefault();
     aClipper.abort();

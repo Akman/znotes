@@ -30,17 +30,23 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+const EXPORTED_SYMBOLS = ["Keyset"];
+
+var Cc = Components.classes;
+var Ci = Components.interfaces;
+var Cr = Components.results;
+var Cu = Components.utils;
+
 if ( !ru ) var ru = {};
 if ( !ru.akman ) ru.akman = {};
 if ( !ru.akman.znotes ) ru.akman.znotes = {};
 
-Components.utils.import( "resource://znotes/utils.js", ru.akman.znotes );
-
-var EXPORTED_SYMBOLS = ["Keyset"];
+Cu.import( "resource://znotes/utils.js", ru.akman.znotes );
 
 var Keyset = function() {
 
   var Utils = ru.akman.znotes.Utils;
+  var log = Utils.getLogger( "modules.keyset" );
 
   var pub = function( aKeyset, aDefaults ) {
 
@@ -48,9 +54,9 @@ var Keyset = function() {
     var _keyset = aKeyset.getAttribute( "id" );
     var _doc = aKeyset.ownerDocument;
     var _defaults = ( aDefaults === undefined ) ? null : aDefaults;
-  
+
     // helpers
-  
+
     function getKeyNodeAttributesFromShortcut( shortcut ) {
       var result = {
         modifiers: "",
@@ -100,7 +106,7 @@ var Keyset = function() {
     };
 
     // private
-    
+
     function updateTooltips() {
       var command = null;
       var menuitem = null;
@@ -140,16 +146,13 @@ var Keyset = function() {
       }
       popupset.removeChild( menupopup );
     };
-    
+
     function keypressHandler( event ) {
       var Common;
       try {
         Common = _doc.defaultView.ru.akman.znotes.Common;
       } catch ( e ) {
-        Components.utils.reportError(
-          "An error occurred processing keyboard shortcut: " +
-          "ru.akman.znotes.Common was not found!"
-        );
+        log.warn( e + "\n" + Utils.dumpStack() );
         Common = null;
       }
       if ( !Common ) {
@@ -186,12 +189,13 @@ var Keyset = function() {
             event.preventDefault();
             return false;
           default:
-            // Utils.log( "command: '" + command + "', keyCode: " + eventKeyCode );
+            //log.debug( "keypressHandler()\ncommand: '" + command +
+            //  "', keyCode: " + eventKeyCode );
         }
       }
       return true;
     };
-  
+
     function processKeyset( keyset, processor ) {
       var node = keyset.firstChild;
       var result, name, command;
@@ -219,21 +223,21 @@ var Keyset = function() {
       }
       return false;
     };
-    
+
     // public
-  
+
     this.activate = function() {
       if ( _doc && _doc.defaultView ) {
         _doc.defaultView.addEventListener( "keypress", keypressHandler, false );
       }
     };
-    
+
     this.deactivate = function() {
       if ( _doc && _doc.defaultView ) {
         _doc.defaultView.removeEventListener( "keypress", keypressHandler, false );
       }
     };
-    
+
     this.update = function( current, original ) {
       for ( var name in _shortcuts ) {
         _shortcuts[name]["original"] = ( original && ( name in original ) ) ?
@@ -263,6 +267,17 @@ var Keyset = function() {
       parent.removeChild( keyset );
       parent.appendChild( clone );
       updateTooltips();
+    };
+
+    this.getShortcuts = function() {
+      var name, value, result = {};
+      for ( name in _shortcuts ) {
+        value = _shortcuts[name]["current"];
+        if ( value ) {
+          result[ value ] = true;
+        }
+      }
+      return result;
     };
     
     // constructor

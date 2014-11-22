@@ -40,16 +40,15 @@
 <!ENTITY docTypeCaption.label "Default document type">
 <!ENTITY clipperCaption.label "Web-clipper">
 <!ENTITY clipperSaveScripts.label "Save scripts">
+<!ENTITY clipperSaveScripts.tooltip "Can lead to incorrect display of the saved content!">
 <!ENTITY clipperSaveFrames.label "Save frames">
 <!ENTITY clipperSeparateFrames.label "Save frames in the separate folders">
 <!ENTITY clipperPreserveHTML5Tags.label "Preserve HTML5 tags">
+<!ENTITY clipperSaveInlineResources.label "Save inline resources in the separate files">
 <!ENTITY clipperSaveStyles.label "Save styles">
 <!ENTITY clipperInlineStylesheets.label "Inline stylesheets in a document">
-<!ENTITY clipperSingleStylesheet.label "Save stylesheets in a single file">
-<!ENTITY clipperSeparateStylesheets.label "Save stylesheets in the separate files">
 <!ENTITY clipperSaveActiveRulesOnly.label "Save active rules only">
 <!ENTITY isCloseBrowserAfterImport.label "Close browser window when download completes">
-<!ENTITY isSelectNoteAfterImport.label "Select created note when download completes">
 <!ENTITY isClipperPlaySound.label "Play sound when download completes">
 <!ENTITY additionCaption.label "Additionally">
 <!ENTITY isReplaceBackground.label "Replace the background color of note using the main tag color">
@@ -57,6 +56,7 @@
 <!ENTITY isExitQuitTB.label "Exiting application leads to closing TB">
 <!ENTITY isHighlightRow.label "Highlight row in the note list using the main tag color">
 <!ENTITY isPlaySound.label "Play sound at startup">
+<!ENTITY isClearBinOnExit.label "Empty trash on exit">
 <!ENTITY keysPlatformCaption.label "Keyboard shortcuts">
 <!ENTITY keysCaption.label "Keyboard shortcuts">
 <!ENTITY defaultsButton.label "Defaults">

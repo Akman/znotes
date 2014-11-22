@@ -252,6 +252,13 @@
 <!ENTITY znotes_toggletagsmode_key_modifiers "">
 <!ENTITY znotes_toggletagsmode_keycode "">
 
+<!ENTITY znotes_importresources_label "Import resources">
+<!ENTITY znotes_importresources_tooltip "Import external resources">
+<!ENTITY znotes_importresources_accesskey "">
+<!ENTITY znotes_importresources_key "">
+<!ENTITY znotes_importresources_key_modifiers "">
+<!ENTITY znotes_importresources_keycode "">
+
 <!-- OPTIONS -->
 
 <!ENTITY docCaption.xhtml.label "Document">

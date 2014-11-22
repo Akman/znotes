@@ -34,7 +34,7 @@ if ( !ru ) var ru = {};
 if ( !ru.akman ) ru.akman = {};
 if ( !ru.akman.znotes ) ru.akman.znotes = {};
 
-Components.utils.import( "resource://znotes/utils.js", ru.akman.znotes );
+Cu.import( "resource://znotes/utils.js", ru.akman.znotes );
 
 ru.akman.znotes.Attachments = function() {
 
@@ -42,6 +42,8 @@ ru.akman.znotes.Attachments = function() {
   return function( aWindow, aStyle ) {
 
     var Utils = ru.akman.znotes.Utils;
+    var log = Utils.getLogger( "content.attachments" );
+
     var Common = ru.akman.znotes.Common;
 
     var currentWindow = null;
@@ -49,7 +51,7 @@ ru.akman.znotes.Attachments = function() {
 
     var attachmentTree = null;
     var attachmentTreeChildren = null;
-    
+
     var currentNote = null;
     var currentAttachment = null;
 
@@ -58,7 +60,7 @@ ru.akman.znotes.Attachments = function() {
     //
     // COMMANDS
     //
-    
+
     var attachmentsCommands = {
       "znotes_attachmentsaddcontact_command": null,
       "znotes_attachmentsaddfile_command": null,
@@ -67,7 +69,7 @@ ru.akman.znotes.Attachments = function() {
       "znotes_attachmentssave_command": null,
       "znotes_attachmentsdelete_command": null
     };
-    
+
     var attachmentsController = {
       supportsCommand: function( cmd ) {
         if ( !( cmd in attachmentsCommands ) ) {
@@ -152,18 +154,17 @@ ru.akman.znotes.Attachments = function() {
             }
             break;
           case "znotes_attachmentsaddfile_command":
-            var nsIFilePicker = Components.interfaces.nsIFilePicker;
-            var fp = Components.classes["@mozilla.org/filepicker;1"]
-                               .createInstance( nsIFilePicker );
+            var fp = Cc["@mozilla.org/filepicker;1"]
+                               .createInstance( Ci.nsIFilePicker );
             fp.init(
               currentWindow,
               Utils.STRINGS_BUNDLE.getString(
                 "attachments.addfiledialog.title" ),
-              nsIFilePicker.modeOpen
+              Ci.nsIFilePicker.modeOpen
             );
-            fp.appendFilters( nsIFilePicker.filterAll );
+            fp.appendFilters( Ci.nsIFilePicker.filterAll );
             var result = fp.show();
-            if ( result == nsIFilePicker.returnOK ) {
+            if ( result == Ci.nsIFilePicker.returnOK ) {
               createAttachment( fp.file );
             }
             break;
@@ -180,9 +181,8 @@ ru.akman.znotes.Attachments = function() {
                                     .split( "\u0000" );
             var id = parseInfo[0];
             var type = parseInfo[1];
-            var nsIFilePicker = Components.interfaces.nsIFilePicker;
-            var fp = Components.classes["@mozilla.org/filepicker;1"]
-                               .createInstance( nsIFilePicker );
+            var fp = Cc["@mozilla.org/filepicker;1"]
+              .createInstance( Ci.nsIFilePicker );
             switch ( type ) {
               case "file" :
                 fp.defaultString = id;
@@ -258,9 +258,9 @@ ru.akman.znotes.Attachments = function() {
             return currentWindow.controllers.getControllerId( this );
           };
         } catch ( e ) {
-          Components.utils.reportError(
+          log.warn(
             "An error occurred registering '" + this.getName() +
-            "' controller: " + e
+            "' controller\n" + e
           );
         }
       },
@@ -271,14 +271,14 @@ ru.akman.znotes.Attachments = function() {
         try {
           currentWindow.controllers.removeController( this );
         } catch ( e ) {
-          Components.utils.reportError(
+          log.warn(
             "An error occurred unregistering '" + this.getName() +
-            "' controller: " + e
+            "' controller\n" + e
           );
         }
       }
     };
-    
+
     function updateCommands() {
       var id = attachmentsController.getId();
       Common.goUpdateCommand( "znotes_attachmentsaddcontact_command", id, currentWindow );
@@ -287,8 +287,8 @@ ru.akman.znotes.Attachments = function() {
       Common.goUpdateCommand( "znotes_attachmentsopenwith_command", id, currentWindow );
       Common.goUpdateCommand( "znotes_attachmentssave_command", id, currentWindow );
       Common.goUpdateCommand( "znotes_attachmentsdelete_command", id, currentWindow );
-    };    
-    
+    };
+
     function createContacts( cards ) {
       for ( var i = 0; i < cards.length; i++ ) {
         var contact = cards[i]
@@ -324,8 +324,7 @@ ru.akman.znotes.Attachments = function() {
       result += '  "properties": {\n';
       var properties = card.properties;
       while ( properties.hasMoreElements() ) {
-        var property = properties.getNext().QueryInterface(
-          Components.interfaces.nsIProperty );
+        var property = properties.getNext().QueryInterface( Ci.nsIProperty );
         var type = typeof( property.value );
         switch ( type ) {
           case 'function':
@@ -344,7 +343,7 @@ ru.akman.znotes.Attachments = function() {
       }
       return result.substring( 0, result.length - 2 ) + "\n  }\n}";
     };
-    
+
     function createAttachment( file ) {
       currentNote.addAttachment( [ file.leafName, "file", file.parent.path ] );
     };
@@ -373,7 +372,7 @@ ru.akman.znotes.Attachments = function() {
             }
             src.copyTo( parentDir, fileName );
           } catch ( e ) {
-            Utils.log( e + "\n" + Utils.dumpStack() );
+            log.warn( e + "\n" + Utils.dumpStack() );
           }
           break;
         case "contact" :
@@ -395,13 +394,10 @@ ru.akman.znotes.Attachments = function() {
         case "file" :
           var entry = currentNote.getAttachmentEntry( id );
           if ( entry ) {
-            var ioService =
-              Components.classes["@mozilla.org/network/io-service;1"]
-                        .getService( Components.interfaces.nsIIOService );
-            var fph =
-              ioService.getProtocolHandler( "file" )
-                       .QueryInterface(
-                         Components.interfaces.nsIFileProtocolHandler );
+            var ioService = Cc["@mozilla.org/network/io-service;1"]
+              .getService( Ci.nsIIOService );
+            var fph = ioService.getProtocolHandler( "file" )
+              .QueryInterface( Ci.nsIFileProtocolHandler );
             var url = fph.getURLSpecFromFile( entry );
             var title = Utils.STRINGS_BUNDLE.getString(
               "utils.openuri.apppicker.title" );
@@ -424,7 +420,7 @@ ru.akman.znotes.Attachments = function() {
       }
       updateAttachmentTreeItem( anAttachmentIndex );
     };
-    
+
     // EVENTS
 
     function onSelect( event ) {
@@ -463,12 +459,17 @@ ru.akman.znotes.Attachments = function() {
     };
 
     function getFileDescription( entry ) {
-      var result = Utils.STRINGS_BUNDLE.getString(
+      var size, result = Utils.STRINGS_BUNDLE.getString(
         "attachments.filenotfound" );
       if ( entry.exists() && !entry.isDirectory() ) {
-        result = Utils.STRINGS_BUNDLE.getString( "attachments.filesize" ) +
-          ": " + Math.round( entry.fileSize / 1000 ) + " " +
-          Utils.STRINGS_BUNDLE.getString( "attachments.kib" );
+        result = Utils.STRINGS_BUNDLE.getString( "attachments.filesize" ) + ": ";
+        if ( entry.fileSize < 1024 ) {
+          result += entry.fileSize + " " +
+            Utils.STRINGS_BUNDLE.getString( "attachments.bytes" );
+        } else {
+          result += Math.round( entry.fileSize / 1024 ) + " " +
+            Utils.STRINGS_BUNDLE.getString( "attachments.kib" );
+        }
       }
       return result;
     };
@@ -489,13 +490,13 @@ ru.akman.znotes.Attachments = function() {
       if ( Utils.IS_STANDALONE )
         return null;
       var directoryId = card.directoryId;
-      var abManager = Components.classes["@mozilla.org/abmanager;1"]
-                            .getService( Components.interfaces.nsIAbManager );
+      var abManager =
+        Cc["@mozilla.org/abmanager;1"].getService( Ci.nsIAbManager );
       var directories = abManager.directories;
       while ( directories.hasMoreElements() ) {
-        var directory = directories.getNext().QueryInterface(
-          Components.interfaces.nsIAbDirectory );
-        if ( directory instanceof Components.interfaces.nsIAbDirectory ) {
+        var directory =
+          directories.getNext().QueryInterface( Ci.nsIAbDirectory );
+        if ( directory instanceof Ci.nsIAbDirectory ) {
           var id = directory.dirPrefId + "&" + directory.dirName;
           if ( id == directoryId ) {
             return directory.dirName;
@@ -524,13 +525,11 @@ ru.akman.znotes.Attachments = function() {
       var directory = null;
       var isFound = false;
       var abManager =
-        Components.classes["@mozilla.org/abmanager;1"]
-                  .getService( Components.interfaces.nsIAbManager );
+        Cc["@mozilla.org/abmanager;1"].getService( Ci.nsIAbManager );
       var directories = abManager.directories;
       while ( directories.hasMoreElements() ) {
-        directory = directories.getNext().QueryInterface(
-          Components.interfaces.nsIAbDirectory );
-        if ( directory instanceof Components.interfaces.nsIAbDirectory ) {
+        directory = directories.getNext().QueryInterface( Ci.nsIAbDirectory );
+        if ( directory instanceof Ci.nsIAbDirectory ) {
           if ( directory.dirPrefId == pabName ) {
             isFound = true;
             break;
@@ -543,9 +542,8 @@ ru.akman.znotes.Attachments = function() {
       //
       var cards = directory.childCards;
       while ( cards.hasMoreElements() ) {
-        var card = cards.getNext().QueryInterface(
-          Components.interfaces.nsIAbCard );
-        if ( card instanceof Components.interfaces.nsIAbCard ) {
+        var card = cards.getNext().QueryInterface( Ci.nsIAbCard );
+        if ( card instanceof Ci.nsIAbCard ) {
           if ( card.localId == localId ) {
             return { abCard: card, abURI: directory.URI };
           }
@@ -593,7 +591,7 @@ ru.akman.znotes.Attachments = function() {
       }
       return result;
     };
-    
+
     function getCurrentAttachmentType() {
       if ( !isAttachmentSelected() ) {
         return null;
@@ -615,11 +613,11 @@ ru.akman.znotes.Attachments = function() {
                                      .split( "\u0000" );
       return parseInfo[0];
     };
-    
+
     function isAttachmentSelected() {
       return ( currentAttachment != null && currentAttachment != -1 );
     };
-    
+
     // NOTE EVENTS
 
     function onNoteDeleted( aCategory, aNote ) {
@@ -750,7 +748,7 @@ ru.akman.znotes.Attachments = function() {
       }
       return result;
     };
-    
+
     function createAttachmentTreeItem( id, type, icon, name, description ) {
       var treeItem = null;
       var treeRow = null;
@@ -787,14 +785,14 @@ ru.akman.znotes.Attachments = function() {
       ];
       treeCell.setAttribute( "label", anInfo.description );
     };
-    
+
     function clearAttachmentsTree() {
       while ( attachmentTreeChildren.firstChild ) {
         attachmentTreeChildren.removeChild(
           attachmentTreeChildren.firstChild );
       }
     };
-    
+
     function showCurrentView() {
       attachmentTree.removeAttribute( "disabled" );
       var count = 0;
@@ -817,11 +815,11 @@ ru.akman.znotes.Attachments = function() {
       }
       attachmentTree.view.selection.select( count > 0 ? 0 : -1 );
     };
-    
+
     function hideCurrentView() {
       attachmentTree.setAttribute( "disabled", "true" );
     };
-    
+
     function show( aNote, aForced ) {
       if ( currentNote && currentNote == aNote && !aForced ) {
         return;
@@ -837,7 +835,7 @@ ru.akman.znotes.Attachments = function() {
       }
       updateCommands();
     };
-      
+
     // LISTENERS
 
     function addEventListeners() {
@@ -862,13 +860,13 @@ ru.akman.znotes.Attachments = function() {
 
     this.onStyleChanged = function( event ) {
     };
-    
+
     this.onNoteChanged = function( event ) {
       var aNote = event.data.note;
       var aForced = event.data.forced;
       show( aNote, aForced );
     };
-    
+
     this.onRelease = function( event ) {
       removeEventListeners();
       attachmentsController.unregister();

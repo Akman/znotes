@@ -86,7 +86,7 @@ pref("app.update.auto", false); // true
 //
 // AUM Set to:        Minor Releases:     Major Releases:
 // 0                  download no prompt  download no prompt
-// 1                  download no prompt  download no prompt 
+// 1                  download no prompt  download no prompt
 //                                        if no incompatibilities
 // 2                  download no prompt  prompt
 //

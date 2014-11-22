@@ -36,6 +36,7 @@
 <?xml-stylesheet type="text/css" href="chrome://znotes/skin/viewer.css" ?>
 
 <?xul-overlay href="chrome://znotes/content/common.xul" ?>
+<?xul-overlay href="chrome://znotes/content/common-edit.xul" ?>
 <?xul-overlay href="chrome://znotes/content/body.xul" ?>
 
 <!DOCTYPE window SYSTEM "chrome://znotes/locale/viewer.dtd">
@@ -61,19 +62,20 @@
   <toolbox id="znotes_viewertoolbox"
     class="mail-toolbox znotes_viewertoolbox"
     mode="icons"
+    orient="horizontal"
     defaultmode="full"
     labelalign="bottom"
     defaultlabelalign="end"
     iconsize="small" />
-  
+
   <vbox id="noteBodyView" flex="1" class="noteBodyView" />
 
   <statusbar id="znotes_statusbar" class="chromeclass-status znotes_statusbar">
     <statusbarpanel id="znotes_statusbarpanel" flex="1">
       <image id="znotes_statusbarpanellogo" />
       <label id="znotes_statusbarpanellabel" />
-      <spacer id="znotes_statusbar_spacer" flex="1"/>      
+      <spacer id="znotes_statusbar_spacer" flex="1"/>
     </statusbarpanel>
   </statusbar>
-  
+
 </window>

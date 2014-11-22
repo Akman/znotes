@@ -36,6 +36,9 @@ if ( !ru.akman.znotes ) ru.akman.znotes = {};
 
 ru.akman.znotes.InputDialog = function() {
 
+  var Utils = ru.akman.znotes.Utils;
+  var log = Utils.getLogger( "content.inputdialog" );
+
   var args = null;
   var textbox = null;
   var caption = null;

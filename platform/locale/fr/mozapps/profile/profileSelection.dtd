@@ -25,5 +25,5 @@
 <!ENTITY            offlineState.label     "Travailler hors connexion">
 <!ENTITY            offlineState.accesskey "o">
 
-<!ENTITY            autoSelect.label      "Utiliser par défaut le profil sélectionné">
-<!ENTITY            autoSelect.accesskey  "U">
+<!ENTITY            useSelected.label      "Utiliser par défaut le profil sélectionné">
+<!ENTITY            useSelected.accesskey  "U">

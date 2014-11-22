@@ -38,13 +38,13 @@
 
 <dialog xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   id="book" title="&dialog.title;" minwidth="600" windowtype="znotes">
-  
+
   <script type="application/javascript" src="chrome://znotes/content/book.js" />
 
   <stringbundleset id="bookStringBundleset" />
-  
+
   <vbox id="bookBox" flex="1">
-    
+
     <groupbox id="commonBox" flex="1">
       <caption id="commonBoxCaption" label="&common.caption;" />
       <label id="labelBookName" value="&name.label;"
@@ -57,7 +57,7 @@
         rows="5" size="80" wrap="true" newlines="pasteintact" minheight="100"
         placeholder="&description.placeholder;" />
     </groupbox>
-    
+
     <groupbox id="driverBox">
       <caption id="driverBoxCaption" label="&driver.caption;" />
       <menulist id="menuBookDriver" />
@@ -67,14 +67,14 @@
       <caption id="paramsBoxCaption" label="&params.caption;" />
       <vbox id="paramsView" />
     </groupbox>
-    
+
     <hbox id="hboxButtons" dir="rtl" pack="start">
       <button id="btnAccept" dlgtype="accept" minwidth="90"
         label=" &dialog.accept;" pack="start"/>
       <button id="btnCancel" dlgtype="cancel" minwidth="90"
         label=" &dialog.cancel;" pack="start"/>
     </hbox>
-    
+
   </vbox>
 
 </dialog>

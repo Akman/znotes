@@ -57,20 +57,20 @@
     <keyset id="znotes_platform_keyset" />
     <popupset id="znotes_platform_popupset" />
   </window>
-    
+
   <vbox id="znotes_maintabpanel" />
-  
+
   <vbox id="znotes_tabpanelcontainer">
     <vbox id="znotes_contenttabpanel" />
     <vbox id="znotes_infotabpanel" />
   </vbox>
-  
+
   <statusbar id="znotes_statusbar">
     <statusbarpanel id="znotes_statusbarpanel" flex="1">
       <image id="znotes_statusbarpanellogo" />
       <label id="znotes_statusbarpanellabel" />
-      <spacer id="znotes_statusbar_spacer" flex="1"/>      
+      <spacer id="znotes_statusbar_spacer" flex="1"/>
     </statusbarpanel>
   </statusbar>
-    
+
 </overlay>

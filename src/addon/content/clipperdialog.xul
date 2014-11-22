@@ -34,6 +34,8 @@
 <?xml-stylesheet type="text/css" href="chrome://global/skin/" ?>
 <?xml-stylesheet type="text/css" href="chrome://znotes/skin/clipperdialog.css" ?>
 
+<?xul-overlay href="chrome://znotes/content/common-edit.xul" ?>
+
 <!DOCTYPE window SYSTEM "chrome://znotes/locale/clipperdialog.dtd">
 
 <dialog xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -41,10 +43,17 @@
   minwidth="350" persist="width height screenX screenY sizemode">
 
   <script type="application/javascript"
+    src="chrome://znotes/content/common.js" />
+  <script type="application/javascript"
     src="chrome://znotes/content/clipperdialog.js" />
 
+  <stringbundleset id="znotes_stringbundleset" />
+  <commandset id="znotes_commandset" />
+  <keyset id="znotes_keyset" />
+  <popupset id="znotes_popupset" />
+  
   <vbox id="progressBox" width="384" height="512" flex="1">
-    <richlistbox id="jobList" flex="1" seltype="single" />
+    <richlistbox id="jobList" flex="1" seltype="multiple" />
   </vbox>
 
   <hbox id="btnBox">

@@ -30,29 +30,37 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+const EXPORTED_SYMBOLS = ["Note"];
+
+var Cc = Components.classes;
+var Ci = Components.interfaces;
+var Cr = Components.results;
+var Cu = Components.utils;
+
 if ( !ru ) var ru = {};
 if ( !ru.akman ) ru.akman = {};
 if ( !ru.akman.znotes ) ru.akman.znotes = {};
 if ( !ru.akman.znotes.core ) ru.akman.znotes.core = {};
 
-Components.utils.import( "resource://znotes/utils.js",
-  ru.akman.znotes
-);
-Components.utils.import( "resource://znotes/event.js",
-  ru.akman.znotes.core
-);
-Components.utils.import( "resource://znotes/documentmanager.js",
-  ru.akman.znotes
-);
-
-var EXPORTED_SYMBOLS = ["Note"];
+Cu.import( "resource://znotes/utils.js", ru.akman.znotes );
+Cu.import( "resource://znotes/event.js", ru.akman.znotes.core );
+Cu.import( "resource://znotes/documentmanager.js", ru.akman.znotes );
 
 var Note = function( aBook, anEntry, aCategory, aType, aTagID ) {
 
   var Utils = ru.akman.znotes.Utils;
+  var log = Utils.getLogger( "modules.note" );
 
   this.getBook = function() {
     return this.book;
+  };
+
+  this.getRoot = function() {
+    return this.getParent().getRoot();
+  };
+
+  this.getBin = function() {
+    return this.getParent().getBin();
   };
 
   this.getEncoding = function() {
@@ -82,7 +90,7 @@ var Note = function( aBook, anEntry, aCategory, aType, aTagID ) {
   this.getUpdateDateTime = function() {
     return this.entry.getUpdateDateTime();
   };
-  
+
   this.getKeyWords = function() {
     var result = [];
     // name
@@ -104,18 +112,23 @@ var Note = function( aBook, anEntry, aCategory, aType, aTagID ) {
     // content
     // ...
     return result;
-  };  
-  
+  };
+
   this.getIndex = function() {
-    return this.index;
+    return parseInt( this.index );
   };
 
   this.setIndex = function( index ) {
-    if ( this.index == index ) {
+    var value = parseInt( index );
+    if ( this.getIndex() === value ) {
       return;
     }
-    this.index = index;
-    this.entry.setIndex( index );
+    this.index = value;
+    this.entry.setIndex( value );
+  };
+
+  this.dump = function( prefix ) {
+    return prefix + this.getName() + "\n";
   };
 
   this.getType = function() {
@@ -147,10 +160,10 @@ var Note = function( aBook, anEntry, aCategory, aType, aTagID ) {
         { parentCategory: this.getParent(), changedNote: this } )
     );
   };
-  
+
   this.loadPreference = function( name, value ) {
     if ( "prefs" in this.data ) {
-      if ( this.data.prefs == null || 
+      if ( this.data.prefs == null ||
            Array.isArray( this.data.prefs ) ||
            typeof( this.data.prefs ) !== "object" ) {
         this.data.prefs = {};
@@ -163,10 +176,10 @@ var Note = function( aBook, anEntry, aCategory, aType, aTagID ) {
     }
     return value;
   };
-  
+
   this.savePreference = function( name, value ) {
     if ( "prefs" in this.data ) {
-      if ( this.data.prefs == null || 
+      if ( this.data.prefs == null ||
            Array.isArray( this.data.prefs ) ||
            typeof( this.data.prefs ) !== "object" ) {
         this.data.prefs = {};
@@ -194,6 +207,12 @@ var Note = function( aBook, anEntry, aCategory, aType, aTagID ) {
       )
     );
   };
+
+  this.getExtension = function() {
+    var doc = ru.akman.znotes.DocumentManager.getInstance()
+                                             .getDocument( this.getType() );
+    return doc ? doc.getExtension( this.getType() ) : null;
+  };
   
   this.getDocument = function() {
     var doc = ru.akman.znotes.DocumentManager.getInstance()
@@ -208,7 +227,7 @@ var Note = function( aBook, anEntry, aCategory, aType, aTagID ) {
       this.getName()
     );
   };
-  
+
   this.setDocument = function( dom ) {
     var doc = ru.akman.znotes.DocumentManager.getInstance()
                                              .getDocument( this.getType() );
@@ -237,10 +256,11 @@ var Note = function( aBook, anEntry, aCategory, aType, aTagID ) {
       return;
     }
     this.setDocument(
-      doc.importDocument( dom, this.getURI(), this.getBaseURI(), this.getName(), params ) );
+      doc.importDocument(
+        dom, this.getURI(), this.getBaseURI(), this.getName(), params ) );
     this.updateDocument();
   };
-  
+
   this.getMainContent = function() {
     return this.entry.getMainContent();
   };
@@ -260,9 +280,9 @@ var Note = function( aBook, anEntry, aCategory, aType, aTagID ) {
       )
     );
   };
-  
-  this.loadContentDirectory = function( fromDirectoryEntry, flagMove ) {
-    this.entry.loadContentDirectory( fromDirectoryEntry, flagMove );
+
+  this.loadContentDirectory = function( fromDirectoryEntry, fMove, fClean ) {
+    this.entry.loadContentDirectory( fromDirectoryEntry, fMove, fClean );
     this.notifyStateListener(
       new ru.akman.znotes.core.Event(
         "NoteContentLoaded",
@@ -383,6 +403,18 @@ var Note = function( aBook, anEntry, aCategory, aType, aTagID ) {
     return this.name;
   };
 
+  this.isInBin = function() {
+    var aCategory = this.getParent();
+    var aBin = aCategory.getBin();
+    while ( aCategory ) {
+      if ( aCategory === aBin ) {
+        return true;
+      }
+      aCategory = aCategory.getParent();
+    }
+    return false;
+  };
+
   this.rename = function( aName ) {
     if ( this.name != aName ) {
       this.entry.setName( aName );
@@ -399,31 +431,46 @@ var Note = function( aBook, anEntry, aCategory, aType, aTagID ) {
   };
 
   this.remove = function() {
-    this.entry.remove();
-    this.exists = false;
-    this.getParent().removeNote( this );
-    this.notifyStateListener(
-      new ru.akman.znotes.core.Event(
-        "NoteDeleted",
-        { parentCategory: this.getParent(), deletedNote: this }
-      )
-    );
+    var aParent = this.getParent();
+    if ( this.isInBin() ) {
+      this.entry.remove();
+      this.exists = false;
+      aParent.removeNote( this );
+      this.notifyStateListener(
+        new ru.akman.znotes.core.Event(
+          "NoteDeleted",
+          { parentCategory: aParent, deletedNote: this }
+        )
+      );
+    } else {
+      this.moveInto( this.getBin() );
+    }
   };
 
-  this.moveInto = function( aCategory ) {
-    this.entry.moveTo( aCategory.entry );
-    // @@@@ 1 What if the note is in editing mode ?
+  this.moveInto = function( aCategory, aName ) {
+    var aSuffix, anIndex;
+    var aParent = this.getParent();
+    var aType = this.getType();
+    if ( aName === undefined ) {
+      aName = this.getName();
+    }
+    aSuffix = "";
+    anIndex = 2;
+    while ( !aCategory.canCreateNote( aName + aSuffix, aType ) ) {
+      aSuffix = " (" + anIndex++ + ")";
+    }
+    aName += aSuffix;
+    this.entry.moveTo( aCategory.entry, aName );
+    if ( this.name !== aName ) {
+      this.name = aName;
+    }
     this.updateDocument();
-    this.getParent().removeNote( this );
-    aCategory.appendNote( this );
+    aParent.moveNoteInto( this, aCategory );
   };
 
   this.moveTo = function( anIndex ) {
     var aParent = this.getParent();
-    if ( aParent.removeNote( this ) ) {
-      return aParent.insertNote( this, anIndex );
-    }
-    return null;
+    aParent.moveNoteTo( this, anIndex );
   };
 
   this.refresh = function() {
@@ -531,7 +578,7 @@ var Note = function( aBook, anEntry, aCategory, aType, aTagID ) {
     }
     return color;
   };
-  
+
   this.getOrigin = function() {
     return this.origin;
   };
@@ -546,7 +593,7 @@ var Note = function( aBook, anEntry, aCategory, aType, aTagID ) {
   this.getMode = function() {
     return this.mode;
   };
-  
+
   this.setMode = function( mode ) {
     var oldValue = this.mode;
     this.mode = mode;
@@ -562,14 +609,15 @@ var Note = function( aBook, anEntry, aCategory, aType, aTagID ) {
       )
     );
   };
-  
+
   this.isLoading = function() {
     return this.loading;
   };
-  
+
   this.setLoading = function( loading ) {
     var oldValue = this.loading;
-    this.loading = loading;
+    var newValue = !!loading;
+    this.loading = newValue;
     this.notifyStateListener(
       new ru.akman.znotes.core.Event(
         "NoteLoadingChanged",
@@ -577,12 +625,12 @@ var Note = function( aBook, anEntry, aCategory, aType, aTagID ) {
           parentCategory: this.getParent(),
           changedNote: this,
           oldValue: oldValue,
-          newValue: loading
+          newValue: newValue
         }
       )
     );
   };
-  
+
   this.addStateListener = function( stateListener ) {
     if ( this.listeners.indexOf( stateListener ) < 0 ) {
       this.listeners.push( stateListener );
@@ -628,24 +676,21 @@ var Note = function( aBook, anEntry, aCategory, aType, aTagID ) {
       }
     }
     listenersNames += "}\n";
-    return "{ " + this.instanceId + " }\n{ " +
-      "'" + this.id + "', " +
-      "'" + this.name + "', " +
-      this.index + ", " +
-      "'" + parentName + "'" +
-      " }\n{ " +
-      this.getTags() +
-      " }\n{ " +
-      "loading = " + this.loading + ", " +
-      "locked = " + this.locked + ", " +
-      "exists = " + this.exists + ", " +
-      "listeners = " + listenersNames +
-      " }\n" +
-      this.entry
+    return "\ninstanceId: " + this.instanceId + "\n" +
+      "id: " + this.id + ", " +
+      "index: " + this.index + "\n" +
+      "name: '" + this.name + "'\n" +
+      "parent: '" + parentName + "'\n" +
+      "tags: " + this.getTags() + "\n" +
+      "loading: " + this.loading + ", " +
+      "locked: " + this.locked + ", " +
+      "exists: " + this.exists + "\n" +
+      "listeners:\n" + listenersNames +
+      "entry:\n" + this.entry;
   };
 
   // C O N S T R U C T O R
-  
+
   // for debug purpose
   this.instanceId = Utils.createUUID();
 
@@ -661,7 +706,11 @@ var Note = function( aBook, anEntry, aCategory, aType, aTagID ) {
   this.name = this.entry.getName();
   this.id = this.entry.getId();
   this.index = this.entry.getIndex();
-  this.data = JSON.parse( this.entry.getData() );
+  try {
+    this.data = JSON.parse( this.entry.getData() );
+  } catch ( e ) {
+    this.data = {};
+  }
   //
   this.type = this.entry.getType();
   if ( aType && aType != this.type ) {

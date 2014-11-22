@@ -35,6 +35,7 @@
 <?xml-stylesheet type="text/css" href="chrome://znotes/skin/options.css" ?>
 
 <?xul-overlay href="chrome://znotes/content/common.xul" ?>
+<?xul-overlay href="chrome://znotes/content/common-edit.xul" ?>
 
 <!DOCTYPE window SYSTEM "chrome://znotes/locale/options.dtd">
 
@@ -65,7 +66,7 @@
   <popupset id="znotes_popupset">
     <popupset id="znotes_editor_popupset" />
   </popupset>
-  
+
   <tabbox id="optionsTabBox" flex="1">
     <tabs id="optionsTabs">
       <tab id="tab-main" label="&tab-main.label;" class="optionsTab" />
@@ -85,25 +86,21 @@
           <hbox id="docTypeHBox" align="center">
             <menulist id="docTypeMenuList" flex="1">
               <menupopup id="docTypeMenuPopup" />
-            </menulist>      
+            </menulist>
           </hbox>
         </groupbox>
         <groupbox id="clipperGroupBox">
           <caption id="clipperCaption" label="&clipperCaption.label;" />
           <vbox id="clipperVBox" align="start">
-            <checkbox id="clipperSaveScripts" label="&clipperSaveScripts.label;" />
+            <checkbox id="clipperSaveScripts" label="&clipperSaveScripts.label;" tooltiptext="&clipperSaveScripts.tooltip;" />
             <checkbox id="clipperSaveFrames" label="&clipperSaveFrames.label;" />
             <checkbox id="clipperSeparateFrames" label="&clipperSeparateFrames.label;" />
             <checkbox id="clipperPreserveHTML5Tags" label="&clipperPreserveHTML5Tags.label;" />
+            <checkbox id="clipperSaveInlineResources" label="&clipperSaveInlineResources.label;" />
             <checkbox id="clipperSaveStyles" label="&clipperSaveStyles.label;" />
-            <radiogroup id="clipperSaveStylesGroup">
-              <radio id="clipperInlineStylesheets" label="&clipperInlineStylesheets.label;" />
-              <radio id="clipperSingleStylesheet" label="&clipperSingleStylesheet.label;" />
-              <radio id="clipperSeparateStylesheets" label="&clipperSeparateStylesheets.label;" />
-            </radiogroup>            
+            <checkbox id="clipperInlineStylesheets" label="&clipperInlineStylesheets.label;" />
             <checkbox id="clipperSaveActiveRulesOnly" label="&clipperSaveActiveRulesOnly.label;" />
             <checkbox id="isCloseBrowserAfterImport" label="&isCloseBrowserAfterImport.label;" />
-            <checkbox id="isSelectNoteAfterImport" label="&isSelectNoteAfterImport.label;" />
             <checkbox id="isClipperPlaySound" label="&isClipperPlaySound.label;" />
           </vbox>
         </groupbox>
@@ -117,6 +114,7 @@
             <checkbox id="isReplaceBackground" label="&isReplaceBackground.label;" />
             <checkbox id="isHighlightRow" label="&isHighlightRow.label;" />
             <checkbox id="isPlaySound" label="&isPlaySound.label;" />
+            <checkbox id="isClearBinOnExit" label="&isClearBinOnExit.label;" />
           </vbox>
         </groupbox>
       </tabpanel>
@@ -148,5 +146,5 @@
       label=" &defaultsButton.label;"
       tooltiptext="&defaultsButton.tooltip;" />
   </hbox>
-  
+
 </window>

@@ -70,3 +70,10 @@
 <!ENTITY znotes_customizetoolbar_key "">
 <!ENTITY znotes_customizetoolbar_key_modifiers "">
 <!ENTITY znotes_customizetoolbar_keycode "">
+
+<!ENTITY znotes_styles_label "Styles">
+<!ENTITY znotes_styles_tooltip "Select style">
+<!ENTITY znotes_styles_accesskey "Y">
+<!ENTITY znotes_styles_key "">
+<!ENTITY znotes_styles_key_modifiers "">
+<!ENTITY znotes_styles_keycode "">

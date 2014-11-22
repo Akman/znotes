@@ -30,73 +30,62 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+var Cc = Components.classes;
+var Ci = Components.interfaces;
+var Cr = Components.results;
+var Cu = Components.utils;
+
 if ( !ru ) var ru = {};
 if ( !ru.akman ) ru.akman = {};
 if ( !ru.akman.znotes ) ru.akman.znotes = {};
 if ( !ru.akman.znotes.core ) ru.akman.znotes.core = {};
 if ( !ru.akman.znotes.mime ) ru.akman.znotes.mime = {};
 
-Components.utils.import( "resource://znotes/utils.js",
-  ru.akman.znotes
-);
-Components.utils.import( "resource://znotes/event.js",
-  ru.akman.znotes.core
-);
-Components.utils.import( "resource://znotes/clipper.js",
-  ru.akman.znotes.core
-);
-Components.utils.import( "resource://znotes/tabmonitor.js",
-  ru.akman.znotes
-);
-Components.utils.import( "resource://znotes/prefsmanager.js",
-  ru.akman.znotes
-);
-Components.utils.import( "resource://znotes/sessionmanager.js",
-  ru.akman.znotes
-);
-Components.utils.import( "resource://znotes/keyset.js",
-  ru.akman.znotes
-);
-Components.utils.import( "resource://app/modules/gloda/mimemsg.js",
-  ru.akman.znotes.mime
-);
+Cu.import( "resource://znotes/utils.js", ru.akman.znotes );
+Cu.import( "resource://znotes/event.js", ru.akman.znotes.core );
+Cu.import( "resource://znotes/clipper.js", ru.akman.znotes.core );
+Cu.import( "resource://znotes/tabmonitor.js", ru.akman.znotes );
+Cu.import( "resource://znotes/prefsmanager.js", ru.akman.znotes );
+Cu.import( "resource://znotes/sessionmanager.js", ru.akman.znotes );
+Cu.import( "resource://znotes/keyset.js", ru.akman.znotes );
+Cu.import( "resource://app/modules/gloda/mimemsg.js", ru.akman.znotes.mime );
 
 ru.akman.znotes.ZNotes = function() {
 
   var pub = {};
 
-  var observerService =
-    Components.classes["@mozilla.org/observer-service;1"]
-              .getService( Components.interfaces.nsIObserverService );
-  
   var Utils = ru.akman.znotes.Utils;
+  var log = Utils.getLogger( "content.overlay-tb" );
+
   var Mime = ru.akman.znotes.mime;
   var Common = ru.akman.znotes.Common;
-
   var prefsBundle = ru.akman.znotes.PrefsManager.getInstance();
   var sessionManager = ru.akman.znotes.SessionManager.getInstance();
   var tabMonitor = ru.akman.znotes.TabMonitor.getInstance();
-  
+
+  var observerService = Cc["@mozilla.org/observer-service;1"].getService(
+    Ci.nsIObserverService );
+
   var bookManager = null;
   var driverManager = null;
-  
+
   var mailWindow = null;
   var folderTree = null;
   var threadTree = null;
-  
+
   var keySet = null;
   var isMainLoaded = false;
   var mainWindow = null;
   var mainWindowState = null;
-  
+
   var alertObserver = null;
-  
+
   // HELPERS
-  
+
   function getString( name ) {
     return Utils.STRINGS_BUNDLE.getString( name );
   };
-  
+
   function getValidNoteName( category, name, aType ) {
     var index = 0, suffix = "";
     while ( !category.canCreateNote( name + suffix, aType ) ) {
@@ -104,14 +93,14 @@ ru.akman.znotes.ZNotes = function() {
     }
     return name + suffix;
   };
-  
+
   function createNote( aBook, aRoot, aName, aType ) {
     if ( !aBook || !aBook.isOpen() ) {
       return null;
     }
     return aRoot.createNote( aName, aType, null /* tagId */ );
   };
-  
+
   function setupAlertObserver() {
     alertObserver = {
       observe: function( subject, topic, data ) {
@@ -135,7 +124,7 @@ ru.akman.znotes.ZNotes = function() {
       }
     };
   };
-  
+
   /**
    * How to Find or Validate an Email Address
    * @author Jan Goyvaerts
@@ -145,7 +134,7 @@ ru.akman.znotes.ZNotes = function() {
     var result = /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}\b/i.exec( anAuthor );
     return result ? result[0] : null;
   };
-  
+
   function processMessagePart( part, textBodies, htmlBodies ) {
     if ( !part ) {
       return;
@@ -191,19 +180,15 @@ ru.akman.znotes.ZNotes = function() {
   function getContactByEmail( anEmail ) {
     var dir, directories, card, cards, abManager;
     if ( anEmail ) {
-      abManager =
-        Components.classes["@mozilla.org/abmanager;1"]
-                  .getService( Components.interfaces.nsIAbManager );
+      abManager = Cc["@mozilla.org/abmanager;1"].getService( Ci.nsIAbManager );
       directories = abManager.directories;
       while ( directories.hasMoreElements() ) {
-        dir = directories.getNext().QueryInterface(
-          Components.interfaces.nsIAbDirectory );
-        if ( dir instanceof Components.interfaces.nsIAbDirectory ) {
+        dir = directories.getNext().QueryInterface( Ci.nsIAbDirectory );
+        if ( dir instanceof Ci.nsIAbDirectory ) {
           cards = dir.childCards;
           while ( cards.hasMoreElements() ) {
-            card = cards.getNext().QueryInterface(
-              Components.interfaces.nsIAbCard );
-            if ( card instanceof Components.interfaces.nsIAbCard ) {
+            card = cards.getNext().QueryInterface( Ci.nsIAbCard );
+            if ( card instanceof Ci.nsIAbCard ) {
               if ( card.primaryEmail && card.primaryEmail === anEmail ) {
                 return card;
               }
@@ -225,22 +210,19 @@ ru.akman.znotes.ZNotes = function() {
       aNote.addAttachment( [ id, "contact" ] );
     }
   };
-  
+
   function addAttachments( aNote, anAttachments ) {
-    var urls = {}, tmpfile, tmpdir =
-      Components.classes["@mozilla.org/file/directory_service;1"]
-                .getService( Components.interfaces.nsIProperties )
-                .get( "TmpD", Components.interfaces.nsIFile );
+    var urls = {}, tmpfile;
+    var tmpdir = Cc["@mozilla.org/file/directory_service;1"].getService(
+      Ci.nsIProperties ).get( "TmpD", Ci.nsIFile );
     tmpdir.append( Utils.createUUID() );
-    tmpdir.createUnique(
-      Components.interfaces.nsIFile.DIRECTORY_TYPE,
-      parseInt( "0774", 8 )
-    );
+    tmpdir.createUnique( Ci.nsIFile.DIRECTORY_TYPE, parseInt( "0774", 8 ) );
     for ( var i = 0; i < anAttachments.length; i++ ) {
       tmpfile = tmpdir.clone();
       tmpfile.append( anAttachments[i].name );
       urls[ anAttachments[i].url ] = tmpfile.leafName;
       try {
+        // TODO: @see clipper.js :: loadURLToFileEntry()
         Utils.saveURLToFile(
           tmpfile, // file entry
           -1, // file mode
@@ -260,7 +242,7 @@ ru.akman.znotes.ZNotes = function() {
                     urls[url], "file", tmpdir.path
                   ] );
                 } else {
-                  Components.utils.reportError(
+                  log.warn(
                     getString( "main.note.saving.attachments.error" ) +
                     ": " + urls[url] + "\n" +
                     getString( "main.note.loading.error" ) + " " +
@@ -273,7 +255,7 @@ ru.akman.znotes.ZNotes = function() {
                 try {
                   tmpdir.remove( true );
                 } catch ( e ) {
-                  //Utils.log( e + "\n" + Utils.dumpStack() );
+                  log.warn( e + "\n" + Utils.dumpStack() );
                 }
               }
             },
@@ -283,7 +265,7 @@ ru.akman.znotes.ZNotes = function() {
         );
       } catch ( e ) {
         delete urls[ anAttachments[i].url ];
-        Components.utils.reportError(
+        log.warn(
           getString( "main.note.saving.attachments.error" ) +
           ": " + urls[url] + "\n" +
           getString( "main.note.loading.error" ) + " " + e
@@ -294,97 +276,91 @@ ru.akman.znotes.ZNotes = function() {
       try {
         tmpdir.remove( true );
       } catch ( e ) {
-        //Utils.log( e + "\n" + Utils.dumpStack() );
+        log.warn( e + "\n" + Utils.dumpStack() );
       }
     }
   };
-  
+
   function saveMessageToNote( aNote, aBody, anAttachments, aContact, aCallback ) {
     var securityManager, codebasePrincipal, domParser, dom;
     var anEntries, aFile, aDirectory, aResultObj;
-    addAttachments( aNote, anAttachments );
-    addContact( aNote, aContact );
-    securityManager =
-      Components.classes["@mozilla.org/scriptsecuritymanager;1"]
-                .getService( Components.interfaces.nsIScriptSecurityManager );
-    codebasePrincipal = securityManager.getCodebasePrincipal( aNote.getURI() );
-    domParser =
-      Components.classes["@mozilla.org/xmlextras/domparser;1"]
-                .createInstance( Components.interfaces.nsIDOMParser );
-    // TODO: anURI cause message in error console, what principal must be use?    
-    domParser.init( codebasePrincipal, null /* aNote.getURI() */,
-                    aNote.getBaseURI(), null );
-    dom = domParser.parseFromString( aBody, "text/html" );
-    switch( aNote.getType() ) {
-      case "application/xhtml+xml":
-        anEntries = Utils.getEntriesToSaveContent( ".xhtml", "_files" );
-        aFile = anEntries.fileEntry;
-        aDirectory = anEntries.directoryEntry;
-        aResultObj = { value: null };
-        clipper = new ru.akman.znotes.core.Clipper();
-        clipper.save(
-          dom,
-          aResultObj,
-          aFile,
-          aDirectory,
-          /*
-          0x00000001 SAVE_SCRIPTS
-          0x00000010 SAVE_FRAMES
-          0x00000100 SAVE_FRAMES_IN_SEPARATE_DIRECTORY
-          0x00001000 PRESERVE_HTML5_TAGS
-          0x00010000 SAVE_STYLES
-          0x00100000 SAVE_STYLESHEETS_IN_SINGLE_FILE
-          0x01000000 SAVE_STYLESHEETS_IN_SEPARATE_FILES
-          0x10000000 SAVE_ACTIVE_RULES_ONLY
-          */
-          0x10010000,
-          {
-            onLoaderStarted: function( anEvent ) {
-              aNote.setLoading( true );
-            },
-            onLoaderStopped: function( anEvent ) {
-              var aStatus = anEvent.getData().status;
-              try {
-                if ( !aStatus ) {
-                  if ( aDirectory.exists() ) {
-                    aNote.loadContentDirectory( aDirectory, true );
-                  } else {
-                    aDirectory.remove( true );
-                  }
-                  if ( aFile.exists() ) {
-                    aFile.remove( false );
-                  }
+    aNote.setLoading( true );
+    try {
+      addAttachments( aNote, anAttachments );
+      addContact( aNote, aContact );
+      securityManager = Cc["@mozilla.org/scriptsecuritymanager;1"].getService(
+        Ci.nsIScriptSecurityManager );
+      codebasePrincipal = securityManager.getCodebasePrincipal( aNote.getURI() );
+      domParser = Cc["@mozilla.org/xmlextras/domparser;1"].createInstance(
+        Ci.nsIDOMParser );
+      // TODO: anURI cause message in error console, what principal must be use?
+      domParser.init( codebasePrincipal, null /* aNote.getURI() */,
+        aNote.getBaseURI(), null );
+      dom = domParser.parseFromString( aBody, "text/html" );
+      switch( aNote.getType() ) {
+        case "application/xhtml+xml":
+          anEntries = Utils.getEntriesToSaveContent( ".xhtml", "_files" );
+          aFile = anEntries.fileEntry;
+          aDirectory = anEntries.directoryEntry;
+          aResultObj = { value: null };
+          clipper = new ru.akman.znotes.core.Clipper();
+          clipper.save(
+            dom,
+            aResultObj,
+            aFile,
+            aDirectory,
+            /*
+            0x00000001 SAVE_SCRIPTS
+            0x00000010 SAVE_FRAMES
+            0x00000100 SAVE_FRAMES_IN_SEPARATE_DIRECTORY
+            0x00001000 PRESERVE_HTML5_TAGS
+            0x00010000 SAVE_STYLES
+            0x00100000 SAVE_INLINE_RESOURCES_IN_SEPARATE_FILES
+            0x01000000 INLINE_STYLESHEETS_IN_DOCUMENT
+            0x10000000 SAVE_ACTIVE_RULES_ONLY
+            */
+            0x11110000,
+            {
+              onLoaderStarted: function( anEvent ) {
+              },
+              onLoaderStopped: function( anEvent ) {
+                try {
+                  aNote.loadContentDirectory( aDirectory, true );
+                } catch ( e ) {
+                  log.warn( e + "\n" + Utils.dumpStack() );
                 }
-              } catch ( e ) {
-                Utils.log( e + "\n" + Utils.dumpStack() );
-              }
-              try {
-                if ( !aStatus ) {
+                try {
+                  aFile.remove( false );
+                } catch ( e ) {
+                  log.warn( e + "\n" + Utils.dumpStack() );
+                }
+                try {
                   aNote.importDocument( aResultObj.value );
+                } catch ( e ) {
+                  log.warn( e + "\n" + Utils.dumpStack() );
                 }
-              } catch ( e ) {
-                Utils.log( e + "\n" + Utils.dumpStack() );
-              }
-              aNote.setLoading( false );
-              if ( aCallback ) {
-                aCallback( aNote );
+                aNote.setLoading( false );
+                if ( aCallback ) {
+                  aCallback( aNote );
+                }
               }
             }
-          }
-        );
-        break;
-      case "text/plain":
-        aNote.setLoading( true );
-        try {
+          );
+          break;
+        case "text/plain":
           aNote.importDocument( dom );
-        } catch ( e ) {
-          Utils.log( e + "\n" + Utils.dumpStack() );
-        }
-        aNote.setLoading( false );
-        if ( aCallback ) {
-          aCallback( aNote );
-        }
-        break;
+          aNote.setLoading( false );
+          if ( aCallback ) {
+            aCallback( aNote );
+          }
+          break;
+      }
+    } catch ( e ) {
+      log.warn( e + "\n" + Utils.dumpStack() );
+      aNote.setLoading( false );
+      if ( aCallback ) {
+        aCallback( aNote, true );
+      }
     }
   };
 
@@ -436,9 +412,9 @@ ru.akman.znotes.ZNotes = function() {
       observerService.removeObserver( this, "znotes-main-shutdown" );
     }
   };
-  
+
   // PREFERENCES
-  
+
   var prefsBundleObserver = {
     onPrefChanged: function( event ) {
       switch( event.data.name ) {
@@ -455,7 +431,7 @@ ru.akman.znotes.ZNotes = function() {
       prefsBundle.removeObserver( this );
     }
   };
-  
+
   var prefsMozillaObserver = {
     observe: function( subject, topic, data ) {
       switch ( data ) {
@@ -468,9 +444,8 @@ ru.akman.znotes.ZNotes = function() {
       }
     },
     register: function() {
-      var prefService =
-        Components.classes["@mozilla.org/preferences-service;1"]
-                  .getService( Components.interfaces.nsIPrefService );
+      var prefService = Cc["@mozilla.org/preferences-service;1"].getService(
+        Ci.nsIPrefService );
       this.branch = prefService.getBranch( "extensions.znotes.");
       this.branch.addObserver( "", this, false );
     },
@@ -518,10 +493,6 @@ ru.akman.znotes.ZNotes = function() {
           return true;
         case "znotes_tbsaveasnote_command":
           return getNumSelectedMessages() > 0;
-          /*
-          return ( getNumSelectedMessages() > 0 ) &&
-                 Common.isCommandEnabled( "znotes_newnote_command", null, mainWindow );
-          */
         case "znotes_tbnewnote_command":
           return Common.isCommandEnabled( "znotes_newnote_command", null, mainWindow );
         case "znotes_tbopenoptionsdialog_command":
@@ -550,6 +521,7 @@ ru.akman.znotes.ZNotes = function() {
           doNewBook();
           break;
         case "znotes_tbnewnote_command":
+          Utils.switchToMainTab();
           Common.goDoCommand(
             "znotes_newnote_command",
             mainWindow.document.getElementById( "znotes_newnote_command" )
@@ -627,9 +599,9 @@ ru.akman.znotes.ZNotes = function() {
           return window.controllers.getControllerId( this );
         };
       } catch ( e ) {
-        Components.utils.reportError(
+        log.warn(
           "An error occurred registering '" + this.getName() +
-          "' controller: " + e
+          "' controller\n" + e
         );
       }
     },
@@ -640,14 +612,14 @@ ru.akman.znotes.ZNotes = function() {
       try {
         window.controllers.removeController( this );
       } catch ( e ) {
-        Components.utils.reportError(
+        log.warn(
           "An error occurred unregistering '" + this.getName() +
-          "' controller: " + e
+          "' controller\n" + e
         );
       }
     }
   };
-  
+
   function updateCommands() {
     platformController.updateCommands();
   };
@@ -660,14 +632,15 @@ ru.akman.znotes.ZNotes = function() {
   };
 
   function doNewBook() {
+    window.setCursor( "wait" );
     if ( !driverManager ) {
-      Components.utils.import( "resource://znotes/drivermanager.js",
+      Cu.import( "resource://znotes/drivermanager.js",
         ru.akman.znotes
       );
       driverManager = ru.akman.znotes.DriverManager.getInstance();
     }
     if ( !bookManager ) {
-      Components.utils.import( "resource://znotes/bookmanager.js",
+      Cu.import( "resource://znotes/bookmanager.js",
         ru.akman.znotes.core
       );
       bookManager = ru.akman.znotes.core.BookManager.getInstance();
@@ -689,6 +662,7 @@ ru.akman.znotes.ZNotes = function() {
       },
       output: null
     };
+    window.setCursor( "auto" );
     window.openDialog(
       "chrome://znotes/content/book.xul",
       "",
@@ -704,18 +678,19 @@ ru.akman.znotes.ZNotes = function() {
     newBook.setConnection( params.output.connection );
     doOpenMainWindow();
   };
-  
+
   function doSaveSelectedMessages() {
     var messageURIs = mailWindow.gFolderDisplay.selectedMessageUris;
     if ( !messageURIs ) {
       return;
     }
+    window.setCursor( "wait" );
     var ctx = Utils.MAIN_CONTEXT ? Utils.MAIN_CONTEXT() : null;
     var args, arr, index;
     var book = null, category = null;
     if ( !ctx ) {
       if ( !bookManager ) {
-        Components.utils.import( "resource://znotes/bookmanager.js",
+        Cu.import( "resource://znotes/bookmanager.js",
           ru.akman.znotes.core
         );
         bookManager = ru.akman.znotes.core.BookManager.getInstance();
@@ -755,6 +730,7 @@ ru.akman.znotes.ZNotes = function() {
       },
       output: null
     };
+    window.setCursor( "auto" );
     window.openDialog(
       "chrome://znotes/content/opensavedialog.xul?mode=save&type=category",
       "",
@@ -769,27 +745,38 @@ ru.akman.znotes.ZNotes = function() {
     doSaveMessages( messageURIs, book, category );
   };
 
-  function saveCallback( aNote ) {
+  function saveCallback( aNote, isError ) {
     var name = aNote.getName();
     var id = aNote.getBook().getId() + "&" + aNote.getId();
-    mailWindow.setTimeout(
-      function() {
-        var alertsService =
-          Components.classes['@mozilla.org/alerts-service;1']
-                    .getService( Components.interfaces.nsIAlertsService );
-        alertsService.showAlertNotification(
-          "chrome://znotes_images/skin/message-32x32.png",
-          getString( "main.note.loading.success" ),
-          name,
-          true,
-          id,
-          alertObserver
-        );
-      },
-      0
-    );
+    if ( isError ) {
+      Utils.showPopup(
+        "chrome://znotes_images/skin/warning-32x32.png",
+        getString( "main.note.loading.fail" ),
+        name,
+        true,
+        id,
+        0,
+        null,
+        null,
+        null,
+        alertObserver
+      );
+    } else {
+      Utils.showPopup(
+        "chrome://znotes_images/skin/message-32x32.png",
+        getString( "main.note.loading.success" ),
+        name,
+        true,
+        id,
+        0,
+        null,
+        null,
+        null,
+        alertObserver
+      );
+    }
   };
-  
+
   function doSaveMessages( uris, book, category ) {
     if ( Utils.IS_STANDALONE ) {
       return null;
@@ -804,7 +791,7 @@ ru.akman.znotes.ZNotes = function() {
       Mime.MsgHdrToMimeMessage( msgHdr, null, function( aMsgHdr, aMimeMsg ) {
         author = aMsgHdr.mime2DecodedAuthor;
         subject = aMsgHdr.mime2DecodedSubject;
-        if ( aMsgHdr.flags & Components.interfaces.nsMsgMessageFlags.HasRe ) {
+        if ( aMsgHdr.flags & Ci.nsMsgMessageFlags.HasRe ) {
           subject = subject ? "Re: " + subject : "Re: ";
         }
         if ( !subject ) {
@@ -819,7 +806,6 @@ ru.akman.znotes.ZNotes = function() {
             "application/xhtml+xml" : "text/plain";
           contentData = htmlBodies.length ?
             htmlBodies.join( "" ) : textBodies.join( "" );
-          // TODO: undefined behavior
           note = createNote(
             book,
             category,
@@ -837,7 +823,7 @@ ru.akman.znotes.ZNotes = function() {
       } );
     }
   };
-  
+
   function doOpenMainWindow( background ) {
     if ( mainWindow ) {
       Utils.switchToMainTab();
@@ -851,28 +837,29 @@ ru.akman.znotes.ZNotes = function() {
       }
     }
   };
-  
+
   // FOLDER & THREAD TREE
-  
+
   function getNumSelectedMessages() {
     return mailWindow.gDBView ? mailWindow.gDBView.numSelected : 0;
   };
-  
+
   function onMessengerEvent( event ) {
     try {
       Common.goUpdateCommand( "znotes_tbsaveasnote_command",
         platformController.getId(), window );
     } catch ( e ) {
-      Utils.log( e + "\n" + platformController );
+      log.warn( e + "\n" + Utils.dumpStack() );
     }
   };
-  
+
   // SHORTCUTS
 
   function setupKeyset() {
     keySet = new ru.akman.znotes.Keyset(
       document.getElementById( "znotes_platform_keyset" )
     );
+    Utils.PLATFORM_KEYSET = keySet;
   };
 
   function updateKeyset() {
@@ -883,7 +870,7 @@ ru.akman.znotes.ZNotes = function() {
         shortcuts = {};
       }
     } catch ( e ) {
-      Utils.log( e + "\n" + Utils.dumpStack() );
+      log.warn( e + "\n" + Utils.dumpStack() );
       shortcuts = {};
     }
     keySet.update( shortcuts );
@@ -908,11 +895,11 @@ ru.akman.znotes.ZNotes = function() {
       Utils.updateKeyAttribute( element );
     }
   };
-  
+
   // TABS
-  
+
   function setupTabs() {
-    var tabMail = ru.akman.znotes.Utils.getTabMail();
+    var tabMail = Utils.getTabMail();
     if ( !tabMail ) {
       return;
     }
@@ -923,7 +910,7 @@ ru.akman.znotes.ZNotes = function() {
   };
 
   // PERSISTING STATE
-  
+
   function getState() {
     var state = {
       open: false,
@@ -943,7 +930,7 @@ ru.akman.znotes.ZNotes = function() {
   };
 
   // INIT
-  
+
   function addMessengerListeners() {
     folderTree = mailWindow.document.getElementById( "folderTree" );
     threadTree = mailWindow.document.getElementById( "threadTree" );
@@ -954,7 +941,7 @@ ru.akman.znotes.ZNotes = function() {
     threadTree.addEventListener( "focus", onMessengerEvent, false );
     threadTree.addEventListener( "blur", onMessengerEvent, false );
   };
-  
+
   function fixupMessengerOverlay() {
     var button, name, names = [
       "znotes_tbopenmaintab",
@@ -968,7 +955,7 @@ ru.akman.znotes.ZNotes = function() {
       }
     }
   };
-  
+
   function init() {
     Utils.initGlobals();
     mailWindow = Utils.getMail3PaneWindow();
@@ -997,14 +984,14 @@ ru.akman.znotes.ZNotes = function() {
     }
     addMessengerListeners();
   };
-  
+
   // PUBLIC
 
   pub.load = function( event ) {
     window.removeEventListener( "load", ru.akman.znotes.ZNotes.load, false );
     init();
   };
-  
+
   pub.close = function( event ) {
     Utils.IS_QUIT_ENABLED = true;
     // uncomment this to enable confirm when closing tb window
@@ -1018,7 +1005,7 @@ ru.akman.znotes.ZNotes = function() {
     observerService.notifyObservers( null, "znotes-quit-accepted", null );
     return true;
   };
-  
+
   return pub;
 
 }();

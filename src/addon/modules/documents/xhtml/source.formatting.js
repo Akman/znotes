@@ -1,6 +1,6 @@
 /*
  * CodeMirror Formatting Addon v3.1
- * Removed since v3.11 
+ * Removed since v3.11
  */
 (function() {
 

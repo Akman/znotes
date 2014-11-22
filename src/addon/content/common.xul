@@ -32,14 +32,14 @@
   - ***** END LICENSE BLOCK ***** -->
 
 <?xml-stylesheet type="text/css" href="chrome://znotes/skin/common.css" ?>
-  
+
 <!DOCTYPE overlay SYSTEM "chrome://znotes/locale/common.dtd">
 
 <overlay id="common"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <stringbundleset id="znotes_stringbundleset" />
-  
+
   <commandset id="znotes_commandset">
     <!-- dummy -->
     <command id="znotes_dummy_command" />
@@ -163,6 +163,13 @@
       accesskey="&znotes_deletecategory_accesskey;"
       key="znotes_deletecategory_key"
       oncommand="ru.akman.znotes.Common.goDoCommand( 'znotes_deletecategory_command', event.explicitOriginalTarget );"/>
+    <command id="znotes_clearbin_command" disabled="true"
+      label="&znotes_clearbin_label;"
+      title="&znotes_clearbin_label;"
+      tooltiptext="&znotes_clearbin_tooltip;"
+      accesskey="&znotes_clearbin_accesskey;"
+      key="znotes_clearbin_key"
+      oncommand="ru.akman.znotes.Common.goDoCommand( 'znotes_clearbin_command', event.explicitOriginalTarget );"/>
     <command id="znotes_renamecategory_command" disabled="true"
       label="&znotes_renamecategory_label;"
       title="&znotes_renamecategory_label;"
@@ -324,56 +331,6 @@
       accesskey="&znotes_update_accesskey;"
       key="znotes_update_key"
       oncommand="ru.akman.znotes.Common.goDoCommand( 'znotes_update_command', event.explicitOriginalTarget );"/>
-    <!-- edit -->
-    <command id="znotes_undo_command" disabled="true"
-      label="&znotes_undo_label;"
-      title="&znotes_undo_label;"
-      tooltiptext="&znotes_undo_tooltip;"
-      accesskey="&znotes_undo_accesskey;"
-      key="znotes_undo_key"
-      oncommand="ru.akman.znotes.Common.goDoCommand( 'znotes_undo_command', event.explicitOriginalTarget );"/>
-    <command id="znotes_redo_command" disabled="true"
-      label="&znotes_redo_label;"
-      title="&znotes_redo_label;"
-      tooltiptext="&znotes_redo_tooltip;"
-      accesskey="&znotes_redo_accesskey;"
-      key="znotes_redo_key"
-      oncommand="ru.akman.znotes.Common.goDoCommand( 'znotes_redo_command', event.explicitOriginalTarget );"/>
-    <command id="znotes_cut_command" disabled="true"
-      label="&znotes_cut_label;"
-      title="&znotes_cut_label;"
-      tooltiptext="&znotes_cut_tooltip;"
-      accesskey="&znotes_cut_accesskey;"
-      key="znotes_cut_key"
-      oncommand="ru.akman.znotes.Common.goDoCommand( 'znotes_cut_command', event.explicitOriginalTarget );"/>
-    <command id="znotes_copy_command" disabled="true"
-      label="&znotes_copy_label;"
-      title="&znotes_copy_label;"
-      tooltiptext="&znotes_copy_tooltip;"
-      accesskey="&znotes_copy_accesskey;"
-      key="znotes_copy_key"
-      oncommand="ru.akman.znotes.Common.goDoCommand( 'znotes_copy_command', event.explicitOriginalTarget );"/>
-    <command id="znotes_paste_command" disabled="true"
-      label="&znotes_paste_label;"
-      title="&znotes_paste_label;"
-      tooltiptext="&znotes_paste_tooltip;"
-      accesskey="&znotes_paste_accesskey;"
-      key="znotes_paste_key"
-      oncommand="ru.akman.znotes.Common.goDoCommand( 'znotes_paste_command', event.explicitOriginalTarget );"/>
-    <command id="znotes_delete_command" disabled="true"
-      label="&znotes_delete_label;"
-      title="&znotes_delete_label;"
-      tooltiptext="&znotes_delete_tooltip;"
-      accesskey="&znotes_delete_accesskey;"
-      key="znotes_delete_key"
-      oncommand="ru.akman.znotes.Common.goDoCommand( 'znotes_delete_command', event.explicitOriginalTarget );"/>
-    <command id="znotes_selectall_command" disabled="true"
-      label="&znotes_selectall_label;"
-      title="&znotes_selectall_label;"
-      tooltiptext="&znotes_selectall_tooltip;"
-      accesskey="&znotes_selectall_accesskey;"
-      key="znotes_selectall_key"
-      oncommand="ru.akman.znotes.Common.goDoCommand( 'znotes_selectall_command', event.explicitOriginalTarget );"/>
     <!-- body -->
     <command id="znotes_bodydeletenote_command" disabled="true"
       label="&znotes_bodydeletenote_label;"
@@ -417,7 +374,7 @@
       accesskey="&znotes_bodyaddonspanel_accesskey;"
       key="znotes_bodyaddonspanel_key"
       oncommand="ru.akman.znotes.Common.goDoCommand( 'znotes_bodyaddonspanel_command', event.explicitOriginalTarget );"/>
-    <!-- attachments -->    
+    <!-- attachments -->
     <command id="znotes_attachmentsaddcontact_command" disabled="true"
       label="&znotes_attachmentsaddcontact_label;"
       title="&znotes_attachmentsaddcontact_label;"
@@ -518,28 +475,6 @@
       accesskey="&znotes_editorprint_accesskey;"
       key="znotes_editorprint_key"
       oncommand="ru.akman.znotes.Common.goDoCommand( 'znotes_editorprint_command', event.explicitOriginalTarget );"/>
-    <!-- spell -->
-    <command id="znotes_addtodictionary_command" disabled="true"
-      label="&znotes_addtodictionary_label;"
-      title="&znotes_addtodictionary_label;"
-      tooltiptext="&znotes_addtodictionary_tooltip;"
-      accesskey="&znotes_addtodictionary_accesskey;"
-      key="znotes_addtodictionary_key"
-      oncommand="ru.akman.znotes.Common.goDoCommand( 'znotes_addtodictionary_command', event.explicitOriginalTarget );"/>
-    <command id="znotes_undoaddtodictionary_command" disabled="true"
-      label="&znotes_undoaddtodictionary_label;"
-      title="&znotes_undoaddtodictionary_label;"
-      tooltiptext="&znotes_undoaddtodictionary_tooltip;"
-      accesskey="&znotes_undoaddtodictionary_accesskey;"
-      key="znotes_undoaddtodictionary_key"
-      oncommand="ru.akman.znotes.Common.goDoCommand( 'znotes_undoaddtodictionary_command', event.explicitOriginalTarget );"/>
-    <command id="znotes_spellcheckenabled_command" disabled="true"
-      label="&znotes_spellcheckenabled_label;"
-      title="&znotes_spellcheckenabled_label;"
-      tooltiptext="&znotes_spellcheckenabled_tooltip;"
-      accesskey="&znotes_spellcheckenabled_accesskey;"
-      key="znotes_spellcheckenabled_key"
-      oncommand="ru.akman.znotes.Common.goDoCommand( 'znotes_spellcheckenabled_command', event.explicitOriginalTarget );"/>
   </commandset>
 
   <keyset id="znotes_keyset">
@@ -595,6 +530,9 @@
     <key id="znotes_deletecategory_key" command="znotes_deletecategory_command"
       key="&znotes_deletecategory_key;" modifiers="&znotes_deletecategory_key_modifiers;"
       keycode="&znotes_deletecategory_keycode;"/>
+    <key id="znotes_clearbin_key" command="znotes_clearbin_command"
+      key="&znotes_clearbin_key;" modifiers="&znotes_clearbin_key_modifiers;"
+      keycode="&znotes_clearbin_keycode;"/>
     <key id="znotes_renamecategory_key" command="znotes_renamecategory_command"
       key="&znotes_renamecategory_key;" modifiers="&znotes_renamecategory_key_modifiers;"
       keycode="&znotes_renamecategory_keycode;"/>
@@ -664,28 +602,6 @@
     <key id="znotes_update_key" command="znotes_update_command"
       key="&znotes_update_key;" modifiers="&znotes_update_key_modifiers;"
       keycode="&znotes_update_keycode;"/>
-    <!-- edit -->
-    <key id="znotes_undo_key" command="znotes_undo_command"
-      key="&znotes_undo_key;" modifiers="&znotes_undo_key_modifiers;"
-      keycode="&znotes_undo_keycode;"/>
-    <key id="znotes_redo_key" command="znotes_redo_command"
-      key="&znotes_redo_key;" modifiers="&znotes_redo_key_modifiers;"
-      keycode="&znotes_redo_keycode;"/>
-    <key id="znotes_cut_key" command="znotes_cut_command"
-      key="&znotes_cut_key;" modifiers="&znotes_cut_key_modifiers;"
-      keycode="&znotes_cut_keycode;"/>
-    <key id="znotes_copy_key" command="znotes_copy_command"
-      key="&znotes_copy_key;" modifiers="&znotes_copy_key_modifiers;"
-      keycode="&znotes_copy_keycode;"/>
-    <key id="znotes_paste_key" command="znotes_paste_command"
-      key="&znotes_paste_key;" modifiers="&znotes_paste_key_modifiers;"
-      keycode="&znotes_paste_keycode;"/>
-    <key id="znotes_delete_key" command="znotes_delete_command"
-      key="&znotes_delete_key;" modifiers="&znotes_delete_key_modifiers;"
-      keycode="&znotes_delete_keycode;"/>
-    <key id="znotes_selectall_key" command="znotes_selectall_command"
-      key="&znotes_selectall_key;" modifiers="&znotes_selectall_key_modifiers;"
-      keycode="&znotes_selectall_keycode;"/>
     <!-- body -->
     <key id="znotes_bodydeletenote_key" command="znotes_bodydeletenote_command"
       key="&znotes_bodydeletenote_key;" modifiers="&znotes_bodydeletenote_key_modifiers;"
@@ -750,112 +666,8 @@
     <key id="znotes_editorprint_key" command="znotes_editorprint_command"
       key="&znotes_editorprint_key;" modifiers="&znotes_editorprint_key_modifiers;"
       keycode="&znotes_editorprint_keycode;"/>
-    <!-- spell -->
-    <key id="znotes_addtodictionary_key" command="znotes_addtodictionary_command"
-      key="&znotes_addtodictionary_key;" modifiers="&znotes_addtodictionary_key_modifiers;"
-      keycode="&znotes_addtodictionary_keycode;"/>
-    <key id="znotes_undoaddtodictionary_key" command="znotes_undoaddtodictionary_command"
-      key="&znotes_undoaddtodictionary_key;" modifiers="&znotes_undoaddtodictionary_key_modifiers;"
-      keycode="&znotes_undoaddtodictionary_keycode;"/>
-    <key id="znotes_spellcheckenabled_key" command="znotes_spellcheckenabled_command"
-      key="&znotes_spellcheckenabled_key;" modifiers="&znotes_spellcheckenabled_key_modifiers;"
-      keycode="&znotes_spellcheckenabled_keycode;"/>
   </keyset>
-  
-  <popupset id="znotes_popupset">
-    <menupopup id="znotes_edit_menupopup">
-      <menuitem id="znotes_undo_menuitem"
-        class="menuitem-iconic znotes_undo_class"
-        key="znotes_undo_key"
-        command="znotes_undo_command"/>
-      <menuitem id="znotes_redo_menuitem"
-        class="menuitem-iconic znotes_redo_class"
-        key="znotes_redo_key"
-        command="znotes_redo_command"/>
-      <menuseparator id="znotes_edit_menupopup_separator1"/>
-      <menuitem id="znotes_cut_menuitem"
-        class="menuitem-iconic znotes_cut_class"
-        key="znotes_cut_key"
-        command="znotes_cut_command"/>
-      <menuitem id="znotes_copy_menuitem"
-        class="menuitem-iconic znotes_copy_class"
-        key="znotes_copy_key"
-        command="znotes_copy_command"/>
-      <menuitem id="znotes_paste_menuitem"
-        class="menuitem-iconic znotes_paste_class"
-        key="znotes_paste_key"
-        command="znotes_paste_command"/>
-      <menuitem id="znotes_delete_menuitem"
-        class="menuitem-iconic znotes_delete_class"
-        key="znotes_delete_key"
-        command="znotes_delete_command"/>
-      <menuseparator id="znotes_edit_menupopup_separator2"/>
-      <menuitem id="znotes_selectall_menuitem"
-        class="menuitem-iconic znotes_selectall_class"
-        key="znotes_selectall_key"
-        command="znotes_selectall_command"/>
-    </menupopup>
-    <menupopup id="znotes_editspell_menupopup">
-      <!-- spell -->
-      <menuitem id="znotes_spellnosuggestions_menuitem"
-        label="&znotes_spellnosuggestionsmenuitem_label;"
-        disabled="true" />
-      <menuitem id="znotes_addtodictionary_menuitem"
-        class="menuitem-iconic znotes_addtodictionary_class"
-        key="znotes_addtodictionary_key"
-        command="znotes_addtodictionary_command" />
-      <menuitem id="znotes_undoaddtodictionary_menuitem"
-        class="menuitem-iconic znotes_undoaddtodictionary_class"
-        key="znotes_undoaddtodictionary_key"
-        command="znotes_undoaddtodictionary_command"/>
-      <menuseparator id="znotes_edit_menupopup_spellsuggestions_separator"/>
-      <!-- spell -->
-      <menuitem id="znotes_undo_menuitem"
-        class="menuitem-iconic znotes_undo_class"
-        key="znotes_undo_key"
-        command="znotes_undo_command"/>
-      <menuitem id="znotes_redo_menuitem"
-        class="menuitem-iconic znotes_redo_class"
-        key="znotes_redo_key"
-        command="znotes_redo_command"/>
-      <menuseparator id="znotes_edit_menupopup_separator1"/>
-      <menuitem id="znotes_cut_menuitem"
-        class="menuitem-iconic znotes_cut_class"
-        key="znotes_cut_key"
-        command="znotes_cut_command"/>
-      <menuitem id="znotes_copy_menuitem"
-        class="menuitem-iconic znotes_copy_class"
-        key="znotes_copy_key"
-        command="znotes_copy_command"/>
-      <menuitem id="znotes_paste_menuitem"
-        class="menuitem-iconic znotes_paste_class"
-        key="znotes_paste_key"
-        command="znotes_paste_command"/>
-      <menuitem id="znotes_delete_menuitem"
-        class="menuitem-iconic znotes_delete_class"
-        key="znotes_delete_key"
-        command="znotes_delete_command"/>
-      <menuseparator id="znotes_edit_menupopup_separator2"/>
-      <menuitem id="znotes_selectall_menuitem"
-        class="menuitem-iconic znotes_selectall_class"
-        key="znotes_selectall_key"
-        command="znotes_selectall_command"/>
-      <!-- spell -->
-      <menuseparator id="znotes_edit_menupopup_spellcheck_separator"/>
-      <menuitem id="znotes_spellcheckenabled_menuitem"
-        type="checkbox"
-        class="menuitem-iconic znotes_spellcheckenabled_class"
-        key="znotes_spellcheckenabled_key"
-        command="znotes_spellcheckenabled_command" />
-        <menu id="znotes_spelldictionaries_menu"
-          label="&znotes_spelldictionariesmenu_label;"
-          accesskey="&znotes_spelldictionariesmenu_accesskey;">
-          <menupopup id="znotes_spelldictionaries_menupopup"
-            onpopupshowing="event.stopPropagation();"
-            onpopuphiding="event.stopPropagation();" />
-        </menu>
-      <!-- spell -->
-    </menupopup>
-  </popupset>
+
+  <popupset id="znotes_popupset" />
 
 </overlay>

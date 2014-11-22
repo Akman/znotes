@@ -41,16 +41,15 @@
 <!ENTITY docTypeCaption.label "Domyślny typ dokumentu">
 <!ENTITY clipperCaption.label "Web-clipper">
 <!ENTITY clipperSaveScripts.label "Save scripts">
+<!ENTITY clipperSaveScripts.tooltip "Can lead to incorrect display of the saved content!">
 <!ENTITY clipperSaveFrames.label "Save frames">
 <!ENTITY clipperSeparateFrames.label "Save frames in the separate folders">
 <!ENTITY clipperPreserveHTML5Tags.label "Preserve HTML5 tags">
+<!ENTITY clipperSaveInlineResources.label "Save inline resources in the separate files">
 <!ENTITY clipperSaveStyles.label "Save styles">
 <!ENTITY clipperInlineStylesheets.label "Inline stylesheets in a document">
-<!ENTITY clipperSingleStylesheet.label "Save stylesheets in a single file">
-<!ENTITY clipperSeparateStylesheets.label "Save stylesheets in the separate files">
 <!ENTITY clipperSaveActiveRulesOnly.label "Save active rules only">
 <!ENTITY isCloseBrowserAfterImport.label "Close browser window when download completes">
-<!ENTITY isSelectNoteAfterImport.label "Select created note when download completes">
 <!ENTITY isClipperPlaySound.label "Play sound when download completes">
 <!ENTITY additionCaption.label "Dodatkowo">
 <!ENTITY isConfirmExit.label "Potwierdź wyjście po zamknięciu aplikacji">
@@ -58,6 +57,7 @@
 <!ENTITY isReplaceBackground.label "Zastąp kolor tła notatkę, za pomocą głównego koloru znacznika">
 <!ENTITY isHighlightRow.label "Zaznacz wiersz w liście notatkę przy wykorzystaniu głównego koloru znacznika">
 <!ENTITY isPlaySound.label "Odtwórz dźwięk przy starcie">
+<!ENTITY isClearBinOnExit.label "Przy wyjściu z programu opróźniaj kosz">
 <!ENTITY keysPlatformCaption.label "Skróty klawiaturowe">
 <!ENTITY keysCaption.label "Skróty klawiaturowe">
 <!ENTITY defaultsButton.label "Domyślne">

@@ -30,20 +30,25 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+const EXPORTED_SYMBOLS = ["Tag"];
+
+var Cc = Components.classes;
+var Ci = Components.interfaces;
+var Cr = Components.results;
+var Cu = Components.utils;
+
 if ( !ru ) var ru = {};
 if ( !ru.akman ) ru.akman = {};
 if ( !ru.akman.znotes ) ru.akman.znotes = {};
 if ( !ru.akman.znotes.core ) ru.akman.znotes.core = {};
 
-Components.utils.import( "resource://znotes/event.js"  , ru.akman.znotes.core );
-
-var EXPORTED_SYMBOLS = ["Tag"];
+Cu.import( "resource://znotes/utils.js", ru.akman.znotes );
+Cu.import( "resource://znotes/event.js", ru.akman.znotes.core );
 
 var Tag = function( list, id, name, color, index, selectedIndex ) {
 
-  this.getDescriptor = function() {
-    return this.list.getDescriptor();
-  };
+  var Utils = ru.akman.znotes.Utils;
+  var log = Utils.getLogger( "modules.tag" );
 
   this.getDescriptorItemInfo = function() {
     return [
@@ -53,6 +58,12 @@ var Tag = function( list, id, name, color, index, selectedIndex ) {
       this.getIndex(),
       this.getSelectedIndex()
     ];
+  };
+
+  this.setDescriptorItemInfo = function( info ) {
+    if ( !this.isLocked() ) {
+      this.list.getDescriptor().setItem( info );
+    }
   };
 
   this.getBook = function() {
@@ -80,15 +91,13 @@ var Tag = function( list, id, name, color, index, selectedIndex ) {
       return;
     }
     this.name = name;
-    this.getDescriptor().setItem( this.getDescriptorItemInfo() );
-
+    this.setDescriptorItemInfo( this.getDescriptorItemInfo() );
     this.notifyStateListener(
       new ru.akman.znotes.core.Event(
         "TagChanged",
         { changedTag: this }
       )
     );
-
   };
 
   this.getColor = function() {
@@ -100,39 +109,39 @@ var Tag = function( list, id, name, color, index, selectedIndex ) {
       return;
     }
     this.color = color;
-    this.getDescriptor().setItem( this.getDescriptorItemInfo() );
-
+    this.setDescriptorItemInfo( this.getDescriptorItemInfo() );
     this.notifyStateListener(
       new ru.akman.znotes.core.Event(
         "TagChanged",
         { changedTag: this }
       )
     );
-
   };
 
   this.getIndex = function() {
-    return this.index;
+    return parseInt( this.index );
   };
 
   this.setIndex = function( index ) {
-    if ( this.isNoTag() || this.getIndex() == index ) {
+    var value = parseInt( index );
+    if ( this.isNoTag() || this.getIndex() === value ) {
       return;
     }
-    this.index = index;
-    this.getDescriptor().setItem( this.getDescriptorItemInfo() );
+    this.index = value;
+    this.setDescriptorItemInfo( this.getDescriptorItemInfo() );
   };
 
   this.getSelectedIndex = function() {
-    return this.selectedIndex;
+    return parseInt( this.selectedIndex );
   };
 
   this.setSelectedIndex = function( selectedIndex ) {
-    if ( this.getSelectedIndex() == selectedIndex ) {
+    var value = parseInt( selectedIndex );
+    if ( this.getSelectedIndex() === value ) {
       return;
     }
-    this.selectedIndex = selectedIndex;
-    this.getDescriptor().setItem( this.getDescriptorItemInfo() );
+    this.selectedIndex = value;
+    this.setDescriptorItemInfo( this.getDescriptorItemInfo() );
   };
 
   this.remove = function() {
@@ -143,15 +152,14 @@ var Tag = function( list, id, name, color, index, selectedIndex ) {
       processNote: function( aNote ) {
         var noteIDs = aNote.getTags();
         var indexID = noteIDs.indexOf( this.tagID );
-        if ( indexID != -1 ) {
+        if ( indexID !== -1 ) {
           noteIDs.splice( indexID, 1 );
           aNote.setTags( noteIDs );
         }
       }
     };
     contentTree.process( removeTagProcessor );
-    //
-    this.getDescriptor().removeItem( this.getId() );
+    this.list.removeTag( this );
     this.notifyStateListener(
       new ru.akman.znotes.core.Event(
         "TagDeleted",
@@ -190,11 +198,6 @@ var Tag = function( list, id, name, color, index, selectedIndex ) {
     this.list.notifyStateListener( event );
   };
 
-  /*
-  TagChanged( aChangedTag )
-  TagDeleted( aDeletedTag )
-  */
-
   this.toString = function() {
     return "{ '" +
       this.id + "', '" +
@@ -216,6 +219,7 @@ var Tag = function( list, id, name, color, index, selectedIndex ) {
   this.color = color;
   this.index = index;
   this.selectedIndex = selectedIndex;
+  this.list.appendTag( this );
   this.locked = false;
 
 };

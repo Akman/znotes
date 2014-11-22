@@ -30,35 +30,34 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+var Cc = Components.classes;
+var Ci = Components.interfaces;
+var Cr = Components.results;
+var Cu = Components.utils;
+
 if ( !ru ) var ru = {};
 if ( !ru.akman ) ru.akman = {};
 if ( !ru.akman.znotes ) ru.akman.znotes = {};
 
-Components.utils.import( "resource://znotes/utils.js",
-  ru.akman.znotes
-);
-Components.utils.import( "resource://znotes/prefsmanager.js",
-  ru.akman.znotes
-);
-Components.utils.import( "resource://znotes/keyset.js",
-  ru.akman.znotes
-);
+Cu.import( "resource://znotes/utils.js", ru.akman.znotes );
+Cu.import( "resource://znotes/prefsmanager.js", ru.akman.znotes );
+Cu.import( "resource://znotes/keyset.js", ru.akman.znotes );
 
 ru.akman.znotes.Viewer = function() {
 
   var Utils = ru.akman.znotes.Utils;
+  var log = Utils.getLogger( "content.viewer" );
+
   var Common = ru.akman.znotes.Common;
 
-  var ioService =
-    Components.classes["@mozilla.org/network/io-service;1"]
-              .getService( Components.interfaces.nsIIOService );
+  var ioService = Cc["@mozilla.org/network/io-service;1"].getService(
+    Ci.nsIIOService );
 
-  var observerService =
-    Components.classes["@mozilla.org/observer-service;1"]
-              .getService( Components.interfaces.nsIObserverService );
+  var observerService = Cc["@mozilla.org/observer-service;1"].getService(
+    Ci.nsIObserverService );
 
   var prefsBundle = ru.akman.znotes.PrefsManager.getInstance();
-  
+
   var keySet = null;
 
   var currentPage = null;
@@ -77,7 +76,7 @@ ru.akman.znotes.Viewer = function() {
   var noteStateListener = null;
 
   // HELPER OBSERVER
-  
+
   var helperObserver = {
     observe: function( aSubject, aTopic, aData ) {
       var uri;
@@ -110,7 +109,7 @@ ru.akman.znotes.Viewer = function() {
       observerService.removeObserver( this, "znotes-href" );
     }
   };
-  
+
   // COMMANDS
 
   var viewerCommands = {
@@ -157,8 +156,9 @@ ru.akman.znotes.Viewer = function() {
           return window.controllers.getControllerId( this );
         };
       } catch ( e ) {
-        Components.utils.reportError(
-          "An error occurred registering '" + this.getName() + "' controller: " + e
+        log.warn(
+          "An error occurred registering '" + this.getName() +
+          "' controller\n" + e
         );
       }
     },
@@ -169,13 +169,14 @@ ru.akman.znotes.Viewer = function() {
       try {
         window.controllers.removeController( this );
       } catch ( e ) {
-        Components.utils.reportError(
-          "An error occurred unregistering '" + this.getName() + "' controller: " + e
+        log.warn(
+          "An error occurred unregistering '" + this.getName() +
+          "' controller\n" + e
         );
       }
     }
   };
-  
+
   var mainBundleObserver = {
     observe: function( aSubject, aTopic, aData ) {
       var tabMail = Utils.getTabMail();
@@ -195,8 +196,8 @@ ru.akman.znotes.Viewer = function() {
         Utils.getTabMail().closeTab( currentTab );
       } else {
         var windowService =
-          Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
-                    .getService( Components.interfaces.nsIWindowWatcher );
+          Cc["@mozilla.org/embedcomp/window-watcher;1"].getService(
+            Ci.nsIWindowWatcher );
         windowService.activeWindow = window;
         window.focus();
         pub.onClose();
@@ -210,7 +211,7 @@ ru.akman.znotes.Viewer = function() {
       observerService.removeObserver( this, "znotes-quit-accepted" );
     }
   };
-  
+
   var prefsBundleObserver = {
     onPrefChanged: function( event ) {
       switch( event.data.name ) {
@@ -227,15 +228,15 @@ ru.akman.znotes.Viewer = function() {
       prefsBundle.removeObserver( this );
     }
   };
-  
+
   // SHORTCUTS
-  
+
   function setupKeyset() {
     keySet = new ru.akman.znotes.Keyset(
       document.getElementById( "znotes_keyset" )
     );
   };
-  
+
   function activateKeyset() {
     keySet.activate();
   };
@@ -243,7 +244,7 @@ ru.akman.znotes.Viewer = function() {
   function deactivateKeyset() {
     keySet.deactivate();
   };
-  
+
   function updateKeyset() {
     var shortcuts = {};
     try {
@@ -252,14 +253,14 @@ ru.akman.znotes.Viewer = function() {
         shortcuts = {};
       }
     } catch ( e ) {
-      Utils.log( e + "\n" + Utils.dumpStack() );
+      log.warn( e + "\n" + Utils.dumpStack() );
       shortcuts = {};
     }
     keySet.update( shortcuts );
   };
 
   // TABS
-  
+
   function getCurrentTab() {
     var tabMail = Utils.getTabMail();
     if ( !tabMail ) {
@@ -295,7 +296,7 @@ ru.akman.znotes.Viewer = function() {
       body.show( currentNote, true );
     }
   };
-  
+
   function onNoteDeleted( e ) {
     var aCategory = e.data.parentCategory;
     var aNote = e.data.deletedNote;
@@ -336,6 +337,8 @@ ru.akman.znotes.Viewer = function() {
       currentStatusbarLabel = mainWindow.document.getElementById(
         "znotes_statusbarpanellabel" );
     }
+    editorToolbar = document.getElementById( "znotes_editor_toolbar" );
+    editorToolbar.setAttribute( "viewer", "true" );
     currentNote = null;
     currentTab = getCurrentTab();
     if ( currentTab ) {
@@ -402,7 +405,7 @@ ru.akman.znotes.Viewer = function() {
     }
     return true;
   };
-  
+
   return pub;
 
 }();

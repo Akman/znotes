@@ -30,15 +30,23 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+var Cc = Components.classes;
+var Ci = Components.interfaces;
+var Cr = Components.results;
+var Cu = Components.utils;
+
 if ( !ru ) var ru = {};
 if ( !ru.akman ) ru.akman = {};
 if ( !ru.akman.znotes ) ru.akman.znotes = {};
 
-Components.utils.import( "resource://znotes/utils.js" , ru.akman.znotes );
+Cu.import( "resource://znotes/utils.js", ru.akman.znotes );
 
 ru.akman.znotes.ABPicker = function() {
 
   var pub = {};
+
+  var Utils = ru.akman.znotes.Utils;
+  var log = Utils.getLogger( "content.abpicker" );
 
   var args = null;
   var btnAccept = null;
@@ -56,12 +64,11 @@ ru.akman.znotes.ABPicker = function() {
       return;
     while ( directoryMenuPopup.firstChild )
       directoryMenuPopup.removeChild( directoryMenuPopup.firstChild );
-    abManager = Components.classes["@mozilla.org/abmanager;1"]
-                          .getService( Components.interfaces.nsIAbManager );
+    abManager = Cc["@mozilla.org/abmanager;1"].getService( Ci.nsIAbManager );
     var directories = abManager.directories;
     while ( directories.hasMoreElements() ) {
-      var directory = directories.getNext().QueryInterface( Components.interfaces.nsIAbDirectory );
-      if ( directory instanceof Components.interfaces.nsIAbDirectory ) {
+      var directory = directories.getNext().QueryInterface( Ci.nsIAbDirectory );
+      if ( directory instanceof Ci.nsIAbDirectory ) {
         var menuItem = document.createElement( "menuitem" );
         menuItem.setAttribute( "label", directory.dirName );
         menuItem.setAttribute( "value", directory.URI );
@@ -77,8 +84,8 @@ ru.akman.znotes.ABPicker = function() {
     cardsArray.splice(0);
     var cards = abDirectory.childCards;
     while ( cards.hasMoreElements() ) {
-      var card = cards.getNext().QueryInterface( Components.interfaces.nsIAbCard );
-      if ( card instanceof Components.interfaces.nsIAbCard ) {
+      var card = cards.getNext().QueryInterface( Ci.nsIAbCard );
+      if ( card instanceof Ci.nsIAbCard ) {
         cardsArray.push( card );
         var richListItem = document.createElement( "richlistitem" );
         // ***

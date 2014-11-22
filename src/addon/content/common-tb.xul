@@ -32,14 +32,14 @@
   - ***** END LICENSE BLOCK ***** -->
 
 <?xml-stylesheet type="text/css" href="chrome://znotes/skin/common-tb.css" ?>
-  
+
 <!DOCTYPE overlay SYSTEM "chrome://znotes/locale/common-tb.dtd">
 
 <overlay id="common-tb"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <stringbundleset id="znotes_platform_stringbundleset" />
-  
+
   <commandset id="znotes_platform_commandset">
     <command id="znotes_tbopenmaintab_command"
       thunderbird="true"
@@ -117,7 +117,7 @@
       key="&znotes_tbsaveasnote_key;" modifiers="&znotes_tbsaveasnote_key_modifiers;"
       keycode="&znotes_tbsaveasnote_keycode;"/>
   </keyset>
-  
+
   <popupset id="znotes_platform_popupset" />
-  
+
 </overlay>

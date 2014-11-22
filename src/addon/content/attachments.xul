@@ -72,7 +72,7 @@
         command="znotes_attachmentsdelete_command"/>
     </menupopup>
   </popupset>
-    
+
   <toolbarpalette id="znotes_bodytoolbarpalette">
     <toolbarbutton id="znotes_attachmentsaddfile_button"
       class="toolbarbutton-1 znotes_attachmentsaddfile_class"

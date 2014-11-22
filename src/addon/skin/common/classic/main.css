@@ -123,13 +123,13 @@
   background-color: white;
 }
 
-splitter[state="collapsed"] .folderGrippy, 
+splitter[state="collapsed"] .folderGrippy,
 splitter:not([state="open"]) .folderGrippy,
-splitter[state="collapsed"] .bookGrippy, 
+splitter[state="collapsed"] .bookGrippy,
 splitter:not([state="open"]) .bookGrippy,
-splitter[state="collapsed"] .tagGrippy, 
+splitter[state="collapsed"] .tagGrippy,
 splitter:not([state="open"]) .tagGrippy,
-splitter[state="collapsed"] .noteGrippy, 
+splitter[state="collapsed"] .noteGrippy,
 splitter:not([state="open"]) .noteGrippy {
   visibility: visible;
 }
@@ -159,7 +159,7 @@ splitter:not([state="collapsed"]) .noteGrippy {
 #bookSplitter, #tagSplitter,
 #bookTree, #folderTree, #tagTree {
   background-color: white;
-  background-image: url("chrome://znotes_images/skin/grain.png");  
+  background-image: url("chrome://znotes_images/skin/grain.png");
 }
 
 /* background color and image for treecol element */
@@ -167,7 +167,7 @@ splitter:not([state="collapsed"]) .noteGrippy {
 #bookTree treecol, #folderTree  treecol, #tagTree  treecol {
   -moz-appearance: none;
   background-color: yellow;
-  background-image: url("chrome://znotes_images/skin/grain.png");  
+  background-image: url("chrome://znotes_images/skin/grain.png");
 }
 */
 
@@ -199,6 +199,27 @@ treechildren::-moz-tree-image( folder, closed ) {
 treechildren::-moz-tree-image( folder, open ) {
   list-style-image: url("chrome://znotes_images/skin/open-folder-16x16.png");
 }
+
+treechildren::-moz-tree-image( folder, root, leaf ) {
+  list-style-image: url("chrome://znotes_images/skin/book-16x16.png");
+}
+treechildren::-moz-tree-image( folder, root ) {
+  list-style-image: url("chrome://znotes_images/skin/book-16x16.png");
+}
+treechildren::-moz-tree-image( folder, root, open ) {
+  list-style-image: url("chrome://znotes_images/skin/open-book-16x16.png");
+}
+
+treechildren::-moz-tree-image( folder, bin, leaf ) {
+  list-style-image: url("chrome://znotes_images/skin/bin-open-16x16.png");
+}
+treechildren::-moz-tree-image( folder, bin ) {
+  list-style-image: url("chrome://znotes_images/skin/bin-open-16x16.png");
+}
+treechildren::-moz-tree-image( folder, bin, empty ) {
+  list-style-image: url("chrome://znotes_images/skin/bin-empty-16x16.png");
+}
+
 treechildren::-moz-tree-cell-text( folder ) {
   padding-left: 3px;
 }

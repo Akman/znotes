@@ -107,11 +107,11 @@
     <vbox id="creditscontainer" align="start" flex="1">
       <label id="credits" value="&credits;"/>
     </vbox>
-    
+
     <vbox id="translatorscontainer" align="start" flex="1">
       <label id="translators" value="&translators;"/>
     </vbox>
-    
+
   </vbox>
 
   <hbox id="donatecontainer" align="center" pack="center" flex="1">
