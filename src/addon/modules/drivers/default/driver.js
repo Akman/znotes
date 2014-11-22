@@ -1338,7 +1338,7 @@ var Driver = function() {
     this.loadContentDirectory = function( fromDirectoryEntry, fMove, fClean ) {
       var entry, entries;
       var toDirectoryEntry = this.getContentDirectory();
-      if ( !fClean ) {
+      if ( fClean ) {
         entries = toDirectoryEntry.directoryEntries;
         while( entries && entries.hasMoreElements() ) {
           entry = entries.getNext();

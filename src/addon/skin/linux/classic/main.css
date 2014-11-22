@@ -41,10 +41,18 @@
 
 #mainPanel {
   border-bottom: 1px solid #AABCCF;
-}
-/* only for xr */
-.mainPanelXR {
   border-top: 1px solid #AABCCF;
+}
+#mainPanel[thunderbird="true"] {
+  border-top: none;
+}
+
+.znotes_maintoolbar {
+  padding: 0px;
+}
+.znotes_maintoolbar[thunderbird="true"] {
+  padding-top: 6px;
+  padding-bottom: 6px;
 }
 
 #folderSplitter:not([state]),

@@ -581,53 +581,53 @@ ru.akman.znotes.Main = function() {
         case "sanitize":
           Utils.IS_SANITIZE_ENABLED = this.branch.getBoolPref( "sanitize" );
           // SAVE_SCRIPTS
-          if ( !pub.hasPref( "clipperSaveScripts" ) ) {
-            pub.setBoolPref( "clipperSaveScripts",
+          if ( !prefsBundle.hasPref( "clipperSaveScripts" ) ) {
+            prefsBundle.setBoolPref( "clipperSaveScripts",
               !!( Utils.CLIPPER_FLAGS & 0x00000001 ) );
           }
           // SAVE_FRAMES
-          if ( !pub.hasPref( "clipperSaveFrames" ) ) {
-            pub.setBoolPref( "clipperSaveFrames",
+          if ( !prefsBundle.hasPref( "clipperSaveFrames" ) ) {
+            prefsBundle.setBoolPref( "clipperSaveFrames",
               !!( Utils.CLIPPER_FLAGS & 0x00000010 ) );
           }
           // SAVE_FRAMES_IN_SEPARATE_DIRECTORY
-          if ( !pub.hasPref( "clipperSeparateFrames" ) ) {
-            pub.setBoolPref( "clipperSeparateFrames",
+          if ( !prefsBundle.hasPref( "clipperSeparateFrames" ) ) {
+            prefsBundle.setBoolPref( "clipperSeparateFrames",
               !!( Utils.CLIPPER_FLAGS & 0x00000100 ) );
           }
           // PRESERVE_HTML5_TAGS
-          if ( !pub.hasPref( "clipperPreserveHTML5Tags" ) ) {
-            pub.setBoolPref( "clipperPreserveHTML5Tags",
+          if ( !prefsBundle.hasPref( "clipperPreserveHTML5Tags" ) ) {
+            prefsBundle.setBoolPref( "clipperPreserveHTML5Tags",
               !!( Utils.CLIPPER_FLAGS & 0x00001000 ) );
           }
           // SAVE_STYLES
-          if ( !pub.hasPref( "clipperSaveStyles" ) ) {
-            pub.setBoolPref( "clipperSaveStyles",
+          if ( !prefsBundle.hasPref( "clipperSaveStyles" ) ) {
+            prefsBundle.setBoolPref( "clipperSaveStyles",
               !!( Utils.CLIPPER_FLAGS & 0x00010000 ) );
           }
           // SAVE_INLINE_RESOURCES_IN_SEPARATE_FILES
-          if ( !pub.hasPref( "clipperSaveInlineResources" ) ) {
-            pub.setBoolPref( "clipperSaveInlineResources",
+          if ( !prefsBundle.hasPref( "clipperSaveInlineResources" ) ) {
+            prefsBundle.setBoolPref( "clipperSaveInlineResources",
               !!( Utils.CLIPPER_FLAGS & 0x00100000 ) );
           }
           // INLINE_STYLESHEETS_IN_DOCUMENT
-          if ( !pub.hasPref( "clipperInlineStylesheets" ) ) {
-            pub.setBoolPref( "clipperInlineStylesheets",
+          if ( !prefsBundle.hasPref( "clipperInlineStylesheets" ) ) {
+            prefsBundle.setBoolPref( "clipperInlineStylesheets",
               !!( Utils.CLIPPER_FLAGS & 0x01000000 ) );
           }
           // SAVE_ACTIVE_RULES_ONLY
-          if ( !pub.hasPref( "clipperSaveActiveRulesOnly" ) ) {
-            pub.setBoolPref( "clipperSaveActiveRulesOnly",
+          if ( !prefsBundle.hasPref( "clipperSaveActiveRulesOnly" ) ) {
+            prefsBundle.setBoolPref( "clipperSaveActiveRulesOnly",
               !!( Utils.CLIPPER_FLAGS & 0x10000000 ) );
           }
           // SAVE_STYLES
-          if ( pub.getBoolPref( "clipperSaveStyles" ) ) {
+          if ( prefsBundle.getBoolPref( "clipperSaveStyles" ) ) {
             Utils.CLIPPER_FLAGS |= 0x00010000;
           } else {
             Utils.CLIPPER_FLAGS &= 0x11101111;
           }
           // SAVE_INLINE_RESOURCES_IN_SEPARATE_FILES
-          if ( pub.getBoolPref( "clipperSaveInlineResources" ) ) {
+          if ( prefsBundle.getBoolPref( "clipperSaveInlineResources" ) ) {
             Utils.CLIPPER_FLAGS |= 0x00100000;
           } else {
             Utils.CLIPPER_FLAGS &= 0x11011111;
@@ -640,37 +640,37 @@ ru.akman.znotes.Main = function() {
             Utils.CLIPPER_FLAGS |= 0x10000000;
           } else {
             // SAVE_SCRIPTS
-            if ( pub.getBoolPref( "clipperSaveScripts" ) ) {
+            if ( prefsBundle.getBoolPref( "clipperSaveScripts" ) ) {
               Utils.CLIPPER_FLAGS |= 0x00000001;
             } else {
               Utils.CLIPPER_FLAGS &= 0x11111110;
             }
             // SAVE_FRAMES
-            if ( pub.getBoolPref( "clipperSaveFrames" ) ) {
+            if ( prefsBundle.getBoolPref( "clipperSaveFrames" ) ) {
               Utils.CLIPPER_FLAGS |= 0x00000010;
             } else {
               Utils.CLIPPER_FLAGS &= 0x11111101;
             }
             // SAVE_FRAMES_IN_SEPARATE_DIRECTORY
-            if ( pub.getBoolPref( "clipperSeparateFrames" ) ) {
+            if ( prefsBundle.getBoolPref( "clipperSeparateFrames" ) ) {
               Utils.CLIPPER_FLAGS |= 0x00000100;
             } else {
               Utils.CLIPPER_FLAGS &= 0x11111011;
             }
             // PRESERVE_HTML5_TAGS
-            if ( pub.getBoolPref( "clipperPreserveHTML5Tags" ) ) {
+            if ( prefsBundle.getBoolPref( "clipperPreserveHTML5Tags" ) ) {
               Utils.CLIPPER_FLAGS |= 0x00001000;
             } else {
               Utils.CLIPPER_FLAGS &= 0x11110111;
             }
             // INLINE_STYLESHEETS_IN_DOCUMENT
-            if ( pub.getBoolPref( "clipperInlineStylesheets" ) ) {
+            if ( prefsBundle.getBoolPref( "clipperInlineStylesheets" ) ) {
               Utils.CLIPPER_FLAGS |= 0x01000000;
             } else {
               Utils.CLIPPER_FLAGS &= 0x10111111;
             }
             // SAVE_ACTIVE_RULES_ONLY
-            if ( pub.getBoolPref( "clipperSaveActiveRulesOnly" ) ) {
+            if ( prefsBundle.getBoolPref( "clipperSaveActiveRulesOnly" ) ) {
               Utils.CLIPPER_FLAGS |= 0x10000000;
             } else {
               Utils.CLIPPER_FLAGS &= 0x01111111;
@@ -696,7 +696,11 @@ ru.akman.znotes.Main = function() {
     if ( Utils.IS_FIRST_RUN ) {
       prefsBundle.setBoolPref( "isFirstRun", false );
     }
-    if ( Utils.IS_FIRST_RUN || Utils.IS_DEBUG_ENABLED ) {
+    if ( prefsBundle.getCharPref( "version" ) !== Utils.VERSION ) {
+      prefsBundle.setCharPref( "version", Utils.VERSION );
+      Utils.IS_NEW_VERSION = true;
+    }
+    if ( Utils.IS_FIRST_RUN || Utils.IS_NEW_VERSION || Utils.IS_DEBUG_ENABLED ) {
       observerService.notifyObservers( null, "startupcache-invalidate", null );
       observerService.notifyObservers( null, "chrome-flush-skin-caches", null );
       observerService.notifyObservers( null, "chrome-flush-caches", null );
@@ -3357,24 +3361,30 @@ ru.akman.znotes.Main = function() {
           }
         };
         clipper = new ru.akman.znotes.core.Clipper();
-        clipper.save(
-          wBrowser.contentDocument,
-          aResultObj,
-          aFile,
-          aDirectory,
-          /*
-          0x00000001 SAVE_SCRIPTS
-          0x00000010 SAVE_FRAMES
-          0x00000100 SAVE_FRAMES_IN_SEPARATE_DIRECTORY
-          0x00001000 PRESERVE_HTML5_TAGS
-          0x00010000 SAVE_STYLES
-          0x00100000 SAVE_INLINE_RESOURCES_IN_SEPARATE_FILES
-          0x01000000 INLINE_STYLESHEETS_IN_DOCUMENT
-          0x10000000 SAVE_ACTIVE_RULES_ONLY
-          */
-          0x11010000,
-          anObserver
-        );
+        try {
+          clipper.save(
+            wBrowser.contentDocument,
+            aResultObj,
+            aFile,
+            aDirectory,
+            /*
+            0x00000001 SAVE_SCRIPTS
+            0x00000010 SAVE_FRAMES
+            0x00000100 SAVE_FRAMES_IN_SEPARATE_DIRECTORY
+            0x00001000 PRESERVE_HTML5_TAGS
+            0x00010000 SAVE_STYLES
+            0x00100000 SAVE_INLINE_RESOURCES_IN_SEPARATE_FILES
+            0x01000000 INLINE_STYLESHEETS_IN_DOCUMENT
+            0x10000000 SAVE_ACTIVE_RULES_ONLY
+            */
+            0x11010000,
+            note.getBaseURI(),
+            anObserver
+          );
+        } catch ( e ) {
+          clipper.abort();
+          log.warn( e + "\n" + Utils.dumpStack() );
+        }
       },
       true
     );
@@ -3524,7 +3534,7 @@ ru.akman.znotes.Main = function() {
         win = window.open(
           "chrome://znotes/content/viewer.xul?" + windowName,
           windowName,
-          "chrome,toolbar,status,resizable,centerscreen"
+          "chrome,toolbar,status,resizable"
         );
         win.arguments = [
           "chrome://znotes/content/viewer.xul?" + windowName,
@@ -5404,7 +5414,7 @@ ru.akman.znotes.Main = function() {
     var aBook = aNote.getBook();
     if ( currentBook && currentBook === aBook ) {
       if ( currentNote && currentNote === aNote &&
-           !currentNote.isLoading() ) {
+        !currentNote.isLoading() ) {
         currentNoteChanged( true );
       }
     }
@@ -5903,13 +5913,16 @@ ru.akman.znotes.Main = function() {
     document.title = getString( "main.window.title" );
     // panel
     mainPanel = document.getElementById( "mainPanel" );
-    if ( Utils.IS_STANDALONE ) {
-      mainPanel.classList.add( "mainPanelXR" );
-    }
     // toolbox
     mainMenuBar = document.getElementById( "znotes_mainmenutoolbar" );
     mainToolBox = document.getElementById( "znotes_maintoolbox" );
     mainToolBar = document.getElementById( "znotes_maintoolbar" );
+    if ( !Utils.IS_STANDALONE ) {
+      mainPanel.setAttribute( "thunderbird", "true" );
+      mainMenuBar.setAttribute( "thunderbird", "true" );
+      mainToolBox.setAttribute( "thunderbird", "true" );
+      mainToolBar.setAttribute( "thunderbird", "true" );
+    }
     mainToolBox.customizeDone = onCustomizeMainToolbarDone;
     // menubar & appmenu
     mainMenu = document.getElementById( "znotes_mainmenubar" );
@@ -6374,9 +6387,6 @@ ru.akman.znotes.Main = function() {
     refreshBooksList();
     restoreBooksTreeSelection();
     loadPersistedSession();
-    if ( Utils.IS_STANDALONE ) {
-      updateWindowSizeAndPosition();
-    }
     if ( Utils.IS_TEST_ACTIVE ) {
       doOpenTestSuiteWindow();
     }
@@ -6386,8 +6396,10 @@ ru.akman.znotes.Main = function() {
     updateFocus();
     updateEditCommands();
     observerService.notifyObservers( window, "znotes-main-startup", null );
-    if ( prefsBundle.getCharPref( "version" ) != Utils.VERSION ) {
-      prefsBundle.setCharPref( "version", Utils.VERSION );
+    if ( Utils.IS_STANDALONE ) {
+      updateWindowSizeAndPosition( Utils.MAIN_WINDOW );
+    }
+    if ( Utils.IS_NEW_VERSION ) {
       Utils.showNewVersionInfo( "maximized" );
     }
   };
@@ -6502,57 +6514,70 @@ ru.akman.znotes.Main = function() {
   };
 
   // XR only
-  function updateWindowSizeAndPosition() {
-    var win = Utils.MAIN_WINDOW;
+  function updateWindowSizeAndPosition( win ) {
+    var screenX, screenY, outerWidth, outerHeight;
+    var windowListener, screenR, screenB;
     var availLeft = win.screen.availLeft;
     var availTop = win.screen.availTop;
     var availWidth = win.screen.availWidth;
     var availHeight = win.screen.availHeight;
-    if ( Utils.IS_FIRST_RUN ) {
-      win.moveTo( availLeft, availTop );
-      win.resizeTo( availWidth - availLeft, availHeight - availTop );
-      return;
-    }
-    // maximized
-    if ( win.windowState == 1 ) {
-      win.maximize();
-      return;
-    }
-    // normal
     var availRight = availLeft + availWidth - 1;
     var availBottom = availTop + availHeight - 1;
-    var screenL = win.screenX;
-    var screenT = win.screenY;
-    var flagMove = false;
-    if ( screenL < availLeft ) {
-      flagMove = true;
-      screenL = availLeft;
+    if ( !prefsBundle.hasPref( "windowState" ) ) {
+      prefsBundle.setIntPref( "windowState",
+        Ci.nsIDOMChromeWindow.STATE_NORMAL );
     }
-    if ( screenT < availTop ) {
-      flagMove = true;
-      screenT = availTop;
+    if ( !prefsBundle.hasPref( "windowScreenX" ) ) {
+      prefsBundle.setIntPref( "windowScreenX", availLeft );
     }
-    if ( flagMove ) {
-      win.moveTo( screenL, screenT );
+    if ( !prefsBundle.hasPref( "windowScreenY" ) ) {
+      prefsBundle.setIntPref( "windowScreenY", availTop );
     }
-    //
-    var outerWidth = win.outerWidth
-    var outerHeight = win.outerHeight;
-    var screenR = screenL + outerWidth - 1;
-    var screenB = screenT + outerHeight - 1;
-    //
-    var flagResize = false;
-    if ( screenR > ( availRight - availLeft ) ) {
-      flagResize = true;
-      outerWidth -= ( screenR - ( availRight - availLeft ) );
+    if ( !prefsBundle.hasPref( "windowWidth" ) ) {
+      prefsBundle.setIntPref( "windowWidth", availWidth );
     }
-    if ( screenB > ( availBottom - availTop ) ) {
-      flagResize = true;
-      outerHeight -= ( screenB - ( availBottom - availTop ) );
+    if ( !prefsBundle.hasPref( "windowHeight" ) ) {
+      prefsBundle.setIntPref( "windowHeight", availHeight );
     }
-    if ( flagResize ) {
-      win.resizeTo( outerWidth, outerHeight );
+    switch ( prefsBundle.getIntPref( "windowState" ) ) {
+      case Ci.nsIDOMChromeWindow.STATE_MAXIMIZED:
+      case Ci.nsIDOMChromeWindow.STATE_FULLSCREEN:
+        win.maximize();
+        break;
+      case Ci.nsIDOMChromeWindow.STATE_MINIMIZED:
+        win.minimize();
+        break;
+      default:
+        screenX = prefsBundle.getIntPref( "windowScreenX" );
+        screenY = prefsBundle.getIntPref( "windowScreenY" );
+        outerWidth = prefsBundle.getIntPref( "windowWidth" );
+        outerHeight = prefsBundle.getIntPref( "windowHeight" );
+        if ( screenX < availLeft ) {
+          screenX = availLeft;
+        }
+        if ( screenY < availTop ) {
+          screenY = availTop;
+        }
+        screenR = screenX + outerWidth - 1;
+        screenB = screenY + outerHeight - 1;
+        if ( screenR > ( availRight - availLeft ) ) {
+          outerWidth -= ( screenR - ( availRight - availLeft ) );
+        }
+        if ( screenB > ( availBottom - availTop ) ) {
+          outerHeight -= ( screenB - ( availBottom - availTop ) );
+        }
+        win.moveTo( screenX, screenY );
+        win.resizeTo( outerWidth, outerHeight );
     }
+    windowListener = function( event ) {
+      prefsBundle.setIntPref( "windowState", win.windowState );
+      prefsBundle.setIntPref( "windowScreenX", win.screenX );
+      prefsBundle.setIntPref( "windowScreenY", win.screenY );
+      prefsBundle.setIntPref( "windowWidth", win.outerWidth );
+      prefsBundle.setIntPref( "windowHeight", win.outerHeight );
+    };
+    win.addEventListener( "sizemodechange", windowListener, false );
+    win.addEventListener( "resize", windowListener, false );
   };
 
   function closeWindows() {

@@ -44,32 +44,17 @@ if ( !ru.akman.znotes ) ru.akman.znotes = {};
 Cu.import( "resource://znotes/utils.js", ru.akman.znotes );
 Cu.import( "resource://znotes/cssutils.js", ru.akman.znotes );
 Cu.import( "resource://znotes/domevents.js", ru.akman.znotes );
+Cu.import( "resource://znotes/mimetypes.js", ru.akman.znotes );
 
 var Utils = ru.akman.znotes.Utils;
 var CSSUtils = ru.akman.znotes.CSSUtils;
 var DOMEvents = ru.akman.znotes.DOMEvents;
+var MIME = ru.akman.znotes.MIME;
 
 var log = Utils.getLogger( "modules.clipper" );
 
 var HTML5NS = CSSUtils.Namespaces.knowns["html"];
 var DOMEventHandlers = DOMEvents.getEventHandlers();
-var MIME = {
-  "application/opensearchdescription+xml": "osdx",
-  "application/atom+xml": "atom",
-  "application/rss+xml": "rss",
-  "application/xhtml+xml": "xhtml",
-  "text/html": "html",
-  "text/xml": "xml",
-  "application/xml": "xml",
-  "text/javascript": "js",
-  "application/javascript": "js",
-  "application/font-woff": "woff",
-  "application/x-woff": "woff",
-  "font/ttf": "ttf",
-  "application/octet-stream": "ttf",
-  "application/vnd.ms-fontobject": "eot",
-  "image/svg+xml": "svg"
-};
 /**
 Maximum Path Length Limitation
 @see http://msdn.microsoft.com/en-us/library/aa365247.aspx#maxpath
@@ -600,6 +585,7 @@ ChannelObserver.prototype = {
   },
   onStopRequest: function( aRequest, aContext, aStatusCode ) {
     try {
+      // TODO: sometimes flush() throws exception NS_ERROR_FILE_NOT_FOUND
       this.mBufferedOutputStream.flush();
       if ( this.mFileOutputStream instanceof Ci.nsISafeOutputStream ) {
         this.mFileOutputStream.finish();
@@ -2287,7 +2273,8 @@ function doneDocument( aDocument, aResult, aRules, aBaseURL, aFile,
   aDirectory, aFlags, aBaseURI ) {
   var isFrame, aHead, aStyle, aMeta, aCollection, aBase, aBaseTarget;
   var aNode, aBaseIndentText;
-  isFrame = aDocument.defaultView.self !== aDocument.defaultView.window.top;
+  isFrame = aDocument.defaultView &&
+    aDocument.defaultView.self !== aDocument.defaultView.window.top;
   var namespaceURI = aResult.documentElement.namespaceURI;
   if ( namespaceURI && namespaceURI === HTML5NS ) {
     // HEAD
@@ -2736,6 +2723,7 @@ Job.prototype = {
 
 var Loader = function() {
   this.mLength = 0;
+  this.mErrors = 0;
   this.mJobs = {};
   this.mObservers = [];
 };
@@ -2766,6 +2754,9 @@ Loader.prototype = {
     } ) );
   },
   _stopJob: function( aJob ) {
+    if ( aJob.getStatus() ) {
+      this.mErrors++;
+    }
     this.notifyObservers( new Event( "JobStopped", {
       job: aJob
     } ) );
@@ -2790,6 +2781,8 @@ Loader.prototype = {
   },
   _stopLoader: function() {
     this.notifyObservers( new Event( "LoaderStopped", {
+      count: this.getCount(),
+      errors: this.getErrors(),
       status: this.getStatus()
     } ) );
   },
@@ -2838,6 +2831,9 @@ Loader.prototype = {
   getCount: function() {
     return this.mLength;
   },
+  getErrors: function() {
+    return this.mErrors;
+  },
   getStatus: function() {
     for each ( var aJob in this.mJobs ) {
       if ( !aJob.isActive() && aJob.getStatus() ) {
@@ -2847,10 +2843,15 @@ Loader.prototype = {
     return 0;
   },
   start: function() {
-    for each ( var aJob in this.mJobs ) {
-      if ( !aJob.isActive() ) {
-        aJob.start();
+    if ( this.hasJobs() ) {
+      for each ( var aJob in this.mJobs ) {
+        if ( !aJob.isActive() ) {
+          aJob.start();
+        }
       }
+    } else {
+      this._startLoader();
+      this._stopLoader();
     }
   },
   stop: function() {
@@ -2943,11 +2944,7 @@ Clipper.prototype = {
       aBaseURI,
       this.mLoader
     );
-    if ( this.mLoader.hasJobs() ) {
-      this.mLoader.start();
-    } else {
-      this.mLoader.stop();
-    }
+    this.mLoader.start();
   },
   abort: function() {
     if ( this.mLoader ) {

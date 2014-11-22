@@ -69,13 +69,15 @@ ru.akman.znotes.Viewer = function() {
   var currentStatusbarLogo = null;
   var currentStatusbarLabel = null;
   var currentToolbox = null;
+  var currentToolbar = null;
+  var editorToolbar = null;
   var currentTab = null;
   var noteBodyView = null;
 
   var body = null;
   var noteStateListener = null;
 
-  // HELPER OBSERVER
+  // HELPERS
 
   var helperObserver = {
     observe: function( aSubject, aTopic, aData ) {
@@ -110,6 +112,76 @@ ru.akman.znotes.Viewer = function() {
     }
   };
 
+  // XR only
+  function updateWindowSizeAndPosition( win ) {
+    var screenX, screenY, outerWidth, outerHeight;
+    var windowListener, screenR, screenB;
+    var availLeft = win.screen.availLeft;
+    var availTop = win.screen.availTop;
+    var availWidth = win.screen.availWidth;
+    var availHeight = win.screen.availHeight;
+    var availRight = availLeft + availWidth - 1;
+    var availBottom = availTop + availHeight - 1;
+    var data = currentNote.getData();
+    if ( !( "windowState" in data ) ) {
+      data.windowState = Ci.nsIDOMChromeWindow.STATE_NORMAL;
+    }
+    if ( !( "windowScreenX" in data ) ) {
+      data.windowScreenX = availLeft;
+    }
+    if ( !( "windowScreenY" in data ) ) {
+      data.windowScreenY = availTop;
+    }
+    if ( !( "windowWidth" in data ) ) {
+      data.windowWidth = availWidth;
+    }
+    if ( !( "windowHeight" in data ) ) {
+      data.windowHeight = availHeight;
+    }
+    currentNote.setData();
+    switch ( data.windowState ) {
+      case Ci.nsIDOMChromeWindow.STATE_MAXIMIZED:
+      case Ci.nsIDOMChromeWindow.STATE_FULLSCREEN:
+        win.maximize();
+        break;
+      case Ci.nsIDOMChromeWindow.STATE_MINIMIZED:
+        win.minimize();
+        break;
+      default:
+        screenX = data.windowScreenX;
+        screenY = data.windowScreenY;
+        outerWidth = data.windowWidth;
+        outerHeight = data.windowHeight;
+        if ( screenX < availLeft ) {
+          screenX = availLeft;
+        }
+        if ( screenY < availTop ) {
+          screenY = availTop;
+        }
+        screenR = screenX + outerWidth - 1;
+        screenB = screenY + outerHeight - 1;
+        if ( screenR > ( availRight - availLeft ) ) {
+          outerWidth -= ( screenR - ( availRight - availLeft ) );
+        }
+        if ( screenB > ( availBottom - availTop ) ) {
+          outerHeight -= ( screenB - ( availBottom - availTop ) );
+        }
+        win.moveTo( screenX, screenY );
+        win.resizeTo( outerWidth, outerHeight );
+    }
+    windowListener = function( event ) {
+      data = currentNote.getData();
+      data.windowState = win.windowState;
+      data.windowScreenX = win.screenX;
+      data.windowScreenY = win.screenY;
+      data.windowWidth = win.outerWidth;
+      data.windowHeight = win.outerHeight;
+      currentNote.setData();
+    };
+    win.addEventListener( "sizemodechange", windowListener, false );
+    win.addEventListener( "resize", windowListener, false );
+  };
+  
   // COMMANDS
 
   var viewerCommands = {
@@ -284,7 +356,7 @@ ru.akman.znotes.Viewer = function() {
     var aCategory = e.data.parentCategory;
     var aNote = e.data.changedNote;
     if ( currentNote == aNote ) {
-      document.title = currentNote.name;
+      document.title = currentNote.getName();
     }
   };
 
@@ -336,6 +408,11 @@ ru.akman.znotes.Viewer = function() {
         "znotes_statusbarpanellogo" );
       currentStatusbarLabel = mainWindow.document.getElementById(
         "znotes_statusbarpanellabel" );
+    }
+    currentToolbar = document.getElementById( "znotes_bodytoolbar" );
+    if ( !Utils.IS_STANDALONE ) {
+      currentToolbox.setAttribute( "thunderbird", "true" );
+      currentToolbar.setAttribute( "thunderbird", "true" );
     }
     editorToolbar = document.getElementById( "znotes_editor_toolbar" );
     editorToolbar.setAttribute( "viewer", "true" );
@@ -389,6 +466,9 @@ ru.akman.znotes.Viewer = function() {
     updateKeyset();
     activateKeyset();
     body.show( currentNote );
+    if ( Utils.IS_STANDALONE ) {
+      updateWindowSizeAndPosition( window );
+    }
   };
 
   pub.onClose = function() {

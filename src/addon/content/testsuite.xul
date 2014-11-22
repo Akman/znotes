@@ -42,6 +42,7 @@
   windowtype="znotes:test"
   persist="width height screenX screenY sizemode">
 
+  <script type="application/javascript" src="chrome://znotes/content/common.js" />
   <script type="application/javascript" src="chrome://znotes/content/testsuite.js"/>
 
   <menupopup id="testMenu" />

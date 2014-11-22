@@ -319,6 +319,7 @@ ru.akman.znotes.Clipper = function() {
           file: contentFile,
           directory: contentDirectory,
           flags: Utils.CLIPPER_FLAGS,
+          baseURI: aNote.getBaseURI(),
           onstart: function( result ) {
             aNote.setOrigin( aDocument.location.toString() );
             aNote.setLoading( true );
@@ -350,9 +351,9 @@ ru.akman.znotes.Clipper = function() {
             }
             aNote.setLoading( false );
             if ( result.status ) {
-              notifyFail( id );
+              notifyFail( id, result.count, result.errors );
             } else {
-              notifySuccess( id );
+              notifySuccess( id, result.count );
             }
           }
         }
@@ -371,13 +372,17 @@ ru.akman.znotes.Clipper = function() {
     return aBundle.getString( name );
   };
 
-  function notifyFail( id ) {
+  function getFormattedString( name, values ) {
+    return aBundle.getFormattedString( name, values );
+  };
+  
+  function notifyFail( id, count, errors ) {
     if ( Utils.IS_CLIPPER_PLAY_SOUND ) {
       Utils.play( "chrome://znotes_sounds/skin/fail.wav" );
     }
     Utils.showPopup(
       "chrome://znotes_images/skin/warning-32x32.png",
-      getString( "savePopup.fail" ),
+      getFormattedString( "savePopup.fail", [ errors, count ] ),
       aBrowser.contentDocument.location.toString(),
       true,
       id,
@@ -389,13 +394,13 @@ ru.akman.znotes.Clipper = function() {
     );
   };
   
-  function notifySuccess( id ) {
+  function notifySuccess( id, count ) {
     if ( Utils.IS_CLIPPER_PLAY_SOUND ) {
       Utils.play( "chrome://znotes_sounds/skin/success.wav" );
     }
     Utils.showPopup(
       "chrome://znotes_images/skin/message-32x32.png",
-      getString( "savePopup.success" ),
+      getFormattedString( "savePopup.success", [ count ] ),
       aBrowser.contentDocument.location.toString(),
       true,
       id,

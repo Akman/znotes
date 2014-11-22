@@ -49,6 +49,7 @@ ru.akman.znotes.TestSuite = function() {
   var pub = {};
 
   var Utils = ru.akman.znotes.Utils;
+  var Common = ru.akman.znotes.Common;
   var DOMUtils = ru.akman.znotes.DOMUtils;
   var CSSUtils = ru.akman.znotes.CSSUtils;
 
@@ -235,7 +236,17 @@ ru.akman.znotes.TestSuite = function() {
       description: "Create welcome note",
       code: function () {
         var note = ctx.createWelcomeNote( ctx.book );
+        var id = note.getBook().getId() + "&" + note.getId();
         log.trace( "\n" + note.toString() );
+        var params = Common.createCommandParamsObject();
+        if ( params ) {
+          params.setStringValue( "id", id );
+          Common.goDoCommandWithParams(
+            "znotes_savemessage_command",
+            params,
+            ctx.window.document.getElementById( "znotes_dummy_command" )
+          );
+        }
       }
     }
   );

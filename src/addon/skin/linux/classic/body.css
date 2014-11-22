@@ -37,3 +37,28 @@
 #addonsTabs {
   padding-top: 5px;
 }
+
+.znotes_bodytoolbox {
+  padding: 0px;
+}
+.znotes_bodytoolbox[thunderbird="true"] {
+}
+.znotes_bodytoolbar {
+  padding: 0px;
+}
+.znotes_bodytoolbar[thunderbird="true"] {
+  padding: 0px;
+}
+.znotes_editor_toolbar {
+  padding: 0px;
+  margin: 0px;
+}
+.znotes_editor_toolbar[viewer="true"] {
+  padding: 0px;
+}
+.znotes_editor_toolbar[thunderbird="true"] {
+  padding: 0px;
+}
+.znotes_editor_toolbar[thunderbird="true"][viewer="true"] {
+  padding: 0px;
+}
