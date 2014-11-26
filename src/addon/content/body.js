@@ -958,6 +958,10 @@ ru.akman.znotes.Body = function() {
     bodyToolboxPalette = bodyToolbox.palette;
     bodyToolbar = currentWindow.document.getElementById( "znotes_bodytoolbar" );
     bodyToolbarSpacer = currentWindow.document.getElementById( "znotes_bodytoolbar_spacer" );
+    if ( !Utils.IS_STANDALONE ) {
+      bodyToolbox.setAttribute( "thunderbird", "true" );
+      bodyToolbar.setAttribute( "thunderbird", "true" );
+    }
     if ( currentToolbox ) {
       bodyToolbar.classList.remove( "znotes_bodytoolbar" );
       bodyToolbar.classList.add( "znotes_viewertoolbar" );

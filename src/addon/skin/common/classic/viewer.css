@@ -43,9 +43,19 @@
   padding-bottom: 1px;
   padding-top: 2px;
 }
+.znotes_viewermenutoolbar[thunderbird="true"] {
+}
 .znotes_viewertoolbar {
   overflow-x: hidden;
-  padding: 1px 0;
+  padding-top: 1px;
+  padding-left: 1px;
+  padding-right: 1px;
+  padding-bottom: 2px;
+}
+.znotes_viewertoolbar[thunderbird="true"] {
+  padding-left: 0px;
+  padding-right: 0px;
+  padding-bottom: 1px;
 }
 
 /* body view */

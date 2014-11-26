@@ -48,6 +48,18 @@ var UpdateManager = function() {
   var Utils = ru.akman.znotes.Utils;
   var log = Utils.getLogger( "modules.updatemanager" );
 
+  /*
+  addons.update-checker	WARN	Update manifest was not valid XML
+  ----------
+  file:///F:/ZNotes/platform/locale/ru/mozapps/extensions/extensions.properties
+  Line: 1, Char : 2
+  # This Source Code Form is subject to the terms of the Mozilla Public
+  ----------
+  addons.repository	WARN	Search failed when repopulating cache
+  addons.repository	WARN	AddonRepository search failed: searching false aURI null aMaxResults 3
+  addons.repository	WARN	_formatURLPref: Couldn't get pref: extensions.getAddons.get.url
+  */
+  
   var aus, mgr, aup;
 
   var pub = {};

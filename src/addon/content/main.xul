@@ -44,8 +44,7 @@
 
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   id="znotes"
-  windowtype="znotes:main"
-  persist="width height screenX screenY sizemode">
+  windowtype="znotes:main">
 
   <script type="application/javascript"
     src="chrome://znotes/content/common.js" />

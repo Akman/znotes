@@ -204,6 +204,8 @@ ru.akman.znotes.ClipperDialog = function() {
 
   function onLoaderStopped( anEvent ) {
     aResult.status = anEvent.getData().status;
+    aResult.count = anEvent.getData().count;
+    aResult.errors = anEvent.getData().errors;
     if ( onStop ) {
       onStop( aResult );
     }

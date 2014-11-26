@@ -34,6 +34,23 @@
 
 @import url("chrome://znotes_common/skin/viewer.css");
 
+.znotes_viewertoolbox {
+}
+.znotes_viewertoolbox[thunderbird="true"] {
+  padding-top: 6px;
+  padding-bottom: 7px;
+}
+.znotes_viewermenutoolbar {
+  padding: 0px;
+}
+.znotes_viewermenutoolbar[thunderbird="true"] {
+}
+.znotes_viewertoolbar {
+  padding: 0px;
+}
+.znotes_viewertoolbar[thunderbird="true"] {
+}
+
 .noteBodyView {
   border-bottom: 1px solid #AABCCF;
 }

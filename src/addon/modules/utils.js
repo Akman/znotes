@@ -105,6 +105,7 @@ var Utils = function() {
   var isSanitizeEnabled = true;
   var isAdEnabled = false;
   var isFirstRun = true;
+  var isNewVersion = false;
   var isStandalone = true;
   var isQuitEnabled = true;
   var isSavePosition = true;
@@ -182,6 +183,14 @@ var Utils = function() {
       isFirstRun = value;
     },
 
+    get IS_NEW_VERSION() {
+      return isNewVersion;
+    },
+
+    set IS_NEW_VERSION( value ) {
+      isNewVersion = value;
+    },
+    
     get NAME() {
       return ru.akman.znotes.Product.Name;
     },
@@ -736,7 +745,7 @@ var Utils = function() {
       window.openDialog(
         "chrome://znotes/content/main.xul",
         "_blank",
-        "chrome,dialog=no,all,centerscreen",
+        "chrome,dialog=no,all",
         {
           contentPage: "chrome://znotes/content/main.xul",
           background: !isActive,

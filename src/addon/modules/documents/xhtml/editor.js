@@ -1027,23 +1027,24 @@ var Editor = function() {
             },
             onstop: function( result ) {
               var data, node, position;
-              try {
-                note.loadContentDirectory( contentDirectory, false /* fMove */,
-                  true /* fClean */ );
-              } catch ( e ) {
-                log.warn( e + "\n" + Utils.dumpStack() );
-              }
-              if ( currentMode !== "editor" ) {
+              if ( result.count ) {
                 try {
-                  note.importDocument( result.value );
+                  note.loadContentDirectory( contentDirectory );
                 } catch ( e ) {
                   log.warn( e + "\n" + Utils.dumpStack() );
                 }
-              } else {
-                data = self.getDocument().serializeToString(
-                  result.value, note.getURI(), note.getBaseURI() );
-                if ( sourceEditor.getValue() !== data ) {
-                  patchDesign( result.value );
+                if ( currentMode === "editor" ) {
+                  data = self.getDocument().serializeToString(
+                    result.value, note.getURI(), note.getBaseURI() );
+                  if ( sourceEditor.getValue() !== data ) {
+                    patchDesign( result.value );
+                  }
+                } else {
+                  try {
+                    note.importDocument( result.value );
+                  } catch ( e ) {
+                    log.warn( e + "\n" + Utils.dumpStack() );
+                  }
                 }
               }
               note.setLoading( false );
@@ -1058,9 +1059,9 @@ var Editor = function() {
                 log.warn( e + "\n" + Utils.dumpStack() );
               }
               if ( result.status ) {
-                notifyFail( note.getName() );
+                notifyFail( note.getName(), result.count, result.errors );
               } else {
-                notifySuccess( note.getName() );
+                notifySuccess( note.getName(), result.count );
               }
             }
           }
@@ -1070,19 +1071,21 @@ var Editor = function() {
       }
     };
     
-    function notifyFail( title ) {
+    function notifyFail( title, count, errors ) {
       if ( Utils.IS_CLIPPER_PLAY_SOUND ) {
         Utils.play( failAudio );
       }
-      Utils.showPopup( failImage, getEditorString( "clipper.fail" ),
+      Utils.showPopup( failImage,
+        getEditorFormattedString( "clipper.fail", [ errors, count ] ),
         title, true );
     };
     
-    function notifySuccess( title ) {
+    function notifySuccess( title, count ) {
       if ( Utils.IS_CLIPPER_PLAY_SOUND ) {
         Utils.play( successAudio );
       }
-      Utils.showPopup( successImage, getEditorString( "clipper.success" ),
+      Utils.showPopup( successImage,
+        getEditorFormattedString( "clipper.success", [ count ] ),
         title, true );
     };
     
@@ -2210,6 +2213,10 @@ var Editor = function() {
 
     function getEditorString( name ) {
       return stringsBundle.getString( name );
+    };
+
+    function getEditorFormattedString( name, values ) {
+      return stringsBundle.getFormattedString( name, values );
     };
 
     function getString( name ) {

@@ -243,9 +243,9 @@ ru.akman.znotes.ZNotes = function() {
                   ] );
                 } else {
                   log.warn(
-                    getString( "main.note.saving.attachments.error" ) +
+                    getString( "main.savemessageasnote.attachments.error" ) +
                     ": " + urls[url] + "\n" +
-                    getString( "main.note.loading.error" ) + " " +
+                    getString( "main.savemessageasnote.error" ) + " " +
                     aExitCode + " " + Utils.getErrorName( aExitCode )
                   );
                 }
@@ -266,9 +266,9 @@ ru.akman.znotes.ZNotes = function() {
       } catch ( e ) {
         delete urls[ anAttachments[i].url ];
         log.warn(
-          getString( "main.note.saving.attachments.error" ) +
+          getString( "main.savemessageasnote.attachments.error" ) +
           ": " + urls[url] + "\n" +
-          getString( "main.note.loading.error" ) + " " + e
+          getString( "main.savemessageasnote.error" ) + " " + e
         );
       }
     }
@@ -304,48 +304,54 @@ ru.akman.znotes.ZNotes = function() {
           aDirectory = anEntries.directoryEntry;
           aResultObj = { value: null };
           clipper = new ru.akman.znotes.core.Clipper();
-          clipper.save(
-            dom,
-            aResultObj,
-            aFile,
-            aDirectory,
-            /*
-            0x00000001 SAVE_SCRIPTS
-            0x00000010 SAVE_FRAMES
-            0x00000100 SAVE_FRAMES_IN_SEPARATE_DIRECTORY
-            0x00001000 PRESERVE_HTML5_TAGS
-            0x00010000 SAVE_STYLES
-            0x00100000 SAVE_INLINE_RESOURCES_IN_SEPARATE_FILES
-            0x01000000 INLINE_STYLESHEETS_IN_DOCUMENT
-            0x10000000 SAVE_ACTIVE_RULES_ONLY
-            */
-            0x11110000,
-            {
-              onLoaderStarted: function( anEvent ) {
-              },
-              onLoaderStopped: function( anEvent ) {
-                try {
-                  aNote.loadContentDirectory( aDirectory, true );
-                } catch ( e ) {
-                  log.warn( e + "\n" + Utils.dumpStack() );
-                }
-                try {
-                  aFile.remove( false );
-                } catch ( e ) {
-                  log.warn( e + "\n" + Utils.dumpStack() );
-                }
-                try {
-                  aNote.importDocument( aResultObj.value );
-                } catch ( e ) {
-                  log.warn( e + "\n" + Utils.dumpStack() );
-                }
-                aNote.setLoading( false );
-                if ( aCallback ) {
-                  aCallback( aNote );
+          try {
+            clipper.save(
+              dom,
+              aResultObj,
+              aFile,
+              aDirectory,
+              /*
+              0x00000001 SAVE_SCRIPTS
+              0x00000010 SAVE_FRAMES
+              0x00000100 SAVE_FRAMES_IN_SEPARATE_DIRECTORY
+              0x00001000 PRESERVE_HTML5_TAGS
+              0x00010000 SAVE_STYLES
+              0x00100000 SAVE_INLINE_RESOURCES_IN_SEPARATE_FILES
+              0x01000000 INLINE_STYLESHEETS_IN_DOCUMENT
+              0x10000000 SAVE_ACTIVE_RULES_ONLY
+              */
+              0x11110000,
+              aNote.getBaseURI(),
+              {
+                onLoaderStarted: function( anEvent ) {
+                },
+                onLoaderStopped: function( anEvent ) {
+                  try {
+                    aNote.loadContentDirectory( aDirectory, true );
+                  } catch ( e ) {
+                    log.warn( e + "\n" + Utils.dumpStack() );
+                  }
+                  try {
+                    aFile.remove( false );
+                  } catch ( e ) {
+                    log.warn( e + "\n" + Utils.dumpStack() );
+                  }
+                  try {
+                    aNote.importDocument( aResultObj.value );
+                  } catch ( e ) {
+                    log.warn( e + "\n" + Utils.dumpStack() );
+                  }
+                  aNote.setLoading( false );
+                  if ( aCallback ) {
+                    aCallback( aNote );
+                  }
                 }
               }
-            }
-          );
+            );
+          } catch ( e ) {
+            clipper.abort();
+            log.warn( e + "\n" + Utils.dumpStack() );
+          }
           break;
         case "text/plain":
           aNote.importDocument( dom );
@@ -751,7 +757,7 @@ ru.akman.znotes.ZNotes = function() {
     if ( isError ) {
       Utils.showPopup(
         "chrome://znotes_images/skin/warning-32x32.png",
-        getString( "main.note.loading.fail" ),
+        getString( "main.savemessageasnote.fail" ),
         name,
         true,
         id,
@@ -764,7 +770,7 @@ ru.akman.znotes.ZNotes = function() {
     } else {
       Utils.showPopup(
         "chrome://znotes_images/skin/message-32x32.png",
-        getString( "main.note.loading.success" ),
+        getString( "main.savemessageasnote.success" ),
         name,
         true,
         id,
@@ -977,7 +983,7 @@ ru.akman.znotes.ZNotes = function() {
     if ( mainWindowState.open ) {
       doOpenMainWindow( !mainWindowState.active );
     } else {
-      if ( prefsBundle.getCharPref( "version" ) != Utils.VERSION ) {
+      if ( prefsBundle.getCharPref( "version" ) !== Utils.VERSION ) {
         prefsBundle.setCharPref( "version", Utils.VERSION );
         Utils.showNewVersionInfo( "maximized" );
       }

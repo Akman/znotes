@@ -34,32 +34,44 @@
 
 @import url("chrome://znotes_common/skin/common-tb.css");
 
+#znotes_tbopenmaintab_button,
 .znotes_tbopenmaintab_class {
   list-style-image: url("chrome://znotes_images/skin/znotes-tb-24x24.png");
 }
+#znotes_tbopenmaintab_button[disabled="true"],
 .znotes_tbopenmaintab_class[disabled="true"] {
   list-style-image: url("chrome://znotes_images/skin/znotes-tb-disabled-24x24.png");
 }
+toolbar[iconsize="small"] #znotes_tbopenmaintab_button,
 toolbar[iconsize="small"] .znotes_tbopenmaintab_class,
-menuitem.znotes_tbopenmaintab_class {
+menuitem #znotes_tbopenmaintab_button,
+menuitem .znotes_tbopenmaintab_class {
   list-style-image: url("chrome://znotes_images/skin/znotes-tb-16x16.png");
 }
+toolbar[iconsize="small"] #znotes_tbopenmaintab_button[disabled="true"],
 toolbar[iconsize="small"] .znotes_tbopenmaintab_class[disabled="true"],
-menuitem.znotes_tbopenmaintab_class[disabled="true"] {
+menuitem #znotes_tbopenmaintab_button[disabled="true"],
+menuitem .znotes_tbopenmaintab_class[disabled="true"] {
   list-style-image: url("chrome://znotes_images/skin/znotes-tb-disabled-16x16.png");
 }
 
+#znotes_tbsaveasnote_button,
 .znotes_tbsaveasnote_class {
   list-style-image: url("chrome://znotes_images/skin/save-email-tb-24x24.png");
 }
+#znotes_tbsaveasnote_button[disabled="true"],
 .znotes_tbsaveasnote_class[disabled="true"] {
   list-style-image: url("chrome://znotes_images/skin/save-email-tb-disabled-24x24.png");
 }
+toolbar[iconsize="small"] #znotes_tbsaveasnote_button,
 toolbar[iconsize="small"] .znotes_tbsaveasnote_class,
-menuitem.znotes_tbsaveasnote_class {
+menuitem #znotes_tbsaveasnote_button,
+menuitem .znotes_tbsaveasnote_class {
   list-style-image: url("chrome://znotes_images/skin/save-email-tb-16x16.png");
 }
+toolbar[iconsize="small"] #znotes_tbsaveasnote_button[disabled="true"],
 toolbar[iconsize="small"] .znotes_tbsaveasnote_class[disabled="true"],
-menuitem.znotes_tbsaveasnote_class[disabled="true"] {
+menuitem #znotes_tbsaveasnote_button[disabled="true"],
+menuitem .znotes_tbsaveasnote_class[disabled="true"] {
   list-style-image: url("chrome://znotes_images/skin/save-email-tb-disabled-16x16.png");
 }

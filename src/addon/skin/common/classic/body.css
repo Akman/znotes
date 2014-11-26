@@ -52,6 +52,7 @@
   border: none;
   padding: 0px;
 }
+
 .znotes_bodytoolbox {
   -moz-appearance: none;
   border: none;
@@ -59,27 +60,31 @@
   padding-top: 1px;
   padding-bottom: 1px;
 }
+.znotes_bodytoolbox[thunderbird="true"] {
+  padding: 0px;
+}
 .znotes_bodytoolbar {
+  padding-left: 1px;
+}
+.znotes_bodytoolbar[thunderbird="true"] {
   padding-left: 3px;
 }
-
 .znotes_editor_toolbar {
   margin-top: -2px;
-  padding-right: 3px;
+  padding-right: 1px;
 }
 .znotes_editor_toolbar[viewer="true"] {
-  margin-top: -1px;
-  padding-right: 0px;
-  margin-bottom: 1px;
+  margin-left: -1px;
+  padding-top: 1px;
+  padding-bottom: 2px;
 }
-
 .znotes_editor_toolbar[thunderbird="true"] {
-  margin-top: -1px;
-  padding-right: 0px;
-}
-.znotes_editor_toolbar[thunderbird="true"][viewer="true"] {
-  margin-top: -1px;
+  padding-top: 1px;
   padding-right: 0px;
   padding-bottom: 0px;
-  padding-top: 2px;
+  padding-left: 0px;
+}
+.znotes_editor_toolbar[thunderbird="true"][viewer="true"] {
+  padding-top: 3px;
+  padding-bottom: 1px;
 }
