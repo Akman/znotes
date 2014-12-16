@@ -962,6 +962,19 @@ ru.akman.znotes.ZNotes = function() {
     }
   };
 
+  function findUpdates() {
+    var last, now;
+    if ( !prefsBundle.hasPref( "lastUpdateCheck" ) ) {
+      prefsBundle.setIntPref( "lastUpdateCheck", 0 );
+    }
+    last = prefsBundle.getIntPref( "lastUpdateCheck" );
+    now = Date.now();
+    if ( now - last > 86400000 /* 24h === 86400000ms */ ) {
+      prefsBundle.setIntPref( "lastUpdateCheck", now );
+      Utils.findUpdates();
+    }
+  };
+  
   function init() {
     Utils.initGlobals();
     mailWindow = Utils.getMail3PaneWindow();
@@ -989,6 +1002,7 @@ ru.akman.znotes.ZNotes = function() {
       }
     }
     addMessengerListeners();
+    findUpdates();
   };
 
   // PUBLIC
