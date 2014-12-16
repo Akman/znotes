@@ -274,7 +274,7 @@
       </fileset>
     </copy>
     <property name="update.rdf.url"
-      value="http://znotes.net/downloads/releases/addon/update.rdf" />
+      value="http://znotes.besaba.com/downloads/releases/addon/update.rdf" />
     <if>
       <uptodate srcfile="${public.key.path}"
         targetfile="${bin.dir}/addon/install.rdf" />
@@ -954,7 +954,7 @@
           <arg value="-p" />
           <arg value="=${config.openssl.private.key.password}" />
           <arg value="${releases.dir}/releases/addon/${application.fullname}.xpi" />
-          <arg value="http://znotes.net/downloads/releases/addon/${application.fullname}.xpi" />
+          <arg value="http://znotes.besaba.com/downloads/releases/addon/${application.fullname}.xpi" />
         </exec>
       </else>
     </if>

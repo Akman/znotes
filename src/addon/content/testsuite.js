@@ -626,6 +626,44 @@ ru.akman.znotes.TestSuite = function() {
   } );
 
   tests.push( {
+    name: "Addon Manager",
+    description: "Usage of addon manager",
+    code: function () {
+      Cu.import( "resource://gre/modules/AddonManager.jsm" );
+      AddonManager.getAddonByID( Utils.ID, function( anAddon ) {
+        if ( !anAddon ) {
+          log.trace( "Addon: " + Utils.ID + " not found!" );
+          return;
+        }
+        log.trace( "Current version: " + anAddon.version );
+        anAddon.findUpdates( {
+          onUpdateAvailable: function ( anAddon, anInstall ) {
+            log.trace( "Update available, version: " + anInstall.version );
+            anInstall.addListener( {
+              onDownloadFailed: function () {
+                log.trace( "Update download failed" );
+              },
+              onInstallFailed: function () {
+                log.trace( "Update install failed" );
+              },
+              onInstallEnded: function ( anInstall, anAddon ) {
+                log.trace( "Update install ended" );
+              }
+            } );
+            anInstall.install();
+          },
+          onNoUpdateAvailable: function ( anAddon ) {
+            log.trace( "No update available" );
+          },
+          onUpdateFinished: function( anAddon, anError ) {
+            log.trace( "Update check is complete" );
+          }
+        }, AddonManager.UPDATE_WHEN_USER_REQUESTED );
+      } );
+    }
+  } );
+  
+  tests.push( {
     name: "Platform commands",
     description: "Platform commands",
     code: function () {

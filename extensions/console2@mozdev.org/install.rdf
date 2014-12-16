@@ -71,7 +71,7 @@
 			<RDF:Description>
 				<id>toolkit@mozilla.org</id>
 				<minVersion>1.9a7</minVersion>
-				<maxVersion>34.*</maxVersion>  <!-- don't take my word for it! -->
+				<maxVersion>35.*</maxVersion>  <!-- don't take my word for it! -->
 			</RDF:Description>
 		</targetApplication>
 

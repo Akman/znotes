@@ -43,6 +43,7 @@ if ( !ru.akman.znotes ) ru.akman.znotes = {};
 
 Cu.import( "resource://znotes/product.js", ru.akman.znotes );
 Cu.import( "resource://gre/modules/Log.jsm" );
+Cu.import( "resource://gre/modules/AddonManager.jsm" );
 
 var Utils = function() {
 
@@ -1959,6 +1960,27 @@ var Utils = function() {
     loader.loadSubScript( url, context, charset );
   };
 
+  pub.findUpdates = function() {
+    if ( pub.IS_STANDALONE ) {
+      return;
+    }
+    AddonManager.getAddonByID( pub.ID, function( anAddon ) {
+      if ( !anAddon ) {
+        return;
+      }
+      log.debug( "current version: " + anAddon.version );
+      anAddon.findUpdates( {
+        onUpdateAvailable: function ( anAddon, anInstall ) {
+          log.debug( "update available, version: " + anInstall.version );
+          anInstall.install();
+        },
+        onNoUpdateAvailable: function ( anAddon ) {
+          log.debug( "no update available" );
+        }
+      }, AddonManager.UPDATE_WHEN_USER_REQUESTED );
+    } );
+  };
+  
   return pub;
 
 }();
