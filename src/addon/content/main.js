@@ -527,6 +527,9 @@ ru.akman.znotes.Main = function() {
         case "isExitQuitTB":
           Utils.IS_EXIT_QUIT_TB = event.data.newValue;
           break;
+        case "firstDayOfWeek":
+          Utils.FIRST_DAY_OF_WEEK = event.data.newValue;
+          break;
         case "isHighlightRow":
           Utils.IS_HIGHLIGHT_ROW = event.data.newValue;
           updateTagsCSSRules();
@@ -571,7 +574,8 @@ ru.akman.znotes.Main = function() {
     observe: function( subject, topic, data ) {
       switch ( data ) {
         case "debug":
-          Utils.IS_DEBUG_ENABLED = this.branch.getBoolPref( "debug" );
+          Utils.IS_DEBUG_ENABLED = Utils.checkTestSuite() &&
+            this.branch.getBoolPref( "debug" );
           updateCommandsVisibility();
           Common.goUpdateCommand( "znotes_testsuite_command", mainController.getId(), window );
           Common.goUpdateCommand( "znotes_console_command", mainController.getId(), window );
@@ -704,6 +708,9 @@ ru.akman.znotes.Main = function() {
       observerService.notifyObservers( null, "startupcache-invalidate", null );
       observerService.notifyObservers( null, "chrome-flush-skin-caches", null );
       observerService.notifyObservers( null, "chrome-flush-caches", null );
+    }
+    if ( !Utils.DEFAULT_DOCUMENT_TYPE ) {
+      setCharPref( "defaultDocumentType", "application/xhtml+xml" );
     }
   };
 
@@ -1429,7 +1436,7 @@ ru.akman.znotes.Main = function() {
     }
     Common.goSetCommandHidden( "znotes_addons_command", !Utils.IS_STANDALONE, window );
     Common.goSetCommandHidden( "znotes_update_command", !Utils.IS_STANDALONE, window );
-    Common.goSetCommandHidden( "znotes_testsuite_command", !Utils.IS_DEBUG_ENABLED, window );
+    Common.goSetCommandHidden( "znotes_testsuite_command", !Utils.IS_DEBUG_ENABLED || !Utils.checkTestSuite(), window );
     Common.goSetCommandHidden( "znotes_console_command", !Utils.IS_DEBUG_ENABLED, window );
     Common.goSetCommandHidden( "znotes_debugger_command", !( Utils.IS_DEBUG_ENABLED && Utils.IS_STANDALONE && Utils.IS_DEBUGGER_INSTALLED ), window );
     Common.goSetCommandHidden( "znotes_inspector_command", !( Utils.IS_DEBUG_ENABLED && Utils.IS_STANDALONE && Utils.IS_INSPECTOR_INSTALLED ), window );
@@ -1654,9 +1661,9 @@ ru.akman.znotes.Main = function() {
     if ( win ) {
       windowWatcher.activeWindow = win;
     } else {
-      if ( Utils.checkChromeURL( "chrome://znotes/content/testsuite.xul" ) ) {
+      if ( Utils.checkTestSuite() ) {
         win = window.open(
-          "chrome://znotes/content/testsuite.xul",
+          "chrome://znotes/content/testsuite/testsuite.xul",
           "znotes:test",
           "chrome,dialog=no,modal=no,resizable=yes,centerscreen"
         );

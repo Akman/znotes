@@ -107,16 +107,23 @@
 <!ENTITY znotes_justifyfull_keycode "">
 
 <!ENTITY znotes_editorcustomizetoolbar_label "Dostosuj">
-<!ENTITY znotes_editorcustomizetoolbar_tooltip "Dostosuj narzędzi">
+<!ENTITY znotes_editorcustomizetoolbar_tooltip "Dostosuj narzędzia">
 <!ENTITY znotes_editorcustomizetoolbar_accesskey "D">
 <!ENTITY znotes_editorcustomizetoolbar_key "">
 <!ENTITY znotes_editorcustomizetoolbar_key_modifiers "">
 <!ENTITY znotes_editorcustomizetoolbar_keycode "">
 
+<!ENTITY znotes_editordebug_label "Debugger">
+<!ENTITY znotes_editordebug_tooltip "Debugger">
+<!ENTITY znotes_editordebug_accesskey "">
+<!ENTITY znotes_editordebug_key "">
+<!ENTITY znotes_editordebug_key_modifiers "">
+<!ENTITY znotes_editordebug_keycode "">
+
 <!-- OPTIONS -->
 
-<!ENTITY docCaption.text.label "Document">
+<!ENTITY docCaption.text.label "Dokument">
 
 <!ENTITY mainCaption.text.label "Główny">
-<!ENTITY isSpellcheckEnabled.text.label "Włącz sprawdź pisownię domyślnie">
+<!ENTITY isSpellcheckEnabled.text.label "Włącz sprawdzanie pisowni domyślnie">
 <!ENTITY keysCaption.text.label "Skróty klawiaturowe">

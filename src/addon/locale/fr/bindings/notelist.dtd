@@ -1,0 +1,56 @@
+<!-- ***** BEGIN LICENSE BLOCK *****
+  -
+  - Version: GPL 3.0
+  -
+  - ZNotes
+  - Copyright (C) 2015 Alexander Kapitman
+  -
+  - This program is free software: you can redistribute it and/or modify
+  - it under the terms of the GNU General Public License as published by
+  - the Free Software Foundation, either version 3 of the License, or
+  - (at your option) any later version.
+  -
+  - This program is distributed in the hope that it will be useful,
+  - but WITHOUT ANY WARRANTY; without even the implied warranty of
+  - MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  - GNU General Public License for more details.
+  -
+  - You should have received a copy of the GNU General Public License
+  - along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -
+  - The Original Code is ZNotes.
+  -
+  - Initial Developer(s):
+  -   Alexander Kapitman <akman.ru@gmail.com>
+  -
+  - Portions created by the Initial Developer are Copyright (C) 2015
+  - the Initial Developer. All Rights Reserved.
+  -
+  - Contributor(s):
+  -
+  - ***** END LICENSE BLOCK ***** -->
+
+<!ENTITY note_tree_attachments "Pieces jointes">
+<!ENTITY note_tree_sticky_flag "Flag">
+<!ENTITY note_tree_name "Nom">
+<!ENTITY note_tree_category "Categorie">
+<!ENTITY note_tree_tag "Etiquette">
+<!ENTITY note_tree_type "Type">
+<!ENTITY note_tree_create_datetime "Cree le">
+<!ENTITY note_tree_update_datetime "Modifie le">
+
+<!ENTITY qf_pin_tooltip "Keep the filter applied when switching">
+<!ENTITY qf_attachments_label "Attachments">
+<!ENTITY qf_attachments_tooltip "Show only notes with attachments">
+<!ENTITY qf_type_label "Type">
+<!ENTITY qf_type_tooltip "Show only notes selected types">
+<!ENTITY qf_created_label "Created">
+<!ENTITY qf_created_tooltip "Show only notes created in selected time intervals">
+<!ENTITY qf_updated_label "Updated">
+<!ENTITY qf_updated_tooltip "Show only notes updated in selected time intervals">
+<!ENTITY qf_text_placeholder "Filter these notes ...">
+<!ENTITY qf_detail_label "Filter notes by:">
+<!ENTITY qf_category_label "Category">
+<!ENTITY qf_tag_label "Tag">
+<!ENTITY qf_name_label "Name">
+<!ENTITY qf_body_label "Body">

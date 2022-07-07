@@ -8,9 +8,9 @@
      xmlns:em="http://www.mozilla.org/2004/em-rdf#">
   <Description about="urn:mozilla:install-manifest">
     <em:id>inspector@mozilla.org</em:id>
-    <em:version>2.0.14</em:version>
+    <em:version>2.0.16</em:version>
 
-    <!-- DOM Inspector supports Gecko 1.9.0 and higher.
+    <!-- DOM Inspector supports Gecko 2.0.0 and higher.
          All applications listed below are the subset of supported versions
          which also use an appropriate version of Gecko. -->
     <!-- For maxVersion of applications that follow the rapid cycle pattern,
@@ -21,8 +21,8 @@
     <em:targetApplication>
       <Description>
         <em:id>{a23983c0-fd0e-11dc-95ff-0800200c9a66}</em:id>
-        <em:minVersion>1.0a1</em:minVersion>
-        <em:maxVersion>1.0.*</em:maxVersion>
+        <em:minVersion>4.0</em:minVersion>
+        <em:maxVersion>40.0</em:maxVersion>
       </Description>
     </em:targetApplication>
 
@@ -36,8 +36,8 @@
     <em:targetApplication>
       <Description>
         <em:id>{ec8030f7-c20a-464f-9b0e-13a3a9e97384}</em:id>
-        <em:minVersion>3.0a1</em:minVersion>
-        <em:maxVersion>23.0a1</em:maxVersion>
+        <em:minVersion>4.0</em:minVersion>
+        <em:maxVersion>42.0</em:maxVersion>
       </Description>
     </em:targetApplication>
 
@@ -49,8 +49,17 @@
     <em:targetApplication>
       <Description>
         <em:id>{92650c4d-4b8e-4d2a-b7eb-24ecf4f6b63a}</em:id>
-        <em:minVersion>2.0a1pre</em:minVersion>
-        <em:maxVersion>2.20a1</em:maxVersion>
+        <em:minVersion>2.1</em:minVersion>
+        <em:maxVersion>2.39</em:maxVersion>
+      </Description>
+    </em:targetApplication>
+
+    <!-- Pale Moon -->
+    <em:targetApplication>
+      <Description>
+        <em:id>{8de7fcbb-c55c-4fbe-bfc5-fc555c87dbc4}</em:id>
+        <em:minVersion>25.0</em:minVersion>
+        <em:maxVersion>26.*</em:maxVersion>
       </Description>
     </em:targetApplication>
 
@@ -71,18 +80,18 @@
     <em:targetApplication>
       <Description>
         <em:id>{3550f703-e582-4d05-9a08-453d09bdfdc6}</em:id>
-        <em:minVersion>3.0a1pre</em:minVersion>
-        <em:maxVersion>23.0a1</em:maxVersion>
+        <em:minVersion>5.0</em:minVersion>
+        <em:maxVersion>42.0</em:maxVersion>
       </Description>
     </em:targetApplication>
 
     <!-- Gecko Toolkit
-         version 1.9.0 and higher -->
+         version 2.0.0 and higher -->
     <em:targetApplication>
       <Description>
         <em:id>toolkit@mozilla.org</em:id>
-        <em:minVersion>1.9a1</em:minVersion>
-        <em:maxVersion>35.*</em:maxVersion>
+        <em:minVersion>2.0</em:minVersion>
+        <em:maxVersion>42.0</em:maxVersion>
       </Description>
     </em:targetApplication>
 
@@ -105,6 +114,14 @@
         <em:locale>sv-SE</em:locale>
         <em:name>DOM-granskaren (DOM Inspector)</em:name>
         <em:description>Granskar strukturen och egenskaperna för ett fönster och dess innehåll.</em:description>
+      </Description>
+    </em:localized>
+
+    <em:localized>
+      <Description>
+        <em:locale>el</em:locale>
+        <em:name>Επιθεωρητής DOM</em:name>
+        <em:description>Επιθεωρεί τη δομή και τις ιδιότητες ενός παραθύρου και των περιεχομένων του.</em:description>
       </Description>
     </em:localized>
 

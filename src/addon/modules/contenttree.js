@@ -201,21 +201,25 @@ var ContentTree = function( book, rootCategoryEntry ) {
     }
   };
 
-  this.getNotesByTag = function( tagID ) {
+  this.getNotesByTag = function( tagID, binFlag ) {
     var result = [];
     var getNotesByTagProcessor = {
+      binFlag: !!binFlag,
       tagID: tagID,
       notes: result,
       processCategory: function( aCategory ) {
       },
       processNote: function( aNote ) {
         var noteIDs = aNote.getTags();
-        if ( noteIDs.length == 0 && this.tagID == "00000000000000000000000000000000" ) {
-          this.notes.push( aNote );
-        } else {
-          var indexID = noteIDs.indexOf( this.tagID );
-          if ( indexID != -1 ) {
+        if ( this.binFlag || !aNote.isInBin() ) {
+          if ( noteIDs.length === 0 &&
+            this.tagID === "00000000000000000000000000000000" ) {
             this.notes.push( aNote );
+          } else {
+            var indexID = noteIDs.indexOf( this.tagID );
+            if ( indexID !== -1 ) {
+              this.notes.push( aNote );
+            }
           }
         }
       }

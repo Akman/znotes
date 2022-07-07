@@ -49,5 +49,4 @@
 <!ENTITY note_tree_create_datetime "Créé le">
 <!ENTITY note_tree_update_datetime "Modifié le">
 
-<!ENTITY qf_text_placeholder "Filtrer ces notes ...">
-<!ENTITY qf_text_emptybase "Filtrer ces notes ...">
+<!ENTITY qf_text_placeholder "Filter these notes ...">

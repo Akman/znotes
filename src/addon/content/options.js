@@ -91,6 +91,7 @@ ru.akman.znotes.Options = function() {
   var cancelButton = null;
   var defaultsButton = null;
   var defaultDocumentType = null;
+  var firstDayOfWeekMenuList = null;
 
   var platformAssignedKeys = null;
   var platformKeyset = null;
@@ -601,6 +602,7 @@ ru.akman.znotes.Options = function() {
     isReplaceBackground.checked = optionsPrefs["main"]["default"].isReplaceBackground;
     isConfirmExit.checked = optionsPrefs["main"]["default"].isConfirmExit;
     isExitQuitTB.checked = optionsPrefs["main"]["default"].isExitQuitTB;
+    firstDayOfWeekMenuList.selectedIndex = optionsPrefs["main"]["default"].firstDayOfWeek;
     isHighlightRow.checked = optionsPrefs["main"]["default"].isHighlightRow;
     isCloseBrowserAfterImport.checked = optionsPrefs["main"]["default"].isCloseBrowserAfterImport;
     isClipperPlaySound.checked = optionsPrefs["main"]["default"].isClipperPlaySound;
@@ -746,6 +748,9 @@ ru.akman.znotes.Options = function() {
     currentPrefs.isExitQuitTB = isExitQuitTB.checked;
     isChanged = isChanged ||
       ( currentPrefs.isExitQuitTB !== originalPrefs.isExitQuitTB );
+    currentPrefs.firstDayOfWeek = firstDayOfWeekMenuList.selectedIndex;
+    isChanged = isChanged ||
+      ( currentPrefs.firstDayOfWeek !== originalPrefs.firstDayOfWeek );
     currentPrefs.isHighlightRow = isHighlightRow.checked;
     isChanged = isChanged ||
       ( currentPrefs.isHighlightRow !== originalPrefs.isHighlightRow );
@@ -849,6 +854,7 @@ ru.akman.znotes.Options = function() {
       "isReplaceBackground": true,
       "isConfirmExit": true,
       "isExitQuitTB": true,
+      "firstDayOfWeek": 0,
       "isHighlightRow": false,
       "isCloseBrowserAfterImport": true,
       "isClipperPlaySound": true,
@@ -903,6 +909,7 @@ ru.akman.znotes.Options = function() {
       "isReplaceBackground": Utils.IS_REPLACE_BACKGROUND,
       "isConfirmExit": Utils.IS_CONFIRM_EXIT,
       "isExitQuitTB": Utils.IS_EXIT_QUIT_TB,
+      "firstDayOfWeek": Utils.FIRST_DAY_OF_WEEK,
       "isHighlightRow": Utils.IS_HIGHLIGHT_ROW,
       "isCloseBrowserAfterImport": Utils.IS_CLOSE_BROWSER_AFTER_IMPORT,
       "isClipperPlaySound":       Utils.IS_CLIPPER_PLAY_SOUND,
@@ -936,6 +943,7 @@ ru.akman.znotes.Options = function() {
     prefsBundle.setBoolPref( "isReplaceBackground", prefs.isReplaceBackground );
     prefsBundle.setBoolPref( "isConfirmExit", prefs.isConfirmExit );
     prefsBundle.setBoolPref( "isExitQuitTB", prefs.isExitQuitTB );
+    prefsBundle.setIntPref( "firstDayOfWeek", prefs.firstDayOfWeek );
     prefsBundle.setBoolPref( "isHighlightRow", prefs.isHighlightRow );
     prefsBundle.setBoolPref( "isCloseBrowserAfterImport", prefs.isCloseBrowserAfterImport );
     prefsBundle.setCharPref( "defaultDocumentType", prefs.defaultDocumentType );
@@ -1036,6 +1044,7 @@ ru.akman.znotes.Options = function() {
     isReplaceBackground.checked = currentPrefs.isReplaceBackground;
     isConfirmExit.checked = currentPrefs.isConfirmExit;
     isExitQuitTB.checked = currentPrefs.isExitQuitTB;
+    firstDayOfWeekMenuList.selectedIndex = currentPrefs.firstDayOfWeek;
     isHighlightRow.checked = currentPrefs.isHighlightRow;
     isCloseBrowserAfterImport.checked = currentPrefs.isCloseBrowserAfterImport;
     isClipperPlaySound.checked = currentPrefs.isClipperPlaySound;
@@ -1119,6 +1128,7 @@ ru.akman.znotes.Options = function() {
     if ( Utils.IS_STANDALONE ) {
       isExitQuitTB.setAttribute( "hidden", true );
     }
+    firstDayOfWeekMenuList = document.getElementById( "firstDayOfWeekMenuList" );
     isHighlightRow = document.getElementById( "isHighlightRow" );
     isCloseBrowserAfterImport = document.getElementById( "isCloseBrowserAfterImport" );
     isClipperPlaySound = document.getElementById( "isClipperPlaySound" );

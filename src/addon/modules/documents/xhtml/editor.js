@@ -208,7 +208,8 @@ var Editor = function() {
       observe: function( subject, topic, data ) {
         switch ( data ) {
           case "debug":
-            Utils.IS_DEBUG_ENABLED = this.branch.getBoolPref( "debug" );
+            Utils.IS_DEBUG_ENABLED = Utils.checkTestSuite() &&
+              this.branch.getBoolPref( "debug" );
             Common.goSetCommandHidden( "znotes_editordebug_command",
               !Utils.IS_DEBUG_ENABLED, currentWindow );
             Common.goUpdateCommand( "znotes_editordebug_command", editorController.getId(), currentWindow );

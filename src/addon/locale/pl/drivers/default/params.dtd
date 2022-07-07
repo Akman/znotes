@@ -30,11 +30,11 @@
   -
   - ***** END LICENSE BLOCK ***** -->
 
-<!ENTITY encoding.label "Encoding:">
-<!ENTITY encoding.placeholder "Enter symbol encoding here ...">
-<!ENTITY path.label "Path:">
-<!ENTITY path.placeholder "Enter directory path here ...">
-<!ENTITY path.tooltiptext "Click to select folder ...">
-<!ENTITY extensions.label "Extensions:">
-<!ENTITY extensions.type.header "Type">
-<!ENTITY extensions.value.header "Value">
+<!ENTITY encoding.label "Kodowanie:">
+<!ENTITY encoding.placeholder "Wpisz symbol kodowania tutaj ...">
+<!ENTITY path.label "Ścieżka:">
+<!ENTITY path.placeholder "Wpisz ścieżkę katalogu tutaj ...">
+<!ENTITY path.tooltiptext "Kliknij aby wybrać katalog ...">
+<!ENTITY extensions.label "Rozszerzenia:">
+<!ENTITY extensions.type.header "Typ">
+<!ENTITY extensions.value.header "Wartość">

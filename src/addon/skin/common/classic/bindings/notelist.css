@@ -1,0 +1,179 @@
+﻿/* ***** BEGIN LICENSE BLOCK *****
+ *
+ * Version: GPL 3.0
+ *
+ * ZNotes
+ * Copyright (C) 2015 Alexander Kapitman
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * The Original Code is ZNotes.
+ *
+ * Initial Developer(s):
+ *   Alexander Kapitman <akman.ru@gmail.com>
+ *
+ * Portions created by the Initial Developer are Copyright (C) 2015
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+/* ***** classic/1.0 common **** */
+
+.noteBox {
+}
+.filterBox {
+  padding: 2px;
+}
+.qfBox {
+  margin-left: -1px;
+}
+.qfBoxButton {
+  border: 1px solid transparent;
+  padding: 1px 3px;
+  -moz-margin-start: 1px;
+  -moz-margin-end: 1px;
+}
+.qfPin {
+  list-style-image: url( "chrome://znotes_images/skin/sticky-16x16.png" );
+}
+.qfAttachments {
+  list-style-image: url( "chrome://znotes_images/skin/attachment-16x16.png" );
+}
+.qfType {
+}
+.qfTypeMenuPopup {
+}
+.qfCreated {
+}
+.qfCreatedMenuPopup {
+}
+.qfUpdated {
+}
+.qfUpdatedMenuPopup {
+}
+.qfMatch {
+ padding-top: 1px;
+}
+.qfMatch[filterActive="matches"] {
+  color: green;
+}
+.qfMatch[filterActive="nomatches"] {
+  color: red;
+}
+.qfText {
+  margin: 0px;
+}
+.qfDetail {
+  margin-top: 2px;
+  margin-right: -1px;
+}
+.qfDetailButton {
+  border: 1px solid transparent;
+  padding: 1px 3px;
+  -moz-margin-start: 1px;
+  -moz-margin-end: 1px;
+}
+.qfDetailLabel {
+}
+.qfCategory {
+}
+.qfTag {
+}
+.qfName {
+}
+.qfBody {
+}
+
+.noteTree {
+  -moz-appearance: none;
+  margin: 0px !important;
+  border: none;
+  border-top: 1px solid #e8f1fb;
+  padding: 0px;
+}
+.noteTree[filterActive="searching"] {
+  background-color: #ffffcc;
+}
+.noteTree[filterActive="matches"] {
+  background-color: #f2f9fc;
+}
+.noteTree[filterActive="nomatches"] {
+  background: repeating-linear-gradient(-45deg, #fff0f4,
+              #fff0f4 5px, white 5px, white 10px);
+}
+.noteTreeCols {
+}
+.noteTreeColsSplitter {
+}
+.noteTreeAttachments {
+  list-style-image: url( "chrome://znotes_images/skin/attachment-16x16.png" );
+}
+.noteTreeStickyFlag {
+  list-style-image: url( "chrome://znotes_images/skin/sticky-16x16.png" );
+}
+.noteTreeName {
+}
+.noteTreeCategory {
+}
+.noteTreeTag {
+}
+.noteTreeType {
+}
+.noteTreeCreateDateTime {
+}
+.noteTreeUpdateDateTime {
+}
+.noteTreeChildren::-moz-tree-drop-feedback() {
+  visibility: hidden;
+}
+.noteTreeChildren::-moz-tree-row( dropBefore ) {
+  border-top: 2px solid red;
+}
+.noteTreeChildren::-moz-tree-row( dropAfter ) {
+  border-bottom: 2px solid red;
+}
+.noteTreeChildren::-moz-tree-row( selected ) {
+  background-color: #FFFFAA;
+}
+.noteTreeChildren::-moz-tree-row( odd ) {
+  background-color: #EEEEEE;
+}
+.noteTreeChildren::-moz-tree-row( odd, selected ) {
+  background-color: #FFFFAA;
+}
+.noteTreeChildren::-moz-tree-cell-text( note ) {
+  padding-left: 3px;
+}
+.noteTreeChildren::-moz-tree-cell-text( note, selected ) {
+  font-weight: bold;
+}
+.noteTreeChildren::-moz-tree-cell-text( tag ) {
+  padding-left: 3px;
+}
+.noteTreeChildren::-moz-tree-image( note ) {
+  list-style-image: url( "chrome://znotes_images/skin/note-16x16.png" );
+}
+.noteTreeChildren::-moz-tree-image( loading ) {
+  list-style-image: url( "chrome://znotes_images/skin/spinner-16x16.gif" );
+}
+.noteTreeChildren::-moz-tree-image( attachment ) {
+  list-style-image: url("chrome://znotes_images/skin/attachment-16x16.png");
+  margin-left: -2px;
+}
+.noteTreeChildren::-moz-tree-image( sticky ) {
+  list-style-image: url("chrome://znotes_images/skin/sticky-16x16.png");
+  margin-left: -2px;
+}

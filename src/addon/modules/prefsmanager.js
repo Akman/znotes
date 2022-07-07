@@ -435,6 +435,13 @@ var PrefsManager = function() {
       Utils.IS_EXIT_QUIT_TB =
         pub.getBoolPref( "isExitQuitTB" );
       //
+      if ( !pub.hasPref( "firstDayOfWeek" ) ) {
+        pub.setIntPref( "firstDayOfWeek",
+          Utils.FIRST_DAY_OF_WEEK );
+      }
+      Utils.FIRST_DAY_OF_WEEK =
+        pub.getIntPref( "firstDayOfWeek" );
+      //
       if ( !pub.hasPref( "isMainMenubarVisible" ) ) {
         pub.setBoolPref( "isMainMenubarVisible",
           Utils.IS_MAINMENUBAR_VISIBLE );

@@ -57,6 +57,14 @@
 <!ENTITY isHighlightRow.label "Подсвечивать строки в списке заметок используя цвет основного тега">
 <!ENTITY isPlaySound.label "Воспроизводить звук при запуске">
 <!ENTITY isClearBinOnExit.label "Очищать корзину при выходе">
+<!ENTITY firstDayOfWeekCaption.label " Первый день недели ">
+<!ENTITY sunday.label "Воскресенье">
+<!ENTITY monday.label "Понедельник">
+<!ENTITY tuesday.label "Вторник">
+<!ENTITY wednesday.label "Среда">
+<!ENTITY thursday.label "Четверг">
+<!ENTITY friday.label "Пятница">
+<!ENTITY saturday.label "Суббота">
 <!ENTITY keysPlatformCaption.label "Сочетания клавиш">
 <!ENTITY keysCaption.label "Сочетания клавиш">
 <!ENTITY defaultsButton.label "По умолчанию">

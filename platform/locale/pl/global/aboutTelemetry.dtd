@@ -12,6 +12,8 @@
   Telemetria jest <span>wyłączona</span>.
 ">
 
+<!ENTITY aboutTelemetry.generalDataSection "Ogólne">
+<!ENTITY aboutTelemetry.telemetryLogSection "Dziennik telemetrii">
 <!ENTITY aboutTelemetry.slowSqlSection "
   Powolne polecenia SQL
 ">
@@ -24,7 +26,7 @@
 <!ENTITY aboutTelemetry.histogramsSection "
   Histogramy
 ">
-
+<!ENTITY aboutTelemetry.keyedHistogramsSection "Indeksowane histogramy">
 <!ENTITY aboutTelemetry.simpleMeasurementsSection "
   Proste pomiary
 ">

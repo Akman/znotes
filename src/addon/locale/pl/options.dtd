@@ -40,29 +40,37 @@
 <!ENTITY isEditSourceEnabled.label "Pozwól edytować kod źródłowy notatki">
 <!ENTITY docTypeCaption.label "Domyślny typ dokumentu">
 <!ENTITY clipperCaption.label "Web-clipper">
-<!ENTITY clipperSaveScripts.label "Save scripts">
-<!ENTITY clipperSaveScripts.tooltip "Can lead to incorrect display of the saved content!">
-<!ENTITY clipperSaveFrames.label "Save frames">
-<!ENTITY clipperSeparateFrames.label "Save frames in the separate folders">
-<!ENTITY clipperPreserveHTML5Tags.label "Preserve HTML5 tags">
-<!ENTITY clipperSaveInlineResources.label "Save inline resources in the separate files">
-<!ENTITY clipperSaveStyles.label "Save styles">
-<!ENTITY clipperInlineStylesheets.label "Inline stylesheets in a document">
-<!ENTITY clipperSaveActiveRulesOnly.label "Save active rules only">
-<!ENTITY isCloseBrowserAfterImport.label "Close browser window when download completes">
-<!ENTITY isClipperPlaySound.label "Play sound when download completes">
-<!ENTITY additionCaption.label "Dodatkowo">
+<!ENTITY clipperSaveScripts.label "Zapisz skrypty">
+<!ENTITY clipperSaveScripts.tooltip "Może prowadzić do nieprawidłowego wyświetlania zapisanej zawartości!">
+<!ENTITY clipperSaveFrames.label "Zapisz ramki">
+<!ENTITY clipperSeparateFrames.label "Zapisz ramki w osobnych folderach">
+<!ENTITY clipperPreserveHTML5Tags.label "Zachowaj znaczniki HTML5">
+<!ENTITY clipperSaveInlineResources.label "Zapisz zasoby inline w osobnych plikach">
+<!ENTITY clipperSaveStyles.label "Zapisz style">
+<!ENTITY clipperInlineStylesheets.label "Arkusze stylów dokumentu">
+<!ENTITY clipperSaveActiveRulesOnly.label "Zapisz tylko aktywne reguły">
+<!ENTITY isCloseBrowserAfterImport.label "Zamknij okno przeglądarki po zakończeniu pobierania">
+<!ENTITY isClipperPlaySound.label "Odtwórz dżwięk kiedy pobieranie zakończy się">
+<!ENTITY additionCaption.label "Dodatki">
 <!ENTITY isConfirmExit.label "Potwierdź wyjście po zamknięciu aplikacji">
-<!ENTITY isExitQuitTB.label "Exiting application leads to closing TB">
-<!ENTITY isReplaceBackground.label "Zastąp kolor tła notatkę, za pomocą głównego koloru znacznika">
-<!ENTITY isHighlightRow.label "Zaznacz wiersz w liście notatkę przy wykorzystaniu głównego koloru znacznika">
+<!ENTITY isExitQuitTB.label "Zamknięcie aplikacji prowadzi do zamknięcia TB">
+<!ENTITY isReplaceBackground.label "Zastąp kolor tła notatki, za pomocą głównego koloru znacznika">
+<!ENTITY isHighlightRow.label "Zaznacz wiersz w liście notatek przy wykorzystaniu głównego koloru znacznika">
 <!ENTITY isPlaySound.label "Odtwórz dźwięk przy starcie">
-<!ENTITY isClearBinOnExit.label "Przy wyjściu z programu opróźniaj kosz">
+<!ENTITY isClearBinOnExit.label "Przy wyjściu z programu opróżniaj kosz">
+<!ENTITY firstDayOfWeekCaption.label " First day of the week ">
+<!ENTITY sunday.label "Sunday">
+<!ENTITY monday.label "Monday">
+<!ENTITY tuesday.label "Tuesday">
+<!ENTITY wednesday.label "Wednesday">
+<!ENTITY thursday.label "Thursday">
+<!ENTITY friday.label "Friday">
+<!ENTITY saturday.label "Saturday">
 <!ENTITY keysPlatformCaption.label "Skróty klawiaturowe">
 <!ENTITY keysCaption.label "Skróty klawiaturowe">
 <!ENTITY defaultsButton.label "Domyślne">
 <!ENTITY defaultsButton.tooltip "Przywróć domyślne">
 <!ENTITY acceptButton.label "Akceptuj">
-<!ENTITY acceptButton.tooltip "Zaakceptuj zmiany i wyjść">
+<!ENTITY acceptButton.tooltip "Zaakceptuj zmiany i wyjdź">
 <!ENTITY cancelButton.label "Anuluj">
-<!ENTITY cancelButton.tooltip "Anuluj zmiany i wyjść">
+<!ENTITY cancelButton.tooltip "Anuluj zmiany i wyjdź">

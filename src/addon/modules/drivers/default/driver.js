@@ -303,12 +303,12 @@ var Driver = function() {
     var getDirectoryPrefix = function( leafName ) {
       var cLength = NOTE_CONTENT_DIRECTORY_SUFFIX.length;
       var cIndex = leafName.lastIndexOf( NOTE_CONTENT_DIRECTORY_SUFFIX );
-      if ( cIndex > 0 && cIndex + cLength == leafName.length ) {
+      if ( cIndex > 0 && cIndex + cLength === leafName.length ) {
         return leafName.substring( 0, cIndex );
       }
       var aLength = NOTE_ATTACHMENTS_DIRECTORY_SUFFIX.length;
       var aIndex = leafName.lastIndexOf( NOTE_ATTACHMENTS_DIRECTORY_SUFFIX );
-      if ( aIndex > 0 && aIndex + aLength == leafName.length ) {
+      if ( aIndex > 0 && aIndex + aLength === leafName.length ) {
         return leafName.substring( 0, aIndex );
       }
       return "";
@@ -437,14 +437,14 @@ var Driver = function() {
         } else {
           if ( checkFileEntry( entry ) ) {
             name = getFileName( entry.leafName );
-            if ( notes.indexOf( name ) == -1 ) {
+            if ( notes.indexOf( name ) === -1 ) {
               notes.push( name );
             }
           }
         }
       }
       for ( name in dirs ) {
-        if ( notes.indexOf( name ) == -1 ) {
+        if ( notes.indexOf( name ) === -1 ) {
           for each ( fileName in dirs[name] ) {
             categories.push( fileName );
           }
@@ -452,22 +452,29 @@ var Driver = function() {
       }
       fileName = getFileNameFromNoteName( aName );
       if ( !!aType ) {
+        // note
+        // a -> a.txt, a_files/, a_content/
+        // a_files -> a_files.txt, a_files_files/, a_files_content/
         return (
-          notes.indexOf( fileName ) == -1 &&
+          notes.indexOf( fileName ) === -1 &&
           categories.indexOf(
-            fileName + NOTE_CONTENT_DIRECTORY_SUFFIX ) == -1 &&
+            fileName + NOTE_CONTENT_DIRECTORY_SUFFIX ) === -1 &&
           categories.indexOf(
-            fileName + NOTE_ATTACHMENTS_DIRECTORY_SUFFIX ) == -1
+            fileName + NOTE_ATTACHMENTS_DIRECTORY_SUFFIX ) === -1
         );
       }
+      // category
+      // a -> a/
+      // a_files -> a_files/
+      // _files -> _files/
       prefix = getDirectoryPrefix( fileName );
-      if ( prefix ) {
+      if ( prefix.length ) {
         return (
-          categories.indexOf( fileName ) == -1 &&
-          notes.indexOf( prefix ) == -1
+          categories.indexOf( fileName ) === -1 &&
+          notes.indexOf( prefix ) === -1
         );
       }
-      return ( categories.indexOf( fileName ) == -1 );
+      return ( categories.indexOf( fileName ) === -1 );
     };
 
     this.exists = function( aName, aType ) {
@@ -630,6 +637,7 @@ var Driver = function() {
       var createdDateTime = this.entry.lastModifiedTime;
       var updatedDateTime = this.entry.lastModifiedTime;
       var id = Utils.createUUID();
+      var sticky = false;
       var type = this.entry.isDirectory() ? "" : "unknown";
       var data = "{}";
       var result = false;
@@ -673,8 +681,12 @@ var Driver = function() {
         info[10] = data;
         result = true;
       }
-      if ( info.length > 11 ) {
-        info.splice( 11 );
+      if ( info[11] === undefined ) {
+        info[11] = sticky;
+        result = true;
+      }
+      if ( info.length > 12 ) {
+        info.splice( 12 );
         result = true;
       }
       return result;
@@ -880,6 +892,18 @@ var Driver = function() {
       return this.getDescriptorItemField( 10 );
     };
 
+    this.isSticky = function() {
+      if ( this.isCategory() )
+        throw new DriverException( "ENTRY_CATEGORY_INVALID_OPERATION" );
+      return this.getDescriptorItemField( 11 ).toLowerCase() === "true";
+    };
+
+    this.setSticky = function( sticky ) {
+      if ( this.isCategory() )
+        throw new DriverException( "ENTRY_CATEGORY_INVALID_OPERATION" );
+      this.setDescriptorItemField( 11, !!sticky );
+    };
+
     this.setData = function( data ) {
       if ( this.isCategory() )
         throw new DriverException( "ENTRY_CATEGORY_INVALID_OPERATION" );
@@ -954,10 +978,8 @@ var Driver = function() {
     this.hasContents = function() {
       if ( this.isCategory() )
         throw new DriverException( "ENTRY_CATEGORY_INVALID_OPERATION" );
-      var result = false;
       var items = this.contentsDescriptor.getItems();
       return items.length > 0;
-      return result;
     };
 
     this.getContents = function() {
@@ -1048,10 +1070,8 @@ var Driver = function() {
     this.hasAttachments = function() {
       if ( this.isCategory() )
         throw new DriverException( "ENTRY_CATEGORY_INVALID_OPERATION" );
-      var result = false;
       var items = this.attachmentsDescriptor.getItems();
       return items.length > 0;
-      return result;
     };
 
     this.getAttachments = function() {

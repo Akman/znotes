@@ -20,33 +20,13 @@ suitable directory. Set environmental variable ANT\_HOME to the directory
 you uncompressed Ant to, and add ${ANT\_HOME}/bin (Unix) or
 %ANT\_HOME%/bin (Windows) to your PATH.
 
-Download *commons-net* <http://commons.apache.org/net/download_net.cgi> and *jakarta-oro* <http://archive.apache.org/dist/jakarta/oro/> jars and place them into ${ANT\_HOME}/lib (Unix) or %ANT\_HOME%/lib (Windows). This files are used by ant's *ftp* task.
-
 Ant-Contrib Tasks
 -----------------
 <http://ant-contrib.sourceforge.net/>
 
 The Ant-Contrib project is a collection of tasks ( and at one point maybe types and other tools ) for Apache Ant.
 
-Download latest binary release and uncompress the downloaded file into suitable directory, then copy ant-contrib-0.3.jar to the ${ANT\_HOME}/lib (Unix) or %ANT\_HOME%/lib (Windows) directory.
-
-Xalan Java XSLT processor
--------------------------
-<http://xml.apache.org/xalan-j/downloads.html#latest-release>
-
-Xalan-Java is an XSLT processor for transforming XML documents into HTML, text, or other XML document types. It implements XSL Transformations (XSLT) Version 1.0 and XML Path Language (XPath) Version 1.0 and can be used from the command line, in an applet or a servlet, or as a module in other program.
-
-Download Xalan Java XSLT processor and uncompress the downloaded file into suitable directory.
-
-Xerces Java Parser
-------------------
-<http://archive.apache.org/dist/xml/xerces-j/>
-
-The Xerces Java Parser supports the XML 1.0 recommendation and contains advanced parser functionality, such as support for the W3C's XML Schema recommendation version 1.0, DOM Level 2 version 1.0, and SAX Version 2, in addition to supporting the industry-standard DOM Level 1 and SAX version 1 APIs.
-
-Download Xerces Java Parser and uncompress the downloaded file into suitable directory.
-
-Copy *resolver.jar* to the ${ANT\_HOME}/lib (Unix) or %ANT\_HOME%/lib (Windows) directory.
+Download latest binary release and uncompress the downloaded file into suitable directory.
 
 Mozilla XULRunner
 -----------------
@@ -60,11 +40,11 @@ Download latest releases of runtime for all platforms (win32, mac, linux-x86_64,
 
 OpenSSL
 -------
-<http://www.openssl.org>
+<https://www.openssl.org/community/binaries.html>
 
 The OpenSSL project is a collaborative effort to develop a robust, commercial-grade, full-featured, and open source toolkit implementing the Secure Sockets Layer (SSL v2/v3) and Transport Layer Security (TLS v1) protocols as well as a full-strength general purpose cryptography library.
 
-Plain OpenSSL 0.9.8 or newer installation is sufficient.
+For Windows platform download latest release from <https://indy.fulgan.com/SSL/>
 
 * * *
 
@@ -103,6 +83,9 @@ Perl
 
 MX-Tools and Markdown requires Perl 5.8 or newer.
 
+For Windows platform download latest release from <http://strawberryperl.com/>
+
+
 * * *
 
 Build properties
@@ -110,13 +93,11 @@ Build properties
 
 Copy *build.properties.template* to *build.properties* and use your own values in all sections:
 
-* product.xml
-* Ant-Contrib
-* Xalan
-* Xerces
+* Product
+* Ant-Contrib Tasks
 * XULRunner runtimes
 * OpenSSL
-* Uhura
+* MX-Tools / Uhura
 * Markdown
 * Local development environment
 

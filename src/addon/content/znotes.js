@@ -69,10 +69,45 @@ function toJavaScriptConsole() {
   );
 };
 
+/**
+ * @see https://developer.mozilla.org/en-US/docs/Tools/Remote_Debugging/Debugging_Firefox_Desktop
+ *
+ * Note: By default, and for security reasons,
+ * the "devtools.debugger.force-local" option is set.
+ * If you want to debug a Firefox instance from an external machine,
+ * you can change this option, but only do this on a trusted network or set
+ * a strong firewall rule to lock down which machines can access it.
+ */
 function startDebuggerServer() {
+  var debuggerListener;
+  var debuggerEnabled = false, debuggerPort = 6000;
+  var xulAppInfo = Cc["@mozilla.org/xre/app-info;1"].getService( Ci.nsIXULAppInfo );
+  var versionComparator =
+    Cc["@mozilla.org/xpcom/version-comparator;1"].getService(
+      Ci.nsIVersionComparator );
+  var prefBranch =
+    Cc["@mozilla.org/preferences-service;1"].getService( Ci.nsIPrefBranch );
+  debuggerEnabled = prefBranch.getBoolPref( "devtools.debugger.remote-enabled" );
+  debuggerPort = prefBranch.getIntPref( "devtools.debugger.remote-port" );
+  if ( !debuggerEnabled ) {
+    return;
+  }
   if ( !DebuggerServer.initialized ) {
     DebuggerServer.init();
-    DebuggerServer.addBrowserActors( "znotes:platform" );
+    DebuggerServer.addBrowserActors(
+      "znotes:platform" /* chrome */,
+      false /* registerTabActors */
+    );
+    DebuggerServer.allowChromeProcess = true;
   }
-  DebuggerServer.openListener( 6000 );
+  if ( versionComparator.compare( xulAppInfo.platformVersion, "37.0" ) >= 0 ) {
+    debuggerListener = DebuggerServer.createListener();
+    debuggerListener.portOrPath = debuggerPort;
+    debuggerListener.open();
+  } else {
+    DebuggerServer.openListener( debuggerPort );
+  }
+};
+
+function stopDebuggerServer() {
 };

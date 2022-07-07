@@ -61,7 +61,6 @@ var Source = function() {
   };
 
   pub.onLoad = function() {
-    var foldFunc = CodeMirror.newFoldFunction( CodeMirror.tagRangeFinder );
     editor = CodeMirror(
       document.getElementById( "editorView" ),
       {
@@ -74,14 +73,11 @@ var Source = function() {
         indentUnit: 2,
         tabSize: 2,
         undoDepth: 500,
-        historyEventDelay: 100
+        historyEventDelay: 100,
+        foldGutter: true,
+        gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter"]
       }
     );
-    //editor.setOption( "extraKeys", {
-    //  "Ctrl-Q": function( cm ) {
-    //    foldFunc( cm, cm.getCursor().line );
-    //  }
-    //} );
     editor.on( "keydown", function( cm, event ) {
       switch ( event.key ) {
         case "Esc":
@@ -97,7 +93,7 @@ var Source = function() {
       }
     } );
     editor.on( "gutterClick", function( cm, n ) {
-      foldFunc( cm, n );
+      cm.foldCode( cm.getCursor() );      
     } );
     editor.setSize( null, 100 );
   };

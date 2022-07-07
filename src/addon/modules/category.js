@@ -172,6 +172,14 @@ var Category = function( aBook, anEntry, aParent ) {
     return this.entry.canCreate( name, aType );
   };
 
+  this.getValidNoteName = function( aName, aType ) {
+    var index = 0, suffix = "";
+    while ( !this.canCreateNote( aName + suffix, aType ) ) {
+      suffix = " (" + ++index + ")";
+    }
+    return aName + suffix;
+  };
+
   this.categoryExists = function( name ) {
     return this.entry.exists( name );
   };
@@ -497,13 +505,14 @@ var Category = function( aBook, anEntry, aParent ) {
     return this;
   };
 
-  this.createNote = function( aName, aType, aTag ) {
+  this.createNote = function( aName, aType, aTag, isSticky ) {
     var aNote = new ru.akman.znotes.core.Note(
       this.book,
       this.entry.createNote( aName, aType ),
       this,
       aType,
-      aTag
+      aTag,
+      !!isSticky
     );
     this.notifyStateListener(
       new ru.akman.znotes.core.Event(

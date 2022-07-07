@@ -50,5 +50,4 @@
 <!ENTITY note_tree_create_datetime "Utworzono">
 <!ENTITY note_tree_update_datetime "Aktualizacja">
 
-<!ENTITY qf_text_placeholder "Filtruj te notatki ...">
-<!ENTITY qf_text_emptybase "Filtruj te notatki ...">
+<!ENTITY qf_text_placeholder "Filter these notes ...">

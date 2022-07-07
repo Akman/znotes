@@ -5,3 +5,7 @@ bin/
 releases/
 etc/
 linux/
+keys/
+linux/
+docbook/
+.vagrant

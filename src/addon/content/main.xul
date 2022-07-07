@@ -449,10 +449,8 @@
       <vbox id="filterBox" flex="1">
         <hbox id="qfBox">
           <toolbarspacer id="qfSpacer" flex="200" align="end" />
-          <textbox id="qfText" flex="1" type="search"
-            placeholder="&qf_text_placeholder;"
-            emptytextbase="&qf_text_emptybase;"
-            timeout="500" aria-autocomplete="list" />
+          <textbox id="qfText" flex="1" type="search" timeout="500"
+            placeholder="&qf_text_placeholder;" />
         </hbox>
       </vbox>
       <vbox id="noteTreeView" class="noteTreeView" flex="1">
@@ -463,7 +461,7 @@
           <treecols id="noteTreeCols">
             <treecol id="noteTreeAttachments" label="&note_tree_attachments;"
               flex="1" crop="center" persist="width ordinal hidden"
-              primary="true" fixed="true" width="16" maxwidth="16" minwidth="16"
+              fixed="true" width="16" maxwidth="16" minwidth="16"
               sortActive="true" sortDirection="ascending"
               class="treecol-image"/>
             <splitter id="noteTreeAttachmentsSplitter" class="tree-splitter"/>

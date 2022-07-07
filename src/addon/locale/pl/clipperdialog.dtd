@@ -30,6 +30,6 @@
   -
   - ***** END LICENSE BLOCK ***** -->
 
-<!ENTITY dialog.title "Saving">
-<!ENTITY btnClose.label "Close">
+<!ENTITY dialog.title "Zapisuję">
+<!ENTITY btnClose.label "Zamknij">
 <!ENTITY btnCancel.label "Anuluj">

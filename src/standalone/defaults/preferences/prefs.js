@@ -74,6 +74,10 @@ pref("extensions.update.url", "chrome://mozapps/locale/extensions/extensions.pro
 pref("extensions.getMoreExtensionsURL", "chrome://mozapps/locale/extensions/extensions.properties");
 pref("extensions.getMoreThemesURL", "chrome://mozapps/locale/extensions/extensions.properties");
 
+/* application support */
+
+pref("app.support.baseURL", "http://znotes.net");
+
 /* application update */
 
 // Whether or not app updates are enabled

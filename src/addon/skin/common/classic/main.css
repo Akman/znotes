@@ -283,8 +283,15 @@ treechildren::-moz-tree-separator( notetreeseparator ) {
 }
 treechildren#noteTreeChildren::-moz-tree-image( attachment ) {
   list-style-image: url("chrome://znotes_images/skin/attachment-16x16.png");
-  margin-left: -12px;
+  margin-left: -2px;
+}
+treechildren#noteTreeChildren::-moz-tree-image( sticky ) {
+  list-style-image: url("chrome://znotes_images/skin/sticky-16x16.png");
+  margin-left: -2px;
 }
 #noteTreeAttachments {
   list-style-image: url("chrome://znotes_images/skin/attachment-16x16.png");
+}
+#noteTreeStickyFlag {
+  list-style-image: url("chrome://znotes_images/skin/sticky-16x16.png");
 }

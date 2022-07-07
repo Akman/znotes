@@ -60,6 +60,9 @@ var Editor = function() {
 
     var log = Utils.getLogger( "documents.text.editor" );
 
+    // get module `Sample`
+    var SampleModule = this.getDocument().getNamespace().Sample;
+    
     // can't be initialized at once
     var Common = null;
     var prefsBundle = null;
@@ -121,6 +124,36 @@ var Editor = function() {
       justifyfull: false
     };
 
+    // PREFERENCES
+
+    var prefsMozillaObserver = {
+      observe: function( subject, topic, data ) {
+        switch ( data ) {
+          case "debug":
+            Utils.IS_DEBUG_ENABLED = Utils.checkTestSuite() &&
+              this.branch.getBoolPref( "debug" );
+            Common.goSetCommandHidden( "znotes_editordebug_command",
+              !Utils.IS_DEBUG_ENABLED, currentWindow );
+            Common.goUpdateCommand( "znotes_editordebug_command", editorController.getId(), currentWindow );
+            break;
+        }
+      },
+      register: function() {
+        var prefService =
+          Cc["@mozilla.org/preferences-service;1"]
+          .getService( Ci.nsIPrefService );
+        this.branch = prefService.getBranch( "extensions.znotes." );
+        if ( this.branch ) {
+          this.branch.addObserver( "", this, false );
+        }
+      },
+      unregister: function() {
+        if ( this.branch ) {
+          this.branch.removeObserver( "", this );
+        }
+      }
+    };
+    
     var prefObserver = {
       onPrefChanged: function( event ) {
         var docName = self.getDocument().getName();
@@ -156,6 +189,7 @@ var Editor = function() {
       "znotes_justifyright_command": null,
       "znotes_justifyfull_command": null,
       "znotes_editorcustomizetoolbar_command": null,
+      "znotes_editordebug_command": null,
     };
 
     var editorController = {
@@ -178,12 +212,16 @@ var Editor = function() {
           case "znotes_justifyright_command":
           case "znotes_justifyfull_command":
           case "znotes_editorcustomizetoolbar_command":
+          case "znotes_editordebug_command":
             return isDesignEditingActive;
         }
         return false;
       },
       doCommand: function( cmd ) {
         switch ( cmd ) {
+          case "znotes_editordebug_command":
+            doDebug();
+            break;
           case "znotes_close_command":
             doClose();
             break;
@@ -474,6 +512,7 @@ var Editor = function() {
     };
 
     function updateEditCommands() {
+      updateEditCommandsVisibility();
       editController.updateCommands();
     };
 
@@ -481,6 +520,10 @@ var Editor = function() {
       spellEditController.updateCommands();
     };
 
+    function updateEditCommandsVisibility() {
+      Common.goSetCommandHidden( "znotes_editordebug_command", !Utils.IS_DEBUG_ENABLED, currentWindow );
+    };
+    
     function getCommandState( cmd ) {
       return Common.goGetCommandAttribute( cmd, "checked", currentWindow );
     };
@@ -594,6 +637,10 @@ var Editor = function() {
 
     // COMMANDS
 
+    function doDebug() {
+      SampleModule.run();
+    };
+    
     function doClose() {
       if ( stop() ) {
         switchMode( "viewer" );
@@ -1344,6 +1391,7 @@ var Editor = function() {
           loadPrefs();
           load();
           setDisplayStyle();
+          prefsMozillaObserver.register();
           prefsBundle.addObserver( prefObserver );
           self.getDocument().addObserver( docPrefObserver );
           editorController.register();
@@ -1430,6 +1478,7 @@ var Editor = function() {
       }
       deactivateKeyset();
       removeEventListeners();
+      prefsMozillaObserver.unregister();
       self.getDocument().removeObserver( docPrefObserver );
       prefsBundle.removeObserver( prefObserver );
       spellEditController.unregister();
@@ -1892,6 +1941,12 @@ Editor.prototype.getDefaultPreferences = function() {
       },
       znotes_editorcustomizetoolbar_key: {
         command: "znotes_editorcustomizetoolbar_command",
+        key: "",
+        modifiers: "",
+        keycode: ""
+      },
+      znotes_editordebug_key: {
+        command: "znotes_editordebug_command",
         key: "",
         modifiers: "",
         keycode: ""

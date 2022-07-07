@@ -117,6 +117,23 @@
             <checkbox id="isClearBinOnExit" label="&isClearBinOnExit.label;" />
           </vbox>
         </groupbox>
+        <groupbox id="firstDayOfWeekGroupBox">
+          <caption id="firstDayOfWeekCaption"
+            label="&firstDayOfWeekCaption.label;" />
+          <hbox id="firstDayOfWeekHBox" align="center">
+            <menulist id="firstDayOfWeekMenuList" flex="1">
+              <menupopup id="firstDayOfWeekMenuPopup">
+                <menuitem id="sunday" label="&sunday.label;" />
+                <menuitem id="monday" label="&monday.label;" />
+                <menuitem id="tuesday" label="&tuesday.label;" />
+                <menuitem id="wednesday" label="&wednesday.label;" />
+                <menuitem id="thursday" label="&thursday.label;" />
+                <menuitem id="friday" label="&friday.label;" />
+                <menuitem id="saturday" label="&saturday.label;" />
+              </menupopup>
+            </menulist>              
+          </hbox>
+        </groupbox>
       </tabpanel>
       <tabpanel id="panel-mainshortcuts" orient="vertical" flex="1">
         <groupbox id="keysPlatformGroupBox" collapsed="true">

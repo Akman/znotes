@@ -121,6 +121,13 @@
       accesskey="&znotes_editorcustomizetoolbar_accesskey;"
       key="znotes_editorcustomizetoolbar_key"
       oncommand="ru.akman.znotes.Common.goDoCommand( 'znotes_editorcustomizetoolbar_command', event.explicitOriginalTarget );"/>
+    <command id="znotes_editordebug_command" disabled="true" hidden="true"
+      label="&znotes_editordebug_label;"
+      title="&znotes_editordebug_label;"
+      tooltiptext="&znotes_editordebug_tooltip;"
+      accesskey="&znotes_editordebug_accesskey;"
+      key="znotes_editordebug_key"
+      oncommand="ru.akman.znotes.Common.goDoCommand( 'znotes_editordebug_command', event.explicitOriginalTarget );"/>
   </commandset>
 
   <keyset id="znotes_editor_keyset">
@@ -157,6 +164,9 @@
     <key id="znotes_editorcustomizetoolbar_key" command="znotes_editorcustomizetoolbar_command"
       key="&znotes_editorcustomizetoolbar_key;" modifiers="&znotes_editorcustomizetoolbar_key_modifiers;"
       keycode="&znotes_editorcustomizetoolbar_keycode;"/>
+    <key id="znotes_editordebug_key" command="znotes_editordebug_command"
+      key="&znotes_editordebug_key;" modifiers="&znotes_editordebug_key_modifiers;"
+      keycode="&znotes_editordebug_keycode;"/>
   </keyset>
 
   <popupset id="znotes_editor_popupset">
@@ -253,6 +263,10 @@
                   class="menuitem-iconic toolbarbutton-1 znotes_justifyfull_class"
                   key="znotes_justifyfull_key"
                   command="znotes_justifyfull_command" />
+                <toolbarbutton id="znotes_editordebug_button"
+                  class="menuitem-iconic toolbarbutton-1 znotes_editordebug_class"
+                  key="znotes_editordebug_key"
+                  command="znotes_editordebug_command" />
                 <!-- edit -->
                 <toolbarbutton id="znotes_edit_copy_button"
                   class="menuitem-iconic toolbarbutton-1 znotes_copy_class"
@@ -285,7 +299,7 @@
                 toolbarname="&designToolBar;" fullscreentoolbar="true"
                 mode="icons" iconsize="small" customizable="true"
                 context="znotes_editortoolbar_menupopup"
-                defaultset="fontNameMenuList,fontSizeTextBox,separator,znotes_bold_button,znotes_italic_button,znotes_underline_button,separator,znotes_forecolor_button,znotes_backcolor_button,separator,znotes_justifycenter_button,znotes_justifyleft_button,znotes_justifyright_button,znotes_justifyfull_button,spacer,znotes_spellcheckenabled_button,spacer,znotes_edit_undo_button,znotes_edit_redo_button,separator,znotes_edit_cut_button,znotes_edit_copy_button,znotes_edit_paste_button,znotes_edit_delete_button,separator,znotes_edit_selectall_button,spring"/>
+                defaultset="fontNameMenuList,fontSizeTextBox,separator,znotes_bold_button,znotes_italic_button,znotes_underline_button,separator,znotes_forecolor_button,znotes_backcolor_button,separator,znotes_justifycenter_button,znotes_justifyleft_button,znotes_justifyright_button,znotes_justifyfull_button,spacer,znotes_spellcheckenabled_button,spacer,znotes_edit_undo_button,znotes_edit_redo_button,separator,znotes_edit_cut_button,znotes_edit_copy_button,znotes_edit_paste_button,znotes_edit_delete_button,separator,znotes_edit_selectall_button,spring,znotes_editordebug_button"/>
               <toolbarset id="designToolBarSet"
                 context="znotes_editortoolbar_menupopup" />
             </toolbox>

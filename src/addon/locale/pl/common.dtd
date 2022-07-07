@@ -48,7 +48,7 @@
 <!ENTITY znotes_showmaintoolbar_keycode "">
 
 <!ENTITY znotes_customizemaintoolbar_label "Dostosuj">
-<!ENTITY znotes_customizemaintoolbar_tooltip "Dostosuj narzędzi">
+<!ENTITY znotes_customizemaintoolbar_tooltip "Dostosuj narzędzia">
 <!ENTITY znotes_customizemaintoolbar_accesskey "D">
 <!ENTITY znotes_customizemaintoolbar_key "">
 <!ENTITY znotes_customizemaintoolbar_key_modifiers "">
@@ -61,21 +61,21 @@
 <!ENTITY znotes_openoptionsdialog_key_modifiers "">
 <!ENTITY znotes_openoptionsdialog_keycode "">
 
-<!ENTITY znotes_debugger_label "Odpluskwić">
-<!ENTITY znotes_debugger_tooltip "Start debugger">
+<!ENTITY znotes_debugger_label "Debugger">
+<!ENTITY znotes_debugger_tooltip "Uruchom debugger">
 <!ENTITY znotes_debugger_accesskey "D">
 <!ENTITY znotes_debugger_key "D">
 <!ENTITY znotes_debugger_key_modifiers "accel,alt">
 <!ENTITY znotes_debugger_keycode "">
 
-<!ENTITY znotes_console_label "Console">
-<!ENTITY znotes_console_tooltip "Open error console">
+<!ENTITY znotes_console_label "Konsola">
+<!ENTITY znotes_console_tooltip "Otwórz konsolę błędów">
 <!ENTITY znotes_console_accesskey "E">
 <!ENTITY znotes_console_key "">
 <!ENTITY znotes_console_key_modifiers "">
 <!ENTITY znotes_console_keycode "">
 
-<!ENTITY znotes_testsuite_label "Tests">
+<!ENTITY znotes_testsuite_label "Testy">
 <!ENTITY znotes_testsuite_tooltip "Open test suite">
 <!ENTITY znotes_testsuite_accesskey "T">
 <!ENTITY znotes_testsuite_key "T">
@@ -166,7 +166,7 @@
 <!ENTITY znotes_renamebook_key_modifiers "">
 <!ENTITY znotes_renamebook_keycode "">
 
-<!ENTITY znotes_refreshbooktree_label "Odśwież notaniki">
+<!ENTITY znotes_refreshbooktree_label "Odśwież notatniki">
 <!ENTITY znotes_refreshbooktree_tooltip "Odśwież drzewo notatników">
 <!ENTITY znotes_refreshbooktree_accesskey "">
 <!ENTITY znotes_refreshbooktree_key "">
@@ -419,8 +419,8 @@
 <!ENTITY znotes_contentaddfile_key_modifiers "">
 <!ENTITY znotes_contentaddfile_keycode "">
 
-<!ENTITY znotes_contentopen_label "Otwarte">
-<!ENTITY znotes_contentopen_tooltip "Otwarte plik">
+<!ENTITY znotes_contentopen_label "Otwórz">
+<!ENTITY znotes_contentopen_tooltip "Otwórz plik">
 <!ENTITY znotes_contentopen_accesskey "O">
 <!ENTITY znotes_contentopen_key "">
 <!ENTITY znotes_contentopen_key_modifiers "">

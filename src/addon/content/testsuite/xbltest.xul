@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- ***** BEGIN LICENSE BLOCK *****
+  -
+  - Version: GPL 3.0
+  -
+  - ZNotes
+  - Copyright (C) 2015 Alexander Kapitman
+  -
+  - This program is free software: you can redistribute it and/or modify
+  - it under the terms of the GNU General Public License as published by
+  - the Free Software Foundation, either version 3 of the License, or
+  - (at your option) any later version.
+  -
+  - This program is distributed in the hope that it will be useful,
+  - but WITHOUT ANY WARRANTY; without even the implied warranty of
+  - MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  - GNU General Public License for more details.
+  -
+  - You should have received a copy of the GNU General Public License
+  - along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -
+  - The Original Code is ZNotes.
+  -
+  - Initial Developer(s):
+  -   Alexander Kapitman <akman.ru@gmail.com>
+  -
+  - Portions created by the Initial Developer are Copyright (C) 2015
+  - the Initial Developer. All Rights Reserved.
+  -
+  - Contributor(s):
+  -
+  - ***** END LICENSE BLOCK ***** -->
+
+<?xml-stylesheet type="text/css" href="chrome://global/skin/" ?>
+<?xml-stylesheet type="text/css" href="chrome://znotes/skin/bindings/bindings.css" ?>
+<?xml-stylesheet type="text/css" href="chrome://znotes/skin/testsuite/xbltest.css" ?>
+
+<?xul-overlay href="chrome://znotes/content/common.xul" ?>
+
+<!DOCTYPE window SYSTEM "chrome://znotes/locale/testsuite/xbltest.dtd">
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  id="znotes"
+  title="&title;"
+  windowtype="znotes:test"
+  persist="width height screenX screenY sizemode">
+
+  <script type="application/javascript" src="chrome://znotes/content/common.js" />
+  <script type="application/javascript" src="chrome://znotes/content/testsuite/xbltest.js"/>
+
+  <stringbundleset id="znotes_stringbundleset" />
+  <commandset id="znotes_commandset" />
+  <keyset id="znotes_keyset" />
+  
+  <popupset id="znotes_popupset">
+    <menupopup id="noteTreeMenu">
+      <menuitem id="noteTreeMenuNew"
+        class="menuitem-iconic znotes_newnote_class"
+        command="znotes_newnote_command"
+        key="znotes_newnote_key"/>
+      <menuitem id="noteTreeMenuDelete"
+        class="menuitem-iconic znotes_deletenote_class"
+        command="znotes_deletenote_command"
+        key="znotes_deletenote_key"/>
+      <menuitem id="noteTreeMenuRename"
+        class="menuitem-iconic znotes_renamenote_class"
+        command="znotes_renamenote_command"
+        key="znotes_renamenote_key"/>
+      <menuitem id="noteTreeMenuProcess"
+        class="menuitem-iconic znotes_processnote_class"
+        command="znotes_processnote_command"
+        key="znotes_processnote_key"/>
+      <menuitem id="noteTreeMenuUpdate"
+        class="menuitem-iconic znotes_updatenote_class"
+        command="znotes_updatenote_command"
+        key="znotes_updatenote_key"/>
+      <menuseparator id="noteTreeMenuRefreshSeparator"/>
+      <menuitem id="noteTreeMenuRefresh"
+        class="menuitem-iconic znotes_refreshnotetree_class"
+        command="znotes_refreshnotetree_command"
+        key="znotes_refreshnotetree_key"/>
+    </menupopup>
+  </popupset>
+  
+  <toolbox id="znotes_maintoolbox"
+    class="mail-toolbox znotes_maintoolbox"
+    mode="icons"
+    defaultmode="full"
+    labelalign="bottom"
+    defaultlabelalign="end"
+    iconsize="small">
+    <toolbarpalette id="znotes_maintoolbarpalette">
+      <!-- note -->
+      <toolbarbutton id="znotes_newnote_button"
+        type="menu-button"
+        class="toolbarbutton-1 znotes_newnote_class"
+        command="znotes_newnote_command">
+        <menupopup id="znotes_newnote_button_menupopup" />
+      </toolbarbutton>
+      <toolbarbutton id="znotes_importnote_button"
+        class="toolbarbutton-1 znotes_importnote_class"
+        command="znotes_importnote_command"/>
+      <toolbarbutton id="znotes_deletenote_button"
+        class="toolbarbutton-1 znotes_deletenote_class"
+        command="znotes_deletenote_command"/>
+      <toolbarbutton id="znotes_renamenote_button"
+        class="toolbarbutton-1 znotes_renamenote_class"
+        command="znotes_renamenote_command"/>
+      <toolbarbutton id="znotes_processnote_button"
+        class="toolbarbutton-1 znotes_processnote_class"
+        command="znotes_processnote_command"/>
+      <toolbarbutton id="znotes_refreshnotetree_button"
+        class="toolbarbutton-1 znotes_refreshnotetree_class"
+        command="znotes_refreshnotetree_command"/>
+      <toolbarbutton id="znotes_updatenote_button"
+        class="toolbarbutton-1 znotes_updatenote_class"
+        command="znotes_updatenote_command"/>
+      <toolbarbutton id="znotes_showfilterbar_button"
+        class="toolbarbutton-1 znotes_showfilterbar_class"
+        type="checkbox" checked="false"
+        command="znotes_showfilterbar_command" />
+    </toolbarpalette>
+    <toolbar id="znotes_maintoolbar"
+      class="inline-toolbar chromeclass-toolbar znotes_maintoolbar"
+      toolbarname="Notes"
+      fullscreentoolbar="true"
+      mode="icons"
+      iconsize="small"
+      defaultset="znotes_newnote_button,znotes_deletenote_button,spring,znotes_showfilterbar_button"/>
+    <toolbarset id="znotes_maintoolbarset" />
+  </toolbox>
+
+  <notelist id="noteList" menupopup="noteTreeMenu" flex="1"
+    persist="height"/>
+  <splitter id="detailsSplitter" persist="state"
+    collapse="after" resizeafter="farthest">
+    <grippy id="detailsSplitterGrippy"/>
+  </splitter>
+  <textbox id="noteTreeDetails" orient="horizontal" flex="1"
+    pack="start" align="stretch" multiline="true" newlines="pasteintact"
+    value="" persist="height"/>
+  
+</window>

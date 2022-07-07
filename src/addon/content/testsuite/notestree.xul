@@ -1,0 +1,236 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- ***** BEGIN LICENSE BLOCK *****
+  -
+  - Version: GPL 3.0
+  -
+  - ZNotes
+  - Copyright (C) 2015 Alexander Kapitman
+  -
+  - This program is free software: you can redistribute it and/or modify
+  - it under the terms of the GNU General Public License as published by
+  - the Free Software Foundation, either version 3 of the License, or
+  - (at your option) any later version.
+  -
+  - This program is distributed in the hope that it will be useful,
+  - but WITHOUT ANY WARRANTY; without even the implied warranty of
+  - MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  - GNU General Public License for more details.
+  -
+  - You should have received a copy of the GNU General Public License
+  - along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -
+  - The Original Code is ZNotes.
+  -
+  - Initial Developer(s):
+  -   Alexander Kapitman <akman.ru@gmail.com>
+  -
+  - Portions created by the Initial Developer are Copyright (C) 2015
+  - the Initial Developer. All Rights Reserved.
+  -
+  - Contributor(s):
+  -
+  - ***** END LICENSE BLOCK ***** -->
+
+<?xml-stylesheet type="text/css" href="chrome://global/skin/" ?>
+<?xml-stylesheet type="text/css" href="chrome://znotes/skin/main.css" ?>
+<?xml-stylesheet type="text/css" href="chrome://znotes/skin/testsuite/notestree.css" ?>
+
+<?xul-overlay href="chrome://znotes/content/common.xul" ?>
+
+<!DOCTYPE window SYSTEM "chrome://znotes/locale/testsuite/notestree.dtd">
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  id="znotes"
+  title="&title;"
+  windowtype="znotes:test"
+  persist="width height screenX screenY sizemode">
+
+  <script type="application/javascript" src="chrome://znotes/content/common.js" />
+  <script type="application/javascript" src="chrome://znotes/content/testsuite/notestree.js"/>
+
+  <stringbundleset id="znotes_stringbundleset" />
+  <commandset id="znotes_commandset" />
+  <keyset id="znotes_keyset" />
+  
+  <popupset id="znotes_popupset">
+    <menupopup id="noteTreeMenu">
+      <menuitem id="noteTreeMenuNew"
+        class="menuitem-iconic znotes_newnote_class"
+        command="znotes_newnote_command"
+        key="znotes_newnote_key"/>
+      <menuitem id="noteTreeMenuDelete"
+        class="menuitem-iconic znotes_deletenote_class"
+        command="znotes_deletenote_command"
+        key="znotes_deletenote_key"/>
+      <menuitem id="noteTreeMenuRename"
+        class="menuitem-iconic znotes_renamenote_class"
+        command="znotes_renamenote_command"
+        key="znotes_renamenote_key"/>
+      <menuitem id="noteTreeMenuProcess"
+        class="menuitem-iconic znotes_processnote_class"
+        command="znotes_processnote_command"
+        key="znotes_processnote_key"/>
+      <menuitem id="noteTreeMenuUpdate"
+        class="menuitem-iconic znotes_updatenote_class"
+        command="znotes_updatenote_command"
+        key="znotes_updatenote_key"/>
+      <menuseparator id="noteTreeMenuRefreshSeparator"/>
+      <menuitem id="noteTreeMenuRefresh"
+        class="menuitem-iconic znotes_refreshnotetree_class"
+        command="znotes_refreshnotetree_command"
+        key="znotes_refreshnotetree_key"/>
+    </menupopup>
+  </popupset>
+  
+  <toolbox id="znotes_maintoolbox"
+    class="mail-toolbox znotes_maintoolbox"
+    mode="icons"
+    defaultmode="full"
+    labelalign="bottom"
+    defaultlabelalign="end"
+    iconsize="small">
+    <toolbarpalette id="znotes_maintoolbarpalette">
+      <!-- note -->
+      <toolbarbutton id="znotes_newnote_button"
+        type="menu-button"
+        class="toolbarbutton-1 znotes_newnote_class"
+        command="znotes_newnote_command">
+        <menupopup id="znotes_newnote_button_menupopup" />
+      </toolbarbutton>
+      <toolbarbutton id="znotes_importnote_button"
+        class="toolbarbutton-1 znotes_importnote_class"
+        command="znotes_importnote_command"/>
+      <toolbarbutton id="znotes_deletenote_button"
+        class="toolbarbutton-1 znotes_deletenote_class"
+        command="znotes_deletenote_command"/>
+      <toolbarbutton id="znotes_renamenote_button"
+        class="toolbarbutton-1 znotes_renamenote_class"
+        command="znotes_renamenote_command"/>
+      <toolbarbutton id="znotes_processnote_button"
+        class="toolbarbutton-1 znotes_processnote_class"
+        command="znotes_processnote_command"/>
+      <toolbarbutton id="znotes_refreshnotetree_button"
+        class="toolbarbutton-1 znotes_refreshnotetree_class"
+        command="znotes_refreshnotetree_command"/>
+      <toolbarbutton id="znotes_updatenote_button"
+        class="toolbarbutton-1 znotes_updatenote_class"
+        command="znotes_updatenote_command"/>
+      <toolbarbutton id="znotes_showfilterbar_button"
+        class="toolbarbutton-1 znotes_showfilterbar_class"
+        type="checkbox" checked="false"
+        command="znotes_showfilterbar_command" />
+    </toolbarpalette>
+    <toolbar id="znotes_maintoolbar"
+      class="inline-toolbar chromeclass-toolbar znotes_maintoolbar"
+      toolbarname="&znotes_maintoolbar_name;"
+      fullscreentoolbar="true"
+      mode="icons"
+      iconsize="small"
+      defaultset="znotes_newnote_button,znotes_deletenote_button,spring,znotes_showfilterbar_button"/>
+    <toolbarset id="znotes_maintoolbarset" />
+  </toolbox>
+  
+  <hbox id="mainPanel" flex="1">
+    <vbox id="noteBox" flex="1">
+      <vbox id="filterBox">
+        <hbox id="qfBox">
+          <toolbarbutton id="qfPin" class="toolbarbutton-1 qfboxtoolbarbutton"
+            type="checkbox" checked="false"
+            tooltiptext="&qf_pin_tooltip;" />
+          <toolbarseparator />
+          <toolbarbutton id="qfAttachments" class="toolbarbutton-1 qfboxtoolbarbutton"
+            type="checkbox" checked="false"
+            label="&qf_attachments_label;"
+            tooltiptext="&qf_attachments_tooltip;" />
+          <toolbarbutton id="qfType" class="toolbarbutton-1 qfboxtoolbarbutton"
+            type="menu-button" label="&qf_type_label;"
+            checked="false" orient="horizontal"
+            tooltiptext="&qf_type_tooltip;">
+            <menupopup id="qfTypeMenuPopup" />
+          </toolbarbutton>
+          <toolbarbutton id="qfCreated" class="toolbarbutton-1 qfboxtoolbarbutton"
+            type="menu-button" label="&qf_created_label;"
+            checked="false" orient="horizontal"
+            tooltiptext="&qf_created_tooltip;">
+            <menupopup id="qfCreatedMenuPopup" />
+          </toolbarbutton>
+          <toolbarbutton id="qfUpdated" class="toolbarbutton-1 qfboxtoolbarbutton"
+            type="menu-button" label="&qf_updated_label;"
+            checked="false" orient="horizontal"
+            tooltiptext="&qf_updated_tooltip;">
+            <menupopup id="qfUpdatedMenuPopup" />
+          </toolbarbutton>
+          <toolbarspacer flex="1" align="end" />
+          <label id="qfMatch" collapsed="true"/>
+          <textbox id="qfText" flex="1" type="search" timeout="500"
+            placeholder="&qf_text_placeholder;" />
+        </hbox>
+        <hbox id="qfDetail">
+          <toolbarspacer flex="1" align="end" />
+          <label id="qfDetailLabel" value="&qf_detail_label;" />
+          <toolbarbutton id="qfCategory" class="toolbarbutton-1 qfdetailtoolbarbutton"
+            type="checkbox" checked="false"
+            label="&qf_category_label;"/>
+          <toolbarbutton id="qfTag" class="toolbarbutton-1 qfdetailtoolbarbutton"
+            type="checkbox" checked="false"
+            label="&qf_tag_label;"/>
+          <toolbarbutton id="qfName" class="toolbarbutton-1 qfdetailtoolbarbutton"
+            type="checkbox" checked="false"
+            label="&qf_name_label;"/>
+          <toolbarbutton id="qfBody" class="toolbarbutton-1 qfdetailtoolbarbutton"
+            type="checkbox" checked="false"
+            label="&qf_body_label;"/>
+        </hbox>
+      </vbox>
+      <tree id="noteTree" class="plain" flex="1"
+        seltype="single"
+        keepcurrentinview="true" enableColumnDrag="true"
+        persist="height">
+        <treecols id="noteTreeCols">
+          <treecol id="noteTreeAttachments" class="treecol-image"
+            flex="1" label="&note_tree_attachments;" crop="center"
+            fixed="true" width="16" maxwidth="16" minwidth="16"
+            persist="ordinal hidden"/>
+          <splitter id="noteTreeAttachmentsSplitter" class="tree-splitter"/>
+          <treecol id="noteTreeStickyFlag" class="treecol-image"
+            flex="1" label="&note_tree_sticky_flag;" crop="center"
+            fixed="true" width="16" maxwidth="16" minwidth="16"
+            persist="ordinal hidden"/>
+          <splitter id="noteTreeStickyFlagSplitter" class="tree-splitter"/>
+          <treecol id="noteTreeName" class="sortDirectionIndicator"
+            flex="1" label="&note_tree_name;" crop="center" editable="true"
+            persist="width ordinal hidden"/>
+          <splitter id="noteTreeNameSplitter" class="tree-splitter"/>
+          <treecol id="noteTreeCategory" class="sortDirectionIndicator"
+            flex="1" label="&note_tree_category;" crop="center"
+            persist="width ordinal hidden"/>
+          <splitter id="noteTreeCategorySplitter" class="tree-splitter"/>
+          <treecol id="noteTreeTag" class="sortDirectionIndicator"
+            flex="1" label="&note_tree_tag;" crop="center"
+            persist="width ordinal hidden"/>
+          <splitter id="noteTreeTagSplitter" class="tree-splitter"/>
+          <treecol id="noteTreeType" class="sortDirectionIndicator"
+            flex="1" label="&note_tree_type;" crop="center"
+            persist="width ordinal hidden"/>
+          <splitter id="noteTreeTypeSplitter" class="tree-splitter"/>
+          <treecol id="noteTreeCreateDateTime" class="sortDirectionIndicator"
+            flex="1" label="&note_tree_create_datetime;" crop="center"
+            persist="width ordinal hidden"/>
+          <splitter id="noteTreeCreateDateTimeSplitter" class="tree-splitter"/>
+          <treecol id="noteTreeUpdateDateTime" class="sortDirectionIndicator"
+            flex="1" label="&note_tree_update_datetime;" crop="center"
+            persist="width ordinal hidden"/>
+        </treecols>
+        <treechildren id="noteTreeChildren" context="noteTreeMenu"/>
+      </tree>
+      <splitter id="noteTreeDetailsSplitter" persist="state"
+        collapse="after" resizebefore="flex" resizeafter="flex">
+        <grippy id="noteTreeDetailsSplitterGrippy"/>
+      </splitter>
+      <textbox id="noteTreeDetails" orient="horizontal" flex="1"
+        pack="start" align="stretch" multiline="true" newlines="pasteintact"
+        value="" persist="height"/>
+    </vbox>
+  </hbox>
+
+</window>

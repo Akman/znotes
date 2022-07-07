@@ -1,0 +1,56 @@
+<!-- ***** BEGIN LICENSE BLOCK *****
+  -
+  - Version: GPL 3.0
+  -
+  - ZNotes
+  - Copyright (C) 2015 Alexander Kapitman
+  -
+  - This program is free software: you can redistribute it and/or modify
+  - it under the terms of the GNU General Public License as published by
+  - the Free Software Foundation, either version 3 of the License, or
+  - (at your option) any later version.
+  -
+  - This program is distributed in the hope that it will be useful,
+  - but WITHOUT ANY WARRANTY; without even the implied warranty of
+  - MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  - GNU General Public License for more details.
+  -
+  - You should have received a copy of the GNU General Public License
+  - along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -
+  - The Original Code is ZNotes.
+  -
+  - Initial Developer(s):
+  -   Alexander Kapitman <akman.ru@gmail.com>
+  -
+  - Portions created by the Initial Developer are Copyright (C) 2015
+  - the Initial Developer. All Rights Reserved.
+  -
+  - Contributor(s):
+  -
+  - ***** END LICENSE BLOCK ***** -->
+
+<!ENTITY note_tree_attachments "Вложения">
+<!ENTITY note_tree_sticky_flag "Флаг">
+<!ENTITY note_tree_name "Название">
+<!ENTITY note_tree_category "Категория">
+<!ENTITY note_tree_tag "Тег">
+<!ENTITY note_tree_type "Тип">
+<!ENTITY note_tree_create_datetime "Создана">
+<!ENTITY note_tree_update_datetime "Изменена">
+
+<!ENTITY qf_pin_tooltip "Держать фильтр примененным при переключении">
+<!ENTITY qf_attachments_label "Вложения">
+<!ENTITY qf_attachments_tooltip "Показывать только заметки с вложениями">
+<!ENTITY qf_type_label "Тип">
+<!ENTITY qf_type_tooltip "Показывать только заметки выбранных типов">
+<!ENTITY qf_created_label "Создана">
+<!ENTITY qf_created_tooltip "Показывать только заметки созданные в выбранные промежутки времени">
+<!ENTITY qf_updated_label "Изменена">
+<!ENTITY qf_updated_tooltip "Показывать только заметки измененные в выбранные промежутки времени">
+<!ENTITY qf_text_placeholder "Фильтр заметок ...">
+<!ENTITY qf_detail_label "Фильтровать заметки по:">
+<!ENTITY qf_category_label "Категория">
+<!ENTITY qf_tag_label "Тег">
+<!ENTITY qf_name_label "Название">
+<!ENTITY qf_body_label "Тело">

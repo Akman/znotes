@@ -238,6 +238,9 @@ ru.akman.znotes.Relator = function( aWindow, aStyle ) {
     // VIEW
 
     function load() {
+      if ( !Utils.IS_AD_ENABLED ) {
+        return;
+      }
       var language = encodeURIComponent( Utils.getLanguage() );
       var keywords = [ "test", "advertising", "keyword" ]; //currentNote.getKeyWords();
       var url = Utils.SITE + "adv/?language=" + language;
@@ -254,9 +257,7 @@ ru.akman.znotes.Relator = function( aWindow, aStyle ) {
     };
 
     function showCurrentView() {
-      if ( Utils.IS_AD_ENABLED ) {
-        load();
-      }
+      load();
       adBrowser.removeAttribute( "disabled" );
     };
 

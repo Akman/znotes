@@ -43,6 +43,7 @@
   <property name="template.dir" value="${src.dir}/template" />
   <property name="bin.dir" value="./bin" />
   <property name="releases.dir" value="./releases" />
+  <property name="releases.development.dir" value="e:/media/temp" />
 
   <!-- BUILD PROPERTIES -->
   <property file="build.properties" />
@@ -52,6 +53,8 @@
     location="${config.openssl.public.key.path}"/>
   <property name="private.key.path"
     location="${config.openssl.private.key.path}"/>
+  <property name="private.key.passphrase"
+    value="${config.openssl.private.key.passphrase}"/>
   <loadfile srcfile="${public.key.path}"
     property="public.key.value">
     <filterchain>
@@ -67,13 +70,6 @@
     </classpath>
   </taskdef>
 
-  <!-- XALAN & XERCES -->
-  <path id="xslt.classpath">
-    <pathelement path="${config.xslt.xalan.path}"/>
-    <pathelement path="${config.xslt.xerces.impl.path}"/>
-    <pathelement path="${config.xslt.xerces.resolver.path}"/>
-  </path>
-
   <!-- APPLICATION PROPERTIES -->
   <xmlproperty file="${config.product.xml.path}" />
   <property name="application.fullname"
@@ -85,6 +81,10 @@
   <property name="application.languages.enum"
     value="${application.localized.locale(name)}" />
 
+  <!-- SITE -->
+  <property name="site.url"
+    value="${application.site.url}" />
+    
   <!-- SITE SUPPORTED LANGUAGES -->
   <property name="site.languages.enum"
     value="${application.site.localized.locale(name)}" />
@@ -270,11 +270,12 @@
         <include name="chrome.manifest" />
         <include name="readme.md" />
         <include name="modules/**" />
+        <include name="components/**" />
         <include name="locale/**" />
       </fileset>
     </copy>
     <property name="update.rdf.url"
-      value="http://znotes.besaba.com/downloads/releases/addon/update.rdf" />
+      value="${site.url}downloads/releases/addon/update.rdf" />
     <if>
       <uptodate srcfile="${public.key.path}"
         targetfile="${bin.dir}/addon/install.rdf" />
@@ -624,6 +625,7 @@
           <fileset dir="${bin.dir}/addon">
             <include name="chrome/**" />
             <include name="modules/**" />
+            <include name="components/**" />
             <include name="LICENSE" />
           </fileset>
           <fileset dir="${standalone.dir}">
@@ -692,6 +694,7 @@
           <fileset dir="${bin.dir}/addon">
             <include name="chrome/**" />
             <include name="modules/**" />
+            <include name="components/**" />
             <include name="LICENSE" />
           </fileset>
           <fileset dir="${standalone.dir}">
@@ -762,6 +765,7 @@
           <fileset dir="${bin.dir}/addon">
             <include name="chrome/**" />
             <include name="modules/**" />
+            <include name="components/**" />
             <include name="LICENSE" />
           </fileset>
           <fileset dir="${standalone.dir}">
@@ -829,6 +833,7 @@
           <fileset dir="${bin.dir}/addon">
             <include name="chrome/**" />
             <include name="modules/**" />
+            <include name="components/**" />
             <include name="LICENSE" />
           </fileset>
           <fileset dir="${standalone.dir}">
@@ -915,14 +920,14 @@
       destfile="${bin.dir}/addon/chrome/znotes-tb.jar">
       <zipfileset
         src="${bin.dir}/addon/chrome/znotes.jar"
-        excludes="**/testsuite*" />
+        excludes="**/testsuite*/**" />
     </zip>
     <zip destfile="${releases.dir}/releases/addon/${application.fullname}-tb.xpi">
       <mappedresources enablemultiplemappings="yes">
         <fileset dir="${bin.dir}/addon">
           <exclude name="**/znotes.jar" />
           <exclude name="install.rdf" />
-          <exclude name="**/testsuite*" />
+          <exclude name="**/testsuite*/**" />
         </fileset>
         <filtermapper>
           <replacestring from="znotes-tb.jar" to="znotes.jar" />
@@ -938,23 +943,29 @@
     </zip>
     <property name="update.rdf.path"
       location="${releases.dir}/releases/addon/update.rdf"/>
+    <property name="signed.xpi.path"
+      location="${releases.dir}/releases/addon/${application.fullname}.xpi"/>
+    <property name="signed.xpi.url"
+      value="${site.url}downloads/releases/addon/${application.fullname}.xpi"/>
+     
     <if>
       <uptodate targetfile="${update.rdf.path}">
         <srcfiles file="${private.key.path}" />
-        <srcfiles file="${releases.dir}/releases/addon/${application.fullname}.xpi" />
+        <srcfiles file="${signed.xpi.path}" />
       </uptodate>
       <then>
       </then>
       <else>
+        <echo message="${config.uhura.path} -o ${update.rdf.path} -k ${private.key.path} -p =${private.key.passphrase} ${signed.xpi.path} ${signed.xpi.url}"/>
         <exec executable="${config.uhura.path}">
           <arg value="-o" />
           <arg value="${update.rdf.path}" />
           <arg value="-k" />
           <arg value="${private.key.path}" />
           <arg value="-p" />
-          <arg value="=${config.openssl.private.key.password}" />
-          <arg value="${releases.dir}/releases/addon/${application.fullname}.xpi" />
-          <arg value="http://znotes.besaba.com/downloads/releases/addon/${application.fullname}.xpi" />
+          <arg value="=${private.key.passphrase}" />
+          <arg value="${signed.xpi.path}" />
+          <arg value="${signed.xpi.url}" />
         </exec>
       </else>
     </if>
@@ -1179,13 +1190,13 @@
     description="- Release addon and standalone for development needs"
     depends="release-addon, standalone">
     <copy file="${releases.dir}/releases/addon/${application.fullname}-tb.xpi"
-      tofile="e:/temp/${application.fullname}-tb.xpi" />
+      tofile="${releases.development.dir}/${application.fullname}-tb.xpi" />
     <antcall target="release-standalone-platform-language">
       <param name="platform" value="linux-i686"/>
       <param name="lang" value="ru"/>
     </antcall>    
     <copy file="${releases.dir}/releases/standalone/ru/${application.version}/${application.fullname}-linux-i686-ru.tar.gz"
-      tofile="e:/temp/${application.fullname}-linux-i686-ru.tar.gz" />
+      tofile="${releases.development.dir}/${application.fullname}-linux-i686-ru.tar.gz" />
     <delete dir="${releases.dir}/releases/standalone/ru" quiet="true" includeemptydirs="true" />
   </target>
   

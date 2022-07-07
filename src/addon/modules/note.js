@@ -46,7 +46,7 @@ Cu.import( "resource://znotes/utils.js", ru.akman.znotes );
 Cu.import( "resource://znotes/event.js", ru.akman.znotes.core );
 Cu.import( "resource://znotes/documentmanager.js", ru.akman.znotes );
 
-var Note = function( aBook, anEntry, aCategory, aType, aTagID ) {
+var Note = function( aBook, anEntry, aCategory, aType, aTagID, aSticky ) {
 
   var Utils = ru.akman.znotes.Utils;
   var log = Utils.getLogger( "modules.note" );
@@ -110,7 +110,7 @@ var Note = function( aBook, anEntry, aCategory, aType, aTagID ) {
       result.push( tagList.getTagById( tagIDs[i] ).getName() );
     }
     // content
-    // ...
+    // TODO: extract key-words from content
     return result;
   };
 
@@ -136,7 +136,7 @@ var Note = function( aBook, anEntry, aCategory, aType, aTagID ) {
   };
 
   this.setType = function( type ) {
-    if ( this.type == type ) {
+    if ( this.type === type ) {
       return;
     }
     this.type = type;
@@ -148,6 +148,28 @@ var Note = function( aBook, anEntry, aCategory, aType, aTagID ) {
     );
   };
 
+  this.isSticky = function() {
+    return this.sticky;
+  };
+
+  this.setSticky = function( sticky ) {
+    if ( this.sticky === !!sticky ) {
+      return;
+    }
+    this.entry.setSticky( !!sticky );
+    this.sticky = !!sticky;
+    this.notifyStateListener(
+      new ru.akman.znotes.core.Event(
+        "NoteChanged",
+        { parentCategory: this.getParent(), changedNote: this }
+      )
+    );
+  };
+
+  this.toggleSticky = function() {
+    this.setSticky( !this.isSticky() );
+  };
+  
   this.getData = function() {
     return this.data;
   };
@@ -403,6 +425,146 @@ var Note = function( aBook, anEntry, aCategory, aType, aTagID ) {
     return this.name;
   };
 
+  /**
+  isActive: false,
+  isPined: false,
+  text: "",
+  flagAttachments: false,
+  flagType: false,
+  selectedTypes = [],
+  flagCreated: false,
+  selectedCreated = [],
+  flagUpdated: false,
+  selectedUpdated = [],
+  flagCategory: false,
+  flagTag: false,
+  flagName: true,
+  flagBody: false
+  */
+  this.meet = function( filter ) {
+    var flag, tags, text;
+    if ( !filter.isActive || this.isSticky() ) {
+      return true;
+    }
+    if ( filter.flagAttachments && !this.hasAttachments() ) {
+      return false;
+    }
+    if ( filter.flagType &&
+      filter.selectedTypes.indexOf( this.getType() ) === -1 ) {
+      return false;
+    }
+    if ( filter.flagCreated ) {
+      flag = false;
+      for each ( var io in filter.selectedCreated ) {
+        if ( io.check( this.getCreateDateTime() ) ) {
+          flag = true;
+          break;
+        }
+      }
+      if ( !flag ) {
+        return false; 
+      }
+    }
+    if ( filter.flagUpdated ) {
+      flag = false;
+      for each ( var io in filter.selectedUpdated ) {
+        if ( io.check( this.getUpdateDateTime() ) ) {
+          flag = true;
+          break;
+        }
+      }
+      if ( !flag ) {
+        return false; 
+      }
+    }
+    if ( filter.text.length && (
+      filter.flagCategory || filter.flagTag ||
+      filter.flagName || filter.flagBody ) ) {
+      text = filter.text.toLowerCase();
+      flag = false;
+      if ( !flag && filter.flagName ) {
+        flag = this.getName().toLowerCase().indexOf( text ) !== -1;
+      }
+      if ( !flag && filter.flagCategory ) {
+        flag = this.getParent().getName().toLowerCase().indexOf( text ) !== -1;
+      }
+      if ( !flag && filter.flagTag ) {
+        tags = this.getTagsAsString();
+        for each ( var tag in tags ) {
+          if ( tag.toLowerCase().indexOf( text ) !== -1 ) {
+            flag = true;
+            break;            
+          }
+        }
+      }
+      if ( !flag && filter.flagBody ) {
+        flag = this.search( filter.text );
+      }
+      if ( !flag ) {
+        return false; 
+      }
+    }
+    return true;
+  };
+
+  /**
+  sort.isActive    : true || false
+  sort.order       : -1, 1, 0
+  sort.column      : 0 - 7
+  */
+  this.compare = function( note, sort ) {
+    var result = this.getIndex() - note.getIndex();
+    if ( !sort.isActive || sort.order === 0 ) {
+      return result;
+    }
+    switch ( sort.column ) {
+      case 0: // noteTreeAttachments
+        result = this.hasAttachments() - note.hasAttachments();
+        break;
+      case 1: // noteTreeStickyFlag
+        result = this.isSticky() - note.isSticky();
+        break;
+      case 2: // noteTreeName
+        result = this.getName().localeCompare( note.getName() );
+        break;
+      case 3: // noteTreeCategory
+        result = this.getParent().getName().localeCompare(
+          note.getParent().getName() );
+        break;
+      case 4: // noteTreeTag
+        result = this.getMainTagName().localeCompare(
+          note.getMainTagName() );
+        break;
+      case 5: // noteTreeType
+        result = this.getType().localeCompare( note.getType() );
+        break;
+      // TODO: date-time operations are very slow :(
+      case 6: // noteTreeCreateDateTime
+        result = this.getCreateDateTime() - note.getCreateDateTime();
+        break;
+      case 7: // noteTreeUpdateDateTime
+        result = this.getUpdateDateTime() - note.getUpdateDateTime();
+        break;
+    }
+    result = result * sort.order;
+    return result;
+  };
+
+  this.search = function( text ) {
+    var doc = ru.akman.znotes.DocumentManager.getInstance()
+                                             .getDocument( this.getType() );
+    if ( !doc ) {
+      return null;
+    }
+    return doc.search(
+      text,
+      this.getMainContent(),
+      this.getURI(),
+      this.getBaseURI(),
+      this.getName()
+    );
+  };
+
   this.isInBin = function() {
     var aCategory = this.getParent();
     var aBin = aCategory.getBin();
@@ -485,17 +647,26 @@ var Note = function( aBook, anEntry, aCategory, aType, aTagID ) {
     return this.tags.slice( 0 );
   };
 
+  this.getTagsAsString = function() {
+    var tagList = this.getBook().getTagList();
+    var result = [];
+    this.getTags().forEach( function( id ) {
+      result.push( tagList.getTagById( id ).getName() );
+    } );
+    return result;
+  };
+
   this.setTags = function( ids ) {
     var tagIDs = this.getTags();
-    if ( tagIDs.length == 0 && ids.length == 0 ) {
+    if ( !tagIDs.length && !ids.length ) {
       return;
     }
     var mainTagFlag = true;
-    if ( tagIDs.length > 0 && ids.length > 0 ) {
-      mainTagFlag = ( tagIDs[0] != ids[0] ) ;
+    if ( tagIDs.length && ids.length ) {
+      mainTagFlag = ( tagIDs[0] !== ids[0] ) ;
     }
     var tagsFlag = false;
-    if ( tagIDs.length != ids.length ) {
+    if ( tagIDs.length !== ids.length ) {
       tagsFlag = true;
     } else {
       for ( var i = 0; i < tagIDs.length; i++ ) {
@@ -531,7 +702,7 @@ var Note = function( aBook, anEntry, aCategory, aType, aTagID ) {
         return;
       }
       var oldTag = null;
-      if ( tagIDs.length > 0 ) {
+      if ( tagIDs.length ) {
         oldTag = tagIDs[0];
       }
 
@@ -552,10 +723,7 @@ var Note = function( aBook, anEntry, aCategory, aType, aTagID ) {
 
   this.getMainTag = function() {
     var ids = this.getTags();
-    if ( ids.length > 0 ) {
-      return ids[0];
-    }
-    return null;
+    return ids.length ? ids[0] : null;
   };
 
   this.setMainTag = function( id ) {
@@ -579,6 +747,25 @@ var Note = function( aBook, anEntry, aCategory, aType, aTagID ) {
     return color;
   };
 
+  this.getMainTagName = function() {
+    var tagList = this.getBook().getTagList();
+    var name = tagList.getNoTag().getName();
+    var tagID = this.getMainTag();
+    if ( tagID ) {
+      name = tagList.getTagById( tagID ).getName();
+    }
+    return name;
+  };
+
+  this.getMainTagId = function() {
+    var tagList = this.getBook().getTagList();
+    var id = this.getMainTag();
+    if ( id && tagList.getTagById( id ) ) {
+      return id;
+    }
+    return "00000000000000000000000000000000";
+  };
+  
   this.getOrigin = function() {
     return this.origin;
   };
@@ -679,6 +866,7 @@ var Note = function( aBook, anEntry, aCategory, aType, aTagID ) {
     return "\ninstanceId: " + this.instanceId + "\n" +
       "id: " + this.id + ", " +
       "index: " + this.index + "\n" +
+      "sticky: " + this.sticky + "\n" +
       "name: '" + this.name + "'\n" +
       "parent: '" + parentName + "'\n" +
       "tags: " + this.getTags() + "\n" +
@@ -705,6 +893,10 @@ var Note = function( aBook, anEntry, aCategory, aType, aTagID ) {
   this.entry = anEntry;
   this.name = this.entry.getName();
   this.id = this.entry.getId();
+  this.sticky = this.entry.isSticky();
+  if ( aSticky !== undefined ) {
+    this.setSticky( !!aSticky );
+  }
   this.index = this.entry.getIndex();
   try {
     this.data = JSON.parse( this.entry.getData() );

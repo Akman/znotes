@@ -86,8 +86,8 @@
 <!ENTITY znotes_subscript_key_modifiers "">
 <!ENTITY znotes_subscript_keycode "">
 
-<!ENTITY znotes_superscript_label "Vehnij indeksu">
-<!ENTITY znotes_superscript_tooltip "Vehnij indeksu">
+<!ENTITY znotes_superscript_label "Indeks górny">
+<!ENTITY znotes_superscript_tooltip "Indeks górny">
 <!ENTITY znotes_superscript_accesskey "">
 <!ENTITY znotes_superscript_key "">
 <!ENTITY znotes_superscript_key_modifiers "">
@@ -240,22 +240,22 @@
 <!ENTITY znotes_editorcustomizetoolbar_key_modifiers "">
 <!ENTITY znotes_editorcustomizetoolbar_keycode "">
 
-<!ENTITY znotes_editordebug_label "Odpluskwić">
-<!ENTITY znotes_editordebug_tooltip "Odpluskwić">
+<!ENTITY znotes_editordebug_label "Debugger">
+<!ENTITY znotes_editordebug_tooltip "Debugger">
 <!ENTITY znotes_editordebug_accesskey "">
 <!ENTITY znotes_editordebug_key "">
 <!ENTITY znotes_editordebug_key_modifiers "">
 <!ENTITY znotes_editordebug_keycode "">
 
-<!ENTITY znotes_toggletagsmode_label "Pasek tagi">
-<!ENTITY znotes_toggletagsmode_tooltip "Pasek tagi">
+<!ENTITY znotes_toggletagsmode_label "Pasek tagów">
+<!ENTITY znotes_toggletagsmode_tooltip "Pasek tagów">
 <!ENTITY znotes_toggletagsmode_accesskey "">
 <!ENTITY znotes_toggletagsmode_key "">
 <!ENTITY znotes_toggletagsmode_key_modifiers "">
 <!ENTITY znotes_toggletagsmode_keycode "">
 
-<!ENTITY znotes_importresources_label "Import resources">
-<!ENTITY znotes_importresources_tooltip "Import external resources">
+<!ENTITY znotes_importresources_label "Importuj zasoby">
+<!ENTITY znotes_importresources_tooltip "Import zewnętrzne zasoby">
 <!ENTITY znotes_importresources_accesskey "">
 <!ENTITY znotes_importresources_key "">
 <!ENTITY znotes_importresources_key_modifiers "">
@@ -263,11 +263,11 @@
 
 <!-- OPTIONS -->
 
-<!ENTITY docCaption.xhtml.label "Document">
-<!ENTITY author.xhtml.label "Author:">
-<!ENTITY author.xhtml.placeholder "Enter author name here ...">
+<!ENTITY docCaption.xhtml.label "Dokument">
+<!ENTITY author.xhtml.label "Autor:">
+<!ENTITY author.xhtml.placeholder "Wpisz tutaj autora...">
 
 <!ENTITY mainCaption.xhtml.label "Główny">
-<!ENTITY isSpellcheckEnabled.xhtml.label "Włącz sprawdź pisownię domyślnie">
-<!ENTITY isTagsModeActive.xhtml.label "Pasek tagi domyślnie">
+<!ENTITY isSpellcheckEnabled.xhtml.label "Włącz sprawdzanie pisowni domyślnie">
+<!ENTITY isTagsModeActive.xhtml.label "Pasek tagów domyślnie">
 <!ENTITY keysCaption.xhtml.label "Skróty klawiaturowe">

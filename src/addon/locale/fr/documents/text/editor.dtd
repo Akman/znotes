@@ -112,6 +112,13 @@
 <!ENTITY znotes_editorcustomizetoolbar_key_modifiers "">
 <!ENTITY znotes_editorcustomizetoolbar_keycode "">
 
+<!ENTITY znotes_editordebug_label "Debogage">
+<!ENTITY znotes_editordebug_tooltip "Debogage">
+<!ENTITY znotes_editordebug_accesskey "">
+<!ENTITY znotes_editordebug_key "">
+<!ENTITY znotes_editordebug_key_modifiers "">
+<!ENTITY znotes_editordebug_keycode "">
+
 <!-- OPTIONS -->
 
 <!ENTITY docCaption.text.label "Document">

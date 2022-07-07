@@ -57,6 +57,14 @@
 <!ENTITY isHighlightRow.label "Mettre en surbrillance la ligne dans la liste des notes en utilisant la couleur de l'étiquette principale">
 <!ENTITY isPlaySound.label "Jouer un son au démarrage">
 <!ENTITY isClearBinOnExit.label "Vider la corbeille en quittant">
+<!ENTITY firstDayOfWeekCaption.label " First day of the week ">
+<!ENTITY sunday.label "Sunday">
+<!ENTITY monday.label "Monday">
+<!ENTITY tuesday.label "Tuesday">
+<!ENTITY wednesday.label "Wednesday">
+<!ENTITY thursday.label "Thursday">
+<!ENTITY friday.label "Friday">
+<!ENTITY saturday.label "Saturday">
 <!ENTITY keysPlatformCaption.label "Raccourcis clavier">
 <!ENTITY keysCaption.label "Raccourcis clavier">
 <!ENTITY defaultsButton.label "Défauts">

@@ -1,0 +1,157 @@
+/* ***** BEGIN LICENSE BLOCK *****
+ *
+ * Version: GPL 3.0
+ *
+ * ZNotes
+ * Copyright (C) 2012 Alexander Kapitman
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * The Original Code is ZNotes.
+ *
+ * Initial Developer(s):
+ *   Alexander Kapitman <akman.ru@gmail.com>
+ *
+ * Portions created by the Initial Developer are Copyright (C) 2012
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+/* ***** classic/1.0 common **** */
+
+#znotes_maintoolbox {
+  margin-top: 2px;
+  margin-right: 4px;
+  margin-bottom: 0px;
+  margin-left: 4px;
+  padding: 0px;
+}
+#znotes_maintoolbar {
+  padding: 0px;
+  margin: 0px;
+}
+#mainPanel {
+  margin-top: 2px;
+}
+#noteBox {
+}
+
+#filterBox {
+  margin-left: 4px;
+  margin-right: 4px;
+  margin-bottom: 2px;
+}
+#qfBox {
+  margin-left: -1px;
+}
+#qfDetail {
+  margin-top: 2px;
+  margin-right: -1px;
+}
+.qfboxtoolbarbutton {
+  border: 1px solid transparent;
+  padding: 1px 3px;
+  -moz-margin-start: 1px;
+  -moz-margin-end: 1px;
+}
+.qfdetailtoolbarbutton {
+  border: 1px solid transparent;
+  padding: 1px 3px;
+  -moz-margin-start: 1px;
+  -moz-margin-end: 1px;
+}
+#qfBox textbox, #qfDetail textbox {
+  margin: 0px;
+}
+#qfPin {
+  list-style-image: url( "chrome://znotes_images/skin/sticky-16x16.png" );
+}
+#qfAttachments {
+  list-style-image: url( "chrome://znotes_images/skin/attachment-16x16.png" );
+}
+#qfType {
+}
+#qfCreated {
+}
+#qfUpdated {
+}
+#qfMatch {
+  padding-top: 1px;
+}
+#qfMatch[filterActive="matches"] {
+  color: green;
+}
+#qfMatch[filterActive="nomatches"] {
+  color: red;
+}
+#qfText {
+  margin-right: 1px;
+}
+#qfName {
+}
+#qfBody {
+}
+
+#noteTree {
+  margin: 0px 4px 0px 4px !important;
+  border: 1px solid threedshadow;
+}
+
+#noteTree[filterActive="searching"] {
+  background-color: #ffffcc;
+}
+#noteTree[filterActive="matches"] {
+  background-color: #f2f9fc;
+}
+#noteTree[filterActive="nomatches"] {
+  background: repeating-linear-gradient(-45deg, #fff0f4,
+              #fff0f4 5px, white 5px, white 10px);
+}
+
+#noteTreeChildren::-moz-tree-drop-feedback() {
+  visibility: hidden;
+}
+#noteTreeChildren::-moz-tree-row( dropBefore ) {
+  border-top: 2px solid red;
+}
+#noteTreeChildren::-moz-tree-row( dropAfter ) {
+  border-bottom: 2px solid red;
+}
+
+#noteTreeChildren::-moz-tree-row(selected) {
+  background-color: #FFFFAA;
+}
+#noteTreeChildren::-moz-tree-row(odd) {
+  background-color: #EEEEEE;
+}
+#noteTreeChildren::-moz-tree-row(odd, selected) {
+  background-color: #FFFFAA;
+}
+
+#noteTreeDetails {
+  font-family: Courier New, monospace;
+  font-size: 12px;
+  margin-bottom: 4px;
+}
+#noteTreeDetailsSplitter {
+  border: none;
+}
+#noteTreeDetailsSplitterGrippy {
+}
+
+#noteTreeChildren::-moz-tree-cell-text( tag ) {
+  padding-left: 3px;
+}

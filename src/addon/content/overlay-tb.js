@@ -442,7 +442,8 @@ ru.akman.znotes.ZNotes = function() {
     observe: function( subject, topic, data ) {
       switch ( data ) {
         case "debug":
-          Utils.IS_DEBUG_ENABLED = this.branch.getBoolPref( "debug" );
+          Utils.IS_DEBUG_ENABLED = Utils.checkTestSuite() &&
+            this.branch.getBoolPref( "debug" );
           updateCommandsVisibility();
           Common.goUpdateCommand( "znotes_tbtestsuite_command", platformController.getId(), window );
           Common.goUpdateCommand( "znotes_tbconsole_command", platformController.getId(), window );
@@ -632,7 +633,7 @@ ru.akman.znotes.ZNotes = function() {
 
   function updateCommandsVisibility() {
     Common.goSetCommandHidden( "znotes_tbtestsuite_command",
-      !Utils.IS_DEBUG_ENABLED, window );
+      !Utils.IS_DEBUG_ENABLED || !Utils.checkTestSuite(), window );
     Common.goSetCommandHidden( "znotes_tbconsole_command",
       !Utils.IS_DEBUG_ENABLED, window );
   };

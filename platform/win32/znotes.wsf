@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<job>
+<script language="JScript"><![CDATA[
+
+var WshShell = new ActiveXObject("WScript.Shell");
+WshShell.Exec("C:\\Program Files\\Firefox Developer Edition\\firefox.exe -app ./application.ini -jsconsole");
+
+]]></script>
+</job> 

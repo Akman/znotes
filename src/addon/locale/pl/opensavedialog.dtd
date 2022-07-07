@@ -30,15 +30,15 @@
   -
   - ***** END LICENSE BLOCK ***** -->
 
-<!ENTITY window.title "Save">
+<!ENTITY window.title "Zapisywanie">
 <!ENTITY accept.label "Tak">
 <!ENTITY cancel.label "Nie">
 
-<!ENTITY book.label "Notebook:">
-<!ENTITY category.label "Category:">
-<!ENTITY name.label "Name:">
-<!ENTITY name.placeholder "Enter name of note here ...">
-<!ENTITY type.label "Type:">
-<!ENTITY tags.label "Tags:">
-<!ENTITY tags.tooltiptext "Tag menu">
+<!ENTITY book.label "Notatnik:">
+<!ENTITY category.label "Kategoria:">
+<!ENTITY name.label "Nazwa:">
+<!ENTITY name.placeholder "Wpisz tutaj nazwę notatki...">
+<!ENTITY type.label "Typ:">
+<!ENTITY tags.label "Tagi:">
+<!ENTITY tags.tooltiptext "Menu tagów">
 

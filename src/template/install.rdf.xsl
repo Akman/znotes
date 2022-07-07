@@ -43,6 +43,7 @@
     <em:id><xsl:value-of select="//application/id" /></em:id>
     <em:version><xsl:value-of select="//application/version" /></em:version>
     <em:type>2</em:type>
+    <em:multiprocessCompatible>true</em:multiprocessCompatible>
     <em:targetApplication>
       <Description>
         <!-- Thunderbird -->

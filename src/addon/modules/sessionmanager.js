@@ -104,18 +104,16 @@ var SessionManager = function() {
     return { tabs: currentState.tabs.slice( 0 ) };
   };
 
-  pub.updateState = function( aTab, aState ) {
-    if ( aState === undefined ) {
-      var aState = {};
-    }
+  pub.updateState = function( tab, state ) {
+    var aState = ( state === undefined ) ? {} : state;
     var isModified = false;
     var isFound = false;
-    var mode = aTab.mode.name;
-    var bookId = aTab.bookId;
-    var noteId = aTab.noteId;
+    var mode = tab.mode.name;
+    var bookId = tab.bookId;
+    var noteId = tab.noteId;
     for ( var i = 0; i < currentState.tabs.length; i++ ) {
-      var tab = currentState.tabs[i];
-      if ( tab.state.noteId == noteId ) {
+      var ctab = currentState.tabs[i];
+      if ( ctab.state.noteId == noteId ) {
         if ( "opened" in aState ) {
           if ( !aState.opened ) {
             currentState.tabs.splice( i, 1 );
@@ -125,8 +123,8 @@ var SessionManager = function() {
         }
         isFound = true;
         if ( "background" in aState ) {
-          if ( tab.state.background != aState.background ) {
-            tab.state.background = aState.background;
+          if ( ctab.state.background != aState.background ) {
+            ctab.state.background = aState.background;
             isModified = true;
           }
         }

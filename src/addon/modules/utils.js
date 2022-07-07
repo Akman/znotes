@@ -100,6 +100,8 @@ var Utils = function() {
   var platformShortCuts = "{}";
   var platformKeySet = null;
   
+  var firstDayOfWeek = 0;
+  
   var isDebugEnabled = false;
   var isTestActive = false;
   var isTestRaised = false;
@@ -470,6 +472,14 @@ var Utils = function() {
 
     set IS_EXIT_QUIT_TB( value ) {
       isExitQuitTB = value;
+    },
+    
+    get FIRST_DAY_OF_WEEK() {
+      return firstDayOfWeek;
+    },
+
+    set FIRST_DAY_OF_WEEK( value ) {
+      firstDayOfWeek = value;
     }
 
   };
@@ -624,7 +634,6 @@ var Utils = function() {
     try {
       uri = chr.convertChromeURL( ios.newURI( url, null, null ) );
     } catch ( e ) {
-      log.warn( e + "\n" + pub.dumpStack() );
       return null;
     }
     return uri.spec;
@@ -873,8 +882,8 @@ var Utils = function() {
     if ( obj === null ) {
       return "null";
     }
-    var chr = ( chr === undefined ) ? " " : chr;
-    var cnt = ( cnt === undefined ) ? 2 : cnt;
+    var ch = ( chr === undefined ) ? " " : chr;
+    var cn = ( cnt === undefined ) ? 2 : cnt;
     //
     var replicate = function( character, count ) {
       return ( new Array( count + 1 ) ).join( character );
@@ -882,7 +891,7 @@ var Utils = function() {
     //
     var dumpObj = function( o, depth ) {
       var result = "";
-      var indent = replicate( chr, depth * cnt );
+      var indent = replicate( ch, depth * cn );
       var value;
       for ( var p in o ) {
         switch ( typeof o[p] ) {
@@ -1953,6 +1962,11 @@ var Utils = function() {
     return false;
   };
 
+  pub.checkTestSuite = function( ) {
+    return pub.checkChromeURL(
+      "chrome://znotes/content/testsuite/testsuite.xul" );
+  };
+
   pub.loadScript = function( url, context, charset ) {
     var loader =
       Cc["@mozilla.org/moz/jssubscript-loader;1"]
@@ -1980,7 +1994,27 @@ var Utils = function() {
       }, AddonManager.UPDATE_WHEN_USER_REQUESTED );
     } );
   };
-  
+
+  pub.getString = function( name ) {
+    var str = "?" + name + "?";
+    try {
+      str = pub.STRINGS_BUNDLE.getString( name );
+    } catch ( e ) {
+      log.warn( e + " - '" + name + "'" );
+    }
+    return str;
+  };
+
+  pub.getFormattedString = function( name, values ) {
+    var str = "?" + name + "?";
+    try {
+      str = pub.STRINGS_BUNDLE.getFormattedString( name, values );
+    } catch ( e ) {
+      log.warn( e + " - '" + name + "'" );
+    }
+    return str;
+  };
+
   return pub;
 
 }();

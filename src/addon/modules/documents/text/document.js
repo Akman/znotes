@@ -207,6 +207,10 @@ var Document = function() {
     };
   };
 
+  pub.search = function( aText, aData, anURI, aBaseURI, aTitle ) {
+    return aData.toLowerCase().indexOf( aText.toLowerCase() ) !== -1;
+  };
+
   pub.importDocument = function( aDOM, anURI, aBaseURI, aTitle, aParams ) {
 
     // TODO: documentEncoder html -> text

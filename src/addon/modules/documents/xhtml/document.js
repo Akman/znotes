@@ -530,6 +530,13 @@ var Document = function() {
     }
   };
 
+  function searchDocument( aText, aData, aDOM ) {
+    var namespaceURI = aDOM.documentElement.namespaceURI;
+    var body = aDOM.getElementsByTagNameNS( namespaceURI, "body" )[0];
+    var text = body.textContent;
+    return text.toLowerCase().indexOf( aText.toLowerCase() ) !== -1;
+  };
+
   // PUBLIC
 
   pub.addObserver = function( aObserver ) {
@@ -736,6 +743,11 @@ var Document = function() {
       data: data,
       changed: ( aData !== data )
     };
+  };
+
+  pub.search = function( aText, aData, anURI, aBaseURI, aTitle ) {
+    var po = pub.parseFromString( aData, anURI, aBaseURI, aTitle );
+    return po.result ? searchDocument( aText, po.data, po.dom ) : null;
   };
 
   pub.importDocument = function( aDOM, anURI, aBaseURI, aTitle, aParams ) {

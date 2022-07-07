@@ -1,0 +1,914 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- ***** BEGIN LICENSE BLOCK *****
+  -
+  - Version: GPL 3.0
+  -
+  - ZNotes
+  - Copyright (C) 2015 Alexander Kapitman
+  -
+  - This program is free software: you can redistribute it and/or modify
+  - it under the terms of the GNU General Public License as published by
+  - the Free Software Foundation, either version 3 of the License, or
+  - (at your option) any later version.
+  -
+  - This program is distributed in the hope that it will be useful,
+  - but WITHOUT ANY WARRANTY; without even the implied warranty of
+  - MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  - GNU General Public License for more details.
+  -
+  - You should have received a copy of the GNU General Public License
+  - along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -
+  - The Original Code is ZNotes.
+  -
+  - Initial Developer(s):
+  -   Alexander Kapitman <akman.ru@gmail.com>
+  -
+  - Portions created by the Initial Developer are Copyright (C) 2015
+  - the Initial Developer. All Rights Reserved.
+  -
+  - Contributor(s):
+  -
+  - ***** END LICENSE BLOCK ***** -->
+
+<!DOCTYPE bindings [
+<!ENTITY % notelistDTD SYSTEM "chrome://znotes/locale/bindings/notelist.dtd">
+%notelistDTD;
+]>
+
+<bindings id="notelistBindings"
+   xmlns="http://www.mozilla.org/xbl"
+   xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+   xmlns:xbl="http://www.mozilla.org/xbl">
+
+  <binding id="notelist">
+    <content>
+      <xul:vbox class="noteBox" xbl:inherits="flex">
+        <xul:vbox anonid="filterBox" class="filterBox">
+          <xul:hbox anonid="qfBox" class="qfBox">
+            <xul:toolbarbutton anonid="qfPin"
+              class="toolbarbutton-1 qfBoxButton qfPin"
+              type="checkbox" checked="false"
+              tooltiptext="&qf_pin_tooltip;" />
+            <xul:toolbarseparator />
+            <xul:toolbarbutton anonid="qfAttachments"
+              class="toolbarbutton-1 qfBoxButton qfAttachments"
+              type="checkbox" checked="false"
+              label="&qf_attachments_label;"
+              tooltiptext="&qf_attachments_tooltip;" />
+            <xul:toolbarbutton anonid="qfType"
+              class="toolbarbutton-1 qfBoxButton qfType"
+              type="menu-button" label="&qf_type_label;"
+              checked="false" orient="horizontal"
+              tooltiptext="&qf_type_tooltip;">
+              <xul:menupopup anonid="qfTypeMenuPopup"
+                class="qfTypeMenuPopup" />
+            </xul:toolbarbutton>
+            <xul:toolbarbutton anonid="qfCreated"
+              class="toolbarbutton-1 qfBoxButton qfCreated"
+              type="menu-button" label="&qf_created_label;"
+              checked="false" orient="horizontal"
+              tooltiptext="&qf_created_tooltip;">
+              <xul:menupopup anonid="qfCreatedMenuPopup"
+                class="qfCreatedMenuPopup" />
+            </xul:toolbarbutton>
+            <xul:toolbarbutton anonid="qfUpdated"
+              class="toolbarbutton-1 qfBoxButton qfUpdated"
+              type="menu-button" label="&qf_updated_label;"
+              checked="false" orient="horizontal"
+              tooltiptext="&qf_updated_tooltip;">
+              <xul:menupopup anonid="qfUpdatedMenuPopup"
+                class="qfUpdatedMenuPopup" />
+            </xul:toolbarbutton>
+            <xul:toolbarspacer flex="1" align="end" />
+            <xul:label anonid="qfMatch" class="qfMatch" collapsed="true"/>
+            <xul:textbox anonid="qfText" class="qfText"
+              flex="1" type="search" timeout="500"
+              placeholder="&qf_text_placeholder;" />
+          </xul:hbox>
+          <xul:hbox anonid="qfDetail" class="qfDetail">
+            <xul:toolbarspacer flex="1" align="end" />
+            <xul:label anonid="qfDetailLabel"
+              class="qfDetailLabel" value="&qf_detail_label;" />
+            <xul:toolbarbutton anonid="qfCategory"
+              class="toolbarbutton-1 qfDetailButton qfCategory"
+              type="checkbox" checked="false"
+              label="&qf_category_label;"/>
+            <xul:toolbarbutton anonid="qfTag"
+              class="toolbarbutton-1 qfDetailButton qfTag"
+              type="checkbox" checked="false"
+              label="&qf_tag_label;"/>
+            <xul:toolbarbutton anonid="qfName"
+              class="toolbarbutton-1 qfDetailButton qfName"
+              type="checkbox" checked="false"
+              label="&qf_name_label;"/>
+            <xul:toolbarbutton anonid="qfBody"
+              class="toolbarbutton-1 qfDetailButton qfBody"
+              type="checkbox" checked="false"
+              label="&qf_body_label;"/>
+          </xul:hbox>
+        </xul:vbox>
+        <xul:tree anonid="noteTree" class="noteTree" flex="1"
+          keepcurrentinview="true" seltype="single"
+          enableColumnDrag="true">
+          <xul:treecols class="noteTreeCols">
+            <xul:treecol class="treecol-image noteTreeAttachments"
+              flex="1" label="&note_tree_attachments;" crop="center"
+              fixed="true" width="16" maxwidth="16" minwidth="16"
+              ordinal="1"/>
+            <xul:splitter class="tree-splitter noteTreeColsSplitter"
+              ordinal="2" resizeafter="farthest"/>
+            <xul:treecol class="treecol-image noteTreeStickyFlag"
+              flex="1" label="&note_tree_sticky_flag;" crop="center"
+              fixed="true" width="16" maxwidth="16" minwidth="16"
+              ordinal="3"/>
+            <xul:splitter class="tree-splitter noteTreeColsSplitter"
+              ordinal="4" resizeafter="farthest"/>
+            <xul:treecol class="sortDirectionIndicator noteTreeName"
+              flex="1" label="&note_tree_name;" crop="center" editable="true"
+              ordinal="5"/>
+            <xul:splitter class="tree-splitter noteTreeColsSplitter"
+              ordinal="6" resizeafter="farthest"/>
+            <xul:treecol class="sortDirectionIndicator noteTreeCategory"
+              flex="1" label="&note_tree_category;" crop="center"
+              ordinal="7"/>
+            <xul:splitter class="tree-splitter noteTreeColsSplitter"
+              ordinal="8" resizeafter="farthest"/>
+            <xul:treecol class="sortDirectionIndicator noteTreeTag"
+              flex="1" label="&note_tree_tag;" crop="center"
+              ordinal="9"/>
+            <xul:splitter class="tree-splitter noteTreeColsSplitter"
+              ordinal="10" resizeafter="farthest"/>
+            <xul:treecol class="sortDirectionIndicator noteTreeType"
+              flex="1" label="&note_tree_type;" crop="center"
+              ordinal="11"/>
+            <xul:splitter class="tree-splitter noteTreeColsSplitter"
+              ordinal="12" resizeafter="farthest"/>
+            <xul:treecol class="sortDirectionIndicator noteTreeCreateDateTime"
+              flex="1" label="&note_tree_create_datetime;" crop="center"
+              ordinal="13"/>
+            <xul:splitter class="tree-splitter noteTreeColsSplitter"
+              ordinal="14" resizeafter="farthest"/>
+            <xul:treecol class="sortDirectionIndicator noteTreeUpdateDateTime"
+              flex="1" label="&note_tree_update_datetime;" crop="center"
+              ordinal="15"/>
+          </xul:treecols>
+          <xul:treechildren class="noteTreeChildren" />
+        </xul:tree>
+      </xul:vbox>
+    </content>
+    <resources>
+      <stylesheet src="chrome://znotes/skin/bindings/notelist.css"/>
+    </resources>
+    <implementation>
+      <field name="dataProvider">null</field>
+      <field name="noteTypes">null</field>
+      <field name="dateIntervals">null</field>
+      <field name="context">null</field>
+      
+      <field name="filter">null</field>
+      <field name="sort">null</field>
+      <field name="selection">null</field>
+
+      <field name="currentNote">null</field>
+      <field name="lastSelectedNote">null</field>
+      <field name="prevSelectedNote">null</field>
+
+      <method name="getLastSelectedNote">
+        <body><![CDATA[
+          return this.lastSelectedNote;
+        ]]></body>
+      </method>
+  
+      <method name="setLastSelectedNote">
+        <parameter name="note"/>
+        <body><![CDATA[
+          if ( note && note !== this.lastSelectedNote ) {
+            this.lastSelectedNote = note;
+          }
+          if ( !note && !this.prevSelectedNote ) {
+            return true;
+          }
+          if ( note !== this.prevSelectedNote ) {
+            this.prevSelectedNote = note;
+            return true;
+          }
+          return false;
+        ]]></body>
+      </method>
+      
+      <method name="getDirectionByOrder">
+        <parameter name="order"/>
+        <body><![CDATA[
+          if ( order < 0 ) {
+            return "descending";
+          }
+          if ( order > 0 ) {
+            return "ascending";
+          }
+          return "natural";
+        ]]></body>
+      </method>
+      
+      <method name="updateTypeMenuPopup">
+        <body><![CDATA[
+          var that = this;
+          while ( this._qfTypeMenuPopup.firstChild ) {
+            this._qfTypeMenuPopup.removeChild(
+              this._qfTypeMenuPopup.firstChild );
+          }
+          this.noteTypes.forEach( function( noteType ) {
+            var menuItem = document.createElement( "menuitem" );
+            menuItem.className = "menuitem-iconic";
+            menuItem.setAttribute( "type", "checkbox" );
+            menuItem.setAttribute( "checked", "false" );
+            menuItem.setAttribute( "closemenu", "none" );
+            menuItem.setAttribute( "anonid", "qfTypeMenuPopup" );
+            menuItem.setAttribute( "value", noteType.contentType );
+            menuItem.setAttribute( "label", noteType.description );
+            menuItem.setAttribute( "tooltiptext", noteType.contentType );
+            menuItem.style.setProperty( "list-style-image",
+              "url( '" + noteType.iconURL + "' )" , "important" );
+            that._qfTypeMenuPopup.appendChild( menuItem );
+          } );
+        ]]></body>
+      </method>
+
+      <method name="updateCreatedMenuPopup">
+        <body><![CDATA[
+          var that = this;
+          while ( this._qfCreatedMenuPopup.firstChild ) {
+            this._qfCreatedMenuPopup.removeChild(
+              this._qfCreatedMenuPopup.firstChild );
+          }
+          this.dateIntervals.forEach( function( dateInterval ) {
+            var menuItem = document.createElement( "menuitem" );
+            menuItem.setAttribute( "type", "checkbox" );
+            menuItem.setAttribute( "checked", "false" );
+            menuItem.setAttribute( "closemenu", "none" );
+            menuItem.className = "menuitem-iconic";
+            menuItem.setAttribute( "anonid", "qfCreatedMenuPopup" );
+            menuItem.setAttribute( "value", dateInterval.value.toString() );
+            menuItem.setAttribute( "label", dateInterval.name );
+            that._qfCreatedMenuPopup.appendChild( menuItem );
+          } );
+        ]]></body>
+      </method>
+
+      <method name="updateUpdatedMenuPopup">
+        <body><![CDATA[
+          var that = this;
+          while ( this._qfUpdatedMenuPopup.firstChild ) {
+            this._qfUpdatedMenuPopup.removeChild(
+              this._qfUpdatedMenuPopup.firstChild );
+          }
+          this.dateIntervals.forEach( function( dateInterval ) {
+            var menuItem = document.createElement( "menuitem" );
+            menuItem.setAttribute( "type", "checkbox" );
+            menuItem.setAttribute( "checked", "false" );
+            menuItem.setAttribute( "closemenu", "none" );
+            menuItem.className = "menuitem-iconic";
+            menuItem.setAttribute( "anonid", "qfUpdatedMenuPopup" );
+            menuItem.setAttribute( "value", dateInterval.value.toString() );
+            menuItem.setAttribute( "label", dateInterval.name );
+            that._qfUpdatedMenuPopup.appendChild( menuItem );
+          } );
+        ]]></body>
+      </method>
+
+      <method name="updateQuickFilterView">
+        <body><![CDATA[
+          var filter = this.filter;
+          this.updateCBState( this._qfPin, filter.isPined );
+          this.updateCBState( this._qfAttachments, filter.flagAttachments );
+          this.setCheckedItems( this._qfTypeMenuPopup, filter.selectedTypes );
+          this.updateCBState( this._qfType, filter.flagType );
+          this.setCheckedItems( this._qfCreatedMenuPopup, filter.selectedCreated );
+          this.updateCBState( this._qfCreated, filter.flagCreated );
+          this.setCheckedItems( this._qfUpdatedMenuPopup, filter.selectedUpdated );
+          this.updateCBState( this._qfUpdated, filter.flagUpdated );
+          this.updateCBState( this._qfCategory, filter.flagCategory );
+          this.updateCBState( this._qfTag, filter.flagTag );
+          this.updateCBState( this._qfName, filter.flagName );
+          this.updateCBState( this._qfBody, filter.flagBody );
+          this._qfText.value = filter.text;
+          // TODO: uncomment this
+          //if ( !filter.isActive ) {
+          //  this._qfBox.setAttribute( "collapsed", true );
+          //} else {
+          //  this._qfBox.removeAttribute( "collapsed" );
+          //}
+        ]]></body>
+      </method>
+
+      <method name="updateNoteTreeFilterView">
+        <parameter name="isActive"/>
+        <body><![CDATA[
+          // TODO: bad function name !!! updateMatchState()
+          if ( isActive ) {
+            this._qfMatch.removeAttribute( "collapsed" );
+            if ( this._notesView.length ) {
+              this._noteTree.setAttribute( "filterActive", "matches" );
+              this._qfMatch.setAttribute( "filterActive", "matches" );
+              this._qfMatch.value = this.getFormattedString(
+                "main.note.filter.matches", [ this._notesView.length ] );
+            } else {
+              this._noteTree.setAttribute( "filterActive", "nomatches" );
+              this._qfMatch.setAttribute( "filterActive", "nomatches" );
+              this._qfMatch.value = this.getString( "main.note.filter.nomatches" );
+            }
+          } else {
+            this._noteTree.removeAttribute( "filterActive" );
+            this._qfMatch.setAttribute( "collapsed", true );
+          }
+        ]]></body>
+      </method>
+      
+      <method name="updateCBState">
+        <parameter name="cb"/>
+        <parameter name="state"/>
+        <body><![CDATA[
+          if ( state ) {
+            cb.setAttribute( "checked", "true" );
+          } else {
+            cb.removeAttribute( "checked" );
+          }
+        ]]></body>
+      </method>
+      
+      <method name="setCheckedItems">
+        <parameter name="menupopup"/>
+        <parameter name="values"/>
+        <body><![CDATA[
+          var flag, value;
+          var item, items = menupopup.childNodes;
+          for ( var i = 0; i < items.length; i++ ) {
+            item = items[i];
+            flag = false;
+            value = item.getAttribute( "value" );
+            for each ( var v in values ) {
+              if ( v == value ) {
+                flag = true;
+                break;
+              }
+            }
+            item.setAttribute( "checked", flag );
+          }
+        ]]></body>
+      </method>
+
+      <method name="getCheckedItems">
+        <parameter name="menupopup"/>
+        <body><![CDATA[
+          var result = [];
+          var item, items = menupopup.childNodes;
+          for ( var i = 0; i < items.length; i++ ) {
+            item = items[i];
+            if ( item.getAttribute( "checked" ) === "true" ) {
+              result.push( item.getAttribute( "value" ) );
+            }
+          }
+          return result;
+        ]]></body>
+      </method>
+
+      <method name="isButtonChecked">
+        <parameter name="button"/>
+        <body><![CDATA[
+          return button.getAttribute( "checked" ) === "true";
+        ]]></body>
+      </method>
+
+      <method name="setButtonChecked">
+        <parameter name="button"/>
+        <parameter name="state"/>
+        <body><![CDATA[
+          button.setAttribute( "checked", state );
+          return state;
+        ]]></body>
+      </method>
+ 
+      <method name="haveSameValues">
+        <parameter name="arr1"/>
+        <parameter name="arr2"/>
+        <body><![CDATA[
+          var flag, val1, val2;
+          if ( arr1.length !== arr2.length ) {
+            return false;
+          }
+          for each ( val1 in arr1 ) {
+            if ( typeof( val1 ) === "object" ) {
+              flag = false;
+              for each ( val2 in arr2 ) {
+                if ( val1.toString() === val2.toString() ) {
+                  flag = true;
+                  break;
+                }
+              }
+              if ( !flag ) {
+                return false;
+              }
+            } else {
+              if ( arr2.indexOf( val1 ) === -1 ) {
+                return false;
+              }
+            }
+          }
+          return true;
+        ]]></body>
+      </method>
+      
+      <method name="compareNotes">
+        <parameter name="a"/>
+        <parameter name="b"/>
+        <parameter name="sort"/>
+        <body><![CDATA[
+          if ( this._noteTreeModel.canReorder || sort.isActive ) {
+            return a.compare( b, sort );
+          }
+          return this._notesList.indexOf( a ) - this._notesList.indexOf( b );
+        ]]></body>
+      </method>
+  
+      <method name="load">
+        <body><![CDATA[
+          if ( !this._notesList ) {
+            this._notesList =
+              this.dataProvider ? this.dataProvider.fetch() : [];
+            // TODO: this is saved selection restoration
+            if ( this.selection.index >= 0 &&
+              this.selection.index < this._notesList.length ) {
+              this.lastSelectedNote = this._notesList[this.selection.index];
+            }
+          }
+          this.updateTypeMenuPopup();
+          this.updateCreatedMenuPopup();
+          this.updateUpdatedMenuPopup();
+          this.updateQuickFilterView();
+          this.update( [
+            this.applyNoteTreeFilter,
+            this.applyNoteTreeSort
+          ] );
+        ]]></body>
+      </method>
+      
+      <method name="update">
+        <parameter name="updaters"/>
+        <body><![CDATA[
+          var row = this._noteTreeView.getSelection();
+          var note = this._noteTreeModel.getNoteAtIndex( row );
+          var sort = this.sort;
+          var filter = this.filter;
+          var direction =
+            this.getDirectionByOrder( sort.isActive ? sort.order : 0 );
+          var column = sort.isActive ? sort.column : -1;
+          if ( !filter.isActive ) {
+            this._noteTree.removeAttribute( "filterActive" );
+  	      } else {
+            this._noteTree.setAttribute( "filterActive", "searching" );
+          }
+          this._noteTree.treeBoxObject.beginUpdateBatch();
+          for ( var i = 0; i < updaters.length; i++ ) {
+            updaters[i].call( this );
+          }
+          this._noteTree.treeBoxObject.invalidate();
+          this._noteTree.treeBoxObject.endUpdateBatch();
+          this.updateNoteTreeFilterView( filter.isActive );
+  	      for ( var i = 0; i < this._noteTree.columns.length; i++ ) {
+            if ( this._noteTree.columns[i].index === column ) {
+              this._noteTree.columns[i].element.setAttribute(
+                "sortDirection", direction );
+            } else {
+              this._noteTree.columns[i].element.removeAttribute(
+                "sortDirection" );
+            }
+  	      }
+          row = this._noteTreeModel.getIndexOfNote( note );
+          if ( row !== -1 ) {
+            this.onSelectNoteTreePause();
+            this._noteTreeView.setSelection( row );
+            this.onSelectNoteTreeResume();
+          } else {
+            row = this._noteTreeModel.getIndexOfNote( this.lastSelectedNote );
+            this._noteTreeView.setSelection( row );
+          }
+        ]]></body>
+      </method>
+
+      <method name="applyNoteTreeFilter">
+        <body><![CDATA[
+          var that = this;
+          var filter = this.filter;
+          this._notesView.splice( 0, this._notesView.length );
+          this._notesList.forEach( function( note ) {
+            if ( note.meet( filter ) ) {
+              that._notesView.push( note );
+            }
+          } );
+        ]]></body>
+      </method>
+
+      <method name="applyNoteTreeSort">
+        <body><![CDATA[
+          var that = this;
+          var sort = this.sort;
+  	      this._notesView.sort( function ( a, b ) {
+            return that.compareNotes( a, b , sort );
+          } );
+        ]]></body>
+      </method>
+
+      <method name="focus">
+        <body><![CDATA[
+          this._noteTree.focus();
+        ]]></body>
+      </method>
+
+      <method name="onSelectNoteTreePause">
+        <body><![CDATA[
+          this.onSelectNoteTreePaused = true;
+        ]]></body>
+      </method>
+      <method name="onSelectNoteTreeResume">
+        <body><![CDATA[
+          delete this.onSelectNoteTreePaused;
+        ]]></body>
+      </method>
+      
+      <method name="onSortChange">
+        <parameter name="event" />
+        <body><![CDATA[
+          var sort = this.sort;
+          var column =
+            this._noteTree.columns.getColumnFor( event.originalTarget ).index;
+          if ( !sort.isActive ) {
+            sort.isActive = true;
+            sort.order = 1;
+            sort.column = column;
+          } else {
+            if ( sort.column === column ) {
+              switch ( sort.order ) {
+                case -1:
+                  sort.isActive = false;
+                  break;
+                case 1:
+                  sort.order = -1;
+                  break;
+              }
+            } else {
+              sort.column = column;
+              sort.order = 1;
+            }
+          }
+          this.update( [
+            this.applyNoteTreeSort
+          ] );
+        ]]></body>
+      </method>
+      
+      <method name="onFilterChange">
+        <parameter name="event" />
+        <body><![CDATA[
+          var target = event.originalTarget;
+          var of = {}, nf = this.filter;
+          var that = this;
+          ru.akman.znotes.Utils.cloneObject( nf, of );
+          switch ( target.getAttribute( "anonid" ) ) {
+            case "qfButton":
+              nf.reset();
+              break;
+            case "qfPin":
+              nf.isPined = target.checked;
+              break;
+            case "qfText":
+              nf.text = target.value;
+              break;
+            case "qfAttachments":
+              nf.flagAttachments = target.checked;
+              break;
+            case "qfTypeMenuPopup":
+              nf.selectedTypes = this.getCheckedItems( this._qfTypeMenuPopup );
+              switch ( nf.selectedTypes.length ) {
+                case 0:
+                  nf.flagType = false;
+                  this.setButtonChecked( this._qfType, false );
+                  break;
+                case 1:
+                  nf.flagType = true;
+                  this.setButtonChecked( this._qfType, true );
+                  break;
+              }
+              break;
+            case "qfCreatedMenuPopup":
+              nf.selectedCreated = [];
+              this.getCheckedItems( this._qfCreatedMenuPopup ).forEach( function ( id ) {
+                for each ( var dateInterval in that.dateIntervals ) {
+                  if ( id === dateInterval.value.toString() ) {
+                    nf.selectedCreated.push( dateInterval.value );
+                    break;
+                  }
+                }
+              } );
+              switch ( nf.selectedCreated.length ) {
+                case 0:
+                  nf.flagCreated = false;
+                  this.setButtonChecked( this._qfCreated, false );
+                  break;
+                case 1:
+                  nf.flagCreated = true;
+                  this.setButtonChecked( this._qfCreated, true );
+                  break;
+              }
+              break;
+            case "qfUpdatedMenuPopup":
+              nf.selectedUpdated = [];
+              this.getCheckedItems( this._qfUpdatedMenuPopup ).forEach( function ( id ) {
+                for each ( var dateInterval in that.dateIntervals ) {
+                  if ( id === dateInterval.value.toString() ) {
+                    nf.selectedUpdated.push( dateInterval.value );
+                    break;
+                  }
+                }
+              } );
+              switch ( nf.selectedUpdated.length ) {
+                case 0:
+                  nf.flagUpdated = false;
+                  this.setButtonChecked( this._qfUpdated, false );
+                  break;
+                case 1:
+                  nf.flagUpdated = true;
+                  this.setButtonChecked( this._qfUpdated, true );
+                  break;
+              }
+              break;
+            case "qfCategory":
+              nf.flagCategory = target.checked;
+              break;
+            case "qfTag":
+              nf.flagTag = target.checked;
+              break;
+            case "qfName":
+              nf.flagName = target.checked;
+              break;
+            case "qfBody":
+              nf.flagBody = target.checked;
+              break;
+            default:
+              target = document.getBindingParent( target );
+              switch ( target.getAttribute( "anonid" ) ) {
+                case "qfType":
+                  nf.flagType = nf.selectedTypes.length &&
+                    !this.isButtonChecked( target );
+                  this.setButtonChecked( target, nf.flagType );
+                  break;
+                case "qfCreated":
+                  nf.flagCreated = nf.selectedCreated.length &&
+                    !this.isButtonChecked( target );
+                  this.setButtonChecked( target, nf.flagCreated );
+                  break;
+                case "qfUpdated":
+                  nf.flagUpdated = nf.selectedUpdated.length &&
+                    !this.isButtonChecked( target );
+                  this.setButtonChecked( target, nf.flagUpdated );
+                  break;
+              }
+          }
+          nf.isActive = nf.flagAttachments ||
+            nf.flagType || nf.flagCreated || nf.flagUpdated ||
+            nf.text.length && ( nf.flagCategory || nf.flagTag ||
+            nf.flagName || nf.flagBody );
+          if ( !nf.isActive && of.isActive ||
+            nf.isActive && !of.isActive ||
+            nf.isActive && of.isActive && (
+              nf.text.toLowerCase() !== of.text.toLowerCase() ||
+              nf.flagAttachments !== of.flagAttachments ||
+              nf.flagType !== of.flagType ||
+              !this.haveSameValues( nf.selectedTypes, of.selectedTypes ) ||
+              nf.flagCreated !== of.flagCreated ||
+              !this.haveSameValues( nf.selectedCreated, of.selectedCreated ) ||
+              nf.flagUpdated !== of.flagUpdated ||
+              !this.haveSameValues( nf.selectedUpdated, of.selectedUpdated ) ||
+              nf.flagCategory !== of.flagCategory ||
+              nf.flagTag !== of.flagTag ||
+              nf.flagName !== of.flagName ||
+              nf.flagBody !== of.flagBody ) ) {
+            this.update( [
+              this.applyNoteTreeFilter,
+              this.applyNoteTreeSort
+            ] );
+          }
+        ]]></body>
+      </method>
+      
+      <constructor><![CDATA[
+        if ( !ru ) var ru = {};
+        if ( !ru.akman ) ru.akman = {};
+        if ( !ru.akman.znotes ) ru.akman.znotes = {};
+        Components.utils.import(
+          "resource://znotes/utils.js", ru.akman.znotes );
+        Components.utils.import(
+          "chrome://znotes/content/bindings/notelist.js", ru.akman.znotes );
+        ru.akman.znotes.Utils.LOGGER_LEVEL = "ALL";
+        this.log =
+          ru.akman.znotes.Utils.getLogger( "content.bindings.notelist.xml" );
+        //
+        this._qfBox = document.getAnonymousElementByAttribute( this,
+          "anonid", "filterBox" );
+        this._qfText = document.getAnonymousElementByAttribute( this,
+          "anonid", "qfText" );
+        this._qfMatch = document.getAnonymousElementByAttribute( this,
+          "anonid", "qfMatch" );
+        this._qfType = document.getAnonymousElementByAttribute( this,
+          "anonid", "qfType" );
+        this._qfTypeMenuPopup = document.getAnonymousElementByAttribute( this,
+          "anonid", "qfTypeMenuPopup" );
+        this._qfPin = document.getAnonymousElementByAttribute( this,
+          "anonid", "qfPin" );
+        this._qfAttachments = document.getAnonymousElementByAttribute( this,
+          "anonid", "qfAttachments" );
+        this._qfCreated = document.getAnonymousElementByAttribute( this,
+          "anonid", "qfCreated" );
+        this._qfCreatedMenuPopup = document.getAnonymousElementByAttribute( this,
+          "anonid", "qfCreatedMenuPopup" );
+        this._qfUpdated = document.getAnonymousElementByAttribute( this,
+          "anonid", "qfUpdated" );
+        this._qfUpdatedMenuPopup = document.getAnonymousElementByAttribute( this,
+          "anonid", "qfUpdatedMenuPopup" );
+        this._qfCategory = document.getAnonymousElementByAttribute( this,
+          "anonid", "qfCategory" );
+        this._qfTag = document.getAnonymousElementByAttribute( this,
+          "anonid", "qfTag" );
+        this._qfName = document.getAnonymousElementByAttribute( this,
+          "anonid", "qfName" );
+        this._qfBody = document.getAnonymousElementByAttribute( this,
+          "anonid", "qfBody" );
+        this._noteTree = document.getAnonymousElementByAttribute( this,
+          "anonid", "noteTree" );
+        //
+        this._notesList = null;
+        this._notesView = [];
+        //
+        this._noteTreeModel = new NoteList.Model();
+        this._noteTreeView = new NoteList.View( this._noteTreeModel,
+          this._noteTree.treeBoxObject );
+        this._noteTree.view = this._noteTreeView;
+        this._noteTree.inputField.setAttribute( "clickSelectsAll", "true" );
+      ]]></constructor>
+
+      <destructor><![CDATA[
+      ]]></destructor>
+
+    </implementation>
+    <handlers>
+      <handler event="select"><![CDATA[
+        if ( event.originalTarget.localName !== "tree" ||
+          this.onSelectNoteTreePaused ) {
+          return;
+        }
+        var row = this._noteTreeView.getSelection();
+        var note = this._noteTreeModel.getNoteAtIndex( row );
+        this.currentNote = note;
+        if ( this.setLastSelectedNote( note ) ) {
+          this.dispatchEvent( new CustomEvent( 'selectNote', {
+            detail: {
+              note: note
+            },
+            bubbles: true,
+            cancelable: true
+          } ) );
+        };
+      ]]></handler>
+      <handler event="click"><![CDATA[
+        var note, count, menupopup;
+        var row = new Object(), col = new Object(), child = new Object();
+        switch ( event.originalTarget.localName ) {
+          case "treecol":
+            if ( event.button === 0 && event.detail === 1 ) {
+              // click
+              this.onSortChange( event );
+              break;
+            }
+            event.stopPropagation();
+            event.preventDefault();
+            break;
+          case "treechildren":
+            count = this._notesView.length;
+            this._noteTree.treeBoxObject.getCellAt(
+              event.clientX, event.clientY, row, col, child );
+            if ( event.detail === 1 ) {
+              if ( event.button === 0 ) {
+                if ( count && row.value >= 0 && row.value < count ) {
+                  // click
+                  if ( col.value.index === 1 /* noteTreeStickyFlag */ ) {
+                    this._notesView[row.value].toggleSticky();
+                  }
+                  break;
+                }
+              } else {
+                if ( !count || row.value >= 0 && row.value < count ) {
+                  // context
+                  menupopup = this.getAttribute( "menupopup" );
+                  if ( menupopup ) {
+                    menupopup = document.getElementById( menupopup );
+                    if ( menupopup ) {
+                      menupopup.openPopup(
+                        null,
+                        null,
+                        event.clientX,
+                        event.clientY,
+                        true,
+                        false,
+                        event
+                      );
+                    }
+                  }
+                  break;
+                }
+              }
+            } else {
+              if ( event.button === 0 ) {
+                if ( count && row.value >= 0 && row.value < count ) {
+                  // dblclick
+                  if ( col.value.index !== 1 /* noteTreeStickyFlag */ ) {
+                    note = this._noteTreeModel.getNoteAtIndex( row.value );
+                    this.log.trace( note ? note.getName() : "<NULL>" );
+                    break;
+                  }
+                }
+              }
+            }
+            event.stopPropagation();
+            event.preventDefault();
+            break;
+        }
+      ]]></handler>
+      <handler event="dragstart"><![CDATA[
+        if ( event.originalTarget.localName !== "treechildren" ) {
+          return;
+        }
+        var row = this._noteTreeView.getSelection();
+        if ( row === -1 ) {
+          event.stopPropagation();
+          event.preventDefault();
+        } else {
+          event.dataTransfer.effectAllowed = "copyMove";
+          event.dataTransfer.setData( "znotes/x-note", "NOTE" );
+        }
+      ]]></handler>
+      <handler event="keyup"><![CDATA[
+        this.log.trace( "keyup: " + event.originalTarget.localName );
+        /*
+        var len = event.originalTarget.textLength;
+        switch ( event.keyCode ) {
+          case event.DOM_VK_HOME:
+            if ( event.shiftKey ) {
+              event.originalTarget.setSelectionRange( 0,
+                event.originalTarget.selectionEnd );
+            } else {
+              event.originalTarget.setSelectionRange( 0, 0 );
+            }
+            break;
+          case event.DOM_VK_END:
+            if ( len > 0 ) {
+              if ( event.shiftKey ) {
+                event.originalTarget.setSelectionRange(
+                  event.originalTarget.selectionStart, len );
+              } else {
+                event.originalTarget.setSelectionRange( len, len );
+              }
+            }
+            break;
+        }
+        */
+      ]]></handler>
+      <handler event="command"><![CDATA[
+        var target = event.originalTarget;
+        switch ( target.getAttribute( "anonid" ) ) {
+          case "qfText":
+          case "qfPin":
+          case "qfAttachments":
+          case "qfTypeMenuPopup":
+          case "qfCreatedMenuPopup":
+          case "qfUpdatedMenuPopup":
+          case "qfCategory":
+          case "qfTag":
+          case "qfName":
+          case "qfBody":
+            this.onFilterChange( event );
+            break;
+          default:
+            target = document.getBindingParent( target );
+            switch ( target.getAttribute( "anonid" ) ) {
+              case "qfType":
+              case "qfCreated":
+              case "qfUpdated":
+                this.onFilterChange( event );
+                break;
+            }
+            break;
+        }
+      ]]></handler>
+    </handlers>
+  </binding>
+
+</bindings>
